@@ -1,0 +1,53 @@
+[33mcommit d3561279da792cc26afe85b48d386d79b6175da3[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: arshad-dev57 <qureshiarshad947@gmail.com>
+Date:   Wed Jun 24 20:57:20 2026 +0500
+
+    remove build folder from tracking
+
+[33mcommit 35ecdabb503b1f1bb91744e8554732a7b8024f04[m
+Author: arshad-dev57 <qureshiarshad947@gmail.com>
+Date:   Wed Jun 24 06:47:45 2026 +0500
+
+    worked on the side of new web
+
+[33mcommit 151a56fd54bacad1cef7986b9f3e4a30175108dc[m
+Author: arshad-dev57 <qureshiarshad947@gmail.com>
+Date:   Mon Jun 8 23:36:03 2026 +0500
+
+    worked on the side of new url
+
+[33mcommit cad9a9ababe50e04bf9e337fc5ba1ab5a4d9a50e[m[33m ([m[1;31morigin/main[m[33m)[m
+Author: arshad-dev57 <qureshiarshad947@gmail.com>
+Date:   Thu Apr 30 05:36:43 2026 +0500
+
+    add flutter web build
+
+[33mcommit 8ac153eb625de440d1f7b190d576f2246e5916d5[m
+Author: arshad-dev57 <qureshiarshad947@gmail.com>
+Date:   Thu Apr 30 05:21:24 2026 +0500
+
+    worked on the sitrpe side routing
+
+[33mcommit 3bae6c7cebbc9f8cc072e76e2604d503caceaef9[m
+Author: arshad-dev57 <qureshiarshad947@gmail.com>
+Date:   Tue Apr 28 01:43:10 2026 +0500
+
+    worked on the side of routes of stripe
+
+[33mcommit 8abeb5f402ba9727eba2d13ea3b35fa900a69943[m
+Author: arshad-dev57 <qureshiarshad947@gmail.com>
+Date:   Tue Apr 28 01:26:25 2026 +0500
+
+    worked on the side of routing
+
+[33mcommit 81b16763afb24cf393255fb5e8ad7a432dcbbd89[m
+Author: arshad-dev57 <qureshiarshad947@gmail.com>
+Date:   Tue Apr 28 01:00:55 2026 +0500
+
+    worked on new build
+
+[33mcommit df77076183a8bfd7639ad6718c15575217a1fc9a[m
+Author: arshad-dev57 <qureshiarshad947@gmail.com>
+Date:   Mon Apr 27 23:51:27 2026 +0500
+
+    add flutter web build for deployment

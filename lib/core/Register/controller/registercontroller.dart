@@ -1,0 +1,533 @@
+// lib/core/Register/controller/registercontroller.dart
+
+import 'package:LedgerPro_app/core/plans/controllers/subscription_controller.dart';
+import 'package:LedgerPro_app/core/plans/views/Subscription_plans.dart';
+import 'package:LedgerPro_app/Utils/colors.dart';
+import 'package:LedgerPro_app/Utils/currency_controller.dart';
+import 'package:LedgerPro_app/Utils/toast_utils.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:LedgerPro_app/Services/api_client.dart';
+
+class AuthController extends GetxController {
+  var isLoading = false.obs;
+  var isLoggedIn = false.obs;
+  var user = Rxn<Map<String, dynamic>>();
+
+  // ─── TEXT CONTROLLERS ──────────────────────────────────────────
+  late TextEditingController firstNameController;
+  late TextEditingController lastNameController;
+  late TextEditingController emailController;
+  late TextEditingController phoneController;
+  late TextEditingController countryController;
+  late TextEditingController passwordController;
+  late TextEditingController confirmPasswordController;
+  late TextEditingController addressController;
+  late TextEditingController organizationNameController;
+
+  // ─── NEW BUSINESS DETAILS CONTROLLERS ─────────────────────────
+  late TextEditingController industryController;
+  late TextEditingController taxRegistrationController;
+  late TextEditingController logoController;      // Optional: for logo upload
+  late TextEditingController signatureController; // Optional: for signature upload
+
+  // ─── OBSERVABLES ──────────────────────────────────────────────
+  var isPasswordVisible = false.obs;
+  var isConfirmPasswordVisible = false.obs;
+  var agreeToTerms = false.obs;
+  var currentStep = 0.obs;
+  var passwordStrength = 0.0.obs;
+  var passwordStrengthText = ''.obs;
+  var passwordStrengthColor = Colors.red.obs;
+
+  var firstName = ''.obs;
+  var lastName = ''.obs;
+  var email = ''.obs;
+  var phone = ''.obs;
+  var country = ''.obs;
+  var selectedCurrencyCode = ''.obs;
+  var password = ''.obs;
+  var confirmPassword = ''.obs;
+  var address = ''.obs;
+  var organizationName = ''.obs;
+
+  // ─── NEW BUSINESS OBSERVABLES ──────────────────────────────────
+  var industry = ''.obs;
+  var taxRegistrationNumber = ''.obs;
+  var selectedBusinessType = ''.obs;
+  var selectedFiscalYear = ''.obs;
+  var logo = ''.obs;
+  var signature = ''.obs;
+
+  // ─── DROPDOWN OPTIONS ──────────────────────────────────────────
+  final List<String> businessTypes = [
+    'Sole Proprietorship',
+    'Partnership',
+    'Limited Liability Company (LLC)',
+    'Corporation',
+    'Non-Profit Organization',
+    'Cooperative',
+    'Franchise',
+    'Other',
+  ];
+
+  final List<String> fiscalYears = [
+    'January - December',
+    'July - June',
+    'April - March',
+    'October - September',
+    'Custom',
+  ];
+
+  final ApiClient _api = Get.find<ApiClient>();
+
+  @override
+  void onInit() {
+    super.onInit();
+    _initControllers();
+    _setupListeners();
+    checkLoginStatus();
+  }
+
+  void _initControllers() {
+    firstNameController = TextEditingController();
+    lastNameController = TextEditingController();
+    emailController = TextEditingController();
+    phoneController = TextEditingController();
+    countryController = TextEditingController();
+    passwordController = TextEditingController();
+    confirmPasswordController = TextEditingController();
+    addressController = TextEditingController();
+    organizationNameController = TextEditingController();
+
+    // ─── NEW BUSINESS CONTROLLERS ────────────────────────────────
+    industryController = TextEditingController();
+    taxRegistrationController = TextEditingController();
+    logoController = TextEditingController();
+    signatureController = TextEditingController();
+  }
+
+  void _setupListeners() {
+    firstNameController.addListener(
+      () => firstName.value = firstNameController.text,
+    );
+    lastNameController.addListener(
+      () => lastName.value = lastNameController.text,
+    );
+    emailController.addListener(() => email.value = emailController.text);
+    phoneController.addListener(() => phone.value = phoneController.text);
+    countryController.addListener(() => country.value = countryController.text);
+    passwordController.addListener(() {
+      password.value = passwordController.text;
+      checkPasswordStrength(passwordController.text);
+    });
+    confirmPasswordController.addListener(
+      () => confirmPassword.value = confirmPasswordController.text,
+    );
+    addressController.addListener(
+      () => address.value = addressController.text,
+    );
+    organizationNameController.addListener(
+      () => organizationName.value = organizationNameController.text,
+    );
+
+    // ─── NEW BUSINESS LISTENERS ───────────────────────────────────
+    industryController.addListener(
+      () => industry.value = industryController.text,
+    );
+    taxRegistrationController.addListener(
+      () => taxRegistrationNumber.value = taxRegistrationController.text,
+    );
+  }
+
+  @override
+  void onClose() {
+    firstNameController.dispose();
+    lastNameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    countryController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    addressController.dispose();
+    organizationNameController.dispose();
+    industryController.dispose();
+    taxRegistrationController.dispose();
+    logoController.dispose();
+    signatureController.dispose();
+    super.onClose();
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // REGISTER FUNCTION
+  // ════════════════════════════════════════════════════════════════
+  Future<bool> register() async {
+    print("🚀 Register function started at step: ${currentStep.value}");
+
+    // ─── STEP 0: PERSONAL INFO ────────────────────────────────────
+    if (currentStep.value == 0) {
+      if (firstNameController.text.trim().isEmpty) {
+        AppSnackbar.error(kDanger, 'Error', 'Please enter first name');
+        return false;
+      }
+      if (lastNameController.text.trim().isEmpty) {
+        AppSnackbar.error(kDanger, 'Error', 'Please enter last name');
+        return false;
+      }
+      if (countryController.text.trim().isEmpty) {
+        AppSnackbar.error(kDanger, 'Error', 'Please select country');
+        return false;
+      }
+      if (selectedCurrencyCode.value.isEmpty) {
+        AppSnackbar.error(kDanger, 'Error', 'Please select currency');
+        return false;
+      }
+      currentStep.value = 1;
+      return true;
+    }
+
+    // ─── STEP 1: CONTACT INFO ────────────────────────────────────
+    if (currentStep.value == 1) {
+      if (phoneController.text.trim().isEmpty) {
+        AppSnackbar.error(kDanger, 'Error', 'Please enter phone number');
+        return false;
+      }
+      if (emailController.text.trim().isEmpty ||
+          !emailController.text.contains('@')) {
+        AppSnackbar.error(kDanger, 'Error', 'Please enter valid email');
+        return false;
+      }
+
+      if (!agreeToTerms.value) {
+        AppSnackbar.error(
+          kDanger,
+          'Error',
+          'Please agree to terms and conditions',
+        );
+        return false;
+      }
+      currentStep.value = 2;
+      return true;
+    }
+
+    // ─── STEP 2: BUSINESS DETAILS ────────────────────────────────
+    if (currentStep.value == 2) {
+      // Business details are optional, so no validation needed
+      currentStep.value = 3;
+      return true;
+    }
+
+    // ─── STEP 3: PASSWORD ────────────────────────────────────────
+    if (currentStep.value == 3) {
+      if (passwordController.text.length < 6) {
+        AppSnackbar.error(
+          kDanger,
+          'Error',
+          'Password must be at least 6 characters',
+        );
+        return false;
+      }
+      if (passwordController.text != confirmPasswordController.text) {
+        AppSnackbar.error(kDanger, 'Error', 'Passwords do not match');
+        return false;
+      }
+
+      isLoading.value = true;
+
+      try {
+        // ─── BUILD BUSINESS DETAILS ──────────────────────────────
+        final businessDetails = {
+          'logo': logoController.text.trim(),
+          'fiscalYear': selectedFiscalYear.value,
+          'taxRegistrationNumber': taxRegistrationController.text.trim(),
+          'signature': signatureController.text.trim(),
+          'industry': industryController.text.trim(),
+          'businessType': selectedBusinessType.value,
+        };
+
+        // ─── API REQUEST ──────────────────────────────────────────
+        final response = await _api.post(
+          '/api/users/register',
+          body: {
+            'firstName': firstNameController.text.trim(),
+            'lastName': lastNameController.text.trim(),
+            'email': emailController.text.trim(),
+            'password': passwordController.text,
+            'country': countryController.text.trim(),
+            'phone': phoneController.text.trim(),
+            'address': addressController.text.trim(),
+            'organizationName': organizationNameController.text.trim(),
+            // ─── NEW BUSINESS FIELDS ─────────────────────────────
+            'logo': logoController.text.trim(),
+            'fiscalYear': selectedFiscalYear.value,
+            'taxRegistrationNumber': taxRegistrationController.text.trim(),
+            'signature': signatureController.text.trim(),
+            'industry': industryController.text.trim(),
+            'businessType': selectedBusinessType.value,
+            'websiteLink': '', // Can be added later
+            'contactNo': phoneController.text.trim(),
+          },
+          requiresAuth: false,
+        );
+
+        final data = response.data;
+
+        if (response.success) {
+          print("✅ Registration successful");
+
+          await _saveAuthData(data['token'], data['user']);
+
+          // Save selected currency
+          await Get.find<CurrencyController>().setCurrency(
+            selectedCurrencyCode.value,
+          );
+
+          // Save company details
+          final prefs = await SharedPreferences.getInstance();
+          if (data['user']['organizationName'] != null &&
+              data['user']['organizationName'].isNotEmpty) {
+            await prefs.setString(
+              'company_name',
+              data['user']['organizationName'],
+            );
+          }
+          if (data['user']['address'] != null &&
+              data['user']['address'].isNotEmpty) {
+            await prefs.setString('company_address', data['user']['address']);
+          }
+
+          // Save business details
+          if (data['user']['businessDetails'] != null) {
+            await prefs.setString(
+              'business_details',
+              json.encode(data['user']['businessDetails']),
+            );
+          }
+
+          final subscriptionController = Get.find<SubscriptionController>();
+          subscriptionController.updateFromUserData(data['user']);
+
+          currentStep.value = 4;
+          AppSnackbar.success(
+            kSuccess,
+            'Success',
+            'Account created successfully!',
+          );
+
+          if (subscriptionController.hasAccess) {
+            Get.offAllNamed('/dashboard');
+          } else {
+            Get.offAll(() => const SelectPlanScreen());
+          }
+
+          return true;
+        } else {
+          AppSnackbar.error(
+            kDanger,
+            'Error',
+            data['message'] ?? 'Registration failed',
+          );
+          return false;
+        }
+      } catch (e) {
+        print('❌ Registration error: $e');
+        AppSnackbar.error(kDanger, 'Error', 'error. Please try again.');
+        return false;
+      } finally {
+        isLoading.value = false;
+      }
+    }
+
+    return false;
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // LOGIN FUNCTION
+  // ════════════════════════════════════════════════════════════════
+  Future<bool> login(String email, String password) async {
+    if (email.isEmpty || password.isEmpty) {
+      AppSnackbar.error(kDanger, 'Error', 'Please enter email and password');
+      return false;
+    }
+
+    isLoading.value = true;
+
+    try {
+      final response = await _api.post(
+        '/api/users/login',
+        body: {'email': email.trim(), 'password': password},
+        requiresAuth: false,
+      );
+
+      final data = response.data;
+
+      if (response.success) {
+        await _saveAuthData(data['token'], data['user']);
+
+        final subscriptionController = Get.find<SubscriptionController>();
+        subscriptionController.updateFromUserData(data['user']);
+
+        AppSnackbar.success(kSuccess, 'Success', 'Login successful!');
+
+        if (subscriptionController.hasAccess) {
+          Get.offAllNamed('/dashboard');
+        } else {
+          Get.offAll(() => const SelectPlanScreen());
+        }
+
+        return true;
+      } else {
+        AppSnackbar.error(kDanger, 'Error', data['message'] ?? 'Login failed');
+        return false;
+      }
+    } catch (e) {
+      print('Login error: $e');
+      AppSnackbar.error(kDanger, 'Error', 'error. Please try again.');
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // OTHER METHODS
+  // ════════════════════════════════════════════════════════════════
+
+  Future<void> checkLoginStatus() async {
+    final token = await _api.getToken();
+    if (token != null && token.isNotEmpty) {
+      await getCurrentUser();
+    }
+  }
+
+  Future<void> _saveAuthData(String token, Map<String, dynamic> userData) async {
+    final prefs = await SharedPreferences.getInstance();
+    await _api.setToken(token);
+    await prefs.setString('user_data', json.encode(userData));
+    user.value = userData;
+    isLoggedIn.value = true;
+  }
+
+  Future<void> _clearAuthData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await _api.clearToken();
+    await prefs.remove('user_data');
+    user.value = null;
+    isLoggedIn.value = false;
+  }
+
+  Future<void> getCurrentUser() async {
+    try {
+      final response = await _api.get('/api/users/me');
+
+      if (response.success) {
+        final data = response.data;
+        user.value = data['user'];
+        isLoggedIn.value = true;
+
+        final subscriptionController = Get.find<SubscriptionController>();
+        subscriptionController.updateFromUserData(data['user']);
+      } else {
+        await _clearAuthData();
+      }
+    } catch (e) {
+      print('Get user error: $e');
+    }
+  }
+
+  Future<void> logout() async {
+    await _clearAuthData();
+    Get.offAllNamed('/login');
+    AppSnackbar.success(
+      kWarning,
+      'Logged Out',
+      'You have been logged out successfully',
+    );
+  }
+
+  void checkPasswordStrength(String pwd) {
+    double strength = 0;
+    if (pwd.length >= 8) strength += 0.3;
+    if (pwd.contains(RegExp(r'[A-Z]'))) strength += 0.2;
+    if (pwd.contains(RegExp(r'[0-9]'))) strength += 0.2;
+    if (pwd.contains(RegExp(r'[!@#\$%^&*]'))) strength += 0.3;
+    strength = strength.clamp(0.0, 1.0);
+
+    passwordStrength.value = strength;
+
+    if (strength >= 0.7) {
+      passwordStrengthText.value = 'Strong';
+      passwordStrengthColor.value = Colors.green;
+    } else if (strength >= 0.4) {
+      passwordStrengthText.value = 'Medium';
+      passwordStrengthColor.value = Colors.orange;
+    } else {
+      passwordStrengthText.value = 'Weak';
+      passwordStrengthColor.value = Colors.red;
+    }
+  }
+
+  void nextStep() {
+    if (currentStep.value < 4) register();
+  }
+
+  void previousStep() {
+    if (currentStep.value > 0) currentStep.value--;
+  }
+
+  void goToStep(int step) {
+    if (step <= currentStep.value + 1) currentStep.value = step;
+  }
+
+  void resetForm() {
+    firstNameController.clear();
+    lastNameController.clear();
+    emailController.clear();
+    phoneController.clear();
+    countryController.clear();
+    passwordController.clear();
+    confirmPasswordController.clear();
+    addressController.clear();
+    organizationNameController.clear();
+    industryController.clear();
+    taxRegistrationController.clear();
+    logoController.clear();
+    signatureController.clear();
+    selectedBusinessType.value = '';
+    selectedFiscalYear.value = '';
+    agreeToTerms.value = false;
+    selectedCurrencyCode.value = '';
+    currentStep.value = 0;
+    passwordStrength.value = 0;
+    passwordStrengthText.value = '';
+  }
+
+  bool isStepActive(int step) => currentStep.value >= step;
+  bool isStepDone(int step) => currentStep.value > step;
+
+  IconData getStepIcon(int step) {
+    if (isStepDone(step)) return Icons.check;
+    switch (step) {
+      case 0:
+        return Icons.person_outline;
+      case 1:
+        return Icons.phone_outlined;
+      case 2:
+        return Icons.business_outlined;
+      case 3:
+        return Icons.lock_outline;
+      case 4:
+        return Icons.check_circle_outline;
+      default:
+        return Icons.circle_outlined;
+    }
+  }
+
+  Color getStepColor(int step) {
+    if (isStepDone(step)) return const Color(0xFF1AB4F5);
+    if (isStepActive(step)) return const Color(0xFF1AB4F5);
+    return const Color(0xFF7A8FA6);
+  }
+}

@@ -1,0 +1,1507 @@
+import 'package:LedgerPro_app/Utils/currency_utils.dart';
+import 'package:LedgerPro_app/Utils/colors.dart';
+import 'package:LedgerPro_app/Utils/responsive_utils.dart';
+import 'package:LedgerPro_app/Utils/toast_utils.dart';
+import 'package:LedgerPro_app/core/Expense/controller/expense_controller.dart';
+import 'package:LedgerPro_app/core/Expense/model/expense_model.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
+
+class ExpenseScreen extends StatelessWidget {
+  const ExpenseScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = Get.put(ExpenseController());
+
+    if (ResponsiveUtils.isMobile(context)) {
+      return _buildMobileLayout(context, controller);
+    }
+    return _buildWebLayout(context, controller);
+  }
+
+  // ─────────────────────────────────────────
+  // MOBILE LAYOUT
+  // ─────────────────────────────────────────
+  Widget _buildMobileLayout(BuildContext context, ExpenseController controller) {
+    return Scaffold(
+      backgroundColor: kBg,
+      appBar: _buildMobileAppBar(context, controller),
+      body: Obx(() {
+        if (controller.isLoading.value && controller.expenses.isEmpty) {
+          return Center(
+            child: LoadingAnimationWidget.discreteCircle(color: kPrimary, size: 40),
+          );
+        }
+        return Column(
+          children: [
+            _buildMobileFilterBar(controller, context),
+            _buildMobileSummaryCards(controller, context),
+            Expanded(child: _buildMobileExpenseList(controller, context)),
+          ],
+        );
+      }),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddExpenseDialog(controller, context),
+        backgroundColor: kPrimary,
+        child: const Icon(Icons.add, color: Colors.black87),
+      ),
+    );
+  }
+
+  PreferredSizeWidget _buildMobileAppBar(BuildContext context, ExpenseController controller) {
+    return AppBar(
+      title: const Text(
+        'Expenses',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black87),
+      ),
+      backgroundColor: kPrimary,
+      elevation: 0,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.search, color: Colors.black87),
+          onPressed: () => _showMobileSearch(context, controller),
+        ),
+        IconButton(
+          icon: const Icon(Icons.filter_alt_outlined, color: Colors.black87),
+          onPressed: () => _showFilterDialog(controller, context),
+        ),
+        IconButton(
+          icon: const Icon(Icons.download_outlined, color: Colors.black87),
+          onPressed: () => controller.exportExpenses(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileFilterBar(ExpenseController controller, BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: kCardBg,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Obx(() => Row(
+          children: controller.expenseTypes.map((type) {
+            final isSelected = controller.selectedType.value == type;
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: FilterChip(
+                label: Text(type),
+                selected: isSelected,
+                onSelected: (_) => controller.applyTypeFilter(isSelected ? 'All' : type),
+                backgroundColor: kBg,
+                selectedColor: kPrimary.withOpacity(0.2),
+                labelStyle: TextStyle(
+                  color: isSelected ? kPrimary : kSubText,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  fontSize: 12,
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              ),
+            );
+          }).toList(),
+        )),
+      ),
+    );
+  }
+
+  Widget _buildMobileSummaryCards(ExpenseController controller, BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Obx(() => Row(
+          children: [
+            _buildMobileSummaryCard('Total Expense', controller.formatAmount(controller.totalExpense.value), kDanger, Icons.trending_down),
+            const SizedBox(width: 12),
+            _buildMobileSummaryCard('This Month', controller.formatAmount(controller.thisMonthTotal.value), kPrimary, Icons.calendar_month),
+            const SizedBox(width: 12),
+            _buildMobileSummaryCard('This Week', controller.formatAmount(controller.thisWeekTotal.value), kWarning, Icons.calendar_today),
+            const SizedBox(width: 12),
+            _buildMobileSummaryCard('Total Tax', controller.formatAmount(controller.totalTax.value), kWarning, Icons.receipt),
+            const SizedBox(width: 12),
+            _buildMobileSummaryCard('Records', controller.totalCount.value.toString(), kPrimary, Icons.receipt_long, isNumber: true),
+          ],
+        )),
+      ),
+    );
+  }
+
+  Widget _buildMobileSummaryCard(String title, String amount, Color color, IconData icon, {bool isNumber = false}) {
+    return Container(
+      width: 140,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: kCardBg,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Icon(icon, size: 16, color: color),
+            const SizedBox(width: 4),
+            Flexible(child: Text(title, style: TextStyle(fontSize: 11, color: kSubText, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
+          ]),
+          const SizedBox(height: 8),
+          Text(amount, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: color), overflow: TextOverflow.ellipsis),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileExpenseList(ExpenseController controller, BuildContext context) {
+    return Obx(() {
+      final expenses = controller.expenses;
+      if (expenses.isEmpty) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.trending_down, size: 64, color: kSubText.withOpacity(0.5)),
+              const SizedBox(height: 16),
+              Text('No expense records found', style: TextStyle(fontSize: 16, color: kSubText)),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => _showAddExpenseDialog(controller, context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kPrimary,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: const Text('Add Expense', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87)),
+              ),
+            ],
+          ),
+        );
+      }
+
+      return ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: expenses.length,
+        itemBuilder: (context, index) {
+          final expense = expenses[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _buildMobileExpenseCard(expense, controller, context),
+          );
+        },
+      );
+    });
+  }
+
+  Widget _buildMobileExpenseCard(Expense expense, ExpenseController controller, BuildContext context) {
+    final statusColor = expense.status == 'Posted' ? kSuccess : expense.status == 'Draft' ? kWarning : kDanger;
+    final typeColor = Color(int.parse(controller.getTypeColor(expense.expenseType).substring(1, 7), radix: 16) + 0xFF000000);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: kCardBg,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2))],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _showExpenseDetails(expense, controller, context),
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 40, height: 40,
+                      decoration: BoxDecoration(
+                        color: typeColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(controller.getTypeIcon(expense.expenseType), size: 20, color: typeColor),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(expense.expenseNumber, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: kText)),
+                          const SizedBox(height: 2),
+                          Text(
+                            expense.vendorName.isNotEmpty ? '${expense.expenseType} • ${expense.vendorName}' : expense.expenseType,
+                            style: TextStyle(fontSize: 11, color: kSubText),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+                                child: Text(expense.status, style: TextStyle(fontSize: 8, color: statusColor, fontWeight: FontWeight.w600)),
+                              ),
+                              const SizedBox(width: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(color: kBg, borderRadius: BorderRadius.circular(4)),
+                                child: Text(expense.paymentMethod, style: TextStyle(fontSize: 8, color: kSubText, fontWeight: FontWeight.w500)),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(controller.formatAmount(expense.totalAmount),
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: kDanger)),
+                        const SizedBox(height: 4),
+                        Text(DateFormat('dd MMM yy').format(expense.date),
+                            style: TextStyle(fontSize: 9, color: kSubText)),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _showExpenseDetails(expense, controller, context),
+                        icon: Icon(Icons.visibility, size: 14, color: kSubText),
+                        label: Text('Details', style: TextStyle(fontSize: 11, color: kText)),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                        ),
+                      ),
+                    ),
+                    if (expense.status == 'Draft') ...[
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => controller.postExpense(expense.id),
+                          icon: const Icon(Icons.check_circle, size: 14, color: Colors.black87),
+                          label: const Text('Post', style: TextStyle(fontSize: 11, color: Colors.black87)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: kSuccess,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                            elevation: 0,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────
+  // WEB LAYOUT
+  // ─────────────────────────────────────────
+  Widget _buildWebLayout(BuildContext context, ExpenseController controller) {
+    return Scaffold(
+      backgroundColor: kBg,
+      body: Column(
+        children: [
+          _buildWebTopBar(context, controller),
+          Expanded(
+            child: Obx(() {
+              if (controller.isLoading.value && controller.expenses.isEmpty) {
+                return Center(
+                  child: LoadingAnimationWidget.discreteCircle(color: kPrimary, size: 32),
+                );
+              }
+              return Column(
+                children: [
+                  _buildWebKpiStrip(controller),
+                  _buildWebToolbar(controller, context),
+                  Expanded(child: _buildWebExpensesTable(controller, context)),
+                ],
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWebTopBar(BuildContext context, ExpenseController controller) {
+    return Container(
+      height: 56,
+      color: kPrimary,
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Text(
+            'Expenses',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.black87),
+          ),
+          const Expanded(child: SizedBox()),
+          SizedBox(
+            width: 220,
+            height: 34,
+            child: TextField(
+              controller: controller.searchController,
+              style: const TextStyle(fontSize: 13, color: Colors.black87),
+              cursorColor: Colors.black54,
+              decoration: InputDecoration(
+                hintText: 'Search expenses…',
+                hintStyle: const TextStyle(color: Colors.black45, fontSize: 13),
+                prefixIcon: const Icon(Icons.search, size: 16, color: Colors.black45),
+                filled: true,
+                fillColor: Colors.white.withOpacity(0.35),
+                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: BorderSide.none),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: const BorderSide(color: Colors.black26)),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          ElevatedButton.icon(
+            onPressed: () => _showFilterDialog(controller, context),
+            icon: const Icon(Icons.tune, size: 15, color: Colors.black87),
+            label: const Text('Filter', style: TextStyle(fontSize: 13, color: Colors.black87)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white.withOpacity(0.4),
+              elevation: 0,
+              minimumSize: const Size(0, 34),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6), side: const BorderSide(color: Colors.black26)),
+            ),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton.icon(
+            onPressed: () => controller.exportExpenses(),
+            icon: const Icon(Icons.download_outlined, size: 15, color: Colors.black87),
+            label: const Text('Export', style: TextStyle(fontSize: 13, color: Colors.black87)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white.withOpacity(0.4),
+              elevation: 0,
+              minimumSize: const Size(0, 34),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6), side: const BorderSide(color: Colors.black26)),
+            ),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton.icon(
+            onPressed: () => _showAddExpenseDialog(controller, context),
+            icon: const Icon(Icons.add, size: 16, color: Colors.black87),
+            label: const Text('Add Expense', style: TextStyle(fontSize: 13, color: Colors.black87)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white.withOpacity(0.4),
+              elevation: 0,
+              minimumSize: const Size(0, 34),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6), side: const BorderSide(color: Colors.black26)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWebKpiStrip(ExpenseController controller) {
+    return Obx(() => Container(
+      color: kCardBg,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
+      child: Row(
+        children: [
+          _buildWebKpiTile('Total Expense', controller.formatAmount(controller.totalExpense.value), kDanger, Icons.trending_down),
+          _buildWebKpiDivider(),
+          _buildWebKpiTile('This Month', controller.formatAmount(controller.thisMonthTotal.value), kPrimary, Icons.calendar_month),
+          _buildWebKpiDivider(),
+          _buildWebKpiTile('This Week', controller.formatAmount(controller.thisWeekTotal.value), kWarning, Icons.calendar_today),
+          _buildWebKpiDivider(),
+          _buildWebKpiTile('Total Tax', controller.formatAmount(controller.totalTax.value), kWarning, Icons.receipt),
+          _buildWebKpiDivider(),
+          _buildWebKpiTile('Total Records', controller.totalCount.value.toString(), kPrimary, Icons.receipt_long),
+        ],
+      ),
+    ));
+  }
+
+  Widget _buildWebKpiTile(String label, String value, Color color, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        child: Row(
+          children: [
+            Container(
+              width: 34, height: 34,
+              decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+              child: Icon(icon, size: 16, color: color),
+            ),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(label, style: TextStyle(fontSize: 11, color: kSubText, fontWeight: FontWeight.w500)),
+                const SizedBox(height: 2),
+                Text(value, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: color)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWebKpiDivider() => Container(width: 1, height: 36, color: Colors.grey.withOpacity(0.15));
+
+  Widget _buildWebToolbar(ExpenseController controller, BuildContext context) {
+    return Container(
+      height: 44,
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: BoxDecoration(
+        color: kBg,
+        border: Border(
+          bottom: BorderSide(color: Colors.grey.withOpacity(0.15)),
+          top: BorderSide(color: Colors.grey.withOpacity(0.1)),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Obx(() => SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: controller.expenseTypes.map((type) {
+                  final isSelected = controller.selectedType.value == type;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: InkWell(
+                      onTap: () => controller.applyTypeFilter(type),
+                      borderRadius: BorderRadius.circular(4),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isSelected ? kPrimary.withOpacity(0.1) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(4),
+                          border: isSelected ? Border.all(color: kPrimary.withOpacity(0.3)) : null,
+                        ),
+                        child: Text(
+                          type,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                            color: isSelected ? kPrimary : kSubText,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            )),
+          ),
+          const SizedBox(width: 8),
+          Obx(() {
+            if (controller.startDate.value != null && controller.endDate.value != null) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: kPrimary.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: kPrimary.withOpacity(0.2)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.date_range, size: 13, color: kPrimary),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${DateFormat('dd MMM').format(controller.startDate.value!)} – ${DateFormat('dd MMM yyyy').format(controller.endDate.value!)}',
+                      style: TextStyle(fontSize: 11, color: kPrimary, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(width: 6),
+                    GestureDetector(
+                      onTap: () => controller.clearDateRange(),
+                      child: Icon(Icons.close, size: 12, color: kPrimary),
+                    ),
+                  ],
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          }),
+          const SizedBox(width: 8),
+          Obx(() => Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.withOpacity(0.3)),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: controller.selectedFilter.value,
+                icon: Icon(Icons.arrow_drop_down, size: 16, color: kSubText),
+                isDense: true,
+                style: TextStyle(fontSize: 12, color: kText),
+                dropdownColor: kCardBg,
+                items: controller.filterOptions.map((f) => DropdownMenuItem(
+                  value: f,
+                  child: Text(f, style: TextStyle(fontSize: 12, color: kText)),
+                )).toList(),
+                onChanged: (v) { if (v != null) controller.applyFilter(v); },
+              ),
+            ),
+          )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWebExpensesTable(ExpenseController controller, BuildContext context) {
+    return Obx(() {
+      final expenses = controller.expenses;
+
+      if (expenses.isEmpty) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.trending_down, size: 48, color: kSubText.withOpacity(0.4)),
+              const SizedBox(height: 12),
+              Text('No expense records found', style: TextStyle(fontSize: 15, color: kSubText)),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: 150,
+                child: ElevatedButton(
+                  onPressed: () => _showAddExpenseDialog(controller, context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kPrimary,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    elevation: 0,
+                  ),
+                  child: const Text('+ Add Expense', style: TextStyle(fontSize: 13, color: Colors.black87)),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+
+      return Column(
+        children: [
+          Container(
+            height: 36,
+            color: kBg,
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Row(
+              children: [
+                const SizedBox(width: 32),
+                Expanded(flex: 3, child: _tableHeaderCell('Expense #')),
+                Expanded(flex: 2, child: _tableHeaderCell('Type')),
+                Expanded(flex: 3, child: _tableHeaderCell('Vendor')),
+                Expanded(flex: 2, child: _tableHeaderCell('Date')),
+                Expanded(flex: 2, child: _tableHeaderCell('Payment')),
+                Expanded(flex: 2, child: _tableHeaderCell('Amount', align: TextAlign.right)),
+                Expanded(flex: 1, child: _tableHeaderCell('Status', align: TextAlign.center)),
+                const SizedBox(width: 68),
+              ],
+            ),
+          ),
+          Container(height: 1, color: Colors.grey.withOpacity(0.15)),
+          Expanded(
+            child: ListView.separated(
+              itemCount: expenses.length,
+              separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
+              itemBuilder: (context, index) => _buildWebTableRow(expenses[index], controller, context),
+            ),
+          ),
+          _buildWebTableFooter(expenses, controller),
+        ],
+      );
+    });
+  }
+
+  Widget _tableHeaderCell(String text, {TextAlign align = TextAlign.left}) {
+    return Text(
+      text.toUpperCase(),
+      textAlign: align,
+      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: kSubText, letterSpacing: 0.5),
+    );
+  }
+
+  Widget _buildWebTableRow(Expense expense, ExpenseController controller, BuildContext context) {
+    final statusColor = expense.status == 'Posted' ? kSuccess : expense.status == 'Draft' ? kWarning : kDanger;
+    final typeColor = Color(int.parse(controller.getTypeColor(expense.expenseType).substring(1, 7), radix: 16) + 0xFF000000);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _showExpenseDetails(expense, controller, context),
+        hoverColor: kPrimary.withOpacity(0.03),
+        child: Container(
+          height: 52,
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Row(
+            children: [
+              Container(
+                width: 28, height: 28,
+                decoration: BoxDecoration(
+                  color: typeColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(controller.getTypeIcon(expense.expenseType), size: 14, color: typeColor),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                flex: 3,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(expense.expenseNumber,
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kText),
+                          overflow: TextOverflow.ellipsis),
+                      if (expense.reference.isNotEmpty)
+                        Text(expense.reference,
+                            style: TextStyle(fontSize: 11, color: kSubText),
+                            overflow: TextOverflow.ellipsis),
+                    ],
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Container(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: typeColor.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(expense.expenseType,
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: typeColor),
+                        overflow: TextOverflow.ellipsis),
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  expense.vendorName.isNotEmpty ? expense.vendorName : '—',
+                  style: TextStyle(fontSize: 12, color: kSubText),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Text(DateFormat('dd MMM yyyy').format(expense.date),
+                    style: TextStyle(fontSize: 12, color: kSubText)),
+              ),
+              Expanded(
+                flex: 2,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: kPrimary.withOpacity(0.06),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(expense.paymentMethod,
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: kPrimary),
+                      overflow: TextOverflow.ellipsis),
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Text(
+                  controller.formatAmount(expense.totalAmount),
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: kDanger),
+                ),
+              ),
+              Expanded(
+                flex: 1,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    child: Text(
+                      expense.status == 'Posted' ? 'POST' : expense.status == 'Draft' ? 'DFT' : 'VOID',
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: statusColor),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 68,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    _webIconBtn(Icons.remove_red_eye_outlined, kSubText, () => _showExpenseDetails(expense, controller, context)),
+                    const SizedBox(width: 4),
+                    if (expense.status == 'Draft')
+                      _webIconBtn(Icons.check_circle_outline, kSuccess, () => controller.postExpense(expense.id))
+                    else
+                      _webIconBtn(Icons.more_vert, kSubText, () => _showRowActions(controller, expense, context)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _webIconBtn(IconData icon, Color color, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: Container(
+        width: 28, height: 28,
+        child: Icon(icon, size: 15, color: color),
+      ),
+    );
+  }
+
+  Widget _buildWebTableFooter(List<Expense> expenses, ExpenseController controller) {
+    final postedCount = expenses.where((e) => e.status == 'Posted').length;
+    final draftCount = expenses.where((e) => e.status == 'Draft').length;
+
+    return Container(
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: BoxDecoration(
+        color: kPrimary.withOpacity(0.04),
+        border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.15))),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 32),
+          const Expanded(flex: 3,
+              child: Padding(
+                padding: EdgeInsets.only(left: 12),
+                child: Text('TOTALS', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.black87)),
+              )),
+          const Expanded(flex: 2, child: SizedBox()),
+          const Expanded(flex: 3, child: SizedBox()),
+          const Expanded(flex: 2, child: SizedBox()),
+          const Expanded(flex: 2, child: SizedBox()),
+          Expanded(
+            flex: 2,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+              decoration: BoxDecoration(color: kDanger.withOpacity(0.08), borderRadius: BorderRadius.circular(6)),
+              child: Text(
+                controller.formatAmount(controller.totalExpense.value),
+                textAlign: TextAlign.right,
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: kDanger),
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('$postedCount POST', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 10, color: kSuccess)),
+                  if (draftCount > 0)
+                    Text('$draftCount DFT', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 10, color: kWarning)),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 68),
+        ],
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────
+  // ADD EXPENSE DIALOG WITH EXPENSE ACCOUNT DROPDOWN
+  // ─────────────────────────────────────────
+  void _showAddExpenseDialog(ExpenseController controller, BuildContext ctx) {
+    final isWeb = ResponsiveUtils.isWeb(ctx);
+    final formKey = GlobalKey<FormState>();
+    DateTime selectedDate = DateTime.now();
+    String expenseType = 'Rent';
+    String? selectedExpenseAccountId; // ✅ NEW
+    String? selectedVendorId;
+    List<Map<String, dynamic>> items = [{'description': '', 'quantity': 1, 'unitPrice': 0.0}];
+    double simpleAmount = 0;
+    double taxRate = 0;
+    String description = '';
+    String reference = '';
+    String paymentMethod = 'Cash';
+    String? selectedBankAccountId;
+
+    bool requiresItems() => controller.requiresItems(expenseType);
+
+    showDialog(
+      context: ctx,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          double calculateTotal() {
+            if (requiresItems()) {
+              double total = items.fold(0.0, (s, i) => s + (i['quantity'] ?? 1).toDouble() * (i['unitPrice'] ?? 0).toDouble());
+              return total + total * (taxRate / 100);
+            }
+            return simpleAmount;
+          }
+
+          return Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(isWeb ? 12 : 16)),
+            child: Container(
+              width: isWeb ? 560 : double.infinity,
+              constraints: BoxConstraints(maxHeight: isWeb ? 680 : 600),
+              padding: EdgeInsets.all(isWeb ? 24 : 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text('Add Expense', style: TextStyle(fontSize: isWeb ? 16 : 18, fontWeight: FontWeight.w700, color: kText)),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 18),
+                        onPressed: () => Navigator.pop(context),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                  Divider(height: isWeb ? 20 : 16, color: Colors.grey.withOpacity(0.2)),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Form(
+                        key: formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (isWeb)
+                              Row(children: [
+                                Expanded(child: _buildDatePickerField('Date', selectedDate, (d) => setState(() => selectedDate = d), isWeb, context)),
+                                const SizedBox(width: 12),
+                                Expanded(child: _dropdownField(
+                                  label: 'Expense Type',
+                                  value: expenseType,
+                                  items: controller.expenseTypes.skip(1).toList(),
+                                  onChanged: (v) => setState(() => expenseType = v!),
+                                )),
+                              ])
+                            else ...[
+                              _buildDatePickerField('Date', selectedDate, (d) => setState(() => selectedDate = d), isWeb, context),
+                              const SizedBox(height: 12),
+                              _dropdownField(
+                                label: 'Expense Type',
+                                value: expenseType,
+                                items: controller.expenseTypes.skip(1).toList(),
+                                onChanged: (v) => setState(() => expenseType = v!),
+                              ),
+                            ],
+                            
+                            // ─── ✅ NEW: Expense Account Dropdown ──────────
+                            const SizedBox(height: 12),
+                            if (controller.expenseAccounts.isNotEmpty) ...[
+                              _buildExpenseAccountDropdownField(
+                                selectedExpenseAccountId,
+                                (v) => setState(() => selectedExpenseAccountId = v),
+                                controller.expenseAccounts,
+                                isWeb,
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+                            
+                            if (controller.vendors.isNotEmpty) ...[
+                              _buildVendorDropdownField(selectedVendorId, (v) => setState(() => selectedVendorId = v), controller.vendors, isWeb),
+                              const SizedBox(height: 12),
+                            ],
+                            if (requiresItems()) ...[
+                              Text('Items', style: TextStyle(fontSize: isWeb ? 13 : 12, fontWeight: FontWeight.w600, color: kText)),
+                              const SizedBox(height: 8),
+                              ...items.asMap().entries.map((entry) {
+                                final idx = entry.key;
+                                final item = entry.value;
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 10),
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(color: kBg, borderRadius: BorderRadius.circular(8), border: Border.all(color: kBorder)),
+                                  child: Column(
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Expanded(child: _formField('Description *', '', (v) => item['description'] = v, initialValue: item['description'])),
+                                          if (items.length > 1) ...[
+                                            const SizedBox(width: 8),
+                                            InkWell(onTap: () => setState(() => items.removeAt(idx)), child: Icon(Icons.delete, size: 18, color: kDanger)),
+                                          ],
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          Expanded(child: _formField('Qty', '1', (v) => item['quantity'] = int.tryParse(v) ?? 1, initialValue: item['quantity'].toString(), keyboardType: TextInputType.number)),
+                                          const SizedBox(width: 8),
+                                          Expanded(flex: 2, child: _formField('Unit Price *', '0.00', (v) => item['unitPrice'] = double.tryParse(v) ?? 0, initialValue: item['unitPrice'].toString(), keyboardType: TextInputType.number, prefixText: CurrencyUtils.prefix)),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                              TextButton.icon(
+                                onPressed: () => setState(() => items.add({'description': '', 'quantity': 1, 'unitPrice': 0.0})),
+                                icon: const Icon(Icons.add, size: 16),
+                                label: const Text('Add Item', style: TextStyle(fontSize: 12)),
+                              ),
+                              const SizedBox(height: 8),
+                              _formField('Tax Rate (%)', '0', (v) => taxRate = double.tryParse(v) ?? 0, keyboardType: TextInputType.number),
+                            ] else
+                              _formField('Amount *', '0.00', (v) => simpleAmount = double.tryParse(v) ?? 0, keyboardType: TextInputType.number, prefixText: CurrencyUtils.prefix),
+
+                            const SizedBox(height: 12),
+                            if (isWeb)
+                              Row(children: [
+                                Expanded(child: _formField('Description', '', (v) => description = v)),
+                                const SizedBox(width: 12),
+                                Expanded(child: _formField('Reference #', '', (v) => reference = v)),
+                              ])
+                            else ...[
+                              _formField('Description', '', (v) => description = v),
+                              const SizedBox(height: 12),
+                              _formField('Reference #', '', (v) => reference = v),
+                            ],
+                            const SizedBox(height: 12),
+                            _dropdownField(
+                              label: 'Payment Method',
+                              value: paymentMethod,
+                              items: const ['Cash', 'Bank Transfer', 'Cheque', 'Credit Card'],
+                              onChanged: (v) => setState(() => paymentMethod = v!),
+                            ),
+                            if (paymentMethod == 'Bank Transfer' && controller.bankAccounts.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              _buildBankDropdownField(selectedBankAccountId, (v) => setState(() => selectedBankAccountId = v), controller.bankAccounts, isWeb),
+                            ],
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: kDanger.withOpacity(0.06),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: kDanger.withOpacity(0.15)),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text('Total Amount', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: kText)),
+                                  Text(controller.formatAmount(calculateTotal()), style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: kDanger)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: isWeb ? 20 : 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: isWeb ? 10 : 12),
+                            side: BorderSide(color: Colors.grey.withOpacity(0.4)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                          ),
+                          child: Text('Cancel', style: TextStyle(fontSize: isWeb ? 13 : 14, color: kSubText)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Obx(() => ElevatedButton(
+                          onPressed: controller.isProcessing.value ? null : () async {
+                            if (formKey.currentState!.validate()) {
+                              // ─── Validate Expense Account ──────────────
+                              if (selectedExpenseAccountId == null || selectedExpenseAccountId!.isEmpty) {
+                                AppSnackbar.error(kWarning, 'Error', 'Please select an expense account');
+                                return;
+                              }
+                              
+                              if (requiresItems()) {
+                                if (items.any((i) => i['description'].isEmpty || i['unitPrice'] <= 0)) {
+                                  AppSnackbar.error(kWarning, 'Error', 'Please fill all item details');
+                                  return;
+                                }
+                              } else if (simpleAmount <= 0) {
+                                AppSnackbar.error(kWarning, 'Error', 'Please enter a valid amount');
+                                return;
+                              }
+                              Navigator.pop(context);
+                              await controller.createExpense(
+                                date: selectedDate,
+                                expenseType: expenseType,
+                                expenseAccountId: selectedExpenseAccountId, // ✅ NEW
+                                vendorId: selectedVendorId,
+                                items: requiresItems() ? items : [],
+                                amount: requiresItems() ? null : simpleAmount,
+                                taxRate: requiresItems() ? taxRate : 0,
+                                description: description,
+                                reference: reference,
+                                paymentMethod: paymentMethod,
+                                bankAccountId: selectedBankAccountId,
+                              );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: kPrimary,
+                            padding: EdgeInsets.symmetric(vertical: isWeb ? 10 : 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                            elevation: 0,
+                          ),
+                          child: controller.isProcessing.value
+                              ? SizedBox(width: 20, height: 20, child: LoadingAnimationWidget.waveDots(color: Colors.black87, size: 20))
+                              : Text('Save Expense', style: TextStyle(fontSize: isWeb ? 13 : 14, color: Colors.black87)),
+                        )),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ─── ✅ NEW: Expense Account Dropdown Field ──────────────────
+  Widget _buildExpenseAccountDropdownField(
+    String? selectedId,
+    void Function(String?) onChanged,
+    List<Map<String, dynamic>> expenseAccounts,
+    bool isWeb,
+  ) {
+    return DropdownButtonFormField<String>(
+      value: selectedId,
+      decoration: InputDecoration(
+        labelText: 'Expense Account *',
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        isDense: true,
+      ),
+      style: const TextStyle(fontSize: 13, color: Colors.black87),
+      hint: Text('Select expense account', style: TextStyle(fontSize: 12, color: kSubText)),
+      items: expenseAccounts.map((a) => DropdownMenuItem(
+        value: a['id'].toString(),
+        child: Text('${a['code']} - ${a['name']}', overflow: TextOverflow.ellipsis),
+      )).toList(),
+      onChanged: onChanged,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please select an expense account';
+        }
+        return null;
+      },
+    );
+  }
+
+ void _showExpenseDetails(Expense expense, ExpenseController controller, BuildContext context) {
+  final isWeb = ResponsiveUtils.isWeb(context);
+  final statusColor = expense.status == 'Posted' ? kSuccess : expense.status == 'Draft' ? kWarning : kDanger;
+
+  showDialog(
+    context: context,
+    builder: (ctx) => Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(isWeb ? 12 : 16)),
+      child: Container(
+        width: isWeb ? 420 : double.infinity,
+        constraints: const BoxConstraints(maxHeight: 600),
+        padding: EdgeInsets.all(isWeb ? 24 : 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: isWeb ? 44 : 50, height: isWeb ? 44 : 50,
+                  decoration: BoxDecoration(color: kDanger.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                  child: Icon(Icons.trending_down, size: isWeb ? 22 : 28, color: kDanger),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(expense.expenseNumber, style: TextStyle(fontSize: isWeb ? 16 : 18, fontWeight: FontWeight.w700, color: kText)),
+                      Text('${expense.expenseType} • ${DateFormat('dd MMM yyyy').format(expense.date)}', style: TextStyle(fontSize: isWeb ? 12 : 13, color: kSubText)),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(5)),
+                  child: Text(expense.status, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: statusColor)),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 18),
+                  onPressed: () => Navigator.pop(ctx),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
+            const SizedBox(height: 14),
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _buildDetailRow('Expense Type', expense.expenseType, isWeb),
+                    // Show Expense Account
+                    if (expense.expenseAccount != null) ...[
+                      _buildDetailRow('Expense Account', '${expense.expenseAccount?['code']} - ${expense.expenseAccount?['name']}', isWeb),
+                    ],
+                    if (expense.vendorName.isNotEmpty) _buildDetailRow('Vendor', expense.vendorName, isWeb),
+                    _buildDetailRow('Payment Method', expense.paymentMethod, isWeb),
+                    if (expense.reference.isNotEmpty) _buildDetailRow('Reference', expense.reference, isWeb),
+                    _buildDetailRow('Subtotal', _formatAmount(expense.subtotal), isWeb),
+                    if (expense.taxRate > 0) _buildDetailRow('Tax (${expense.taxRate.toStringAsFixed(0)}%)', _formatAmount(expense.taxAmount), isWeb),
+                    Divider(height: 20, color: Colors.grey.withOpacity(0.15)),
+                    _buildDetailRow('Total Amount', _formatAmount(expense.totalAmount), isWeb, valueColor: kDanger),
+                    if (expense.description.isNotEmpty) _buildDetailRow('Description', expense.description, isWeb),
+                    if (expense.items.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text('Items', style: TextStyle(fontSize: isWeb ? 13 : 14, fontWeight: FontWeight.w600, color: kText)),
+                      ),
+                      const SizedBox(height: 8),
+                      // ✅ FIXED: Use bracket notation for Map access
+                      ...expense.items.map((item) => Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(color: kBg, borderRadius: BorderRadius.circular(8)),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                Text(item['description'] ?? '', style: TextStyle(fontSize: isWeb ? 13 : 12, fontWeight: FontWeight.w600, color: kText)),
+                                Text('${item['quantity'] ?? 1} × ${_formatAmount((item['unitPrice'] ?? 0).toDouble())}', style: TextStyle(fontSize: 10, color: kSubText)),
+                              ]),
+                            ),
+                            Text(_formatAmount((item['amount'] ?? 0).toDouble()), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: kDanger)),
+                          ],
+                        ),
+                      )).toList(),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                if (expense.status == 'Draft') ...[
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () { Navigator.pop(ctx); controller.postExpense(expense.id); },
+                      icon: const Icon(Icons.check_circle, size: 16, color: Colors.black87),
+                      label: const Text('Post Expense', style: TextStyle(fontSize: 12, color: Colors.black87)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kSuccess,
+                        padding: EdgeInsets.symmetric(vertical: isWeb ? 10 : 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                        elevation: 0,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                ],
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: isWeb ? 10 : 12),
+                      side: BorderSide(color: Colors.grey.withOpacity(0.4)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    ),
+                    child: Text('Close', style: TextStyle(fontSize: isWeb ? 13 : 14, color: kSubText)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+  void _showFilterDialog(ExpenseController controller, BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text('Filter Options', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(Icons.date_range, color: kPrimary),
+              title: const Text('Select Date Range', style: TextStyle(fontSize: 14)),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () async {
+                final range = await showDateRangePicker(
+                  context: context,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime.now(),
+                  initialDateRange: controller.startDate.value != null && controller.endDate.value != null
+                      ? DateTimeRange(start: controller.startDate.value!, end: controller.endDate.value!)
+                      : null,
+                );
+                if (range != null) {
+                  controller.setDateRange(range.start, range.end);
+                  Navigator.pop(context);
+                }
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.clear_all, color: kDanger),
+              title: const Text('Clear All Filters', style: TextStyle(fontSize: 14)),
+              onTap: () {
+                controller.clearFilters();
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+        ],
+      ),
+    );
+  }
+
+  void _showMobileSearch(BuildContext context, ExpenseController controller) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text('Search Expenses', style: TextStyle(fontWeight: FontWeight.w700)),
+        content: TextField(
+          controller: controller.searchController,
+          decoration: const InputDecoration(
+            hintText: 'Enter expense number, vendor...',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.search),
+          ),
+          onSubmitted: (_) => Navigator.pop(ctx),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Done')),
+        ],
+      ),
+    );
+  }
+
+  void _showRowActions(ExpenseController controller, Expense expense, BuildContext context) {
+    showMenu(
+      context: context,
+      position: const RelativeRect.fromLTRB(100, 100, 0, 0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      items: [
+        PopupMenuItem(
+          onTap: () => AppSnackbar.info('Info', 'Edit expense #${expense.expenseNumber}'),
+          child: const ListTile(leading: Icon(Icons.edit, size: 18), title: Text('Edit', style: TextStyle(fontSize: 13)), dense: true),
+        ),
+        PopupMenuItem(
+          onTap: () => _showDeleteConfirmation(controller, expense, context),
+          child: ListTile(leading: Icon(Icons.delete, size: 18, color: kDanger), title: const Text('Delete', style: TextStyle(fontSize: 13)), dense: true),
+        ),
+        PopupMenuItem(
+          onTap: () => controller.printExpenses(),
+          child: const ListTile(leading: Icon(Icons.print, size: 18), title: Text('Print', style: TextStyle(fontSize: 13)), dense: true),
+        ),
+      ],
+      elevation: 4,
+    );
+  }
+
+  void _showDeleteConfirmation(ExpenseController controller, Expense expense, BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text('Delete Expense', style: TextStyle(fontWeight: FontWeight.w700)),
+        content: Text('Are you sure you want to delete ${expense.expenseNumber}?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () { Navigator.pop(ctx); AppSnackbar.success(Colors.green, 'Deleted', 'Expense deleted'); },
+            style: TextButton.styleFrom(foregroundColor: kDanger),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────
+  // FORM HELPERS
+  // ─────────────────────────────────────────
+  Widget _formField(
+    String label,
+    String hint,
+    void Function(String) onChanged, {
+    String initialValue = '',
+    FormFieldValidator<String>? validator,
+    TextInputType? keyboardType,
+    String? prefixText,
+    int maxLines = 1,
+  }) {
+    return TextFormField(
+      initialValue: initialValue,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        prefixText: prefixText,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        isDense: true,
+      ),
+      style: const TextStyle(fontSize: 13, color: Colors.black87),
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      onChanged: onChanged,
+      validator: validator,
+    );
+  }
+
+  Widget _dropdownField<T extends String>({
+    required String label,
+    required T value,
+    required List<T> items,
+    required void Function(T?) onChanged,
+  }) {
+    return DropdownButtonFormField<T>(
+      value: value,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        isDense: true,
+      ),
+      style: const TextStyle(fontSize: 13, color: Colors.black87),
+      items: items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _buildDatePickerField(String label, DateTime date, void Function(DateTime) onChanged, bool isWeb, BuildContext context) {
+    return GestureDetector(
+      onTap: () async {
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: date,
+          firstDate: DateTime(2020),
+          lastDate: DateTime.now(),
+        );
+        if (picked != null) onChanged(picked);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(border: Border.all(color: Colors.grey.withOpacity(0.4)), borderRadius: BorderRadius.circular(6)),
+        child: Row(
+          children: [
+            Icon(Icons.calendar_today, size: 16, color: kPrimary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(label, style: TextStyle(fontSize: 10, color: kSubText)),
+                Text(DateFormat('dd MMM yyyy').format(date), style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kText)),
+              ]),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVendorDropdownField(String? selectedId, void Function(String?) onChanged, List<Map<String, dynamic>> vendors, bool isWeb) {
+    return DropdownButtonFormField<String>(
+      value: selectedId,
+      decoration: InputDecoration(
+        labelText: 'Vendor',
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        isDense: true,
+      ),
+      style: const TextStyle(fontSize: 13, color: Colors.black87),
+      hint: Text('Select vendor', style: TextStyle(fontSize: 12, color: kSubText)),
+      items: vendors.map((v) => DropdownMenuItem(value: v['_id'].toString(), child: Text(v['name'], overflow: TextOverflow.ellipsis))).toList(),
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _buildBankDropdownField(String? selectedId, void Function(String?) onChanged, List<Map<String, dynamic>> bankAccounts, bool isWeb) {
+    return DropdownButtonFormField<String>(
+      value: selectedId,
+      decoration: InputDecoration(
+        labelText: 'Bank Account',
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        isDense: true,
+      ),
+      style: const TextStyle(fontSize: 13, color: Colors.black87),
+      hint: Text('Select bank account', style: TextStyle(fontSize: 12, color: kSubText)),
+      items: bankAccounts.map((a) => DropdownMenuItem(value: a['_id'].toString(), child: Text(a['accountName'], overflow: TextOverflow.ellipsis))).toList(),
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, bool isWeb, {Color? valueColor}) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: isWeb ? 10 : 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: isWeb ? 110 : 100,
+            child: Text(label, style: TextStyle(fontSize: isWeb ? 12 : 13, color: kSubText, fontWeight: FontWeight.w500)),
+          ),
+          Expanded(
+            child: Text(value, style: TextStyle(fontSize: isWeb ? 12 : 13, fontWeight: FontWeight.w600, color: valueColor ?? kText), overflow: TextOverflow.ellipsis),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatAmount(double amount) => CurrencyUtils.format(amount);
+}

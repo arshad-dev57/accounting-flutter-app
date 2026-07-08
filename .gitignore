@@ -1,0 +1,22 @@
+# Misc
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.idea/
+.vscode/
+
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+
+# Ignore Flutter build output
+build/
+
+# Optional
+coverage/
