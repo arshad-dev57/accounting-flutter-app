@@ -5,11 +5,15 @@ import 'package:LedgerPro_app/core/plans/views/Subscription_plans.dart';
 import 'package:LedgerPro_app/Utils/colors.dart';
 import 'package:LedgerPro_app/Utils/currency_controller.dart';
 import 'package:LedgerPro_app/Utils/toast_utils.dart';
+import 'package:LedgerPro_app/core/FiscalYear/controller/fiscal_year_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:LedgerPro_app/Services/api_client.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:LedgerPro_app/Utils/signature_dialog.dart';
+import 'package:flutter/material.dart';
 
 class AuthController extends GetxController {
   var isLoading = false.obs;
@@ -30,8 +34,9 @@ class AuthController extends GetxController {
   // ─── NEW BUSINESS DETAILS CONTROLLERS ─────────────────────────
   late TextEditingController industryController;
   late TextEditingController taxRegistrationController;
-  late TextEditingController logoController;      // Optional: for logo upload
-  late TextEditingController signatureController; // Optional: for signature upload
+  late TextEditingController logoController; // Optional: for logo upload
+  late TextEditingController
+  signatureController; // Optional: for signature upload
 
   // ─── OBSERVABLES ──────────────────────────────────────────────
   var isPasswordVisible = false.obs;
@@ -82,12 +87,14 @@ class AuthController extends GetxController {
   ];
 
   final ApiClient _api = Get.find<ApiClient>();
+  late final FiscalYearController _fiscalYearController;
 
   @override
   void onInit() {
     super.onInit();
     _initControllers();
     _setupListeners();
+    _fiscalYearController = Get.put(FiscalYearController());
     checkLoginStatus();
   }
 
@@ -126,20 +133,87 @@ class AuthController extends GetxController {
     confirmPasswordController.addListener(
       () => confirmPassword.value = confirmPasswordController.text,
     );
-    addressController.addListener(
-      () => address.value = addressController.text,
-    );
+    addressController.addListener(() => address.value = addressController.text);
     organizationNameController.addListener(
       () => organizationName.value = organizationNameController.text,
     );
 
-    // ─── NEW BUSINESS LISTENERS ───────────────────────────────────
     industryController.addListener(
       () => industry.value = industryController.text,
     );
     taxRegistrationController.addListener(
       () => taxRegistrationNumber.value = taxRegistrationController.text,
     );
+  }
+
+  Map<String, DateTime> _calculateFiscalYearDates(String periodType) {
+    final now = DateTime.now();
+    DateTime startDate;
+    DateTime endDate;
+
+    switch (periodType) {
+      case 'January - December':
+        startDate = DateTime(now.year, 1, 1);
+        endDate = DateTime(now.year, 12, 31);
+        break;
+      case 'July - June':
+        if (now.month >= 7) {
+          startDate = DateTime(now.year, 7, 1);
+          endDate = DateTime(now.year + 1, 6, 30);
+        } else {
+          startDate = DateTime(now.year - 1, 7, 1);
+          endDate = DateTime(now.year, 6, 30);
+        }
+        break;
+      case 'April - March':
+        if (now.month >= 4) {
+          startDate = DateTime(now.year, 4, 1);
+          endDate = DateTime(now.year + 1, 3, 31);
+        } else {
+          startDate = DateTime(now.year - 1, 4, 1);
+          endDate = DateTime(now.year, 3, 31);
+        }
+        break;
+      case 'October - September':
+        if (now.month >= 10) {
+          startDate = DateTime(now.year, 10, 1);
+          endDate = DateTime(now.year + 1, 9, 30);
+        } else {
+          startDate = DateTime(now.year - 1, 10, 1);
+          endDate = DateTime(now.year, 9, 30);
+        }
+        break;
+      case 'Custom':
+      default:
+        startDate = DateTime(now.year, 1, 1);
+        endDate = DateTime(now.year, 12, 31);
+        break;
+    }
+
+    return {'startDate': startDate, 'endDate': endDate};
+  }
+
+  // Create initial fiscal year after registration
+  Future<void> _createInitialFiscalYear() async {
+    if (selectedFiscalYear.value.isEmpty) return;
+
+    try {
+      final dates = _calculateFiscalYearDates(selectedFiscalYear.value);
+      final currentYear = DateTime.now().year;
+
+      final success = await _fiscalYearController.createFiscalYear(
+        name: 'FY $currentYear',
+        startDate: dates['startDate']!,
+        endDate: dates['endDate']!,
+        periodType: selectedFiscalYear.value,
+      );
+
+      if (success) {
+        print('✅ Initial fiscal year created successfully');
+      }
+    } catch (e) {
+      print('❌ Failed to create initial fiscal year: $e');
+    }
   }
 
   @override
@@ -160,13 +234,35 @@ class AuthController extends GetxController {
     super.onClose();
   }
 
-  // ════════════════════════════════════════════════════════════════
-  // REGISTER FUNCTION
-  // ════════════════════════════════════════════════════════════════
+  Future<void> pickLogo() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      logoController.text = image.path;
+      logo.value = image.path;
+    }
+  }
+
+  Future<void> drawSignature(BuildContext context) async {
+    final String? path = await showSignatureDialog(context);
+    if (path != null) {
+      signatureController.text = path;
+      signature.value = path;
+    }
+  }
+
+  Future<void> pickSignatureFromGallery() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      signatureController.text = image.path;
+      signature.value = image.path;
+    }
+  }
+
   Future<bool> register() async {
     print("🚀 Register function started at step: ${currentStep.value}");
 
-    // ─── STEP 0: PERSONAL INFO ────────────────────────────────────
     if (currentStep.value == 0) {
       if (firstNameController.text.trim().isEmpty) {
         AppSnackbar.error(kDanger, 'Error', 'Please enter first name');
@@ -248,27 +344,35 @@ class AuthController extends GetxController {
         };
 
         // ─── API REQUEST ──────────────────────────────────────────
-        final response = await _api.post(
+        final Map<String, String> fields = {
+          'firstName': firstNameController.text.trim(),
+          'lastName': lastNameController.text.trim(),
+          'email': emailController.text.trim(),
+          'password': passwordController.text,
+          'country': countryController.text.trim(),
+          'phone': phoneController.text.trim(),
+          'address': addressController.text.trim(),
+          'organizationName': organizationNameController.text.trim(),
+          'fiscalYear': selectedFiscalYear.value,
+          'taxRegistrationNumber': taxRegistrationController.text.trim(),
+          'industry': industryController.text.trim(),
+          'businessType': selectedBusinessType.value,
+          'websiteLink': '',
+          'contactNo': phoneController.text.trim(),
+        };
+
+        final Map<String, String> filePaths = {};
+        if (logoController.text.isNotEmpty) {
+          filePaths['logo'] = logoController.text;
+        }
+        if (signatureController.text.isNotEmpty) {
+          filePaths['signature'] = signatureController.text;
+        }
+
+        final response = await _api.postMultipart(
           '/api/users/register',
-          body: {
-            'firstName': firstNameController.text.trim(),
-            'lastName': lastNameController.text.trim(),
-            'email': emailController.text.trim(),
-            'password': passwordController.text,
-            'country': countryController.text.trim(),
-            'phone': phoneController.text.trim(),
-            'address': addressController.text.trim(),
-            'organizationName': organizationNameController.text.trim(),
-            // ─── NEW BUSINESS FIELDS ─────────────────────────────
-            'logo': logoController.text.trim(),
-            'fiscalYear': selectedFiscalYear.value,
-            'taxRegistrationNumber': taxRegistrationController.text.trim(),
-            'signature': signatureController.text.trim(),
-            'industry': industryController.text.trim(),
-            'businessType': selectedBusinessType.value,
-            'websiteLink': '', // Can be added later
-            'contactNo': phoneController.text.trim(),
-          },
+          fields: fields,
+          filePaths: filePaths,
           requiresAuth: false,
         );
 
@@ -308,6 +412,9 @@ class AuthController extends GetxController {
 
           final subscriptionController = Get.find<SubscriptionController>();
           subscriptionController.updateFromUserData(data['user']);
+
+          // Create initial fiscal year if selected
+          await _createInitialFiscalYear();
 
           currentStep.value = 4;
           AppSnackbar.success(
@@ -402,7 +509,10 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> _saveAuthData(String token, Map<String, dynamic> userData) async {
+  Future<void> _saveAuthData(
+    String token,
+    Map<String, dynamic> userData,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     await _api.setToken(token);
     await prefs.setString('user_data', json.encode(userData));
@@ -429,6 +539,11 @@ class AuthController extends GetxController {
 
         final subscriptionController = Get.find<SubscriptionController>();
         subscriptionController.updateFromUserData(data['user']);
+
+        Get.find<CurrencyController>().updateFromUserData(data['user']);
+
+        // Initialize fiscal year controller and fetch fiscal years
+        await _fiscalYearController.fetchFiscalYears();
       } else {
         await _clearAuthData();
       }

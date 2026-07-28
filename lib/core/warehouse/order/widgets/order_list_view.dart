@@ -7,7 +7,7 @@ import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 
-class OrderListView extends StatelessWidget {
+class OrderListView extends StatefulWidget {
   final SalesOrderController controller;
   final ValueChanged<OrderModel> onView;
 
@@ -18,14 +18,39 @@ class OrderListView extends StatelessWidget {
   });
 
   @override
+  State<OrderListView> createState() => _OrderListViewState();
+}
+
+class _OrderListViewState extends State<OrderListView> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      widget.controller.fetchMoreOrders();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Obx(() {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(child: _buildList(context)),
-          _buildPagination(context),
-          const SizedBox(height: 80), 
         ],
       );
     });
@@ -33,13 +58,13 @@ class OrderListView extends StatelessWidget {
 
 
   Widget _buildList(BuildContext context) {
-    if (controller.isLoading.value && controller.orders.isEmpty) {
+    if (widget.controller.isLoading.value && widget.controller.orders.isEmpty) {
       return Center(
         child: LoadingAnimationWidget.discreteCircle(color: kPrimary, size: 36),
       );
     }
 
-    if (controller.orders.isEmpty) {
+    if (widget.controller.orders.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -61,15 +86,24 @@ class OrderListView extends StatelessWidget {
         border: Border.all(color: Colors.grey.withOpacity(0.15)),
       ),
       child: ListView.separated(
+        controller: _scrollController,
         padding: const EdgeInsets.symmetric(vertical: 4),
-        itemCount: controller.orders.length,
+        itemCount: widget.controller.orders.length + (widget.controller.isLoadingMore.value ? 1 : 0),
         separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
         itemBuilder: (context, index) {
-          final order = controller.orders[index];
+          if (index == widget.controller.orders.length) {
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Center(
+                child: LoadingAnimationWidget.discreteCircle(color: kPrimary, size: 24),
+              ),
+            );
+          }
+          final order = widget.controller.orders[index];
           return _OrderCard(
             order: order,
-            controller: controller,
-            onView: onView,
+            controller: widget.controller,
+            onView: widget.onView,
           );
         },
       ),
@@ -77,78 +111,6 @@ class OrderListView extends StatelessWidget {
   }
 
 
-  Widget _buildPagination(BuildContext context) {
-    if (controller.orders.isEmpty) return const SizedBox.shrink();
-
-    final start = ((controller.currentPage.value - 1) * controller.pageLimit.value) + 1;
-    final end = (controller.currentPage.value * controller.pageLimit.value)
-        .clamp(0, controller.totalRecords.value);
-
-    return Container(
-      margin: const EdgeInsets.only(top: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: kCardBg,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'Showing $start–$end of ${controller.totalRecords.value} orders',
-            style: TextStyle(fontSize: 12, color: kSubText),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _pageButton(
-                icon: Icons.chevron_left,
-                enabled: controller.hasPrev.value,
-                onTap: () => controller.goToPage(controller.currentPage.value - 1),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  '${controller.currentPage.value} / ${controller.totalPages.value}',
-                  style: TextStyle(fontWeight: FontWeight.w700, color: kPrimary, fontSize: 13),
-                ),
-              ),
-              const SizedBox(width: 8),
-              _pageButton(
-                icon: Icons.chevron_right,
-                enabled: controller.hasNext.value,
-                onTap: () => controller.goToPage(controller.currentPage.value + 1),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _pageButton({
-    required IconData icon,
-    required bool enabled,
-    required VoidCallback onTap,
-  }) {
-    return OutlinedButton(
-      onPressed: enabled ? onTap : null,
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.all(10),
-        minimumSize: const Size(40, 40),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-      child: Icon(icon, size: 20),
-    );
-  }
 }
 
 

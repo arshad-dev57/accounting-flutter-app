@@ -1019,7 +1019,71 @@ class _InvoiceDetailSheetState extends State<_InvoiceDetailSheet> {
             ),
           ),
           const SizedBox(height: 20),
-          // ─── Action Buttons ──────────────────────────────
+          // ─── PDF & Share Actions ──────────────────────────────
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: kPrimary.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Share Invoice',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    color: kSubText.withOpacity(0.7),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: Icon(Icons.download, size: 18),
+                        label: Text('Download PDF', style: TextStyle(fontSize: 12)),
+                        onPressed: widget.controller.isSubmitting.value
+                            ? null
+                            : () => widget.controller.generateAndDownloadPdf(current),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.indigo,
+                          side: BorderSide(color: Colors.indigo.shade300),
+                          padding: EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: Icon(Icons.share, size: 18),
+                        label: Text('Share', style: TextStyle(fontSize: 12)),
+                        onPressed: widget.controller.isSubmitting.value
+                            ? null
+                            : () => widget.controller.shareInvoice(current),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.blue,
+                          side: BorderSide(color: Colors.blue.shade300),
+                          padding: EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                 
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          // ─── Status Actions ──────────────────────────────
           if (current.canPost) ...[
             Row(
               children: [

@@ -55,7 +55,7 @@ class Expense {
     this.postedAt,
     required this.createdAt,
     required this.updatedAt,
-    this.expenseAccount,      // ✅ NEW
+    this.expenseAccount,      
     this.expenseAccountId,    // ✅ NEW
   });
 

@@ -6,18 +6,23 @@ import 'package:LedgerPro_app/config/apiconfig.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
+import 'package:LedgerPro_app/Utils/toast_utils.dart';
+import 'package:LedgerPro_app/Utils/colors.dart';
+import 'package:LedgerPro_app/core/plans/views/Subscription_plans.dart';
 
 class ApiResponse {
   final int statusCode;
   final dynamic data;
   final bool success;
   final String message;
+  final bool isFiscalYearError;
 
   ApiResponse({
     required this.statusCode,
     required this.data,
     required this.success,
     required this.message,
+    this.isFiscalYearError = false,
   });
 }
 
@@ -325,6 +330,44 @@ class ApiClient extends GetxService {
     try {
       final decodedData = json.decode(response.body);
 
+      // Handle 403 errors (Fiscal year or Subscription)
+      if (response.statusCode == 403) {
+        final message = decodedData['message'] ?? '';
+        final code = decodedData['code'] ?? '';
+
+        // Handle subscription expiry/required errors
+        if (code == 'SUBSCRIPTION_REQUIRED') {
+          // Show warning toast
+          AppSnackbar.error(
+            kDanger,
+            'Subscription Required',
+            message.isNotEmpty ? message : 'Your subscription has expired.',
+          );
+          
+          Future.delayed(const Duration(milliseconds: 300), () {
+            Get.offAll(() => const SelectPlanScreen());
+          });
+
+          return ApiResponse(
+            statusCode: 403,
+            data: decodedData,
+            success: false,
+            message: message,
+          );
+        }
+
+        // Handle fiscal year errors
+        if (message.toLowerCase().contains('fiscal year') || message.toLowerCase().contains('closed')) {
+          return ApiResponse(
+            statusCode: 403,
+            data: decodedData,
+            success: false,
+            message: message,
+            isFiscalYearError: true,
+          );
+        }
+      }
+
       if (response.statusCode == 401) {
         return ApiResponse(
           statusCode: 401,
@@ -418,4 +461,74 @@ class ApiClient extends GetxService {
   }) async {
     return _executeRequest('DELETE', endpoint, requiresAuth: requiresAuth);
   }
+
+  // Multipart POST request
+  Future<ApiResponse> postMultipart(
+    String endpoint, {
+    required Map<String, String> fields,
+    Map<String, String>? filePaths, // key: fieldName, value: filePath
+    bool requiresAuth = true,
+  }) async {
+    return _executeMultipartRequest('POST', endpoint, fields, filePaths, requiresAuth);
+  }
+
+  // Multipart PUT request
+  Future<ApiResponse> putMultipart(
+    String endpoint, {
+    required Map<String, String> fields,
+    Map<String, String>? filePaths, // key: fieldName, value: filePath
+    bool requiresAuth = true,
+  }) async {
+    return _executeMultipartRequest('PUT', endpoint, fields, filePaths, requiresAuth);
+  }
+
+  Future<ApiResponse> _executeMultipartRequest(
+    String method,
+    String endpoint,
+    Map<String, String> fields,
+    Map<String, String>? filePaths,
+    bool requiresAuth,
+  ) async {
+    try {
+      Uri uri = Uri.parse('$baseUrl$endpoint');
+      var request = http.MultipartRequest(method, uri);
+
+      if (requiresAuth) {
+        final token = await getToken();
+        if (token != null && token.isNotEmpty) {
+          request.headers['Authorization'] = 'Bearer $token';
+        }
+      }
+
+      // Add text fields
+      fields.forEach((key, value) {
+        request.fields[key] = value;
+      });
+
+      // Add files
+      if (filePaths != null) {
+        for (var entry in filePaths.entries) {
+          if (entry.value.isNotEmpty) {
+            request.files.add(await http.MultipartFile.fromPath(entry.key, entry.value));
+          }
+        }
+      }
+
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      return _processResponse(response);
+    } catch (e) {
+      return ApiResponse(
+        statusCode: 500,
+        data: null,
+        success: false,
+        message: e.toString(),
+      );
+    }
+  }
 }
+
+
+
+

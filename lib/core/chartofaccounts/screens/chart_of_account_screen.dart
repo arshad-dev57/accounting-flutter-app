@@ -1,4 +1,3 @@
-// screens/chart_of_accounts_screen.dart - MOBILE & TABLET ONLY
 
 import 'package:LedgerPro_app/Utils/currency_utils.dart';
 import 'package:LedgerPro_app/Utils/colors.dart';
@@ -9,214 +8,357 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
-class ChartOfAccountsScreen extends StatelessWidget {
+class ChartOfAccountsScreen extends StatefulWidget {
   const ChartOfAccountsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final controller = Get.put(ChartOfAccountController());
+  State<ChartOfAccountsScreen> createState() => _ChartOfAccountsScreenState();
+}
 
+class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
+  final _searchCtrl = TextEditingController();
+  late final ChartOfAccountController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Get.isRegistered<ChartOfAccountController>()
+        ? Get.find<ChartOfAccountController>()
+        : Get.put(ChartOfAccountController());
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBg,
-      appBar: _buildAppBar(context, controller),
-      body: Obx(() {
-        if (controller.isLoading.value && controller.accounts.isEmpty) {
-          return Center(
-            child: LoadingAnimationWidget.discreteCircle(color: kPrimary, size: 40),
-          );
-        }
-        return Column(
-          children: [
-            _buildSummaryCards(controller, context),
-            _buildAccountTypeFilter(controller, context),
-            Expanded(
-              child: NotificationListener<ScrollNotification>(
-                onNotification: (scrollInfo) {
-                  if (!controller.isLoadingMore.value &&
-                      scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent - 200) {
-                    controller.loadMoreData();
-                  }
-                  return false;
-                },
-                child: _buildAccountsList(controller, context),
-              ),
-            ),
-            Obx(() => controller.isLoadingMore.value
-                ? Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Center(
-                      child: LoadingAnimationWidget.discreteCircle(color: kPrimary, size: 30),
-                    ),
-                  )
-                : const SizedBox.shrink()),
-          ],
-        );
-      }),
+      backgroundColor: kBgLight,
+      body: Column(
+        children: [
+          _buildTopHeader(),
+          Expanded(
+            child: Obx(() {
+              if (controller.isLoading.value && controller.accounts.isEmpty) {
+                return Center(
+                  child: LoadingAnimationWidget.discreteCircle(color: kPrimary, size: 40),
+                );
+              }
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: (scrollInfo) {
+                    if (!controller.isLoadingMore.value &&
+                        scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent - 200) {
+                      controller.loadMoreData();
+                    }
+                    return false;
+                  },
+                  child: _buildAccountsList(controller, context),
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddAccountDialog(context, controller),
         backgroundColor: kPrimary,
-        child: const Icon(Icons.add, color: Colors.white),
+        elevation: 2,
+        child: const Icon(Icons.add, color: Colors.black, size: 24),
       ),
     );
   }
 
-  // ─── App Bar ──────────────────────────────────────────────────────
-  PreferredSizeWidget _buildAppBar(BuildContext context, ChartOfAccountController controller) {
-    return AppBar(
-      title: const Text(
-        'Chart of Accounts',
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+  Widget _buildTopHeader() {
+    return Container(
+      color: kPrimary,
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // AppBar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Chart of Accounts',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.black,
+                          ),
+                        ),
+                        Obx(
+                          () => Text(
+                            '${controller.totalItems.value} accounts',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.black.withOpacity(0.55),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Obx(() => controller.hasIncorrectCashAccounts.value
+                      ? GestureDetector(
+                          onTap: () => _showFixCashAccountsDialog(context, controller),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.warning_amber_rounded,
+                              size: 18,
+                              color: Colors.orange.shade800,
+                            ),
+                          ),
+                        )
+                      : GestureDetector(
+                          onTap: controller.fetchAccounts,
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.refresh_rounded,
+                              size: 18,
+                              color: Colors.black.withOpacity(0.65),
+                            ),
+                          ),
+                        )),
+                ],
+              ),
+            ),
+            // Search
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Container(
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: _searchCtrl,
+                  onChanged: (v) {
+                    setState(() {});
+                    v.isEmpty
+                        ? controller.searchAccounts('')
+                        : controller.searchAccounts(v);
+                  },
+                  style: const TextStyle(fontSize: 13, color: Colors.black87),
+                  decoration: InputDecoration(
+                    hintText: 'Search accounts...',
+                    hintStyle: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade400,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      size: 18,
+                      color: Colors.grey.shade400,
+                    ),
+                    suffixIcon: _searchCtrl.text.isNotEmpty
+                        ? GestureDetector(
+                            onTap: () {
+                              _searchCtrl.clear();
+                              controller.searchAccounts('');
+                              setState(() {});
+                            },
+                            child: Icon(
+                              Icons.close,
+                              size: 16,
+                              color: Colors.grey.shade400,
+                            ),
+                          )
+                        : null,
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    isDense: true,
+                  ),
+                ),
+              ),
+            ),
+            // Filters
+            Obx(
+              () => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                child: Row(
+                  children: ['All', 'Assets', 'Liabilities', 'Equity', 'Income', 'Expenses'].map((filter) {
+                    final isSelected = controller.selectedFilter.value == filter;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: GestureDetector(
+                        onTap: () => controller.changeFilter(filter),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? Colors.black
+                                : Colors.white.withOpacity(0.18),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isSelected
+                                  ? Colors.black
+                                  : Colors.white.withOpacity(0.4),
+                            ),
+                          ),
+                          child: Text(
+                            filter,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: isSelected ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
-      backgroundColor: kPrimary,
-      elevation: 0,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.search, color: Colors.white),
-          onPressed: () => _showSearchDialog(context, controller),
+    );
+  }
+
+  Widget _compactKpi(String label, String value, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            color: color,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        IconButton(
-          icon: const Icon(Icons.filter_list, color: Colors.white),
-          onPressed: () => _showFilterDialog(context, controller),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 9,
+            color: Colors.black.withOpacity(0.5),
+            fontWeight: FontWeight.w600,
+          ),
         ),
-        Obx(() => controller.hasIncorrectCashAccounts.value
-            ? IconButton(
-                icon: const Icon(Icons.warning_amber_rounded, color: Colors.orange),
-                onPressed: () => _showFixCashAccountsDialog(context, controller),
+      ],
+    );
+  }
+
+
+
+  Widget _buildAccountsList(ChartOfAccountController controller, BuildContext context) {
+    return Column(
+      children: [
+        Expanded(
+          child: Obx(() {
+            final accounts = controller.accounts;
+            if (accounts.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.account_balance, size: 64, color: kSubText.withOpacity(0.5)),
+                    const SizedBox(height: 16),
+                    Text('No accounts found', style: TextStyle(fontSize: 16, color: kSubText)),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: () => _showAddAccountDialog(context, controller),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kPrimary,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                        elevation: 0,
+                      ),
+                      child: const Text('Add Account', style: TextStyle(fontSize: 13, color: Colors.white)),
+                    ),
+                  ],
+                ),
+              );
+            }
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: accounts.length,
+              itemBuilder: (context, index) {
+                final account = controller.mapAccountToUI(accounts[index]);
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _buildAccountCard(context, account, controller),
+                );
+              },
+            );
+          }),
+        ),
+        Obx(() => controller.isLoadingMore.value
+            ? Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Center(
+                  child: LoadingAnimationWidget.discreteCircle(color: kPrimary, size: 30),
+                ),
               )
             : const SizedBox.shrink()),
       ],
     );
   }
 
-  // ─── Summary Cards ──────────────────────────────────────────────
-  Widget _buildSummaryCards(ChartOfAccountController controller, BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Obx(() => Row(
-          children: [
-            _buildSummaryCard('Assets', controller.totalAssets.value, const Color(0xFF2ECC71), Icons.account_balance, context),
-            const SizedBox(width: 10),
-            _buildSummaryCard('Liabilities', controller.totalLiabilities.value, const Color(0xFFE74C3C), Icons.payment, context),
-            const SizedBox(width: 10),
-            _buildSummaryCard('Equity', controller.totalEquity.value, const Color(0xFF3498DB), Icons.account_balance_wallet, context),
-            const SizedBox(width: 10),
-            _buildSummaryCard('Income', controller.totalIncome.value, const Color(0xFF2ECC71), Icons.trending_up, context),
-            const SizedBox(width: 10),
-            _buildSummaryCard('Expenses', controller.totalExpenses.value, const Color(0xFFE74C3C), Icons.trending_down, context),
-          ],
-        )),
-      ),
-    );
-  }
-
-  Widget _buildSummaryCard(String title, double amount, Color color, IconData icon, BuildContext context) {
-    return Container(
-      width: 130,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: kCardBg,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            Icon(icon, size: 14, color: color),
-            const SizedBox(width: 4),
-            Text(title, style: TextStyle(fontSize: 11, color: kSubText, fontWeight: FontWeight.w500)),
-          ]),
-          const SizedBox(height: 6),
-          Text(_formatAmount(amount), style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: color)),
-        ],
-      ),
-    );
-  }
-
-  // ─── Account Type Filter ────────────────────────────────────────
-  Widget _buildAccountTypeFilter(ChartOfAccountController controller, BuildContext context) {
-    const accountTypes = ['All', 'Assets', 'Liabilities', 'Equity', 'Income', 'Expenses'];
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Obx(() => Row(
-          children: accountTypes.map((type) {
-            final isSelected = controller.selectedFilter.value == type;
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: FilterChip(
-                label: Text(type),
-                selected: isSelected,
-                onSelected: (_) => controller.changeFilter(type),
-                backgroundColor: kBg,
-                selectedColor: kPrimary.withOpacity(0.2),
-                labelStyle: TextStyle(
-                  color: isSelected ? kPrimary : kSubText,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  fontSize: 12,
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              ),
-            );
-          }).toList(),
-        )),
-      ),
-    );
-  }
-
-  // ─── Accounts List ──────────────────────────────────────────────
-  Widget _buildAccountsList(ChartOfAccountController controller, BuildContext context) {
-    return Obx(() {
-      final accounts = controller.accounts;
-      if (accounts.isEmpty) {
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.account_balance, size: 64, color: kSubText.withOpacity(0.5)),
-              const SizedBox(height: 16),
-              Text('No accounts found', style: TextStyle(fontSize: 16, color: kSubText)),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: () => _showAddAccountDialog(context, controller),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kPrimary,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                  elevation: 0,
-                ),
-                child: const Text('Add Account', style: TextStyle(fontSize: 13, color: Colors.white)),
-              ),
-            ],
-          ),
-        );
-      }
-      return ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: accounts.length,
-        itemBuilder: (context, index) {
-          final account = controller.mapAccountToUI(accounts[index]);
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _buildAccountCard(context, account, controller),
-          );
-        },
-      );
-    });
-  }
-
-  // ─── Account Card ──────────────────────────────────────────────
   Widget _buildAccountCard(BuildContext context, Map<String, dynamic> account, ChartOfAccountController controller) {
     final isDebit = account['balanceType'] == 'Debit';
     final isIncorrect = controller.isIncorrectCashAccount(account);
+    final typeColor = account['typeColor'] as Color;
 
     return Container(
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -224,16 +366,21 @@ class ChartOfAccountsScreen extends StatelessWidget {
           onTap: () => _showAccountDetails(context, account, controller),
           borderRadius: BorderRadius.circular(12),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(14),
             child: Row(
               children: [
                 Container(
-                  width: 40, height: 40,
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
-                    color: (account['typeColor'] as Color).withOpacity(0.1),
+                    color: typeColor.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(account['typeIcon'] as IconData, color: account['typeColor'] as Color, size: 20),
+                  child: Icon(
+                    account['typeIcon'] as IconData,
+                    color: typeColor,
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -242,34 +389,79 @@ class ChartOfAccountsScreen extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Text(account['name'], style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: kText)),
-                          if (isIncorrect) ...[
-                            const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              account['name'],
+                              style:  TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: kText,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (isIncorrect)
                             Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 16),
-                          ],
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Text('${account['code']} • ${account['type']}', style: TextStyle(fontSize: 12, color: kSubText)),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: typeColor.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              account['code'],
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: typeColor,
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '• ${account['type']}',
+                            style:  TextStyle(fontSize: 11, color: kSubText),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(_formatAmount(account['balance']),
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800,
-                            color: isDebit ? kSuccess : kDanger)),
+                    Text(
+                      _formatAmount(account['balance']),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: isDebit ? kSuccess : kDanger,
+                      ),
+                    ),
+
                     const SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: isDebit ? kSuccess.withOpacity(0.1) : kDanger.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(6),
                       ),
-                      child: Text(account['balanceType'],
-                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600,
-                              color: isDebit ? kSuccess : kDanger)),
+                      child: Text(
+                        account['balanceType'],
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: isDebit ? kSuccess : kDanger,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -336,142 +528,302 @@ class ChartOfAccountsScreen extends StatelessWidget {
     );
   }
 
-  // ─── Account Details ──────────────────────────────────────────────
   void _showAccountDetails(BuildContext context, Map<String, dynamic> account, ChartOfAccountController controller) {
     final isDebit = account['balanceType'] == 'Debit';
     final isIncorrect = controller.isIncorrectCashAccount(account);
+    final typeColor = account['typeColor'] as Color;
 
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       isScrollControlled: true,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 50, height: 50,
-                  decoration: BoxDecoration(
-                    color: (account['typeColor'] as Color).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(account['typeIcon'] as IconData, color: account['typeColor'] as Color, size: 28),
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.65,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (_, scrollCtrl) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollCtrl,
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Header
                       Row(
                         children: [
-                          Text(account['name'],
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: kText)),
-                          if (isIncorrect) ...[
-                            const SizedBox(width: 8),
-                            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 20),
-                          ],
+                          Container(
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              color: typeColor.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Icon(
+                              account['typeIcon'] as IconData,
+                              color: typeColor,
+                              size: 26,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        account['name'],
+                                        style:  TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w800,
+                                          color: kText,
+                                        ),
+                                      ),
+                                    ),
+                                    if (isIncorrect)
+                                      Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 20),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: typeColor.withOpacity(0.08),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        account['code'],
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                          color: typeColor,
+                                          fontFamily: 'monospace',
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '• ${account['type']}',
+                                      style:  TextStyle(fontSize: 11, color: kSubText),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
-                      Text('${account['code']} • ${account['type']}',
-                          style: TextStyle(fontSize: 13, color: kSubText)),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isDebit ? kSuccess.withOpacity(0.1) : kDanger.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  child: Text(
-                    _formatAmount(account['balance']),
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDebit ? kSuccess : kDanger),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
-            const SizedBox(height: 14),
-            _buildDetailRow('Balance Type', account['balanceType'], context),
-            _buildDetailRow('Parent Account', account['parentAccount'] ?? 'N/A', context),
-            _buildDetailRow('Tax Code', account['taxCode'] ?? 'N/A', context),
-            _buildDetailRow('Description', account['description'] ?? 'No description', context),
-            _buildDetailRow('Status', account['isActive'] ? 'Active' : 'Inactive', context),
-            if (isIncorrect) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 16),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '⚠️ This is a cash/bank account but type is "${account['type']}". It should be "Assets".',
-                        style: TextStyle(fontSize: 12, color: Colors.orange.shade800, fontWeight: FontWeight.w500),
+                      const SizedBox(height: 16),
+                      // KPI Cards
+                      Row(
+                        children: [
+                          _miniKpi(
+                            'Balance',
+                            _formatAmount(account['balance']),
+                            isDebit ? kSuccess : kDanger,
+                            isDebit ? Icons.arrow_downward : Icons.arrow_upward,
+                          ),
+                          const SizedBox(width: 8),
+                          _miniKpi(
+                            'Type',
+                            account['balanceType'],
+                            typeColor,
+                            Icons.account_balance,
+                          ),
+                          const SizedBox(width: 8),
+                          _miniKpi(
+                            'Status',
+                            account['isActive'] ? 'Active' : 'Inactive',
+                            account['isActive'] ? kSuccess : kSubText,
+                            account['isActive'] ? Icons.check_circle : Icons.cancel,
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    controller.fixAccountType(account['id'], 'Assets');
-                  },
-                  icon: const Icon(Icons.account_balance, size: 16),
-                  label: const Text('Fix Account Type'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                      const SizedBox(height: 16),
+                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      const SizedBox(height: 16),
+                      _detailRow('Parent Account', account['parentAccount'] ?? 'N/A'),
+                      _detailRow('Tax Code', account['taxCode'] ?? 'N/A'),
+                      _detailRow('Description', account['description'] ?? 'No description'),
+                      if (isIncorrect) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.warning_amber_rounded,
+                                color: Colors.orange,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '⚠️ This is a cash/bank account but type is "${account['type']}". It should be "Assets".',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.orange.shade800,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              controller.fixAccountType(account['id'], 'Assets');
+                            },
+                            icon: const Icon(Icons.account_balance, size: 18),
+                            label: const Text('Fix Account Type'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                   Row(
+  children: [
+    const SizedBox(width: 10),
+
+    Expanded(
+      child: SizedBox(
+        height: 46,
+        child: OutlinedButton(
+          onPressed: () {
+            Navigator.pop(context);
+            _showEditAccountDialog(context, account, controller);
+          },
+          style: OutlinedButton.styleFrom(
+            foregroundColor: kPrimary,
+            side: const BorderSide(color: kPrimary),
+            minimumSize: const Size.fromHeight(46),
+            padding: EdgeInsets.zero,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child: const Text(
+            'Edit',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: Colors.black,
+            ),
+          ),
+        ),
+      ),
+    ),
+
+    const SizedBox(width: 10),
+
+    Expanded(
+      child: SizedBox(
+        height: 46,
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.pop(context);
+            Get.to(() => const JournalEntriesScreen());
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: kPrimary,
+            elevation: 0,
+            minimumSize: const Size.fromHeight(46),
+            padding: EdgeInsets.zero,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child: const Text(
+            'View Ledger',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Colors.black,
+            ),
+          ),
+        ),
+      ),
+    ),
+  ],
+)
+                    ],
                   ),
                 ),
               ),
             ],
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () { Navigator.pop(context); _showEditAccountDialog(context, account, controller); },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: kPrimary,
-                      side: const BorderSide(color: kPrimary),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                    ),
-                    child: const Text('Edit'),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () { Navigator.pop(context); Get.to(() => const JournalEntriesScreen()); },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kPrimary,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                    ),
-                    child: const Text('View Ledger'),
-                  ),
-                ),
-              ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _miniKpi(String label, String value, Color color, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withOpacity(0.15)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 14, color: color),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              label,
+              style:  TextStyle(fontSize: 10, color: kSubText),
             ),
           ],
         ),
@@ -479,7 +831,39 @@ class ChartOfAccountsScreen extends StatelessWidget {
     );
   }
 
-  // ─── Add Account Dialog ──────────────────────────────────────────
+  Widget _detailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 9),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 110,
+            child: Text(
+              label,
+              style:  TextStyle(
+                fontSize: 12,
+                color: kSubText,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style:  TextStyle(
+                fontSize: 12,
+                color: kText,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── ✅ PROFESSIONAL: Add Account Dialog ──────────────────────
   void _showAddAccountDialog(BuildContext context, ChartOfAccountController controller) {
     final formKey = GlobalKey<FormState>();
     String accountCode = '';
@@ -490,8 +874,9 @@ class ChartOfAccountsScreen extends StatelessWidget {
     String taxCode = 'N/A';
     double openingBalance = 0.0;
     String? typeError;
+    
+    bool isSaving = false;
 
-    // Define parent account mapping
     final Map<String, List<String>> parentAccountMapping = {
       'Assets': ['Current Assets', 'Fixed Assets'],
       'Liabilities': ['Current Liabilities', 'Long Term Liabilities'],
@@ -502,53 +887,97 @@ class ChartOfAccountsScreen extends StatelessWidget {
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
-          // Get parent accounts for selected type
           final parentAccounts = parentAccountMapping[accountType] ?? [];
-          // Reset parent account if current selection is not in the list
           if (parentAccount.isNotEmpty && !parentAccounts.contains(parentAccount)) {
             parentAccount = '';
           }
 
           return Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             child: Container(
               width: double.infinity,
               constraints: BoxConstraints(
-                maxWidth: 500,
+                maxWidth: 480,
                 maxHeight: MediaQuery.of(context).size.height * 0.85,
               ),
-              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Text('Add New Account',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: kText)),
-                      const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.close, size: 18),
-                        onPressed: () => Navigator.pop(context),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                    ],
+                  // Header
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                    decoration: BoxDecoration(
+                      color: kPrimary.withOpacity(0.05),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: kPrimary.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.add,
+                            color: kPrimary,
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                               Text(
+                                'Add New Account',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: kText,
+                                ),
+                              ),
+                              Text(
+                                'Create a new chart of account',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: kSubText,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 20),
+                          onPressed: isSaving ? null : () => Navigator.pop(context),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
+                    ),
                   ),
-                  Divider(height: 16, color: Colors.grey.withOpacity(0.2)),
+                  // Form
                   Flexible(
                     child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
                       child: Form(
                         key: formKey,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            _formField('Account Code *', 'e.g., 1010', (v) => accountCode = v,
-                                validator: (v) => v == null || v.isEmpty ? 'Required' : null),
-                            const SizedBox(height: 12),
-                            _formField('Account Name *', 'e.g., Cash in Hand', (v) {
+                            _proFormField('Account Code', 'e.g., 1010', (v) => accountCode = v,
+                                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                                enabled: !isSaving, isRequired: true),
+                            const SizedBox(height: 16),
+                            _proFormField('Account Name', 'e.g., Cash in Hand', (v) {
                               accountName = v;
                               final nameLower = v.toLowerCase();
                               final isCashOrBank = nameLower.contains('cash') || 
@@ -563,16 +992,16 @@ class ChartOfAccountsScreen extends StatelessWidget {
                                   typeError = null;
                                 });
                               }
-                            }, validator: (v) => v == null || v.isEmpty ? 'Required' : null),
-                            const SizedBox(height: 12),
-                            _dropdownField<String>(
-                              label: 'Account Type *',
+                            }, validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                                enabled: !isSaving, isRequired: true),
+                            const SizedBox(height: 16),
+                            _proDropdownField<String>(
+                              label: 'Account Type',
                               value: accountType,
                               items: const ['Assets', 'Liabilities', 'Equity', 'Income', 'Expenses'],
-                              onChanged: (v) {
+                              onChanged: isSaving ? null : (v) {
                                 setState(() {
                                   accountType = v!;
-                                  // Reset parent account when type changes
                                   parentAccount = '';
                                   final nameLower = accountName.toLowerCase();
                                   final isCashOrBank = nameLower.contains('cash') || 
@@ -585,100 +1014,140 @@ class ChartOfAccountsScreen extends StatelessWidget {
                                   }
                                 });
                               },
+                              isRequired: true,
                             ),
                             if (typeError != null) ...[
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 12),
                               Container(
-                                padding: const EdgeInsets.all(10),
+                                padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Colors.red.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: Colors.red.withOpacity(0.3)),
+                                  color: Colors.red.withOpacity(0.08),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: Colors.red.withOpacity(0.2)),
                                 ),
                                 child: Row(
                                   children: [
-                                    Icon(Icons.warning_amber_rounded, color: Colors.red, size: 16),
-                                    const SizedBox(width: 8),
+                                    Icon(Icons.warning_amber_rounded, color: Colors.red, size: 18),
+                                    const SizedBox(width: 10),
                                     Expanded(
                                       child: Text(
                                         typeError!,
-                                        style: TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.w500),
+                                        style: TextStyle(fontSize: 12, color: Colors.red.shade800, fontWeight: FontWeight.w600),
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
                             ],
-                            const SizedBox(height: 12),
-                            _dropdownField<String>(
+                            const SizedBox(height: 16),
+                            _proDropdownField<String>(
                               label: 'Parent Account',
                               value: parentAccount.isEmpty ? null : parentAccount,
                               items: parentAccounts,
-                              onChanged: (v) => setState(() => parentAccount = v!),
+                              onChanged: isSaving ? null : (v) => setState(() => parentAccount = v!),
                             ),
-                            const SizedBox(height: 12),
-                            _formField('Opening Balance', '0.00', (v) => openingBalance = double.tryParse(v) ?? 0.0,
-                                keyboardType: TextInputType.number, prefixText: CurrencyUtils.prefix),
-                            const SizedBox(height: 12),
-                            _dropdownField<String>(
+                            const SizedBox(height: 16),
+                            _proFormField('Opening Balance', '0.00', (v) => openingBalance = double.tryParse(v) ?? 0.0,
+                                keyboardType: TextInputType.number, prefixText: CurrencyUtils.prefix,
+                                enabled: !isSaving),
+                            const SizedBox(height: 16),
+                            _proDropdownField<String>(
                               label: 'Tax Code',
                               value: taxCode,
                               items: const ['N/A', 'GST-13%', 'GST-5%', 'WHT-10%'],
-                              onChanged: (v) => setState(() => taxCode = v!),
+                              onChanged: isSaving ? null : (v) => setState(() => taxCode = v!),
                               displayLabels: const ['N/A - No Tax', 'GST 13% (Standard)', 'GST 5% (Reduced)', 'WHT 10%'],
                             ),
-                            const SizedBox(height: 12),
-                            _formField('Description', 'Account description', (v) => description = v, maxLines: 2),
+                            const SizedBox(height: 16),
+                            _proFormField('Description', 'Account description', (v) => description = v, maxLines: 3,
+                                enabled: !isSaving),
                           ],
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            side: BorderSide(color: Colors.grey.withOpacity(0.4)),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                  // Footer
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: isSaving ? null : () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              side: BorderSide(color: isSaving ? Colors.grey.withOpacity(0.3) : Colors.grey.shade400),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              foregroundColor: kText,
+                            ),
+                            child: Text(
+                              'Cancel',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: isSaving ? Colors.grey : kText),
+                            ),
                           ),
-                          child: Text('Cancel', style: TextStyle(fontSize: 14, color: kSubText)),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            if (typeError != null) {
-                              AppSnackbar.error(Colors.red, 'Error', typeError!);
-                              return;
-                            }
-                            if (formKey.currentState!.validate()) {
-                              Navigator.pop(context);
-                              await controller.createAccount({
-                                'code': accountCode,
-                                'name': accountName,
-                                'type': accountType,
-                                'parentAccount': parentAccount,
-                                'openingBalance': openingBalance,
-                                'description': description,
-                                'taxCode': taxCode,
-                              });
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: kPrimary,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                            elevation: 0,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: isSaving
+                                ? null
+                                : () async {
+                                    if (typeError != null) {
+                                      AppSnackbar.error(Colors.red, 'Error', typeError!);
+                                      return;
+                                    }
+                                    if (formKey.currentState!.validate()) {
+                                      setState(() {
+                                        isSaving = true;
+                                      });
+                                      
+                                      await controller.createAccount({
+                                        'code': accountCode,
+                                        'name': accountName,
+                                        'type': accountType,
+                                        'parentAccount': parentAccount,
+                                        'openingBalance': openingBalance,
+                                        'description': description,
+                                        'taxCode': taxCode,
+                                      });
+                                      
+                                      Navigator.pop(context);
+                                    }
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isSaving ? Colors.grey : kPrimary,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              elevation: 0,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if (isSaving) ...[
+                                  SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+                                Text(
+                                  isSaving ? 'Saving...' : 'Save Account',
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isSaving ? Colors.white70 : Colors.white),
+                                ),
+                              ],
+                            ),
                           ),
-                          child: Text('Save Account', style: TextStyle(fontSize: 14, color: Colors.white)),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -689,7 +1158,7 @@ class ChartOfAccountsScreen extends StatelessWidget {
     );
   }
 
-  // ─── Edit Account Dialog ──────────────────────────────────────────
+  // ─── ✅ PROFESSIONAL: Edit Account Dialog ──────────────────────
   void _showEditAccountDialog(BuildContext context, Map<String, dynamic> account, ChartOfAccountController controller) {
     final formKey = GlobalKey<FormState>();
     String accountCode = account['code'];
@@ -700,8 +1169,9 @@ class ChartOfAccountsScreen extends StatelessWidget {
     String taxCode = account['taxCode'] ?? 'N/A';
     double openingBalance = account['balance'];
     String? typeError;
+    
+    bool isSaving = false;
 
-    // Define parent account mapping
     final Map<String, List<String>> parentAccountMapping = {
       'Assets': ['Current Assets', 'Fixed Assets'],
       'Liabilities': ['Current Liabilities', 'Long Term Liabilities'],
@@ -712,54 +1182,98 @@ class ChartOfAccountsScreen extends StatelessWidget {
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
-          // Get parent accounts for selected type
           final parentAccounts = parentAccountMapping[accountType] ?? [];
-          // Reset parent account if current selection is not in the list
           if (parentAccount.isNotEmpty && !parentAccounts.contains(parentAccount)) {
             parentAccount = '';
           }
 
           return Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             child: Container(
               width: double.infinity,
               constraints: BoxConstraints(
-                maxWidth: 500,
+                maxWidth: 480,
                 maxHeight: MediaQuery.of(context).size.height * 0.85,
               ),
-              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Text('Edit Account',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: kText)),
-                      const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.close, size: 18),
-                        onPressed: () => Navigator.pop(context),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                    ],
+                  // Header
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                    decoration: BoxDecoration(
+                      color: kPrimary.withOpacity(0.05),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: kPrimary.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.edit,
+                            color: kPrimary,
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                               Text(
+                                'Edit Account',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: kText,
+                                ),
+                              ),
+                              Text(
+                                'Update account details',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: kSubText,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 20),
+                          onPressed: isSaving ? null : () => Navigator.pop(context),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
+                    ),
                   ),
-                  Divider(height: 16, color: Colors.grey.withOpacity(0.2)),
+                  // Form
                   Flexible(
                     child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
                       child: Form(
                         key: formKey,
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            _formField('Account Code *', 'e.g., 1010', (v) => accountCode = v,
+                            _proFormField('Account Code', 'e.g., 1010', (v) => accountCode = v,
                                 initialValue: accountCode,
-                                validator: (v) => v == null || v.isEmpty ? 'Required' : null),
-                            const SizedBox(height: 12),
-                            _formField('Account Name *', 'e.g., Cash in Hand', (v) {
+                                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                                enabled: !isSaving, isRequired: true),
+                            const SizedBox(height: 16),
+                            _proFormField('Account Name', 'e.g., Cash in Hand', (v) {
                               accountName = v;
                               final nameLower = v.toLowerCase();
                               final isCashOrBank = nameLower.contains('cash') || 
@@ -775,16 +1289,16 @@ class ChartOfAccountsScreen extends StatelessWidget {
                                 });
                               }
                             }, initialValue: accountName,
-                                validator: (v) => v == null || v.isEmpty ? 'Required' : null),
-                            const SizedBox(height: 12),
-                            _dropdownField<String>(
-                              label: 'Account Type *',
+                                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                                enabled: !isSaving, isRequired: true),
+                            const SizedBox(height: 16),
+                            _proDropdownField<String>(
+                              label: 'Account Type',
                               value: accountType,
                               items: const ['Assets', 'Liabilities', 'Equity', 'Income', 'Expenses'],
-                              onChanged: (v) {
+                              onChanged: isSaving ? null : (v) {
                                 setState(() {
                                   accountType = v!;
-                                  // Reset parent account when type changes
                                   parentAccount = '';
                                   final nameLower = accountName.toLowerCase();
                                   final isCashOrBank = nameLower.contains('cash') || 
@@ -797,101 +1311,142 @@ class ChartOfAccountsScreen extends StatelessWidget {
                                   }
                                 });
                               },
+                              isRequired: true,
                             ),
                             if (typeError != null) ...[
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 12),
                               Container(
-                                padding: const EdgeInsets.all(10),
+                                padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Colors.red.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(color: Colors.red.withOpacity(0.3)),
+                                  color: Colors.red.withOpacity(0.08),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: Colors.red.withOpacity(0.2)),
                                 ),
                                 child: Row(
                                   children: [
-                                    Icon(Icons.warning_amber_rounded, color: Colors.red, size: 16),
-                                    const SizedBox(width: 8),
+                                    Icon(Icons.warning_amber_rounded, color: Colors.red, size: 18),
+                                    const SizedBox(width: 10),
                                     Expanded(
                                       child: Text(
                                         typeError!,
-                                        style: TextStyle(fontSize: 12, color: Colors.red, fontWeight: FontWeight.w500),
+                                        style: TextStyle(fontSize: 12, color: Colors.red.shade800, fontWeight: FontWeight.w600),
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
                             ],
-                            const SizedBox(height: 12),
-                            _dropdownField<String>(
+                            const SizedBox(height: 16),
+                            _proDropdownField<String>(
                               label: 'Parent Account',
                               value: parentAccount.isEmpty ? null : parentAccount,
                               items: parentAccounts,
-                              onChanged: (v) => setState(() => parentAccount = v!),
+                              onChanged: isSaving ? null : (v) => setState(() => parentAccount = v!),
                             ),
-                            const SizedBox(height: 12),
-                            _formField('Opening Balance', '0.00', (v) => openingBalance = double.tryParse(v) ?? 0.0,
-                                initialValue: openingBalance.toString(), keyboardType: TextInputType.number, prefixText: CurrencyUtils.prefix),
-                            const SizedBox(height: 12),
-                            _dropdownField<String>(
+                            const SizedBox(height: 16),
+                            _proFormField('Opening Balance', '0.00', (v) => openingBalance = double.tryParse(v) ?? 0.0,
+                                keyboardType: TextInputType.number, prefixText: CurrencyUtils.prefix,
+                                initialValue: openingBalance.toString(),
+                                enabled: !isSaving),
+                            const SizedBox(height: 16),
+                            _proDropdownField<String>(
                               label: 'Tax Code',
                               value: taxCode,
                               items: const ['N/A', 'GST-13%', 'GST-5%', 'WHT-10%'],
-                              onChanged: (v) => setState(() => taxCode = v!),
+                              onChanged: isSaving ? null : (v) => setState(() => taxCode = v!),
                               displayLabels: const ['N/A - No Tax', 'GST 13% (Standard)', 'GST 5% (Reduced)', 'WHT 10%'],
                             ),
-                            const SizedBox(height: 12),
-                            _formField('Description', 'Account description', (v) => description = v,
-                                initialValue: description, maxLines: 2),
+                            const SizedBox(height: 16),
+                            _proFormField('Description', 'Account description', (v) => description = v,
+                                initialValue: description, maxLines: 3,
+                                enabled: !isSaving),
                           ],
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            side: BorderSide(color: Colors.grey.withOpacity(0.4)),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                  // Footer
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: isSaving ? null : () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              side: BorderSide(color: isSaving ? Colors.grey.withOpacity(0.3) : Colors.grey.shade400),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              foregroundColor: kText,
+                            ),
+                            child: Text(
+                              'Cancel',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: isSaving ? Colors.grey : kText),
+                            ),
                           ),
-                          child: Text('Cancel', style: TextStyle(fontSize: 14, color: kSubText)),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            if (typeError != null) {
-                              AppSnackbar.error(Colors.red, 'Error', typeError!);
-                              return;
-                            }
-                            if (formKey.currentState!.validate()) {
-                              Navigator.pop(context);
-                              await controller.updateAccount(account['id'], {
-                                'code': accountCode,
-                                'name': accountName,
-                                'type': accountType,
-                                'parentAccount': parentAccount,
-                                'openingBalance': openingBalance,
-                                'description': description,
-                                'taxCode': taxCode,
-                              });
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: kPrimary,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                            elevation: 0,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: isSaving
+                                ? null
+                                : () async {
+                                    if (typeError != null) {
+                                      AppSnackbar.error(Colors.red, 'Error', typeError!);
+                                      return;
+                                    }
+                                    if (formKey.currentState!.validate()) {
+                                      setState(() {
+                                        isSaving = true;
+                                      });
+                                      
+                                      await controller.updateAccount(account['id'], {
+                                        'code': accountCode,
+                                        'name': accountName,
+                                        'type': accountType,
+                                        'parentAccount': parentAccount,
+                                        'openingBalance': openingBalance,
+                                        'description': description,
+                                        'taxCode': taxCode,
+                                      });
+                                      
+                                      Navigator.pop(context);
+                                    }
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isSaving ? Colors.grey : kPrimary,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              elevation: 0,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if (isSaving) ...[
+                                  SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+                                Text(
+                                  isSaving ? 'Updating...' : 'Update Account',
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isSaving ? Colors.white70 : Colors.white),
+                                ),
+                              ],
+                            ),
                           ),
-                          child: Text('Update Account', style: TextStyle(fontSize: 14, color: Colors.white)),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -1010,7 +1565,167 @@ class ChartOfAccountsScreen extends StatelessWidget {
     );
   }
 
-  // ─── Form Field ──────────────────────────────────────────────────
+  // ─── Professional Form Field ──────────────────────────────────────
+  Widget _proFormField(
+    String label,
+    String hint,
+    void Function(String) onChanged, {
+    String? initialValue,
+    FormFieldValidator<String>? validator,
+    TextInputType? keyboardType,
+    String? prefixText,
+    int maxLines = 1,
+    bool enabled = true,
+    bool isRequired = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: kText,
+              ),
+            ),
+            if (isRequired) ...[
+              const SizedBox(width: 2),
+              Text(
+                '*',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.red,
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 6),
+        TextFormField(
+          initialValue: initialValue,
+          enabled: enabled,
+          decoration: InputDecoration(
+            hintText: hint,
+            prefixText: prefixText,
+            filled: true,
+            fillColor: enabled ? Colors.grey.shade50 : Colors.grey.shade100,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: kPrimary, width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.red.shade400),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.red.shade400, width: 2),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            isDense: true,
+          ),
+          style: TextStyle(
+            fontSize: 14,
+            color: enabled ? Colors.black87 : Colors.grey.shade600,
+            fontWeight: FontWeight.w500,
+          ),
+          keyboardType: keyboardType,
+          maxLines: maxLines,
+          onChanged: onChanged,
+          validator: validator,
+        ),
+      ],
+    );
+  }
+
+  // ─── Professional Dropdown Field ───────────────────────────────────
+  Widget _proDropdownField<T>({
+    required String label,
+    required T? value,
+    required List<T> items,
+    required void Function(T?)? onChanged,
+    List<String>? displayLabels,
+    bool isRequired = false,
+  }) {
+    final isEnabled = onChanged != null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: kText,
+              ),
+            ),
+            if (isRequired) ...[
+              const SizedBox(width: 2),
+              Text(
+                '*',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.red,
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 6),
+        DropdownButtonFormField<T>(
+          value: value,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: isEnabled ? Colors.grey.shade50 : Colors.grey.shade100,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: kPrimary, width: 2),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            isDense: true,
+          ),
+          style: TextStyle(
+            fontSize: 14,
+            color: isEnabled ? Colors.black87 : Colors.grey.shade600,
+            fontWeight: FontWeight.w500,
+          ),
+          icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey.shade600),
+          items: items.asMap().entries.map((e) => DropdownMenuItem<T>(
+            value: e.value,
+            child: Text(
+              displayLabels != null ? displayLabels[e.key] : '${e.value}',
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            ),
+          )).toList(),
+          onChanged: onChanged,
+        ),
+      ],
+    );
+  }
+
   Widget _formField(
     String label,
     String hint,
@@ -1020,9 +1735,11 @@ class ChartOfAccountsScreen extends StatelessWidget {
     TextInputType? keyboardType,
     String? prefixText,
     int maxLines = 1,
+    bool enabled = true,
   }) {
     return TextFormField(
       initialValue: initialValue,
+      enabled: enabled,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
@@ -1030,8 +1747,13 @@ class ChartOfAccountsScreen extends StatelessWidget {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         isDense: true,
+        filled: true,
+        fillColor: enabled ? Colors.white : Colors.grey.shade50,
       ),
-      style: const TextStyle(fontSize: 13, color: Colors.black87),
+      style: TextStyle(
+        fontSize: 13, 
+        color: enabled ? Colors.black87 : Colors.grey.shade600,
+      ),
       keyboardType: keyboardType,
       maxLines: maxLines,
       onChanged: onChanged,
@@ -1039,14 +1761,15 @@ class ChartOfAccountsScreen extends StatelessWidget {
     );
   }
 
-  // ─── Dropdown Field ──────────────────────────────────────────────
+  // ─── Legacy Dropdown Field (kept for compatibility) ───────────────
   Widget _dropdownField<T>({
     required String label,
     required T? value,
     required List<T> items,
-    required void Function(T?) onChanged,
+    required void Function(T?)? onChanged,
     List<String>? displayLabels,
   }) {
+    final isEnabled = onChanged != null;
     return DropdownButtonFormField<T>(
       value: value,
       decoration: InputDecoration(
@@ -1054,8 +1777,13 @@ class ChartOfAccountsScreen extends StatelessWidget {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         isDense: true,
+        filled: true,
+        fillColor: isEnabled ? Colors.white : Colors.grey.shade50,
       ),
-      style: const TextStyle(fontSize: 13, color: Colors.black87),
+      style: TextStyle(
+        fontSize: 13, 
+        color: isEnabled ? Colors.black87 : Colors.grey.shade600,
+      ),
       items: items.asMap().entries.map((e) => DropdownMenuItem<T>(
         value: e.value,
         child: Text(displayLabels != null ? displayLabels[e.key] : '${e.value}'),

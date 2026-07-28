@@ -1,14 +1,14 @@
-// lib/core/CreditNote/screens/creditnote_screen.dart
+// screens/creditnote_screen.dart - COMPLETE PROFESSIONAL MOBILE DESIGN
 
+import 'package:LedgerPro_app/Utils/currency_utils.dart';
 import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/responsive_utils.dart';
+import 'package:LedgerPro_app/Utils/toast_utils.dart';
 import 'package:LedgerPro_app/core/CreditNote/controllers/creditnote_controller.dart';
 import 'package:LedgerPro_app/core/CreditNote/models/credit_note_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:sizer/sizer.dart';
 
 class CreditNotesScreen extends StatelessWidget {
   const CreditNotesScreen({super.key});
@@ -16,268 +16,392 @@ class CreditNotesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(CreditNoteController());
-    return _buildMobileLayout(context, controller);
-  }
 
-  // ============================================================
-  // MOBILE LAYOUT
-  // ============================================================
-
-  Widget _buildMobileLayout(
-    BuildContext context,
-    CreditNoteController controller,
-  ) {
     return Scaffold(
-      backgroundColor: kBg,
-      appBar: _buildAppBar(context, controller),
-      body: Obx(() {
-        if (controller.isLoading.value && controller.creditNotes.isEmpty) {
-          return Center(
-            child: LoadingAnimationWidget.discreteCircle(
-              color: kPrimary,
-              size: 40,
-            ),
-          );
-        }
-        return Column(
-          children: [
-            _buildFilterBar(controller),
-            _buildSummaryStrip(controller),
-            Expanded(child: _buildCreditNotesList(controller, context)),
-          ],
-        );
-      }),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => controller.showCreateCreditNoteDialog(),
-        backgroundColor: kWarning,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar(
-    BuildContext context,
-    CreditNoteController controller,
-  ) {
-    return AppBar(
-      title: const Text(
-        'Credit Notes',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w800,
-          color: Colors.black87,
-        ),
-      ),
-      backgroundColor: kPrimary,
-      elevation: 0,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.search, color: Colors.black87),
-          onPressed: () => _showSearchDialog(context, controller),
-        ),
-        IconButton(
-          icon: const Icon(Icons.date_range, color: Colors.black87),
-          onPressed: () => controller.selectDateRange(),
-        ),
-        IconButton(
-          icon: const Icon(Icons.download_outlined, color: Colors.black87),
-          onPressed: () => controller.exportCreditNotes(),
-        ),
-      ],
-    );
-  }
-
-  // ============================================================
-  // FILTER BAR
-  // ============================================================
-
-  Widget _buildFilterBar(CreditNoteController controller) {
-    final filters = ['All', 'Issued', 'Applied', 'Expired'];
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: kCardBg,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Obx(
-          () => Row(
-            children: filters.map((f) {
-              final isSelected = controller.selectedFilter.value == f;
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: FilterChip(
-                  label: Text(f),
-                  selected: isSelected,
-                  onSelected: (_) =>
-                      controller.applyDateFilter(isSelected ? 'All' : f),
-                  backgroundColor: kBg,
-                  selectedColor: kPrimary.withOpacity(0.2),
-                  labelStyle: TextStyle(
-                    color: isSelected ? kPrimary : kSubText,
-                    fontWeight:
-                        isSelected ? FontWeight.w600 : FontWeight.normal,
-                    fontSize: 12,
+      backgroundColor: kBgLight,
+      body: Column(
+        children: [
+          _buildTopHeader(context, controller),
+          Expanded(
+            child: Obx(() {
+              if (controller.isLoading.value && controller.creditNotes.isEmpty) {
+                return Center(
+                  child: LoadingAnimationWidget.discreteCircle(
+                    color: kPrimary,
+                    size: 40,
                   ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                );
+              }
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+                child: Column(
+                  children: [
+                    _buildSummaryCards(controller),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: _buildListView(controller, context),
+                    ),
+                  ],
                 ),
               );
-            }).toList(),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ============================================================
-  // SUMMARY STRIP
-  // ============================================================
-
-  Widget _buildSummaryStrip(CreditNoteController controller) {
-    return Container(
-      color: kCardBg,
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      child: Obx(
-        () => SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              _summaryCard(
-                'Total',
-                controller.totalCount.value.toString(),
-                kPrimary,
-                Icons.note_alt_outlined,
-                isCount: true,
-              ),
-              const SizedBox(width: 10),
-              _summaryCard(
-                'Amount',
-                controller.formatAmount(controller.totalAmount.value),
-                kWarning,
-                Icons.attach_money,
-              ),
-              const SizedBox(width: 10),
-              _summaryCard(
-                'Applied',
-                controller.formatAmount(controller.appliedAmount.value),
-                kSuccess,
-                Icons.check_circle_outline,
-              ),
-              const SizedBox(width: 10),
-              _summaryCard(
-                'Remaining',
-                controller.formatAmount(controller.remainingAmount.value),
-                kPrimary,
-                Icons.pending_outlined,
-              ),
-              const SizedBox(width: 10),
-              _summaryCard(
-                'Expired',
-                controller.formatAmount(controller.expiredAmount.value),
-                kDanger,
-                Icons.warning_amber_outlined,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _summaryCard(
-    String title,
-    String value,
-    Color color,
-    IconData icon, {
-    bool isCount = false,
-  }) {
-    return Container(
-      width: 130,
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: kBg,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 14, color: color),
-              const SizedBox(width: 4),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: kSubText,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: color,
-            ),
-            overflow: TextOverflow.ellipsis,
+            }),
           ),
         ],
       ),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: kWarning.withOpacity(0.4),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: () => controller.showCreateCreditNoteDialog(),
+          backgroundColor: kWarning,
+          elevation: 0,
+          child: const Icon(Icons.add, color: Colors.black, size: 24),
+        ),
+      ),
     );
   }
 
-  // ============================================================
-  // CREDIT NOTES LIST
-  // ============================================================
+  // ═══════════════════════════════════════════════════════════════
+  // TOP HEADER
+  // ═══════════════════════════════════════════════════════════════
 
-  Widget _buildCreditNotesList(
-    CreditNoteController controller,
-    BuildContext context,
-  ) {
+  Widget _buildTopHeader(BuildContext context, CreditNoteController controller) {
+    return Container(
+      color: kPrimary,
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // AppBar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Credit Notes',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.black,
+                          ),
+                        ),
+                        Obx(
+                          () => Text(
+                            '${controller.creditNotes.length} notes',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.black.withOpacity(0.55),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      controller.loadCreditNotesData(resetPage: true);
+                      controller.loadSummary();
+                    },
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.refresh_rounded,
+                        size: 18,
+                        color: Colors.black.withOpacity(0.65),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => controller.exportCreditNotes(),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.download_outlined,
+                        size: 18,
+                        color: Colors.black.withOpacity(0.65),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Search & Filter
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.06),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        onChanged: (value) => controller.searchNotes(value),
+                        style: const TextStyle(fontSize: 13, color: Colors.black87),
+                        decoration: InputDecoration(
+                          hintText: 'Search credit notes...',
+                          hintStyle: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey.shade400,
+                          ),
+                          prefixIcon: Icon(
+                            Icons.search,
+                            size: 18,
+                            color: Colors.grey.shade400,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    height: 40,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: Obx(
+                        () => DropdownButton<String>(
+                          value: controller.selectedFilter.value,
+                          icon: const Icon(Icons.arrow_drop_down, size: 20),
+                          style: const TextStyle(fontSize: 12, color: Colors.black87),
+                          underline: const SizedBox.shrink(),
+                          items: ['All', 'Issued', 'Applied', 'Expired'].map((f) {
+                            return DropdownMenuItem(value: f, child: Text(f));
+                          }).toList(),
+                          onChanged: (v) {
+                            if (v != null) controller.applyFilter(v);
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // PROFESSIONAL SUMMARY CARDS
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildSummaryCards(CreditNoteController controller) {
+    return Obx(
+      () => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+        child: Row(
+          children: [
+            _buildProfessionalCard(
+              title: 'Total',
+              amount: controller.totalCount.value.toString(),
+              color: kPrimary,
+              icon: Icons.note_alt_outlined,
+              bgColor: kPrimary.withOpacity(0.08),
+              borderColor: kPrimary.withOpacity(0.2),
+              isNumber: true,
+            ),
+            const SizedBox(width: 8),
+            _buildProfessionalCard(
+              title: 'Amount',
+              amount: controller.formatAmount(controller.totalAmount.value),
+              color: kWarning,
+              icon: Icons.attach_money,
+              bgColor: kWarning.withOpacity(0.08),
+              borderColor: kWarning.withOpacity(0.2),
+            ),
+            const SizedBox(width: 8),
+            _buildProfessionalCard(
+              title: 'Applied',
+              amount: controller.formatAmount(controller.appliedAmount.value),
+              color: kSuccess,
+              icon: Icons.check_circle,
+              bgColor: kSuccess.withOpacity(0.08),
+              borderColor: kSuccess.withOpacity(0.2),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfessionalCard({
+    required String title,
+    required String amount,
+    required Color color,
+    required IconData icon,
+    required Color bgColor,
+    required Color borderColor,
+    bool isNumber = false,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: kCardBg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: borderColor, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, size: 14, color: color),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: kSubText,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.3,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              amount,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: color,
+                letterSpacing: -0.5,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Container(
+              height: 2,
+              width: 30,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [color, color.withOpacity(0.3)],
+                ),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // LIST VIEW WITH LAZY LOADING
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildListView(CreditNoteController controller, BuildContext context) {
     return Obx(() {
       final notes = controller.creditNotes;
 
-      if (notes.isEmpty && !controller.isLoading.value) {
+      if (notes.isEmpty) {
         return Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.note_outlined,
+                Icons.note_alt_outlined,
                 size: 64,
-                color: kSubText.withOpacity(0.4),
+                color: kSubText.withOpacity(0.5),
               ),
               const SizedBox(height: 16),
               Text(
                 'No credit notes found',
-                style: TextStyle(fontSize: 15, color: kSubText),
+                style: TextStyle(fontSize: 16, color: kSubText),
               ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
+              const SizedBox(height: 12),
+              ElevatedButton(
                 onPressed: () => controller.showCreateCreditNoteDialog(),
-                icon: const Icon(Icons.add, size: 16, color: Colors.white),
-                label: const Text(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kWarning,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
                   'Create Credit Note',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: Colors.black,
                   ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kWarning,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 10,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  elevation: 0,
                 ),
               ),
             ],
@@ -285,334 +409,341 @@ class CreditNotesScreen extends StatelessWidget {
         );
       }
 
-      return RefreshIndicator(
-        onRefresh: () async {
-          await controller.loadCreditNotesData();
-          await controller.loadSummary();
+      return NotificationListener<ScrollNotification>(
+        onNotification: (ScrollNotification scrollInfo) {
+          if (!controller.isLoadingMore.value &&
+              scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent) {
+            controller.loadMoreData();
+          }
+          return false;
         },
         child: ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
-          itemCount: notes.length,
-          itemBuilder: (context, index) => Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _buildCreditNoteCard(notes[index], controller),
-          ),
+          controller: controller.scrollController,
+          padding: const EdgeInsets.all(16),
+          itemCount: notes.length + 1,
+          itemBuilder: (context, index) {
+            if (index == notes.length) {
+              return Obx(
+                () => controller.isLoadingMore.value
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: Center(
+                          child: LoadingAnimationWidget.discreteCircle(
+                            color: kPrimary,
+                            size: 30,
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              );
+            }
+            final note = notes[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _buildCreditNoteCard(note, controller, context),
+            );
+          },
         ),
       );
     });
   }
 
+  // ═══════════════════════════════════════════════════════════════
+  // PROFESSIONAL CREDIT NOTE CARD
+  // ═══════════════════════════════════════════════════════════════
+
   Widget _buildCreditNoteCard(
-    CreditNote cn,
+    CreditNote note,
     CreditNoteController controller,
+    BuildContext context,
   ) {
-    final statusColor = cn.status == 'Issued'
+    final statusColor = note.status == 'Issued'
         ? kWarning
-        : cn.status == 'Applied'
+        : note.status == 'Applied'
             ? kSuccess
             : kDanger;
 
-    final isExpiringSoon = cn.status == 'Issued' &&
-        cn.expiryDate != null &&
-        cn.expiryDate!.difference(DateTime.now()).inDays <= 7;
+    final isExpiringSoon = note.status == 'Issued' &&
+        note.expiryDate != null &&
+        note.expiryDate!.difference(DateTime.now()).inDays <= 7;
 
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
       decoration: BoxDecoration(
         color: kCardBg,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: statusColor.withOpacity(0.2),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
-            blurRadius: 6,
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: statusColor.withOpacity(0.06),
+            blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: InkWell(
-        onTap: () => controller.viewCreditNoteDetails(cn),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Top row ──────────────────────────────────────
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: kWarning.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => controller.viewCreditNoteDetails(note),
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            kWarning.withOpacity(0.15),
+                            kWarning.withOpacity(0.05),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: kWarning.withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.note_alt_outlined,
+                        size: 22,
+                        color: kWarning,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.note_alt_outlined,
-                      size: 20,
-                      color: kWarning,
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            note.creditNoteNumber,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: kText,
+                              letterSpacing: -0.2,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            note.customerName,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: kSubText,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 6),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            children: [
+                              _statusBadge(note.status, statusColor),
+                              _badge(
+                                DateFormat('dd MMM yy').format(note.date),
+                                kSubText,
+                              ),
+                              if (note.reasonType.isNotEmpty)
+                                _badge(note.reasonType, kPrimary),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          cn.creditNoteNumber,
-                          style:  TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: kText,
+                          controller.formatAmount(note.amount),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: kWarning,
+                            letterSpacing: -0.3,
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          cn.customerName,
-                          style: TextStyle(fontSize: 12, color: kSubText),
-                          overflow: TextOverflow.ellipsis,
-                        ),
                         const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            _statusBadge(cn.status, statusColor),
-                            const SizedBox(width: 6),
-                            Text(
-                              DateFormat('dd MMM yyyy').format(cn.date),
-                              style:
-                                  TextStyle(fontSize: 10, color: kSubText),
+                        Text(
+                          'Rem: ${controller.formatAmount(note.remainingAmount)}',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: kPrimary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => controller.viewCreditNoteDetails(note),
+                        icon: Icon(
+                          Icons.visibility_outlined,
+                          size: 14,
+                          color: kSubText,
+                        ),
+                        label: Text(
+                          'Details',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: kText,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (note.status == 'Issued') ...[
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => controller.showApplyCreditNoteDialog(note),
+                          icon: const Icon(
+                            Icons.check_circle,
+                            size: 14,
+                            color: Colors.black,
+                          ),
+                          label: const Text(
+                            'Apply',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black,
                             ),
-                          ],
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: kSuccess,
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 0,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                // Expiry warning
+                if (isExpiringSoon && note.expiryDate != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: kDanger.withOpacity(0.07),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.warning_amber_rounded, size: 14, color: kDanger),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Expires: ${DateFormat('dd MMM yyyy').format(note.expiryDate!)}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: kDanger,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        controller.formatAmount(cn.amount),
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: kWarning,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Rem: ${controller.formatAmount(cn.remainingAmount)}',
-                        style:
-                            TextStyle(fontSize: 10, color: kPrimary),
-                      ),
-                    ],
-                  ),
                 ],
-              ),
-
-              // ── Invoice ref ──────────────────────────────────
-              const SizedBox(height: 10),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: kBg,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.receipt_outlined, size: 13, color: kSubText),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Invoice: ${cn.originalInvoiceNumber}',
-                      style: TextStyle(fontSize: 11, color: kSubText),
-                    ),
-                    const Spacer(),
-                    Text(
-                      cn.reasonType,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: kPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // ── Expiry warning ───────────────────────────────
-              if (isExpiringSoon && cn.expiryDate != null) ...[
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: kDanger.withOpacity(0.07),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.warning_amber_rounded,
-                          size: 13, color: kDanger),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Expires: ${DateFormat('dd MMM yyyy').format(cn.expiryDate!)}',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: kDanger,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ],
-
-              // ── Action buttons ───────────────────────────────
-              const SizedBox(height: 10),
-              Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(
-                    child: _outlineBtn(
-                      Icons.visibility_outlined,
-                      'Details',
-                      kSubText,
-                      () => controller.viewCreditNoteDetails(cn),
-                    ),
-                  ),
-                  if (cn.status == 'Issued') ...[
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _filledBtn(
-                        Icons.check_circle_outline,
-                        'Apply',
-                        kSuccess,
-                        () => controller.showApplyCreditNoteDialog(cn),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _outlineBtn(
-                      Icons.print_outlined,
-                      'Print',
-                      kSubText,
-                      () => controller.printCreditNote(cn),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _statusBadge(String status, Color color) {
+  // ═══════════════════════════════════════════════════════════════
+  // HELPER WIDGETS
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _statusBadge(String text, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
-      child: Text(
-        status,
-        style: TextStyle(
-          fontSize: 9,
-          color: color,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-
-  Widget _outlineBtn(
-    IconData icon,
-    String label,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    return OutlinedButton.icon(
-      onPressed: onTap,
-      icon: Icon(icon, size: 13, color: color),
-      label: Text(label, style: TextStyle(fontSize: 11, color: kText)),
-      style: OutlinedButton.styleFrom(
-        side: BorderSide(color: Colors.grey.withOpacity(0.3)),
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-      ),
-    );
-  }
-
-  Widget _filledBtn(
-    IconData icon,
-    String label,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    return ElevatedButton.icon(
-      onPressed: onTap,
-      icon: Icon(icon, size: 13, color: Colors.white),
-      label:
-          Text(label, style: const TextStyle(fontSize: 11, color: Colors.white)),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        elevation: 0,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-      ),
-    );
-  }
-
-  // ============================================================
-  // SEARCH DIALOG
-  // ============================================================
-
-  void _showSearchDialog(
-    BuildContext context,
-    CreditNoteController controller,
-  ) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text(
-          'Search Credit Notes',
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-        ),
-        content: TextField(
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'Credit note #, customer, invoice…',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.search),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 5,
+            height: 5,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
           ),
-          onChanged: (v) {
-            controller.searchController.text = v;
-            controller.searchController.selection =
-                TextSelection.fromPosition(
-              TextPosition(offset: v.length),
-            );
-          },
-          onSubmitted: (_) => Navigator.pop(ctx),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              controller.searchController.clear();
-              Navigator.pop(ctx);
-            },
-            child: const Text('Clear'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Done'),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+              color: color,
+              letterSpacing: 0.3,
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _badge(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
       ),
     );
   }

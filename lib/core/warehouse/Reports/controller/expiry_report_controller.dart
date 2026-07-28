@@ -25,12 +25,10 @@ class ExpiryReportController extends GetxController {
   final RxBool isExporting = false.obs;
   final RxList<ProductModel> products = <ProductModel>[].obs;
 
-  // Filtered lists
   final RxList<ProductModel> expiringSoon = <ProductModel>[].obs;
   final RxList<ProductModel> expired = <ProductModel>[].obs;
   final RxList<ProductModel> productsWithExpiry = <ProductModel>[].obs;
 
-  // Summary stats
   final RxInt totalProducts = 0.obs;
   final RxInt expiringSoonCount = 0.obs;
   final RxInt expiredCount = 0.obs;
@@ -47,54 +45,42 @@ class ExpiryReportController extends GetxController {
       isLoading.value = true;
 
       final response = await _apiClient.get(
-        '/api/warehouse/products',
-        queryParameters: {'limit': 1000},
+        '/api/warehouse/reports/expiry',
         requiresAuth: true,
       );
 
       if (response.success && response.data != null) {
-        final data = response.data['data'] as List;
-        products.value = data
+        final data = response.data['data'];
+        
+        // Parse summary stats
+        totalProducts.value = data['summary']['totalProducts'] ?? 0;
+        expiredCount.value = data['summary']['expiredCount'] ?? 0;
+        expiringSoonCount.value = data['summary']['expiringSoonCount'] ?? 0;
+        noExpiryCount.value = data['summary']['noExpiryCount'] ?? 0;
+
+        // Parse product lists
+        final expiredList = data['expired'] as List;
+        final expiringSoonList = data['expiringSoon'] as List;
+        final allExpiryList = data['productsWithExpiry'] as List;
+
+        expired.value = expiredList
             .map((item) => ProductModel.fromJson(item))
             .toList();
-        totalProducts.value = products.length;
-
-        _filterProducts();
+        expiringSoon.value = expiringSoonList
+            .map((item) => ProductModel.fromJson(item))
+            .toList();
+        productsWithExpiry.value = allExpiryList
+            .map((item) => ProductModel.fromJson(item))
+            .toList();
+        
+        // Also populate the full products list for compatibility
+        products.value = productsWithExpiry;
       }
     } catch (e) {
       print('Error loading expiry data: $e');
     } finally {
       isLoading.value = false;
     }
-  }
-
-  void _filterProducts() {
-    final now = DateTime.now();
-
-    // Products with expiry dates
-    productsWithExpiry.value = products
-        .where((p) => p.expiryDate != null)
-        .toList();
-
-    // Expiring soon (within 30 days)
-    expiringSoon.value = products
-        .where(
-          (p) =>
-              p.expiryDate != null &&
-              p.expiryDate!.difference(now).inDays <= 30 &&
-              p.expiryDate!.difference(now).inDays > 0,
-        )
-        .toList();
-
-    // Expired products
-    expired.value = products
-        .where((p) => p.expiryDate != null && p.expiryDate!.isBefore(now))
-        .toList();
-
-    // Counts
-    expiringSoonCount.value = expiringSoon.length;
-    expiredCount.value = expired.length;
-    noExpiryCount.value = products.where((p) => p.expiryDate == null).length;
   }
 
   String getCurrentDate() {

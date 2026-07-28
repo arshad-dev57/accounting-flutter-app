@@ -1,17 +1,21 @@
 // lib/core/login/controller/login_controller.dart
 
+import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
+
+import 'package:LedgerPro_app/Utils/currency_controller.dart';
+import 'package:LedgerPro_app/Utils/colors.dart';
+import 'package:LedgerPro_app/Utils/toast_utils.dart';
 import 'package:LedgerPro_app/core/changepassword/screen/otp_screen.dart';
 import 'package:LedgerPro_app/core/dashboard/Screens/dashbaord_screen.dart';
 import 'package:LedgerPro_app/core/loginOtp/screen/login_otp_screen.dart';
 import 'package:LedgerPro_app/core/plans/controllers/subscription_controller.dart';
 import 'package:LedgerPro_app/core/plans/views/Subscription_plans.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
+import 'package:LedgerPro_app/Services/api_client.dart';
+import 'package:LedgerPro_app/Services/notification_Service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:LedgerPro_app/Services/api_client.dart';
 
 class LoginController extends GetxController {
   var isLoading = false.obs;
@@ -82,6 +86,9 @@ class LoginController extends GetxController {
     isLoading.value = true;
 
     try {
+      print('🔍 [LOGIN] Starting login request');
+      print('🔍 [LOGIN] Email: ${emailController.text.trim()}');
+
       final response = await _api.post(
         '/api/users/login',
         body: {
@@ -91,10 +98,18 @@ class LoginController extends GetxController {
         requiresAuth: false,
       );
 
+      print('🔍 [LOGIN] API Response received');
+      print('🔍 [LOGIN] Response statusCode: ${response.statusCode}');
+      print('🔍 [LOGIN] Response success: ${response.success}');
+      print('🔍 [LOGIN] Response message: ${response.message}');
+      print('🔍 [LOGIN] Response data: ${response.data}');
+      print('🔍 [LOGIN] Response isFiscalYearError: ${response.isFiscalYearError}');
+
       final data = response.data;
 
       // ✅ FIX: Check if data is null before accessing
       if (data == null) {
+        print('❌ [LOGIN] Data is null');
         AppSnackbar.error(
           kDanger,
           'Error',
@@ -104,8 +119,12 @@ class LoginController extends GetxController {
       }
 
       if (response.success) {
+        print('✅ [LOGIN] Login successful');
+        print('🔍 [LOGIN] Data keys: ${data.keys.toList()}');
+
         // ✅ Check if requiresOtp exists
         if (data['requiresOtp'] == true) {
+          print('🔍 [LOGIN] OTP required');
           Get.to(
             () => LoginOtpScreen(
               email: data['email'] ?? emailController.text.trim(),
@@ -119,6 +138,39 @@ class LoginController extends GetxController {
         final subscriptionController = Get.find<SubscriptionController>();
         await subscriptionController.checkSubscriptionStatus();
         AppSnackbar.success(kSuccess, 'Success', 'Login successful!');
+
+        // ✅ FIX: Update currency after login
+        await _updateCurrencyFromUser(data['user']);
+
+        // ✅ Notification Service Setup (mobile only)
+        if (!kIsWeb) {
+          try {
+            print('🔔🔔🔔 [LoginController] NOTIFICATION SETUP START 🔔🔔🔔');
+            final userData = data['user'] as Map<String, dynamic>?;
+            if (userData != null && userData['_id'] != null) {
+              final userId = userData['_id'].toString();
+              print('🔔 [LoginController] Setting up notification service for user: $userId');
+              
+              print('🔔 [LoginController] Calling NotificationService.login()...');
+              await NotificationService.instance.login(userId);
+              
+              print('🔔 [LoginController] Calling verifyDeviceRegistration()...');
+              await NotificationService.instance.verifyDeviceRegistration();
+              
+              print('✅ [LoginController] Notification service setup completed');
+              print('🔔🔔🔔 [LoginController] NOTIFICATION SETUP END 🔔🔔🔔');
+            } else {
+              print('⚠️ [LoginController] User data or user ID is null, skipping notification setup');
+            }
+          } catch (e) {
+            print('❌ [LoginController] Notification service setup error: $e');
+            print('❌ [LoginController] Error type: ${e.runtimeType}');
+            // Don't block login on notification error
+          }
+        } else {
+          print('🔔 [LoginController] Running on web, skipping notification setup');
+        }
+
         if (subscriptionController.hasAccess) {
           Get.offAllNamed('/dashboard');
         } else {
@@ -126,6 +178,8 @@ class LoginController extends GetxController {
         }
         return true;
       } else {
+        print('❌ [LOGIN] Login failed');
+        print('❌ [LOGIN] Error message: ${data['message']}');
         AppSnackbar.error(
           kDanger,
           'Error',
@@ -134,15 +188,57 @@ class LoginController extends GetxController {
         return false;
       }
     } catch (e) {
-      print('Login error: $e');
+      print('❌ [LOGIN] Exception caught: $e');
+      print('❌ [LOGIN] Exception type: ${e.runtimeType}');
       AppSnackbar.error(
         kDanger,
         'Error',
-        'Error. Please check your connection.',
+        'Error. Server Down. Please try again later.',
       );
       return false;
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  // ✅ NEW: Update currency from user data
+  Future<void> _updateCurrencyFromUser(Map<String, dynamic>? userData) async {
+    if (userData == null) return;
+
+    try {
+      final currencyController = Get.find<CurrencyController>();
+
+      // Check if businessDetails has currency
+      final businessDetails =
+          userData['businessDetails'] as Map<String, dynamic>?;
+      if (businessDetails != null) {
+        final code = businessDetails['currencyCode'] as String?;
+        final symbol = businessDetails['currencySymbol'] as String?;
+
+        if (code != null &&
+            code.isNotEmpty &&
+            symbol != null &&
+            symbol.isNotEmpty) {
+          // Currency exists in user data, update controller
+          await currencyController.updateFromUserData(userData);
+          print('✅ Currency updated from user data: $code ($symbol)');
+          return;
+        }
+      }
+
+      // If no currency in user data, check SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      final savedCode = prefs.getString('app_currency_code');
+      if (savedCode != null && savedCode.isNotEmpty) {
+        await currencyController.loadFromPrefs();
+        print('✅ Currency loaded from preferences: $savedCode');
+      } else {
+        // Use default currency
+        await currencyController.loadFromPrefs();
+        print('✅ Using default currency');
+      }
+    } catch (e) {
+      print('❌ Error updating currency: $e');
     }
   }
 
@@ -157,33 +253,33 @@ class LoginController extends GetxController {
 
       // ✅ FIX: Check if user exists before saving
       if (data['user'] != null) {
-        await prefs.setString('user_data', json.encode(data['user']));
+        final userData = data['user'] as Map<String, dynamic>;
+        await prefs.setString('user_data', json.encode(userData));
 
-        if (data['user']['organizationName'] != null &&
-            data['user']['organizationName'].toString().isNotEmpty) {
-          await prefs.setString(
-            'company_name',
-            data['user']['organizationName'],
-          );
+        // ✅ Load currency from user data
+        await _updateCurrencyFromUser(userData);
+
+        if (userData['organizationName'] != null &&
+            userData['organizationName'].toString().isNotEmpty) {
+          await prefs.setString('company_name', userData['organizationName']);
         } else {
           await prefs.setString('company_name', '');
         }
 
-        if (data['user']['address'] != null &&
-            data['user']['address'].toString().isNotEmpty) {
-          await prefs.setString('company_address', data['user']['address']);
+        if (userData['address'] != null &&
+            userData['address'].toString().isNotEmpty) {
+          await prefs.setString('company_address', userData['address']);
         }
 
-        if (data['user']['firstName'] != null &&
-            data['user']['lastName'] != null) {
+        if (userData['firstName'] != null && userData['lastName'] != null) {
           await prefs.setString(
             'user_name',
-            '${data['user']['firstName']} ${data['user']['lastName']}',
+            '${userData['firstName']} ${userData['lastName']}',
           );
         }
 
-        if (data['user']['email'] != null) {
-          await prefs.setString('user_email', data['user']['email']);
+        if (userData['email'] != null) {
+          await prefs.setString('user_email', userData['email']);
         }
       }
     } catch (e) {

@@ -1,9 +1,12 @@
+// core/cashflowstatement/controller/cashflow_controller.dart
+// COMPLETE CONTROLLER - NO WEB
+
 import 'dart:convert';
 import 'dart:io';
 import 'package:LedgerPro_app/Utils/colors.dart';
+import 'package:LedgerPro_app/Utils/currency_utils.dart';
 import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:universal_html/html.dart' as html;
+import 'package:LedgerPro_app/core/FiscalYear/controller/fiscal_year_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -49,6 +52,7 @@ class CashFlowController extends GetxController {
   ];
   
   final ApiClient _api = Get.find<ApiClient>();
+  final FiscalYearController _fiscalYearController = Get.find<FiscalYearController>();
   
   @override
   void onInit() {
@@ -57,7 +61,7 @@ class CashFlowController extends GetxController {
   }
   
   String _formatAmount(double amount) {
-    return '\$. ${amount.toStringAsFixed(2)}';
+    return CurrencyUtils.format(amount);
   }
   
   Future<void> loadCashFlowData() async {
@@ -74,9 +78,12 @@ class CashFlowController extends GetxController {
         params['period'] = selectedPeriod.value;
       }
       
-      final response = await _api.get('/api/reports/cash-flow', queryParameters: params);
+      // Add fiscal year ID if selected
+      if (_fiscalYearController.selectedFiscalYear.value != null) {
+        params['fiscalYearId'] = _fiscalYearController.selectedFiscalYear.value!.id;
+      }
       
-      print("📡 Response Status: ${response.statusCode}");
+      final response = await _api.get('/api/reports/cash-flow', queryParameters: params);
       
       if (response.success) {
         final Map<String, dynamic> responseData = response.data;
@@ -85,15 +92,15 @@ class CashFlowController extends GetxController {
           final data = responseData['data'];
           
           // Period text
-          periodText.value = data['period']['displayText'];
+          periodText.value = data['period']['displayText'] ?? '';
           
           // Operating Activities
           if (data['operatingActivities'] != null) {
             operatingItems.value = (data['operatingActivities']['items'] as List)
                 .map((item) => CashFlowItem(
-                  name: item['name'],
+                  name: item['name'] ?? '',
                   amount: (item['amount'] as num).toDouble(),
-                  type: item['type']
+                  type: item['type'] ?? 'operating'
                 )).toList();
             cashFlowFromOperations.value = (data['operatingActivities']['total'] as num).toDouble();
           }
@@ -102,9 +109,9 @@ class CashFlowController extends GetxController {
           if (data['investingActivities'] != null) {
             investingItems.value = (data['investingActivities']['items'] as List)
                 .map((item) => CashFlowItem(
-                  name: item['name'],
+                  name: item['name'] ?? '',
                   amount: (item['amount'] as num).toDouble(),
-                  type: item['type']
+                  type: item['type'] ?? 'investing'
                 )).toList();
             cashFlowFromInvesting.value = (data['investingActivities']['total'] as num).toDouble();
           }
@@ -113,9 +120,9 @@ class CashFlowController extends GetxController {
           if (data['financingActivities'] != null) {
             financingItems.value = (data['financingActivities']['items'] as List)
                 .map((item) => CashFlowItem(
-                  name: item['name'],
+                  name: item['name'] ?? '',
                   amount: (item['amount'] as num).toDouble(),
-                  type: item['type']
+                  type: item['type'] ?? 'financing'
                 )).toList();
             cashFlowFromFinancing.value = (data['financingActivities']['total'] as num).toDouble();
           }
@@ -125,9 +132,6 @@ class CashFlowController extends GetxController {
           openingCashBalance.value = (data['openingCashBalance'] as num).toDouble();
           closingCashBalance.value = (data['closingCashBalance'] as num).toDouble();
           netCashFlowPercentage.value = (data['netCashFlowPercentage'] as num).toDouble();
-          
-          print("✅ Cash Flow loaded successfully");
-          print("📊 Net Cash Flow: ${netCashFlow.value}");
           
         } else {
           hasError.value = true;
@@ -143,7 +147,6 @@ class CashFlowController extends GetxController {
     } catch (e) {
       hasError.value = true;
       errorMessage.value = 'error: ${e.toString()}';
-      print("🔥 Error loading cash flow: $e");
       _showError(errorMessage.value);
     } finally {
       isLoading.value = false;
@@ -179,10 +182,10 @@ class CashFlowController extends GetxController {
   
   String formatAmount(double amount) {
     final formatter = NumberFormat('#,##0.00', 'en_US');
-    return '\$ ${formatter.format(amount)}';
+    return '${CurrencyUtils.prefix} ${formatter.format(amount)}';
   }
   
-  // ==================== EXPORT FUNCTIONS ====================
+  // ─── EXPORT FUNCTIONS ────────────────────────────────────────────
   
   void exportToExcel() {
     Get.bottomSheet(
@@ -195,31 +198,61 @@ class CashFlowController extends GetxController {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-           Text(
-              'Export Cash Flow Statement',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Row(
+              children: [
+                Text(
+                  'Export Cash Flow Statement',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: kText,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 18, color: Colors.black),
+                  onPressed: () => Get.back(),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
-           Text(
-              'Choose export format',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+            const SizedBox(height: 4),
+            Text(
+              'Cash flow statement will be exported',
+              style: TextStyle(fontSize: 12, color: kSubText),
             ),
             const SizedBox(height: 20),
-            ListTile(
-              leading: Icon(Icons.picture_as_pdf, color: Color(0xFFE53935)),
-              title:Text('Export as PDF'),
-              onTap: () {
-                Get.back();
-                exportToPdf();
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.table_chart, color: Color(0xFF2E7D32)),
-              title:Text('Export as Excel'),
-              onTap: () {
-                Get.back();
-                exportToExcelFile();
-              },
+            Row(
+              children: [
+                Expanded(
+                  child: _exportOptionCard(
+                    icon: Icons.picture_as_pdf_outlined,
+                    label: 'PDF',
+                    subtitle: 'Formatted report',
+                    color: const Color(0xFFE53935),
+                    bgColor: const Color(0xFFFFEBEE),
+                    onTap: () {
+                      Get.back();
+                      exportToPdf();
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _exportOptionCard(
+                    icon: Icons.table_chart_outlined,
+                    label: 'Excel',
+                    subtitle: 'Spreadsheet',
+                    color: const Color(0xFF2E7D32),
+                    bgColor: const Color(0xFFE8F5E9),
+                    onTap: () {
+                      Get.back();
+                      exportToExcelFile();
+                    },
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -227,122 +260,183 @@ class CashFlowController extends GetxController {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      backgroundColor: kCardBg,
     );
   }
+  
+  Widget _exportOptionCard({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required Color color,
+    required Color bgColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: Colors.white, size: 22),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 10,
+                color: color.withOpacity(0.7),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  // ─── PDF EXPORT ──────────────────────────────────────────────────
   Future<void> exportToPdf() async {
-  try {
-    // Show loading only on mobile
-    if (!kIsWeb) {
+    try {
       Get.dialog(
-        AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(height: 16),
-              Text('Generating PDF...', style: TextStyle(fontSize: 14)),
-            ],
+        Center(
+          child: Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      color: kPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Generating PDF...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Please wait',
+                    style: TextStyle(fontSize: 12, color: kSubText),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
         barrierDismissible: false,
       );
-    }
-    
-    final pdf = pw.Document();
-    
-    pdf.addPage(
-      pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(24),
-        header: (ctx) => _pdfHeader(),
-        footer: (ctx) => _pdfFooter(ctx),
-        build: (ctx) => [
-          _pdfSummarySection(),
-          pw.SizedBox(height: 16),
-          _pdfOperatingSection(),
-          pw.SizedBox(height: 16),
-          _pdfInvestingSection(),
-          pw.SizedBox(height: 16),
-          _pdfFinancingSection(),
-          pw.SizedBox(height: 16),
-          _pdfTotalsSection(),
-        ],
-      ),
-    );
-    
-    final bytes = await pdf.save();
-    final fileName = 'cash_flow_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
-    
-    if (kIsWeb) {
-      // WEB: Download using HTML anchor tag
-      final blob = html.Blob([bytes], 'application/pdf');
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', fileName)
-        ..click();
-      html.Url.revokeObjectUrl(url);
       
-      if (Get.isDialogOpen ?? false) Get.back();
+      final pdf = pw.Document();
       
-      AppSnackbar.success(
-        Colors.green,
-        'Success',
-        'Cash flow statement exported to PDF',
-        duration: const Duration(seconds: 2),
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(24),
+          header: (ctx) => _pdfHeader(),
+          footer: (ctx) => _pdfFooter(ctx),
+          build: (ctx) => [
+            _pdfSummarySection(),
+            pw.SizedBox(height: 16),
+            _pdfOperatingSection(),
+            pw.SizedBox(height: 16),
+            _pdfInvestingSection(),
+            pw.SizedBox(height: 16),
+            _pdfFinancingSection(),
+            pw.SizedBox(height: 16),
+            _pdfTotalsSection(),
+          ],
+        ),
       );
-    } else {
-      // MOBILE: Save to file and open
+      
       final dir = await getTemporaryDirectory();
+      final fileName = 'cash_flow_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
       final file = File('${dir.path}/$fileName');
-      await file.writeAsBytes(bytes);
+      await file.writeAsBytes(await pdf.save());
       
       if (Get.isDialogOpen ?? false) Get.back();
       
       AppSnackbar.success(
-        Colors.green,
+        kSuccess,
         'Success',
         'Cash flow statement exported to PDF',
-        duration: const Duration(seconds: 2),
       );
-      
       await OpenFile.open(file.path);
+    } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
+      AppSnackbar.error(kDanger, 'Error', 'Failed to export PDF: $e');
     }
-  } catch (e) {
-    if (Get.isDialogOpen ?? false) Get.back();
-    AppSnackbar.error(Colors.red, 'Error', 'Failed to export PDF: $e');
   }
-}
+  
   pw.Widget _pdfHeader() {
     return pw.Container(
       padding: const pw.EdgeInsets.only(bottom: 12),
       decoration: const pw.BoxDecoration(
-          border: pw.Border(
-              bottom: pw.BorderSide(color: PdfColors.grey300, width: 1))),
+        border: pw.Border(
+          bottom: pw.BorderSide(color: PdfColors.grey300, width: 1),
+        ),
+      ),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
-          pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
-            pw.Text('Cash Flow Statement',
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text('Cash Flow Statement',
                 style: pw.TextStyle(
-                    fontSize: 18,
-                    fontWeight: pw.FontWeight.bold,
-                    color: PdfColors.indigo800)),
-            pw.Text(
+                  fontSize: 18,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.indigo800,
+                ),
+              ),
+              pw.Text(
                 'Generated: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now())}',
-                style: pw.TextStyle(
-                    fontSize: 9, color: PdfColors.grey600)),
-          ]),
+                style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              ),
+            ],
+          ),
           pw.Container(
             padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: pw.BoxDecoration(
-                color: PdfColors.indigo800,
-                borderRadius: pw.BorderRadius.circular(6)),
+              color: PdfColors.indigo800,
+              borderRadius: pw.BorderRadius.circular(6),
+            ),
             child: pw.Text('LedgerPro',
-                style: pw.TextStyle(
-                    color: PdfColors.white,
-                    fontWeight: pw.FontWeight.bold,
-                    fontSize: 10)),
+              style: pw.TextStyle(
+                color: PdfColors.white,
+                fontWeight: pw.FontWeight.bold,
+                fontSize: 10,
+              ),
+            ),
           ),
         ],
       ),
@@ -353,15 +447,19 @@ class CashFlowController extends GetxController {
     return pw.Container(
       padding: const pw.EdgeInsets.only(top: 8),
       decoration: const pw.BoxDecoration(
-          border: pw.Border(
-              top: pw.BorderSide(color: PdfColors.grey300, width: 1))),
+        border: pw.Border(
+          top: pw.BorderSide(color: PdfColors.grey300, width: 1),
+        ),
+      ),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
           pw.Text('Confidential - For Internal Use Only',
-              style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500)),
+            style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
+          ),
           pw.Text('Page ${ctx.pageNumber} of ${ctx.pagesCount}',
-              style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500)),
+            style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
+          ),
         ],
       ),
     );
@@ -371,13 +469,15 @@ class CashFlowController extends GetxController {
     return pw.Container(
       padding: const pw.EdgeInsets.all(12),
       decoration: pw.BoxDecoration(
-          color: PdfColors.indigo50,
-          borderRadius: pw.BorderRadius.circular(8),
-          border: pw.Border.all(color: PdfColors.indigo200)),
+        color: PdfColors.indigo50,
+        borderRadius: pw.BorderRadius.circular(8),
+        border: pw.Border.all(color: PdfColors.indigo200),
+      ),
       child: pw.Column(
         children: [
           pw.Text('Period: ${periodText.value}',
-              style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold)),
+            style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
+          ),
           pw.SizedBox(height: 8),
           pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
@@ -385,7 +485,8 @@ class CashFlowController extends GetxController {
               _pdfSummaryItem('Opening Balance', _formatAmount(openingCashBalance.value), PdfColors.indigo700),
               _pdfSummaryItem('Closing Balance', _formatAmount(closingCashBalance.value), PdfColors.indigo700),
               _pdfSummaryItem('Net Cash Flow', _formatAmount(netCashFlow.value), 
-                  netCashFlow.value >= 0 ? PdfColors.green700 : PdfColors.red700),
+                netCashFlow.value >= 0 ? PdfColors.green700 : PdfColors.red700,
+              ),
             ],
           ),
           pw.SizedBox(height: 4),
@@ -394,7 +495,8 @@ class CashFlowController extends GetxController {
             children: [
               pw.Text('Net Cash Flow Change: ', style: pw.TextStyle(fontSize: 9)),
               pw.Text('${netCashFlowPercentage.value.toStringAsFixed(1)}%', 
-                  style: pw.TextStyle(fontSize: 9, color: netCashFlowPercentage.value >= 0 ? PdfColors.green700 : PdfColors.red700)),
+                style: pw.TextStyle(fontSize: 9, color: netCashFlowPercentage.value >= 0 ? PdfColors.green700 : PdfColors.red700),
+              ),
             ],
           ),
         ],
@@ -405,11 +507,16 @@ class CashFlowController extends GetxController {
   pw.Widget _pdfSummaryItem(String label, String value, PdfColor color) {
     return pw.Column(children: [
       pw.Text(label,
-          style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
+        style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+      ),
       pw.SizedBox(height: 4),
       pw.Text(value,
-          style: pw.TextStyle(
-              fontSize: 11, fontWeight: pw.FontWeight.bold, color: color)),
+        style: pw.TextStyle(
+          fontSize: 11,
+          fontWeight: pw.FontWeight.bold,
+          color: color,
+        ),
+      ),
     ]);
   }
   
@@ -418,7 +525,8 @@ class CashFlowController extends GetxController {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text('Cash Flow from Operating Activities',
-            style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.green700)),
+          style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.green700),
+        ),
         pw.SizedBox(height: 8),
         _pdfItemList(operatingItems, 'Total Operating Cash Flow', cashFlowFromOperations.value),
       ],
@@ -430,7 +538,8 @@ class CashFlowController extends GetxController {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text('Cash Flow from Investing Activities',
-            style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.orange700)),
+          style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.orange700),
+        ),
         pw.SizedBox(height: 8),
         _pdfItemList(investingItems, 'Total Investing Cash Flow', cashFlowFromInvesting.value),
       ],
@@ -442,7 +551,8 @@ class CashFlowController extends GetxController {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text('Cash Flow from Financing Activities',
-            style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.red700)),
+          style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.red700),
+        ),
         pw.SizedBox(height: 8),
         _pdfItemList(financingItems, 'Total Financing Cash Flow', cashFlowFromFinancing.value),
       ],
@@ -464,7 +574,8 @@ class CashFlowController extends GetxController {
           child: pw.Row(children: [
             pw.Expanded(child: pw.Text(item.name, style: pw.TextStyle(fontSize: 10))),
             pw.Text(_formatAmount(item.amount), 
-                style: pw.TextStyle(fontSize: 10, color: item.amount >= 0 ? PdfColors.green700 : PdfColors.red700)),
+              style: pw.TextStyle(fontSize: 10, color: item.amount >= 0 ? PdfColors.green700 : PdfColors.red700),
+            ),
           ]),
         )).toList(),
         pw.Divider(),
@@ -473,8 +584,10 @@ class CashFlowController extends GetxController {
           child: pw.Row(children: [
             pw.Expanded(child: pw.Text(totalLabel, style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold))),
             pw.Text(_formatAmount(total), 
-                style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, 
-                    color: total >= 0 ? PdfColors.green700 : PdfColors.red700)),
+              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, 
+                color: total >= 0 ? PdfColors.green700 : PdfColors.red700,
+              ),
+            ),
           ]),
         ),
       ],
@@ -485,9 +598,10 @@ class CashFlowController extends GetxController {
     return pw.Container(
       padding: const pw.EdgeInsets.all(12),
       decoration: pw.BoxDecoration(
-          color: PdfColors.indigo50,
-          borderRadius: pw.BorderRadius.circular(8),
-          border: pw.Border.all(color: PdfColors.indigo200)),
+        color: PdfColors.indigo50,
+        borderRadius: pw.BorderRadius.circular(8),
+        border: pw.Border.all(color: PdfColors.indigo200),
+      ),
       child: pw.Column(
         children: [
           pw.Row(children: [
@@ -498,201 +612,207 @@ class CashFlowController extends GetxController {
           pw.Row(children: [
             pw.Expanded(child: pw.Text('Net Cash Flow', style: pw.TextStyle(fontSize: 11))),
             pw.Text(_formatAmount(netCashFlow.value), 
-                style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, 
-                    color: netCashFlow.value >= 0 ? PdfColors.green700 : PdfColors.red700)),
+              style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, 
+                color: netCashFlow.value >= 0 ? PdfColors.green700 : PdfColors.red700,
+              ),
+            ),
           ]),
           pw.Divider(),
           pw.Row(children: [
             pw.Expanded(child: pw.Text('Closing Cash Balance', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold))),
             pw.Text(_formatAmount(closingCashBalance.value), 
-                style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.indigo800)),
+              style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.indigo800),
+            ),
           ]),
         ],
       ),
     );
   }
+  
+  // ─── EXCEL EXPORT ──────────────────────────────────────────────────
   Future<void> exportToExcelFile() async {
-  try {
-    // Show loading only on mobile
-    if (!kIsWeb) {
+    try {
       Get.dialog(
-        AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(height: 16),
-              Text('Building Excel...', style: TextStyle(fontSize: 14)),
-            ],
+        Center(
+          child: Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      color: kPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Building Excel...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Please wait',
+                    style: TextStyle(fontSize: 12, color: kSubText),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
         barrierDismissible: false,
       );
-    }
-    
-    final excelFile = Excel.createExcel();
-    
-    // Summary Sheet
-    final summarySheet = excelFile['Summary'];
-    excelFile.setDefaultSheet('Summary');
-    
-    _excelSetCell(summarySheet, 0, 0, 'Cash Flow Statement',
-        bold: true, fontSize: 14, bgColor: '1A237E', fontColor: 'FFFFFF');
-    _excelSetCell(summarySheet, 1, 0,
-        'Generated: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now())}',
-        fontSize: 9, fontColor: '757575');
-    _excelSetCell(summarySheet, 2, 0,
-        'Period: ${periodText.value}',
-        fontSize: 10, fontColor: '1A237E');
-    
-    _excelSetCell(summarySheet, 4, 0, 'SUMMARY', bold: true, fontSize: 11, bgColor: 'E8EAF6');
-    
-    final summaryRows = [
-      ['Opening Cash Balance', _formatAmount(openingCashBalance.value)],
-      ['Net Cash Flow', _formatAmount(netCashFlow.value)],
-      ['Closing Cash Balance', _formatAmount(closingCashBalance.value)],
-      ['Net Cash Flow Change', '${netCashFlowPercentage.value.toStringAsFixed(1)}%'],
-    ];
-    
-    for (int r = 0; r < summaryRows.length; r++) {
-      for (int c = 0; c < 2; c++) {
-        _excelSetCell(summarySheet, 5 + r, c, summaryRows[r][c],
-            bgColor: r.isEven ? 'FFFFFF' : 'F5F5F5');
+      
+      final excelFile = Excel.createExcel();
+      
+      // Summary Sheet
+      final summarySheet = excelFile['Summary'];
+      excelFile.setDefaultSheet('Summary');
+      
+      _excelSetCell(summarySheet, 0, 0, 'Cash Flow Statement',
+          bold: true, fontSize: 14, bgColor: '1A237E', fontColor: 'FFFFFF');
+      _excelSetCell(summarySheet, 1, 0,
+          'Generated: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now())}',
+          fontSize: 9, fontColor: '757575');
+      _excelSetCell(summarySheet, 2, 0,
+          'Period: ${periodText.value}',
+          fontSize: 10, fontColor: '1A237E');
+      
+      _excelSetCell(summarySheet, 4, 0, 'SUMMARY', bold: true, fontSize: 11, bgColor: 'E8EAF6');
+      
+      final summaryRows = [
+        ['Opening Cash Balance', _formatAmount(openingCashBalance.value)],
+        ['Net Cash Flow', _formatAmount(netCashFlow.value)],
+        ['Closing Cash Balance', _formatAmount(closingCashBalance.value)],
+        ['Net Cash Flow Change', '${netCashFlowPercentage.value.toStringAsFixed(1)}%'],
+      ];
+      
+      for (int r = 0; r < summaryRows.length; r++) {
+        for (int c = 0; c < 2; c++) {
+          _excelSetCell(summarySheet, 5 + r, c, summaryRows[r][c],
+              bgColor: r.isEven ? 'FFFFFF' : 'F5F5F5');
+        }
       }
-    }
-    summarySheet.setColumnWidth(0, 25);
-    summarySheet.setColumnWidth(1, 20);
-    
-    // Operating Activities Sheet
-    final operatingSheet = excelFile['Operating Activities'];
-    _excelSetCell(operatingSheet, 0, 0, 'Cash Flow from Operating Activities', 
-        bold: true, fontSize: 12, bgColor: '2E7D32', fontColor: 'FFFFFF');
-    _excelSetCell(operatingSheet, 1, 0, 'Description', bold: true, bgColor: 'E8EAF6');
-    _excelSetCell(operatingSheet, 1, 1, 'Amount', bold: true, bgColor: 'E8EAF6');
-    
-    int row = 2;
-    for (final item in operatingItems) {
-      final bg = row.isEven ? 'F5F5F5' : 'FFFFFF';
-      _excelSetCell(operatingSheet, row, 0, item.name, bgColor: bg);
-      _excelSetCell(operatingSheet, row, 1, item.amount, bgColor: bg, fontColor: item.amount >= 0 ? '2E7D32' : 'C62828');
-      row++;
-    }
-    _excelSetCell(operatingSheet, row, 0, 'Total Operating Cash Flow', bold: true, bgColor: 'E8EAF6');
-    _excelSetCell(operatingSheet, row, 1, cashFlowFromOperations.value, bold: true, bgColor: 'E8EAF6', fontColor: cashFlowFromOperations.value >= 0 ? '2E7D32' : 'C62828');
-    
-    operatingSheet.setColumnWidth(0, 40);
-    operatingSheet.setColumnWidth(1, 20);
-    
-    // Investing Activities Sheet
-    final investingSheet = excelFile['Investing Activities'];
-    _excelSetCell(investingSheet, 0, 0, 'Cash Flow from Investing Activities', 
-        bold: true, fontSize: 12, bgColor: 'F39C12', fontColor: 'FFFFFF');
-    _excelSetCell(investingSheet, 1, 0, 'Description', bold: true, bgColor: 'E8EAF6');
-    _excelSetCell(investingSheet, 1, 1, 'Amount', bold: true, bgColor: 'E8EAF6');
-    
-    row = 2;
-    for (final item in investingItems) {
-      final bg = row.isEven ? 'F5F5F5' : 'FFFFFF';
-      _excelSetCell(investingSheet, row, 0, item.name, bgColor: bg);
-      _excelSetCell(investingSheet, row, 1, item.amount, bgColor: bg, fontColor: item.amount >= 0 ? '2E7D32' : 'C62828');
-      row++;
-    }
-    _excelSetCell(investingSheet, row, 0, 'Total Investing Cash Flow', bold: true, bgColor: 'E8EAF6');
-    _excelSetCell(investingSheet, row, 1, cashFlowFromInvesting.value, bold: true, bgColor: 'E8EAF6', fontColor: cashFlowFromInvesting.value >= 0 ? '2E7D32' : 'C62828');
-    
-    investingSheet.setColumnWidth(0, 40);
-    investingSheet.setColumnWidth(1, 20);
-    
-    // Financing Activities Sheet
-    final financingSheet = excelFile['Financing Activities'];
-    _excelSetCell(financingSheet, 0, 0, 'Cash Flow from Financing Activities', 
-        bold: true, fontSize: 12, bgColor: 'C62828', fontColor: 'FFFFFF');
-    _excelSetCell(financingSheet, 1, 0, 'Description', bold: true, bgColor: 'E8EAF6');
-    _excelSetCell(financingSheet, 1, 1, 'Amount', bold: true, bgColor: 'E8EAF6');
-    
-    row = 2;
-    for (final item in financingItems) {
-      final bg = row.isEven ? 'F5F5F5' : 'FFFFFF';
-      _excelSetCell(financingSheet, row, 0, item.name, bgColor: bg);
-      _excelSetCell(financingSheet, row, 1, item.amount, bgColor: bg, fontColor: item.amount >= 0 ? '2E7D32' : 'C62828');
-      row++;
-    }
-    _excelSetCell(financingSheet, row, 0, 'Total Financing Cash Flow', bold: true, bgColor: 'E8EAF6');
-    _excelSetCell(financingSheet, row, 1, cashFlowFromFinancing.value, bold: true, bgColor: 'E8EAF6', fontColor: cashFlowFromFinancing.value >= 0 ? '2E7D32' : 'C62828');
-    
-    financingSheet.setColumnWidth(0, 40);
-    financingSheet.setColumnWidth(1, 20);
-    
-    // Totals Sheet
-    final totalsSheet = excelFile['Totals'];
-    _excelSetCell(totalsSheet, 0, 0, 'Cash Flow Summary', bold: true, fontSize: 14, bgColor: '1A237E', fontColor: 'FFFFFF');
-    _excelSetCell(totalsSheet, 2, 0, 'Cash Flow from Operations', bold: true);
-    _excelSetCell(totalsSheet, 2, 1, cashFlowFromOperations.value, fontColor: cashFlowFromOperations.value >= 0 ? '2E7D32' : 'C62828');
-    _excelSetCell(totalsSheet, 3, 0, 'Cash Flow from Investing', bold: true);
-    _excelSetCell(totalsSheet, 3, 1, cashFlowFromInvesting.value, fontColor: cashFlowFromInvesting.value >= 0 ? '2E7D32' : 'C62828');
-    _excelSetCell(totalsSheet, 4, 0, 'Cash Flow from Financing', bold: true);
-    _excelSetCell(totalsSheet, 4, 1, cashFlowFromFinancing.value, fontColor: cashFlowFromFinancing.value >= 0 ? '2E7D32' : 'C62828');
-    _excelSetCell(totalsSheet, 5, 0, 'Net Cash Flow', bold: true);
-    _excelSetCell(totalsSheet, 5, 1, netCashFlow.value, bold: true, fontColor: netCashFlow.value >= 0 ? '2E7D32' : 'C62828');
-    _excelSetCell(totalsSheet, 7, 0, 'Opening Cash Balance', bold: true);
-    _excelSetCell(totalsSheet, 7, 1, openingCashBalance.value);
-    _excelSetCell(totalsSheet, 8, 0, 'Net Cash Flow', bold: true);
-    _excelSetCell(totalsSheet, 8, 1, netCashFlow.value, fontColor: netCashFlow.value >= 0 ? '2E7D32' : 'C62828');
-    _excelSetCell(totalsSheet, 9, 0, 'Closing Cash Balance', bold: true, fontSize: 12);
-    _excelSetCell(totalsSheet, 9, 1, closingCashBalance.value, bold: true, fontColor: '1A237E');
-    _excelSetCell(totalsSheet, 11, 0, 'Net Cash Flow Change', bold: true);
-    _excelSetCell(totalsSheet, 11, 1, '${netCashFlowPercentage.value.toStringAsFixed(1)}%');
-    
-    totalsSheet.setColumnWidth(0, 30);
-    totalsSheet.setColumnWidth(1, 20);
-    
-    excelFile.delete('Sheet1');
-    
-    final bytes = excelFile.save();
-    if (bytes == null) throw Exception('Excel save failed');
-    
-    final fileName = 'cash_flow_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
-    
-    if (kIsWeb) {
-      // WEB: Download Excel
-      final blob = html.Blob([bytes], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', fileName)
-        ..click();
-      html.Url.revokeObjectUrl(url);
+      summarySheet.setColumnWidth(0, 25);
+      summarySheet.setColumnWidth(1, 20);
       
-      if (Get.isDialogOpen ?? false) Get.back();
+      // Operating Activities Sheet
+      final operatingSheet = excelFile['Operating Activities'];
+      _excelSetCell(operatingSheet, 0, 0, 'Cash Flow from Operating Activities', 
+          bold: true, fontSize: 12, bgColor: '2E7D32', fontColor: 'FFFFFF');
+      _excelSetCell(operatingSheet, 1, 0, 'Description', bold: true, bgColor: 'E8EAF6');
+      _excelSetCell(operatingSheet, 1, 1, 'Amount', bold: true, bgColor: 'E8EAF6');
       
-      AppSnackbar.success(
-        Colors.green,
-        'Success',
-        'Cash flow statement exported to Excel',
-        duration: const Duration(seconds: 2),
-      );
-    } else {
-      // MOBILE: Save and open
+      int row = 2;
+      for (final item in operatingItems) {
+        final bg = row.isEven ? 'F5F5F5' : 'FFFFFF';
+        _excelSetCell(operatingSheet, row, 0, item.name, bgColor: bg);
+        _excelSetCell(operatingSheet, row, 1, item.amount, bgColor: bg, fontColor: item.amount >= 0 ? '2E7D32' : 'C62828');
+        row++;
+      }
+      _excelSetCell(operatingSheet, row, 0, 'Total Operating Cash Flow', bold: true, bgColor: 'E8EAF6');
+      _excelSetCell(operatingSheet, row, 1, cashFlowFromOperations.value, bold: true, bgColor: 'E8EAF6', fontColor: cashFlowFromOperations.value >= 0 ? '2E7D32' : 'C62828');
+      
+      operatingSheet.setColumnWidth(0, 40);
+      operatingSheet.setColumnWidth(1, 20);
+      
+      // Investing Activities Sheet
+      final investingSheet = excelFile['Investing Activities'];
+      _excelSetCell(investingSheet, 0, 0, 'Cash Flow from Investing Activities', 
+          bold: true, fontSize: 12, bgColor: 'F39C12', fontColor: 'FFFFFF');
+      _excelSetCell(investingSheet, 1, 0, 'Description', bold: true, bgColor: 'E8EAF6');
+      _excelSetCell(investingSheet, 1, 1, 'Amount', bold: true, bgColor: 'E8EAF6');
+      
+      row = 2;
+      for (final item in investingItems) {
+        final bg = row.isEven ? 'F5F5F5' : 'FFFFFF';
+        _excelSetCell(investingSheet, row, 0, item.name, bgColor: bg);
+        _excelSetCell(investingSheet, row, 1, item.amount, bgColor: bg, fontColor: item.amount >= 0 ? '2E7D32' : 'C62828');
+        row++;
+      }
+      _excelSetCell(investingSheet, row, 0, 'Total Investing Cash Flow', bold: true, bgColor: 'E8EAF6');
+      _excelSetCell(investingSheet, row, 1, cashFlowFromInvesting.value, bold: true, bgColor: 'E8EAF6', fontColor: cashFlowFromInvesting.value >= 0 ? '2E7D32' : 'C62828');
+      
+      investingSheet.setColumnWidth(0, 40);
+      investingSheet.setColumnWidth(1, 20);
+      
+      // Financing Activities Sheet
+      final financingSheet = excelFile['Financing Activities'];
+      _excelSetCell(financingSheet, 0, 0, 'Cash Flow from Financing Activities', 
+          bold: true, fontSize: 12, bgColor: 'C62828', fontColor: 'FFFFFF');
+      _excelSetCell(financingSheet, 1, 0, 'Description', bold: true, bgColor: 'E8EAF6');
+      _excelSetCell(financingSheet, 1, 1, 'Amount', bold: true, bgColor: 'E8EAF6');
+      
+      row = 2;
+      for (final item in financingItems) {
+        final bg = row.isEven ? 'F5F5F5' : 'FFFFFF';
+        _excelSetCell(financingSheet, row, 0, item.name, bgColor: bg);
+        _excelSetCell(financingSheet, row, 1, item.amount, bgColor: bg, fontColor: item.amount >= 0 ? '2E7D32' : 'C62828');
+        row++;
+      }
+      _excelSetCell(financingSheet, row, 0, 'Total Financing Cash Flow', bold: true, bgColor: 'E8EAF6');
+      _excelSetCell(financingSheet, row, 1, cashFlowFromFinancing.value, bold: true, bgColor: 'E8EAF6', fontColor: cashFlowFromFinancing.value >= 0 ? '2E7D32' : 'C62828');
+      
+      financingSheet.setColumnWidth(0, 40);
+      financingSheet.setColumnWidth(1, 20);
+      
+      // Totals Sheet
+      final totalsSheet = excelFile['Totals'];
+      _excelSetCell(totalsSheet, 0, 0, 'Cash Flow Summary', bold: true, fontSize: 14, bgColor: '1A237E', fontColor: 'FFFFFF');
+      _excelSetCell(totalsSheet, 2, 0, 'Cash Flow from Operations', bold: true);
+      _excelSetCell(totalsSheet, 2, 1, cashFlowFromOperations.value, fontColor: cashFlowFromOperations.value >= 0 ? '2E7D32' : 'C62828');
+      _excelSetCell(totalsSheet, 3, 0, 'Cash Flow from Investing', bold: true);
+      _excelSetCell(totalsSheet, 3, 1, cashFlowFromInvesting.value, fontColor: cashFlowFromInvesting.value >= 0 ? '2E7D32' : 'C62828');
+      _excelSetCell(totalsSheet, 4, 0, 'Cash Flow from Financing', bold: true);
+      _excelSetCell(totalsSheet, 4, 1, cashFlowFromFinancing.value, fontColor: cashFlowFromFinancing.value >= 0 ? '2E7D32' : 'C62828');
+      _excelSetCell(totalsSheet, 5, 0, 'Net Cash Flow', bold: true);
+      _excelSetCell(totalsSheet, 5, 1, netCashFlow.value, bold: true, fontColor: netCashFlow.value >= 0 ? '2E7D32' : 'C62828');
+      _excelSetCell(totalsSheet, 7, 0, 'Opening Cash Balance', bold: true);
+      _excelSetCell(totalsSheet, 7, 1, openingCashBalance.value);
+      _excelSetCell(totalsSheet, 8, 0, 'Net Cash Flow', bold: true);
+      _excelSetCell(totalsSheet, 8, 1, netCashFlow.value, fontColor: netCashFlow.value >= 0 ? '2E7D32' : 'C62828');
+      _excelSetCell(totalsSheet, 9, 0, 'Closing Cash Balance', bold: true, fontSize: 12);
+      _excelSetCell(totalsSheet, 9, 1, closingCashBalance.value, bold: true, fontColor: '1A237E');
+      _excelSetCell(totalsSheet, 11, 0, 'Net Cash Flow Change', bold: true);
+      _excelSetCell(totalsSheet, 11, 1, '${netCashFlowPercentage.value.toStringAsFixed(1)}%');
+      
+      totalsSheet.setColumnWidth(0, 30);
+      totalsSheet.setColumnWidth(1, 20);
+      
+      excelFile.delete('Sheet1');
+      
+      final bytes = excelFile.save();
+      if (bytes == null) throw Exception('Excel save failed');
+      
       final dir = await getTemporaryDirectory();
+      final fileName = 'cash_flow_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
       final file = File('${dir.path}/$fileName');
       await file.writeAsBytes(bytes);
       
       if (Get.isDialogOpen ?? false) Get.back();
       
       AppSnackbar.success(
-        Colors.green,
+        kSuccess,
         'Success',
         'Cash flow statement exported to Excel',
-        duration: const Duration(seconds: 2),
       );
-          
       await OpenFile.open(file.path);
+    } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
+      AppSnackbar.error(kDanger, 'Error', 'Failed to export Excel: $e');
     }
-  } catch (e) {
-    if (Get.isDialogOpen ?? false) Get.back();
-    AppSnackbar.error(Colors.red, 'Error', 'Failed to export Excel: $e');
   }
-}
+  
   void _excelSetCell(
     Sheet sheet,
     int row,
@@ -704,7 +824,8 @@ class CashFlowController extends GetxController {
     String fontColor = '000000',
   }) {
     final cell = sheet.cell(
-        CellIndex.indexByColumnRow(columnIndex: col, rowIndex: row));
+      CellIndex.indexByColumnRow(columnIndex: col, rowIndex: row),
+    );
     cell.value = value is double
         ? DoubleCellValue(value)
         : value is int
@@ -722,31 +843,11 @@ class CashFlowController extends GetxController {
   }
   
   void printReport() {
-    AppSnackbar.error(
-      Colors.blue,
-      'Print',
-      'Preparing print...',
-      
-      duration: const Duration(seconds: 2),
-    );
-  }
-  
-  void _handleSessionExpired() {
-    AppSnackbar.error(
-      Colors.red,
-      'Session Expired',
-      'Please login again',
-      
-      duration: const Duration(seconds: 2),
-    );
+    AppSnackbar.info('Print', 'Preparing print...');
   }
   
   void _showError(String message) {
-    AppSnackbar.error(
-      Colors.red,
-      'Error',
-      message,
-    );
+    AppSnackbar.error(kDanger, 'Error', message);
   }
 }
 

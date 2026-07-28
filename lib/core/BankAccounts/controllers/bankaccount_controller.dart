@@ -105,10 +105,18 @@ class BankAccountController extends GetxController {
             bankAccounts.value = accounts;
 
             final summary = data['summary'] ?? {};
-            totalBalance.value = _toDouble(summary['totalBalance']);
-            total$.value = _toDouble(summary['total\$']);
-            totalUSD.value = _toDouble(summary['totalUSD']);
-            activeCount.value = (summary['activeCount'] ?? 0).toInt();
+            // Use API summary if available, otherwise calculate locally
+            if (summary.isNotEmpty &&
+                summary['totalBalance'] != null &&
+                summary['totalBalance'] != 0) {
+              totalBalance.value = _toDouble(summary['totalBalance']);
+              total$.value = _toDouble(summary['total\$']);
+              totalUSD.value = _toDouble(summary['totalUSD']);
+              activeCount.value = (summary['activeCount'] ?? 0).toInt();
+            } else {
+              // Fallback to local calculation
+              _updateSummaryTotals();
+            }
           }
         }
       } else {
@@ -132,10 +140,8 @@ class BankAccountController extends GetxController {
     }
   }
 
-  Future<void> createBankAccount(Map<String, dynamic> accountData) async {
+  Future<bool> createBankAccount(Map<String, dynamic> accountData) async {
     try {
-      isLoading(true);
-
       final response = await _api.post('/api/bank-accounts', body: accountData);
 
       if (response.success) {
@@ -147,6 +153,7 @@ class BankAccountController extends GetxController {
         );
 
         await fetchBankAccounts();
+        return true;
       } else {
         AppSnackbar.error(
           Colors.red,
@@ -154,6 +161,7 @@ class BankAccountController extends GetxController {
           response.data['message'] ?? 'Failed to create account',
           duration: const Duration(seconds: 2),
         );
+        return false;
       }
     } catch (e) {
       print('Error creating bank account: $e');
@@ -163,8 +171,7 @@ class BankAccountController extends GetxController {
         'Failed to create account: $e',
         duration: const Duration(seconds: 2),
       );
-    } finally {
-      isLoading(false);
+      return false;
     }
   }
 
@@ -286,10 +293,18 @@ class BankAccountController extends GetxController {
           }
 
           final summary = data['summary'] ?? {};
-          totalBalance.value = _toDouble(summary['totalBalance']);
-          total$.value = _toDouble(summary['total\$']);
-          totalUSD.value = _toDouble(summary['totalUSD']);
-          activeCount.value = (summary['activeCount'] ?? 0).toInt();
+          // Use API summary if available, otherwise calculate locally
+          if (summary.isNotEmpty &&
+              summary['totalBalance'] != null &&
+              summary['totalBalance'] != 0) {
+            totalBalance.value = _toDouble(summary['totalBalance']);
+            total$.value = _toDouble(summary['total\$']);
+            totalUSD.value = _toDouble(summary['totalUSD']);
+            activeCount.value = (summary['activeCount'] ?? 0).toInt();
+          } else {
+            // Fallback to local calculation
+            _updateSummaryTotals();
+          }
         }
       }
     } catch (e) {

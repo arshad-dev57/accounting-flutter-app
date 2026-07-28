@@ -1,3 +1,6 @@
+// core/CapitalEquity/controller/equity_controller.dart
+// COMPLETE CONTROLLER WITH ALL DIALOGS
+
 import 'dart:io';
 
 import 'package:LedgerPro_app/Utils/currency_utils.dart';
@@ -7,10 +10,7 @@ import 'package:LedgerPro_app/Services/api_client.dart';
 import 'package:LedgerPro_app/core/CapitalEquity/models/equity_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:universal_html/html.dart' as html;
 import 'package:intl/intl.dart';
-import 'package:sizer/sizer.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 import 'package:pdf/pdf.dart';
@@ -24,10 +24,21 @@ class EquityController extends GetxController {
   var allEquityAccounts = <EquityAccount>[].obs;
   var equityAccounts = <EquityAccount>[].obs;
   var transactions = <OwnerTransaction>[].obs;
+  
   var isLoading = true.obs;
+  var isLoadingMore = false.obs;
   var isProcessing = false.obs;
   var selectedFilter = 'All'.obs;
   var searchQuery = ''.obs;
+  
+  // Pagination variables
+  var currentPage = 1.obs;
+  var totalPages = 1.obs;
+  var totalItems = 0.obs;
+  var hasNextPage = false.obs;
+  var hasPrevPage = false.obs;
+  var itemsPerPage = 20.obs;
+  var serverSupportsPagination = false.obs;
   
   final List<String> filterOptions = ['All', 'Capital', 'Retained Earnings', 'Drawings', 'Reserves'];
   
@@ -38,13 +49,15 @@ class EquityController extends GetxController {
   var totalDrawings = 0.0.obs;
   var totalEquity = 0.0.obs;
   
-  TextEditingController searchController = TextEditingController();
+  // Controllers
+  final TextEditingController searchController = TextEditingController();
+  final ScrollController scrollController = ScrollController();
   
   @override
   void onInit() {
     super.onInit();
     searchController.addListener(_onSearchChanged);
-    loadEquityAccounts();
+    loadEquityAccounts(resetPage: true);
     loadTransactions();
     loadSummary();
   }
@@ -53,24 +66,146 @@ class EquityController extends GetxController {
   void onClose() {
     searchController.removeListener(_onSearchChanged);
     searchController.dispose();
+    scrollController.dispose();
     super.onClose();
   }
   
   void _onSearchChanged() {
     searchQuery.value = searchController.text;
-    
-    if (searchQuery.value.isEmpty) {
-      equityAccounts.value = allEquityAccounts.value;
-      _updateSummaryForFiltered(allEquityAccounts.value);
-    } else {
-      final searchLower = searchQuery.value.toLowerCase();
-      final results = allEquityAccounts.where((account) {
-        return account.accountName.toLowerCase().contains(searchLower) ||
-               account.accountCode.toLowerCase().contains(searchLower) ||
-               account.accountType.toLowerCase().contains(searchLower);
-      }).toList();
-      equityAccounts.value = results;
-      _updateSummaryForFiltered(results);
+    loadEquityAccounts(resetPage: true);
+  }
+  
+  String formatAmount(double amount) => CurrencyUtils.format(amount);
+  
+  // ─── LOAD EQUITY ACCOUNTS WITH PAGINATION ──────────────────────────
+  Future<void> loadEquityAccounts({bool resetPage = true}) async {
+    try {
+      if (resetPage) {
+        currentPage.value = 1;
+        isLoading.value = true;
+      } else {
+        isLoadingMore.value = true;
+      }
+
+      Map<String, dynamic> params = {};
+      params['type'] = 'Equity';
+      
+      if (serverSupportsPagination.value) {
+        params['page'] = currentPage.value;
+        params['limit'] = itemsPerPage.value;
+      }
+      
+      if (selectedFilter.value != 'All' && selectedFilter.value != 'Equity') {
+        params['accountType'] = selectedFilter.value;
+      }
+      
+      if (searchQuery.value.isNotEmpty) {
+        params['search'] = searchQuery.value;
+      }
+      
+      final response = await _apiClient.get(
+        '/api/chart-of-accounts',
+        queryParameters: params,
+      );
+      
+      if (response.success && response.statusCode == 200) {
+        final responseData = response.data;
+        if (responseData['success'] == true) {
+          List<dynamic> accountsData = responseData['data'];
+          final newAccounts = accountsData.map((json) => EquityAccount.fromChartOfAccountsJson(json)).toList();
+          
+          if (resetPage) {
+            allEquityAccounts.value = newAccounts;
+            equityAccounts.value = newAccounts;
+          } else {
+            allEquityAccounts.addAll(newAccounts);
+            equityAccounts.addAll(newAccounts);
+          }
+          
+          // Parse pagination info
+          if (responseData['pagination'] != null) {
+            final pagination = responseData['pagination'];
+            totalPages.value = pagination['pages'] ?? pagination['totalPages'] ?? 1;
+            totalItems.value = pagination['total'] ?? pagination['totalItems'] ?? newAccounts.length;
+            hasNextPage.value = pagination['hasNext'] ?? pagination['nextPage'] != null ?? false;
+            hasPrevPage.value = pagination['hasPrev'] ?? pagination['prevPage'] != null ?? false;
+            serverSupportsPagination.value = true;
+          } else if (responseData['total'] != null) {
+            totalPages.value = responseData['pages'] ?? 1;
+            totalItems.value = responseData['total'];
+            hasNextPage.value = responseData['hasNext'] ?? false;
+            hasPrevPage.value = responseData['hasPrev'] ?? false;
+            serverSupportsPagination.value = true;
+          } else if (responseData['totalCount'] != null) {
+            totalItems.value = responseData['totalCount'];
+            totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
+            hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+            hasPrevPage.value = currentPage.value > 1;
+            serverSupportsPagination.value = false;
+          } else {
+            totalItems.value = equityAccounts.length;
+            totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
+            hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+            hasPrevPage.value = currentPage.value > 1;
+            serverSupportsPagination.value = false;
+          }
+          
+          _updateSummaryForFiltered(equityAccounts.value);
+          equityAccounts.refresh();
+        }
+      }
+    } catch (e) {
+      print('Error loading equity accounts: $e');
+      _showError('Error loading equity accounts');
+    } finally {
+      isLoading.value = false;
+      isLoadingMore.value = false;
+    }
+  }
+  
+  // ─── LOAD MORE DATA (LAZY LOADING) ──────────────────────────────
+  Future<void> loadMoreData() async {
+    if (hasNextPage.value && !isLoadingMore.value && !isLoading.value) {
+      currentPage.value++;
+      await loadEquityAccounts(resetPage: false);
+    }
+  }
+  
+  // ─── LOAD TRANSACTIONS ────────────────────────────────────────────
+  Future<void> loadTransactions() async {
+    try {
+      final response = await _apiClient.get('/api/equity/transactions');
+      
+      if (response.success && response.statusCode == 200) {
+        final responseData = response.data;
+        if (responseData['success'] == true) {
+          List<dynamic> transactionsData = responseData['data'];
+          transactions.value = transactionsData.map((json) => OwnerTransaction.fromJson(json)).toList();
+        }
+      } 
+    } catch (e) {
+      print('Error loading transactions: $e');
+    }
+  }
+  
+  // ─── LOAD SUMMARY ──────────────────────────────────────────────────
+  Future<void> loadSummary() async {
+    try {
+      final response = await _apiClient.get('/api/equity/summary');
+      
+      if (response.success && response.statusCode == 200) {
+        final responseData = response.data;
+        if (responseData['success'] == true) {
+          final data = responseData['data'];
+          totalCapital.value = (data['totalCapital'] ?? 0).toDouble();
+          totalRetainedEarnings.value = (data['totalRetainedEarnings'] ?? 0).toDouble();
+          totalReserves.value = (data['totalReserves'] ?? 0).toDouble();
+          totalDrawings.value = (data['totalDrawings'] ?? 0).toDouble();
+          totalEquity.value = (data['totalEquity'] ?? 0).toDouble();
+        }
+      } 
+    } catch (e) {
+      print('Error loading summary: $e');
     }
   }
   
@@ -95,91 +230,68 @@ class EquityController extends GetxController {
         .fold(0.0, (sum, a) => sum + a.currentBalance);
   }
   
-  String _formatAmount(double amount) {
-    return CurrencyUtils.format(amount);
+  // ─── SEARCH ──────────────────────────────────────────────────────
+  void searchEquity(String query) {
+    searchQuery.value = query;
+    loadEquityAccounts(resetPage: true);
   }
   
-  Future<void> loadEquityAccounts() async {
-    try {
-      isLoading.value = true;
-      
-      Map<String, dynamic> params = {};
-      params['type'] = 'Equity';
-      
-      if (selectedFilter.value != 'All' && selectedFilter.value != 'Equity') {
-        params['accountType'] = selectedFilter.value;
-      }
-      
-      final response = await _apiClient.get(
-        '/api/chart-of-accounts',
-        queryParameters: params,
-      );
-      
-      if (response.success && response.statusCode == 200) {
-        final responseData = response.data;
-        if (responseData['success'] == true) {
-          List<dynamic> accountsData = responseData['data'];
-          final newAccounts = accountsData.map((json) => EquityAccount.fromChartOfAccountsJson(json)).toList();
-          
-          allEquityAccounts.value = newAccounts;
-          
-          if (searchQuery.value.isNotEmpty) {
-            _onSearchChanged();
-          } else {
-            equityAccounts.value = newAccounts;
-          }
-        }
-      }
-    } catch (e) {
-      print('Error loading equity accounts: $e');
-      _showError('Error loading equity accounts');
-    } finally {
-      isLoading.value = false;
-    }
+  // ─── FILTER ──────────────────────────────────────────────────────
+  void applyFilter(String filter) {
+    selectedFilter.value = filter;
+    loadEquityAccounts(resetPage: true);
   }
   
-  Future<void> loadTransactions() async {
-    try {
-      final response = await _apiClient.get('/api/equity/transactions');
-      
-      if (response.success && response.statusCode == 200) {
-        final responseData = response.data;
-        if (responseData['success'] == true) {
-          List<dynamic> transactionsData = responseData['data'];
-          transactions.value = transactionsData.map((json) => OwnerTransaction.fromJson(json)).toList();
-        }
-      } 
-    } catch (e) {
-      print('Error loading transactions: $e');
-    }
-  }
-  
-  Future<void> loadSummary() async {
-    try {
-      final response = await _apiClient.get('/api/equity/summary');
-      
-      if (response.success && response.statusCode == 200) {
-        final responseData = response.data;
-        if (responseData['success'] == true) {
-          final data = responseData['data'];
-          totalCapital.value = (data['totalCapital'] ?? 0).toDouble();
-          totalRetainedEarnings.value = (data['totalRetainedEarnings'] ?? 0).toDouble();
-          totalReserves.value = (data['totalReserves'] ?? 0).toDouble();
-          totalDrawings.value = (data['totalDrawings'] ?? 0).toDouble();
-          totalEquity.value = (data['totalEquity'] ?? 0).toDouble();
-        }
-      } 
-    } catch (e) {
-      print('Error loading summary: $e');
-    }
-  }
-  
+  // ─── ADD CAPITAL ──────────────────────────────────────────────────
   Future<void> addCapital({
     required String accountId,
     required double amount,
     required String description,
     required String reference,
   }) async {
+    // Show loading dialog
+    Get.dialog(
+      Center(
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: kSuccess,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Adding capital...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kText,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Please wait',
+                  style: TextStyle(fontSize: 12, color: kSubText),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+    
     try {
       isProcessing.value = true;
       
@@ -195,17 +307,19 @@ class EquityController extends GetxController {
         body: capitalData,
       );
       
+      // Close loading dialog
+      Get.back();
+      
       if (response.success && (response.statusCode == 200 || response.statusCode == 201)) {
         final responseData = response.data;
         if (responseData['success'] == true) {
-          Get.back();
           AppSnackbar.success(
-            Colors.green,
-            'Success',
-            'Capital of ${formatAmount(amount)} added successfully\nJournal entry created',
+            kSuccess,
+            'Success ✅',
+            'Capital of ${formatAmount(amount)} added successfully',
             duration: const Duration(seconds: 3),
           );
-          await loadEquityAccounts();
+          await loadEquityAccounts(resetPage: true);
           await loadTransactions();
           await loadSummary();
         } else {
@@ -215,6 +329,7 @@ class EquityController extends GetxController {
         _showError(response.data['message'] ?? 'Failed to add capital');
       }
     } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
       print('Error adding capital: $e');
       _showError('Error adding capital');
     } finally {
@@ -222,12 +337,56 @@ class EquityController extends GetxController {
     }
   }
   
+  // ─── RECORD DRAWINGS ──────────────────────────────────────────────
   Future<void> recordDrawings({
     required String accountId,
     required double amount,
     required String description,
     required String reference,
   }) async {
+    // Show loading dialog
+    Get.dialog(
+      Center(
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: kDanger,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Recording drawings...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kText,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Please wait',
+                  style: TextStyle(fontSize: 12, color: kSubText),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+    
     try {
       isProcessing.value = true;
       
@@ -243,17 +402,19 @@ class EquityController extends GetxController {
         body: drawingsData,
       );
       
+      // Close loading dialog
+      Get.back();
+      
       if (response.success && response.statusCode == 200) {
         final responseData = response.data;
         if (responseData['success'] == true) {
-          Get.back();
           AppSnackbar.success(
-            Colors.green,
-            'Success',
-            'Drawings of ${formatAmount(amount)} recorded successfully\nJournal entry created',
+            kSuccess,
+            'Success ✅',
+            'Drawings of ${formatAmount(amount)} recorded successfully',
             duration: const Duration(seconds: 3),
           );
-          await loadEquityAccounts();
+          await loadEquityAccounts(resetPage: true);
           await loadTransactions();
           await loadSummary();
         } else {
@@ -261,6 +422,7 @@ class EquityController extends GetxController {
         }
       } 
     } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
       print('Error recording drawings: $e');
       _showError('Error recording drawings');
     } finally {
@@ -268,11 +430,55 @@ class EquityController extends GetxController {
     }
   }
   
+  // ─── TRANSFER TO RETAINED EARNINGS ──────────────────────────────
   Future<void> transferToRetainedEarnings({
     required double amount,
     required String description,
     required String reference,
   }) async {
+    // Show loading dialog
+    Get.dialog(
+      Center(
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: kPrimary,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Processing transfer...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kText,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Please wait',
+                  style: TextStyle(fontSize: 12, color: kSubText),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+    
     try {
       isProcessing.value = true;
       
@@ -287,17 +493,19 @@ class EquityController extends GetxController {
         body: transferData,
       );
       
+      // Close loading dialog
+      Get.back();
+      
       if (response.success && response.statusCode == 200) {
         final responseData = response.data;
         if (responseData['success'] == true) {
-          Get.back();
           AppSnackbar.success(
-            Colors.green,
-            'Success',
-            '${formatAmount(amount)} transferred to retained earnings\nJournal entry created',
+            kSuccess,
+            'Success ✅',
+            '${formatAmount(amount)} transferred to retained earnings',
             duration: const Duration(seconds: 3),
           );
-          await loadEquityAccounts();
+          await loadEquityAccounts(resetPage: true);
           await loadTransactions();
           await loadSummary();
         } else {
@@ -307,6 +515,7 @@ class EquityController extends GetxController {
         _showError(response.data['message'] ?? 'Failed to transfer');
       }
     } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
       print('Error transferring to retained earnings: $e');
       _showError('Error transferring');
     } finally {
@@ -314,8 +523,7 @@ class EquityController extends GetxController {
     }
   }
   
-  // ==================== EXPORT FUNCTIONS ====================
-  
+  // ─── EXPORT FUNCTIONS ────────────────────────────────────────────
   void exportEquity() {
     Get.bottomSheet(
       Container(
@@ -327,31 +535,61 @@ class EquityController extends GetxController {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Export Equity Report',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Row(
+              children: [
+                Text(
+                  'Export Equity Report',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: kText,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 18, color: Colors.black),
+                  onPressed: () => Get.back(),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 4),
             Text(
-              'Choose export format',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+              '${equityAccounts.length} accounts will be exported',
+              style: TextStyle(fontSize: 12, color: kSubText),
             ),
             const SizedBox(height: 20),
-            ListTile(
-              leading: Icon(Icons.picture_as_pdf, color: Color(0xFFE53935)),
-              title: Text('Export as PDF'),
-              onTap: () {
-                Get.back();
-                exportToPdf();
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.table_chart, color: Color(0xFF2E7D32)),
-              title: Text('Export as Excel'),
-              onTap: () {
-                Get.back();
-                exportToExcel();
-              },
+            Row(
+              children: [
+                Expanded(
+                  child: _exportOptionCard(
+                    icon: Icons.picture_as_pdf_outlined,
+                    label: 'PDF',
+                    subtitle: 'Formatted report',
+                    color: const Color(0xFFE53935),
+                    bgColor: const Color(0xFFFFEBEE),
+                    onTap: () {
+                      Get.back();
+                      exportToPdf();
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _exportOptionCard(
+                    icon: Icons.table_chart_outlined,
+                    label: 'Excel',
+                    subtitle: 'Spreadsheet',
+                    color: const Color(0xFF2E7D32),
+                    bgColor: const Color(0xFFE8F5E9),
+                    onTap: () {
+                      Get.back();
+                      exportToExcel();
+                    },
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -359,27 +597,102 @@ class EquityController extends GetxController {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      backgroundColor: kCardBg,
     );
   }
   
+  Widget _exportOptionCard({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required Color color,
+    required Color bgColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: Colors.white, size: 22),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 10,
+                color: color.withOpacity(0.7),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  // ─── PDF EXPORT ──────────────────────────────────────────────────
   Future<void> exportToPdf() async {
     try {
-      if (!kIsWeb) {
-        Get.dialog(
-          AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 16),
-                Text('Generating PDF...', style: TextStyle(fontSize: 14)),
-              ],
+      Get.dialog(
+        Center(
+          child: Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      color: kPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Generating PDF...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Please wait',
+                    style: TextStyle(fontSize: 12, color: kSubText),
+                  ),
+                ],
+              ),
             ),
           ),
-          barrierDismissible: false,
-        );
-      }
+        ),
+        barrierDismissible: false,
+      );
       
       final pdf = pw.Document();
       
@@ -399,41 +712,19 @@ class EquityController extends GetxController {
         ),
       );
       
-      final bytes = await pdf.save();
+      final dir = await getTemporaryDirectory();
       final fileName = 'equity_report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsBytes(await pdf.save());
       
-      if (kIsWeb) {
-        final blob = html.Blob([bytes], 'application/pdf');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
-        
-        if (Get.isDialogOpen ?? false) Get.back();
-        
-        AppSnackbar.success(
-          Colors.green,
-          'Success',
-          'Equity report exported to PDF',
-          duration: const Duration(seconds: 2),
-        );
-      } else {
-        final dir = await getTemporaryDirectory();
-        final file = File('${dir.path}/$fileName');
-        await file.writeAsBytes(bytes);
-        
-        if (Get.isDialogOpen ?? false) Get.back();
-        
-        AppSnackbar.success(
-          Colors.green,
-          'Success',
-          'Equity report exported to PDF',
-          duration: const Duration(seconds: 2),
-        );
-        
-        await OpenFile.open(file.path);
-      }
+      if (Get.isDialogOpen ?? false) Get.back();
+      
+      AppSnackbar.success(
+        kSuccess,
+        'Success',
+        'Equity report exported to PDF',
+      );
+      await OpenFile.open(file.path);
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
       AppSnackbar.error(Colors.red, 'Error', 'Failed to export PDF: $e');
@@ -506,17 +797,17 @@ class EquityController extends GetxController {
           pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
             children: [
-              _pdfSummaryItem('Total Capital', _formatAmount(totalCapital.value), PdfColors.indigo700),
-              _pdfSummaryItem('Retained Earnings', _formatAmount(totalRetainedEarnings.value), PdfColors.green700),
-              _pdfSummaryItem('Reserves', _formatAmount(totalReserves.value), PdfColors.orange700),
-              _pdfSummaryItem('Drawings', _formatAmount(totalDrawings.value), PdfColors.red700),
+              _pdfSummaryItem('Total Capital', formatAmount(totalCapital.value), PdfColors.indigo700),
+              _pdfSummaryItem('Retained Earnings', formatAmount(totalRetainedEarnings.value), PdfColors.green700),
+              _pdfSummaryItem('Reserves', formatAmount(totalReserves.value), PdfColors.orange700),
+              _pdfSummaryItem('Drawings', formatAmount(totalDrawings.value), PdfColors.red700),
             ],
           ),
           pw.SizedBox(height: 8),
           pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
             children: [
-              _pdfSummaryItem('Total Equity', _formatAmount(totalEquity.value), PdfColors.indigo800),
+              _pdfSummaryItem('Total Equity', formatAmount(totalEquity.value), PdfColors.indigo800),
               _pdfSummaryItem('Filter', selectedFilter.value, PdfColors.grey700),
             ],
           ),
@@ -567,10 +858,10 @@ class EquityController extends GetxController {
             pw.Expanded(flex: 2, child: pw.Text(account.accountCode, style: pw.TextStyle(fontSize: 9))),
             pw.Expanded(flex: 4, child: pw.Text(account.accountName, style: pw.TextStyle(fontSize: 9))),
             pw.Expanded(flex: 2, child: pw.Text(account.accountType, style: pw.TextStyle(fontSize: 9))),
-            pw.Expanded(flex: 2, child: pw.Text(_formatAmount(account.openingBalance), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 9))),
-            pw.Expanded(flex: 2, child: pw.Text(_formatAmount(account.additions), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 9, color: PdfColors.green700))),
-            pw.Expanded(flex: 2, child: pw.Text(_formatAmount(account.withdrawals), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 9, color: PdfColors.red700))),
-            pw.Expanded(flex: 2, child: pw.Text(_formatAmount(account.currentBalance), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold))),
+            pw.Expanded(flex: 2, child: pw.Text(formatAmount(account.openingBalance), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 9))),
+            pw.Expanded(flex: 2, child: pw.Text(formatAmount(account.additions), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 9, color: PdfColors.green700))),
+            pw.Expanded(flex: 2, child: pw.Text(formatAmount(account.withdrawals), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 9, color: PdfColors.red700))),
+            pw.Expanded(flex: 2, child: pw.Text(formatAmount(account.currentBalance), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold))),
           ]),
         )).toList(),
         pw.Divider(),
@@ -581,7 +872,7 @@ class EquityController extends GetxController {
             pw.Expanded(flex: 2, child: pw.Text('', textAlign: pw.TextAlign.right)),
             pw.Expanded(flex: 2, child: pw.Text('', textAlign: pw.TextAlign.right)),
             pw.Expanded(flex: 2, child: pw.Text('', textAlign: pw.TextAlign.right)),
-            pw.Expanded(flex: 2, child: pw.Text(_formatAmount(equityAccounts.fold(0.0, (sum, a) => sum + a.currentBalance)),
+            pw.Expanded(flex: 2, child: pw.Text(formatAmount(equityAccounts.fold(0.0, (sum, a) => sum + a.currentBalance)),
                 textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.indigo800))),
           ]),
         ),
@@ -619,31 +910,56 @@ class EquityController extends GetxController {
             pw.Expanded(flex: 2, child: pw.Text(txn.type, style: pw.TextStyle(fontSize: 9, color: txn.type == 'Additional Capital' ? PdfColors.green700 : (txn.type == 'Drawings' ? PdfColors.red700 : PdfColors.orange700)))),
             pw.Expanded(flex: 2, child: pw.Text(DateFormat('dd/MM/yyyy').format(txn.date), style: pw.TextStyle(fontSize: 9))),
             pw.Expanded(flex: 3, child: pw.Text(txn.description, style: pw.TextStyle(fontSize: 9))),
-            pw.Expanded(flex: 2, child: pw.Text(_formatAmount(txn.amount), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 9, color: txn.type == 'Additional Capital' ? PdfColors.green700 : PdfColors.red700))),
+            pw.Expanded(flex: 2, child: pw.Text(formatAmount(txn.amount), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 9, color: txn.type == 'Additional Capital' ? PdfColors.green700 : PdfColors.red700))),
           ]),
         )).toList(),
       ],
     );
   }
   
+  // ─── EXCEL EXPORT ──────────────────────────────────────────────────
   Future<void> exportToExcel() async {
     try {
-      if (!kIsWeb) {
-        Get.dialog(
-          AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 16),
-                Text('Building Excel...', style: TextStyle(fontSize: 14)),
-              ],
+      Get.dialog(
+        Center(
+          child: Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      color: kPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Building Excel...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Please wait',
+                    style: TextStyle(fontSize: 12, color: kSubText),
+                  ),
+                ],
+              ),
             ),
           ),
-          barrierDismissible: false,
-        );
-      }
+        ),
+        barrierDismissible: false,
+      );
       
       final excelFile = excel.Excel.createExcel();
       
@@ -668,11 +984,11 @@ class EquityController extends GetxController {
       _excelSetCell(summarySheet, 5, 0, 'SUMMARY', bold: true, fontSize: 11, bgColor: 'E8EAF6');
       
       final summaryRows = [
-        ['Total Capital', _formatAmount(totalCapital.value)],
-        ['Retained Earnings', _formatAmount(totalRetainedEarnings.value)],
-        ['Reserves', _formatAmount(totalReserves.value)],
-        ['Drawings', _formatAmount(totalDrawings.value)],
-        ['Total Equity', _formatAmount(totalEquity.value)],
+        ['Total Capital', formatAmount(totalCapital.value)],
+        ['Retained Earnings', formatAmount(totalRetainedEarnings.value)],
+        ['Reserves', formatAmount(totalReserves.value)],
+        ['Drawings', formatAmount(totalDrawings.value)],
+        ['Total Equity', formatAmount(totalEquity.value)],
         ['Total Accounts', equityAccounts.length.toString()],
       ];
       
@@ -751,39 +1067,19 @@ class EquityController extends GetxController {
       final bytes = excelFile.save();
       if (bytes == null) throw Exception('Excel save failed');
       
-      if (kIsWeb) {
-        final blob = html.Blob([bytes], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', 'equity_report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx')
-          ..click();
-        html.Url.revokeObjectUrl(url);
-        
-        if (Get.isDialogOpen ?? false) Get.back();
-        
-        AppSnackbar.success(
-          Colors.green,
-          'Success',
-          'Equity report exported to Excel',
-          duration: const Duration(seconds: 2),
-        );
-      } else {
-        final dir = await getTemporaryDirectory();
-        final fileName = 'equity_report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
-        final file = File('${dir.path}/$fileName');
-        await file.writeAsBytes(bytes);
-        
-        if (Get.isDialogOpen ?? false) Get.back();
-        
-        AppSnackbar.success(
-          Colors.green,
-          'Success',
-          'Equity report exported to Excel',
-          duration: const Duration(seconds: 2),
-        );
-        
-        await OpenFile.open(file.path);
-      }
+      final dir = await getTemporaryDirectory();
+      final fileName = 'equity_report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsBytes(bytes);
+      
+      if (Get.isDialogOpen ?? false) Get.back();
+      
+      AppSnackbar.success(
+        kSuccess,
+        'Success',
+        'Equity report exported to Excel',
+      );
+      await OpenFile.open(file.path);
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
       AppSnackbar.error(Colors.red, 'Error', 'Failed to export Excel: $e');
@@ -820,14 +1116,14 @@ class EquityController extends GetxController {
   
   void printEquity() {
     AppSnackbar.success(
-      Colors.green,
+      kSuccess,
       'Print',
       'Preparing equity report...',
       duration: const Duration(seconds: 2),
     );
   }
   
-  // ==================== SHOW ADD CAPITAL DIALOG ====================
+  // ─── SHOW ADD CAPITAL DIALOG ────────────────────────────────────
   void showAddCapitalDialog(EquityAccount account) {
     final formKey = GlobalKey<FormState>();
     double amount = 0;
@@ -836,101 +1132,218 @@ class EquityController extends GetxController {
     
     Get.dialog(
       Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.transparent,
         child: Container(
-          width: 85.w,
-          padding: EdgeInsets.all(5.w),
+          width: double.infinity,
+          constraints: BoxConstraints(
+            maxHeight: Get.height * 0.8,
+            maxWidth: 420,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
           child: StatefulBuilder(
             builder: (context, setState) {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Add Capital', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w800, color: kText)),
-                  SizedBox(height: 2.h),
-                  Text('Account: ${account.accountName}', style: TextStyle(fontSize: 12.sp, color: kSubText)),
-                  Text('Current Balance: ${formatAmount(account.currentBalance)}', style: TextStyle(fontSize: 12.sp, color: kSuccess)),
-                  SizedBox(height: 2.h),
-                  Form(
-                    key: formKey,
-                    child: Column(
+                  // Header
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                    decoration: BoxDecoration(
+                      color: kSuccess.withOpacity(0.05),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(24),
+                      ),
+                    ),
+                    child: Row(
                       children: [
-                        TextFormField(
-                          decoration: InputDecoration(
-                            labelText: 'Amount *',
-                            prefixText: CurrencyUtils.prefix,
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                            fillColor: kCardBg,
-                            filled: true,
-                            labelStyle: TextStyle(fontSize: 12.sp),
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: kSuccess,
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          style: TextStyle(fontSize: 14.sp, color: kText),
-                          keyboardType: TextInputType.number,
-                          onChanged: (v) => amount = double.tryParse(v) ?? 0,
-                          validator: (v) => v == null || v.isEmpty ? 'Amount required' : null,
+                          child: const Icon(
+                            Icons.add_circle,
+                            color: Colors.black,
+                            size: 22,
+                          ),
                         ),
-                        SizedBox(height: 2.h),
-                        TextFormField(
-                          decoration: InputDecoration(
-                            labelText: 'Description *',
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                            fillColor: kCardBg,
-                            filled: true,
-                            labelStyle: TextStyle(fontSize: 12.sp),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Add Capital',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: kText,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                account.accountName,
+                                style: TextStyle(fontSize: 12, color: kSubText),
+                              ),
+                            ],
                           ),
-                          style: TextStyle(fontSize: 14.sp, color: kText),
-                          maxLines: 2,
-                          onChanged: (v) => description = v,
-                          validator: (v) => v == null || v.isEmpty ? 'Description required' : null,
                         ),
-                        SizedBox(height: 2.h),
-                        TextFormField(
-                          decoration: InputDecoration(
-                            labelText: 'Reference Number',
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                            fillColor: kCardBg,
-                            filled: true,
-                            labelStyle: TextStyle(fontSize: 12.sp),
-                          ),
-                          style: TextStyle(fontSize: 14.sp, color: kText),
-                          onChanged: (v) => reference = v,
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 20),
+                          onPressed: isProcessing.value ? null : () => Get.back(),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(height: 2.h),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Get.back(),
-                          style: OutlinedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 1.5.h), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                          child: Text('Cancel', style: TextStyle(fontSize: 14.sp)),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: Form(
+                        key: formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: kBgLight,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: Colors.grey.withOpacity(0.1),
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  _detailRow('Current Balance', formatAmount(account.currentBalance),
+                                      valueColor: kSuccess),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            _buildTextField(
+                              label: 'Amount *',
+                              hint: 'Enter capital amount',
+                              prefixText: CurrencyUtils.prefix,
+                              onChanged: (v) => amount = double.tryParse(v) ?? 0,
+                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                              keyboardType: TextInputType.number,
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            _buildTextField(
+                              label: 'Description *',
+                              hint: 'Enter description',
+                              onChanged: (v) => description = v,
+                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                              maxLines: 2,
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            _buildTextField(
+                              label: 'Reference Number',
+                              hint: 'e.g., CAP-001',
+                              onChanged: (v) => reference = v,
+                            ),
+                          ],
                         ),
                       ),
-                      SizedBox(width: 3.w),
-                      Expanded(
-                        child: Obx(() => ElevatedButton(
-                          onPressed: isProcessing.value ? null : () {
-                            if (formKey.currentState!.validate()) {
-                              addCapital(
-                                accountId: account.id,
-                                amount: amount,
-                                description: description,
-                                reference: reference,
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: kSuccess,
-                            padding: EdgeInsets.symmetric(vertical: 1.5.h),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, -5),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: isProcessing.value ? null : () => Get.back(),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: kPrimary,
+                              side: const BorderSide(color: kPrimary),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              'Cancel',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.black,
+                              ),
+                            ),
                           ),
-                          child: isProcessing.value
-                              ? SizedBox(width: 5.w, height: 5.w, child: CircularProgressIndicator(strokeWidth: 2.w, color: Colors.white))
-                              : Text('Add Capital', style: TextStyle(fontSize: 14.sp, color: Colors.white)),
-                        )),
-                      ),
-                    ],
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Obx(() => ElevatedButton(
+                            onPressed: isProcessing.value
+                                ? null
+                                : () {
+                                    if (formKey.currentState!.validate()) {
+                                      addCapital(
+                                        accountId: account.id,
+                                        amount: amount,
+                                        description: description,
+                                        reference: reference,
+                                      );
+                                    }
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: kSuccess,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: isProcessing.value
+                                ? SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.black),
+                                    ),
+                                  )
+                                : const Text(
+                                    'Add Capital',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                          )),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               );
@@ -941,6 +1354,7 @@ class EquityController extends GetxController {
     );
   }
   
+  // ─── SHOW RECORD DRAWINGS DIALOG ──────────────────────────────────
   void showRecordDrawingsDialog(EquityAccount account) {
     final formKey = GlobalKey<FormState>();
     double amount = 0;
@@ -949,312 +1363,132 @@ class EquityController extends GetxController {
     
     Get.dialog(
       Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.transparent,
         child: Container(
-          width: 85.w,
-          padding: EdgeInsets.all(5.w),
+          width: double.infinity,
+          constraints: BoxConstraints(
+            maxHeight: Get.height * 0.8,
+            maxWidth: 420,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
           child: StatefulBuilder(
             builder: (context, setState) {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Record Drawings', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w800, color: kText)),
-                  SizedBox(height: 2.h),
-                  Text('Account: ${account.accountName}', style: TextStyle(fontSize: 12.sp, color: kSubText)),
-                  Text('Current Balance: ${formatAmount(account.currentBalance)}', style: TextStyle(fontSize: 12.sp, color: kDanger)),
-                  SizedBox(height: 2.h),
-                  Form(
-                    key: formKey,
-                    child: Column(
+                  // Header
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                    decoration: BoxDecoration(
+                      color: kDanger.withOpacity(0.05),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(24),
+                      ),
+                    ),
+                    child: Row(
                       children: [
-                        TextFormField(
-                          decoration: InputDecoration(
-                            labelText: 'Amount *',
-                            prefixText: CurrencyUtils.prefix,
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                            fillColor: kCardBg,
-                            filled: true,
-                            labelStyle: TextStyle(fontSize: 12.sp),
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: kDanger,
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          style: TextStyle(fontSize: 14.sp, color: kText),
-                          keyboardType: TextInputType.number,
-                          onChanged: (v) => amount = double.tryParse(v) ?? 0,
-                          validator: (v) => v == null || v.isEmpty ? 'Amount required' : null,
+                          child: const Icon(
+                            Icons.remove_circle,
+                            color: Colors.black,
+                            size: 22,
+                          ),
                         ),
-                        SizedBox(height: 2.h),
-                        TextFormField(
-                          decoration: InputDecoration(
-                            labelText: 'Description *',
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                            fillColor: kCardBg,
-                            filled: true,
-                            labelStyle: TextStyle(fontSize: 12.sp),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Record Drawings',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: kText,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                account.accountName,
+                                style: TextStyle(fontSize: 12, color: kSubText),
+                              ),
+                            ],
                           ),
-                          style: TextStyle(fontSize: 14.sp, color: kText),
-                          maxLines: 2,
-                          onChanged: (v) => description = v,
-                          validator: (v) => v == null || v.isEmpty ? 'Description required' : null,
                         ),
-                        SizedBox(height: 2.h),
-                        TextFormField(
-                          decoration: InputDecoration(
-                            labelText: 'Reference Number',
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                            fillColor: kCardBg,
-                            filled: true,
-                            labelStyle: TextStyle(fontSize: 12.sp),
-                          ),
-                          style: TextStyle(fontSize: 14.sp, color: kText),
-                          onChanged: (v) => reference = v,
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 20),
+                          onPressed: isProcessing.value ? null : () => Get.back(),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(height: 2.h),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Get.back(),
-                          style: OutlinedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 1.5.h), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                          child: Text('Cancel', style: TextStyle(fontSize: 14.sp)),
-                        ),
-                      ),
-                      SizedBox(width: 3.w),
-                      Expanded(
-                        child: Obx(() => ElevatedButton(
-                          onPressed: isProcessing.value ? null : () {
-                            if (formKey.currentState!.validate()) {
-                              recordDrawings(
-                                accountId: account.id,
-                                amount: amount,
-                                description: description,
-                                reference: reference,
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: kDanger,
-                            padding: EdgeInsets.symmetric(vertical: 1.5.h),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: isProcessing.value
-                              ? SizedBox(width: 5.w, height: 5.w, child: CircularProgressIndicator(strokeWidth: 2.w, color: Colors.white))
-                              : Text('Record Drawings', style: TextStyle(fontSize: 14.sp, color: Colors.white)),
-                        )),
-                      ),
-                    ],
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
-  
-  void showTransferToRetainedEarningsDialog() {
-    final formKey = GlobalKey<FormState>();
-    double amount = 0;
-    String description = '';
-    String reference = '';
-    
-    Get.dialog(
-      Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Container(
-          width: 85.w,
-          padding: EdgeInsets.all(5.w),
-          child: StatefulBuilder(
-            builder: (context, setState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Transfer to Retained Earnings', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w800, color: kText)),
-                  SizedBox(height: 2.h),
-                  Text('Transfer from Profit & Loss to Retained Earnings', style: TextStyle(fontSize: 12.sp, color: kSubText)),
-                  SizedBox(height: 2.h),
-                  Form(
-                    key: formKey,
-                    child: Column(
-                      children: [
-                        TextFormField(
-                          decoration: InputDecoration(
-                            labelText: 'Amount *',
-                            prefixText: CurrencyUtils.prefix,
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                            fillColor: kCardBg,
-                            filled: true,
-                            labelStyle: TextStyle(fontSize: 12.sp),
-                          ),
-                          style: TextStyle(fontSize: 14.sp, color: kText),
-                          keyboardType: TextInputType.number,
-                          onChanged: (v) => amount = double.tryParse(v) ?? 0,
-                          validator: (v) => v == null || v.isEmpty ? 'Amount required' : null,
-                        ),
-                        SizedBox(height: 2.h),
-                        TextFormField(
-                          decoration: InputDecoration(
-                            labelText: 'Description *',
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                            fillColor: kCardBg,
-                            filled: true,
-                            labelStyle: TextStyle(fontSize: 12.sp),
-                          ),
-                          style: TextStyle(fontSize: 14.sp, color: kText),
-                          maxLines: 2,
-                          onChanged: (v) => description = v,
-                          validator: (v) => v == null || v.isEmpty ? 'Description required' : null,
-                        ),
-                        SizedBox(height: 2.h),
-                        TextFormField(
-                          decoration: InputDecoration(
-                            labelText: 'Reference Number',
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                            fillColor: kCardBg,
-                            filled: true,
-                            labelStyle: TextStyle(fontSize: 12.sp),
-                          ),
-                          style: TextStyle(fontSize: 14.sp, color: kText),
-                          onChanged: (v) => reference = v,
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 2.h),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Get.back(),
-                          style: OutlinedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 1.5.h), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                          child: Text('Cancel', style: TextStyle(fontSize: 14.sp)),
-                        ),
-                      ),
-                      SizedBox(width: 3.w),
-                      Expanded(
-                        child: Obx(() => ElevatedButton(
-                          onPressed: isProcessing.value ? null : () {
-                            if (formKey.currentState!.validate()) {
-                              transferToRetainedEarnings(
-                                amount: amount,
-                                description: description,
-                                reference: reference,
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: kPrimary,
-                            padding: EdgeInsets.symmetric(vertical: 1.5.h),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: isProcessing.value
-                              ? SizedBox(width: 5.w, height: 5.w, child: CircularProgressIndicator(strokeWidth: 2.w, color: Colors.white))
-                              : Text('Transfer', style: TextStyle(fontSize: 14.sp, color: Colors.white)),
-                        )),
-                      ),
-                    ],
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
-  
-  void showAddTransactionDialog() {
-    final formKey = GlobalKey<FormState>();
-    String transactionType = 'Additional Capital';
-    double amount = 0;
-    String description = '';
-    String reference = ''; 
-
-    Get.dialog(
-      Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Container(
-          width: 90.w,
-          constraints: BoxConstraints(maxHeight: 75.h),
-          padding: EdgeInsets.all(5.w),
-          child: StatefulBuilder(
-            builder: (context, setState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Add Equity Transaction', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w800, color: kText)),
-                  SizedBox(height: 2.h),
                   Expanded(
                     child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
                       child: Form(
                         key: formKey,
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
+                              padding: const EdgeInsets.all(14),
                               decoration: BoxDecoration(
-                                color: kCardBg,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: kBorder),
-                              ),
-                              child: DropdownButtonFormField<String>(
-                                value: transactionType,
-                                decoration: InputDecoration(
-                                  labelText: 'Transaction Type *',
-                                  border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.5.h),
-                                  labelStyle: TextStyle(fontSize: 12.sp, color: kSubText),
+                                color: kBgLight,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: Colors.grey.withOpacity(0.1),
                                 ),
-                                style: TextStyle(fontSize: 14.sp, color: kText),
-                                dropdownColor: kCardBg,
-                                items: const [
-                                  DropdownMenuItem(value: 'Additional Capital', child: Text('Additional Capital')),
-                                  DropdownMenuItem(value: 'Drawings', child: Text('Drawings')),
-                                  DropdownMenuItem(value: 'Reserve Transfer', child: Text('Reserve Transfer')),
+                              ),
+                              child: Column(
+                                children: [
+                                  _detailRow('Current Balance', formatAmount(account.currentBalance),
+                                      valueColor: kDanger),
                                 ],
-                                onChanged: (value) => transactionType = value!,
                               ),
                             ),
-                            SizedBox(height: 2.h),
-                            TextFormField(
-                              decoration: InputDecoration(
-                                labelText: 'Amount *',
-                                prefixText: CurrencyUtils.prefix,
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                                fillColor: kCardBg,
-                                filled: true,
-                                labelStyle: TextStyle(fontSize: 12.sp),
-                              ),
-                              style: TextStyle(fontSize: 14.sp, color: kText),
-                              keyboardType: TextInputType.number,
+                            const SizedBox(height: 16),
+                            
+                            _buildTextField(
+                              label: 'Amount *',
+                              hint: 'Enter drawings amount',
+                              prefixText: CurrencyUtils.prefix,
                               onChanged: (v) => amount = double.tryParse(v) ?? 0,
-                              validator: (v) => v == null || v.isEmpty ? 'Amount required' : null,
+                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                              keyboardType: TextInputType.number,
                             ),
-                            SizedBox(height: 2.h),
-                            TextFormField(
-                              decoration: InputDecoration(
-                                labelText: 'Description *',
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                                fillColor: kCardBg,
-                                filled: true,
-                                labelStyle: TextStyle(fontSize: 12.sp),
-                              ),
-                              style: TextStyle(fontSize: 14.sp, color: kText),
-                              maxLines: 2,
+                            const SizedBox(height: 16),
+                            
+                            _buildTextField(
+                              label: 'Description *',
+                              hint: 'Enter description',
                               onChanged: (v) => description = v,
-                              validator: (v) => v == null || v.isEmpty ? 'Description required' : null,
+                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                              maxLines: 2,
                             ),
-                            SizedBox(height: 2.h),
-                            TextFormField(
-                              decoration: InputDecoration(
-                                labelText: 'Reference Number',
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                                fillColor: kCardBg,
-                                filled: true,
-                                labelStyle: TextStyle(fontSize: 12.sp),
-                              ),
-                              style: TextStyle(fontSize: 14.sp, color: kText),
+                            const SizedBox(height: 16),
+                            
+                            _buildTextField(
+                              label: 'Reference Number',
+                              hint: 'e.g., DRW-001',
                               onChanged: (v) => reference = v,
                             ),
                           ],
@@ -1262,69 +1496,85 @@ class EquityController extends GetxController {
                       ),
                     ),
                   ),
-                  SizedBox(height: 2.h),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Get.back(),
-                          style: OutlinedButton.styleFrom(padding: EdgeInsets.symmetric(vertical: 1.5.h), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                          child: Text('Cancel', style: TextStyle(fontSize: 14.sp)),
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, -5),
                         ),
-                      ),
-                      SizedBox(width: 3.w),
-                      Expanded(
-                        child: Obx(() => ElevatedButton(
-                          onPressed: isProcessing.value ? null : () {
-                            if (formKey.currentState!.validate()) {
-                              if (transactionType == 'Additional Capital') {
-                                final capitalAccount = equityAccounts.firstWhereOrNull(
-                                  (a) => a.accountType == 'Capital',
-                                );
-                                if (capitalAccount != null) {
-                                  addCapital(
-                                    accountId: capitalAccount.id,
-                                    amount: amount,
-                                    description: description,
-                                    reference: reference,
-                                  );
-                                } else {
-                                  _showError('No capital account found');
-                                }
-                              } else if (transactionType == 'Drawings') {
-                                final drawingsAccount = equityAccounts.firstWhereOrNull(
-                                  (a) => a.accountType == 'Drawings',
-                                );
-                                if (drawingsAccount != null) {
-                                  recordDrawings(
-                                    accountId: drawingsAccount.id,
-                                    amount: amount,
-                                    description: description,
-                                    reference: reference,
-                                  );
-                                } else {
-                                  _showError('No drawings account found');
-                                }
-                              } else {
-                                transferToRetainedEarnings(
-                                  amount: amount,
-                                  description: description,
-                                  reference: reference,
-                                );
-                              }
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: kPrimary,
-                            padding: EdgeInsets.symmetric(vertical: 1.5.h),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: isProcessing.value ? null : () => Get.back(),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: kPrimary,
+                              side: const BorderSide(color: kPrimary),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              'Cancel',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.black,
+                              ),
+                            ),
                           ),
-                          child: isProcessing.value
-                              ? SizedBox(width: 5.w, height: 5.w, child: CircularProgressIndicator(strokeWidth: 2.w, color: Colors.white))
-                              : Text('Save Transaction', style: TextStyle(fontSize: 14.sp, color: Colors.white)),
-                        )),
-                      ),
-                    ],
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Obx(() => ElevatedButton(
+                            onPressed: isProcessing.value
+                                ? null
+                                : () {
+                                    if (formKey.currentState!.validate()) {
+                                      recordDrawings(
+                                        accountId: account.id,
+                                        amount: amount,
+                                        description: description,
+                                        reference: reference,
+                                      );
+                                    }
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: kDanger,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: isProcessing.value
+                                ? SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.black),
+                                    ),
+                                  )
+                                : const Text(
+                                    'Record Drawings',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                          )),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               );
@@ -1335,156 +1585,556 @@ class EquityController extends GetxController {
     );
   }
   
-  void showAccountDetails(EquityAccount account) {
-    Get.bottomSheet(
-      Container(
-        padding: EdgeInsets.all(5.w),
-        decoration: BoxDecoration(
-          color: kCardBg,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        constraints: BoxConstraints(maxHeight: 70.h),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 14.w,
-                  height: 14.w,
-                  decoration: BoxDecoration(
-                    color: _getTypeColor(account.accountType).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(_getTypeIcon(account.accountType), size: 12.w, color: _getTypeColor(account.accountType)),
-                ),
-                SizedBox(width: 3.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(account.accountName, style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w800, color: kText)),
-                      Text(account.accountCode, style: TextStyle(fontSize: 12.sp, color: kSubText)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 2.h),
-            _buildDetailRow('Account Type', account.accountType),
-            _buildDetailRow('Opening Balance', formatAmount(account.openingBalance)),
-            _buildDetailRow('Additions', formatAmount(account.additions)),
-            _buildDetailRow('Withdrawals', formatAmount(account.withdrawals)),
-            _buildDetailRow('Current Balance', formatAmount(account.currentBalance)),
-            _buildDetailRow('Last Updated', DateFormat('dd MMM yyyy').format(account.lastUpdated)),
-            if (account.notes.isNotEmpty) _buildDetailRow('Notes', account.notes),
-            SizedBox(height: 2.h),
-          ],
-        ),
-      ),
-    );
-  }
-  
-  void showTransactionHistory(EquityAccount account) {
-    final accountTransactions = transactions.where((t) => t.accountName == account.accountName).toList();
+  // ─── SHOW ADD TRANSACTION DIALOG ──────────────────────────────────
+  void showAddTransactionDialog() {
+    final formKey = GlobalKey<FormState>();
+    String transactionType = 'Additional Capital';
+    double amount = 0;
+    String description = '';
+    String reference = '';
     
-    Get.bottomSheet(
-      Container(
-        padding: EdgeInsets.all(5.w),
-        decoration: BoxDecoration(
-          color: kCardBg,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        constraints: BoxConstraints(maxHeight: 80.h),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Transaction History - ${account.accountName}', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w800, color: kText)),
-            SizedBox(height: 2.h),
-            Expanded(
-              child: accountTransactions.isEmpty
-                  ? Center(child: Text('No transactions found', style: TextStyle(fontSize: 12.sp, color: kSubText)))
-                  : ListView.builder(
-                      itemCount: accountTransactions.length,
-                      itemBuilder: (context, index) {
-                        final txn = accountTransactions[index];
-                        Color typeColor = txn.type == 'Additional Capital' ? kSuccess :
-                                        txn.type == 'Retained Earnings' ? kPrimary :
-                                        txn.type == 'Reserve Transfer' ? kWarning : kDanger;
-                        return Container(
-                          margin: EdgeInsets.only(bottom: 1.h),
-                          padding: EdgeInsets.all(3.w),
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.transparent,
+        child: Container(
+          width: double.infinity,
+          constraints: BoxConstraints(
+            maxHeight: Get.height * 0.92,
+            maxWidth: 500,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: StatefulBuilder(
+            builder: (context, setState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                    decoration: BoxDecoration(
+                      color: kPrimary.withOpacity(0.05),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(24),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
                           decoration: BoxDecoration(
-                            color: kBg,
+                            color: kPrimary,
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: kBorder),
                           ),
-                          child: Row(
+                          child: const Icon(
+                            Icons.add_task,
+                            color: Colors.black,
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                width: 10.w, height: 10.w,
-                                decoration: BoxDecoration(color: typeColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                                child: Icon(txn.type == 'Additional Capital' ? Icons.add_circle : Icons.remove_circle, size: 5.w, color: typeColor),
-                              ),
-                              SizedBox(width: 2.w),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(txn.type, style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w700, color: kText)),
-                                    Text(txn.description, style: TextStyle(fontSize: 11.sp, color: kSubText)),
-                                    Text('Ref: ${txn.reference}', style: TextStyle(fontSize: 10.sp, color: kSubText)),
-                                  ],
+                              Text(
+                                'Add Equity Transaction',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: kText,
                                 ),
                               ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(formatAmount(txn.amount), style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w800, color: typeColor)),
-                                  Text(DateFormat('dd MMM yyyy').format(txn.date), style: TextStyle(fontSize: 10.sp, color: kSubText)),
-                                ],
+                              const SizedBox(height: 2),
+                              Text(
+                                'Record capital, drawings or transfers',
+                                style: TextStyle(fontSize: 12, color: kSubText),
                               ),
                             ],
                           ),
-                        );
-                      },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 20),
+                          onPressed: isProcessing.value ? null : () => Get.back(),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
                     ),
-            ),
-            SizedBox(height: 2.h),
-            ElevatedButton(
-              onPressed: () => Get.back(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kPrimary,
-                padding: EdgeInsets.symmetric(vertical: 1.5.h),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: Text('Close', style: TextStyle(fontSize: 14.sp, color: Colors.white)),
-            ),
-          ],
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: Form(
+                        key: formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildDropdownField(
+                              label: 'Transaction Type *',
+                              value: transactionType,
+                              items: const [
+                                'Additional Capital',
+                                'Drawings',
+                                'Reserve Transfer',
+                              ],
+                              onChanged: (v) => setState(() => transactionType = v!),
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            _buildTextField(
+                              label: 'Amount *',
+                              hint: 'Enter amount',
+                              prefixText: CurrencyUtils.prefix,
+                              onChanged: (v) => amount = double.tryParse(v) ?? 0,
+                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                              keyboardType: TextInputType.number,
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            _buildTextField(
+                              label: 'Description *',
+                              hint: 'Enter description',
+                              onChanged: (v) => description = v,
+                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                              maxLines: 2,
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            _buildTextField(
+                              label: 'Reference Number',
+                              hint: 'e.g., REF-001',
+                              onChanged: (v) => reference = v,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, -5),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: isProcessing.value ? null : () => Get.back(),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: kPrimary,
+                              side: const BorderSide(color: kPrimary),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Text(
+                              'Cancel',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Obx(() => ElevatedButton(
+                            onPressed: isProcessing.value
+                                ? null
+                                : () {
+                                    if (formKey.currentState!.validate()) {
+                                      if (transactionType == 'Additional Capital') {
+                                        final capitalAccount = equityAccounts.firstWhereOrNull(
+                                          (a) => a.accountType == 'Capital',
+                                        );
+                                        if (capitalAccount != null) {
+                                          addCapital(
+                                            accountId: capitalAccount.id,
+                                            amount: amount,
+                                            description: description,
+                                            reference: reference,
+                                          );
+                                        } else {
+                                          _showError('No capital account found');
+                                        }
+                                      } else if (transactionType == 'Drawings') {
+                                        final drawingsAccount = equityAccounts.firstWhereOrNull(
+                                          (a) => a.accountType == 'Drawings',
+                                        );
+                                        if (drawingsAccount != null) {
+                                          recordDrawings(
+                                            accountId: drawingsAccount.id,
+                                            amount: amount,
+                                            description: description,
+                                            reference: reference,
+                                          );
+                                        } else {
+                                          _showError('No drawings account found');
+                                        }
+                                      } else {
+                                        transferToRetainedEarnings(
+                                          amount: amount,
+                                          description: description,
+                                          reference: reference,
+                                        );
+                                      }
+                                    }
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: kPrimary,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: isProcessing.value
+                                ? SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.black),
+                                    ),
+                                  )
+                                : const Text(
+                                    'Save Transaction',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                          )),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
   }
   
+  // ─── SHOW ACCOUNT DETAILS ──────────────────────────────────────────
+  void showAccountDetails(EquityAccount account) {
+    final typeColor = _getTypeColor(account.accountType);
+    
+    showModalBottomSheet(
+      context: Get.context!,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.55,
+        minChildSize: 0.3,
+        maxChildSize: 0.7,
+        expand: false,
+        builder: (_, scrollCtrl) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollCtrl,
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header
+                      Row(
+                        children: [
+                          Container(
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              color: typeColor.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Icon(
+                              _getTypeIcon(account.accountType),
+                              size: 26,
+                              color: typeColor,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        account.accountName,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w800,
+                                          color: kText,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: typeColor.withOpacity(0.08),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        account.accountType,
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                          color: typeColor,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '• ${account.accountCode}',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: kSubText,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // KPI Cards
+                      Row(
+                        children: [
+                          _miniKpi(
+                            'Opening',
+                            formatAmount(account.openingBalance),
+                            kSubText,
+                            Icons.history,
+                          ),
+                          const SizedBox(width: 8),
+                          _miniKpi(
+                            'Additions',
+                            formatAmount(account.additions),
+                            kSuccess,
+                            Icons.add_circle,
+                          ),
+                          const SizedBox(width: 8),
+                          _miniKpi(
+                            'Withdrawals',
+                            formatAmount(account.withdrawals),
+                            kDanger,
+                            Icons.remove_circle,
+                          ),
+                          const SizedBox(width: 8),
+                          _miniKpi(
+                            'Balance',
+                            formatAmount(account.currentBalance),
+                            typeColor,
+                            Icons.account_balance,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      const SizedBox(height: 16),
+                      
+                      // Details
+                      _detailRow('Account Type', account.accountType),
+                      _detailRow('Account Code', account.accountCode),
+                      _detailRow('Opening Balance', formatAmount(account.openingBalance)),
+                      _detailRow('Additions', formatAmount(account.additions)),
+                      _detailRow('Withdrawals', formatAmount(account.withdrawals)),
+                      _detailRow('Current Balance', formatAmount(account.currentBalance)),
+                      _detailRow('Last Updated', DateFormat('dd MMM yyyy').format(account.lastUpdated)),
+                      if (account.notes.isNotEmpty) _detailRow('Notes', account.notes),
+                      const SizedBox(height: 16),
+                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      const SizedBox(height: 16),
+                      
+                      // Close Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 46,
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: kPrimary),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text(
+                            'Close',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  // ─── CALCULATE EQUITY ──────────────────────────────────────────────
   void calculateEquity() {
     Get.dialog(
       AlertDialog(
-        title: Text('Equity Calculator', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w800)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Equity Calculator',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: kText,
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildCalcRow('Total Capital', formatAmount(totalCapital.value), kPrimary),
+            const SizedBox(height: 8),
             _buildCalcRow('Retained Earnings', formatAmount(totalRetainedEarnings.value), kSuccess),
+            const SizedBox(height: 8),
             _buildCalcRow('Reserves', formatAmount(totalReserves.value), kWarning),
+            const SizedBox(height: 8),
             _buildCalcRow('Drawings', formatAmount(totalDrawings.value), kDanger),
             const Divider(),
             _buildCalcRow('Total Equity', formatAmount(totalEquity.value), kPrimary, isBold: true),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Get.back(), child: Text('Close', style: TextStyle(fontSize: 12.sp))),
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  // ─── HELPER WIDGETS ──────────────────────────────────────────────
+  Widget _miniKpi(String label, String value, Color color, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withOpacity(0.15)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 14, color: color),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 9,
+                color: Colors.black.withOpacity(0.5),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _detailRow(String label, String value, {Color? valueColor}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: kSubText,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          Flexible(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: valueColor ?? kText,
+              ),
+              textAlign: TextAlign.right,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
     );
@@ -1492,30 +2142,92 @@ class EquityController extends GetxController {
   
   Widget _buildCalcRow(String label, String value, Color color, {bool isBold = false}) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 0.8.h),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: 12.sp, fontWeight: isBold ? FontWeight.w700 : FontWeight.w500, color: kSubText)),
-          Text(value, style: TextStyle(fontSize: 14.sp, fontWeight: isBold ? FontWeight.w800 : FontWeight.w700, color: color)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
+              color: isBold ? kText : kSubText,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: isBold ? FontWeight.w800 : FontWeight.w700,
+              color: color,
+            ),
+          ),
         ],
       ),
     );
   }
   
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 1.5.h),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(width: 30.w, child: Text(label, style: TextStyle(fontSize: 12.sp, color: kSubText, fontWeight: FontWeight.w500))),
-          Expanded(child: Text(value, style: TextStyle(fontSize: 14.sp, color: kText, fontWeight: FontWeight.w600))),
-        ],
+  Widget _buildTextField({
+    required String label,
+    required String hint,
+    required void Function(String) onChanged,
+    FormFieldValidator<String>? validator,
+    TextInputType? keyboardType,
+    String? prefixText,
+    int maxLines = 1,
+  }) {
+    return TextFormField(
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        prefixText: prefixText,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+        isDense: true,
+        labelStyle: TextStyle(fontSize: 12, color: kSubText),
       ),
+      style: const TextStyle(fontSize: 13, color: Colors.black),
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      onChanged: onChanged,
+      validator: validator,
     );
   }
   
+  Widget _buildDropdownField({
+    required String label,
+    required String value,
+    required List<String> items,
+    required void Function(String?) onChanged,
+  }) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+        isDense: true,
+        labelStyle: TextStyle(fontSize: 12, color: kSubText),
+      ),
+      style: const TextStyle(fontSize: 13, color: Colors.black),
+      items: items
+          .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+          .toList(),
+      onChanged: onChanged,
+    );
+  }
+  
+  // ─── HELPERS ──────────────────────────────────────────────────────
   Color _getTypeColor(String type) {
     switch (type) {
       case 'Capital': return kPrimary;
@@ -1536,23 +2248,7 @@ class EquityController extends GetxController {
     }
   }
   
-  void applyFilter(String filter) {
-    selectedFilter.value = filter;
-    loadEquityAccounts();
-  }
-  
-  void clearSearch() {
-    searchController.clear();
-    searchQuery.value = '';
-    equityAccounts.value = allEquityAccounts.value;
-    _updateSummaryForFiltered(allEquityAccounts.value);
-  }
-  
-  String formatAmount(double amount) => CurrencyUtils.format(amount);
-  
-
-  
   void _showError(String message) {
-    AppSnackbar.error(Colors.red, 'Error', message);
+    AppSnackbar.error(kDanger, 'Error', message);
   }
 }

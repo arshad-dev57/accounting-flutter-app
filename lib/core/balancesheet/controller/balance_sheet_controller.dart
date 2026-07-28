@@ -1,11 +1,13 @@
+// core/balancesheet/controller/balance_sheet_controller.dart
+// COMPLETE CONTROLLER - NO WEB
+
 import 'package:LedgerPro_app/Utils/currency_utils.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:LedgerPro_app/Utils/colors.dart';
 import 'package:LedgerPro_app/Utils/toast_utils.dart';
+import 'package:LedgerPro_app/core/FiscalYear/controller/fiscal_year_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:universal_html/html.dart' as html;
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -44,24 +46,12 @@ class BalanceSheetController extends GetxController {
   ];
 
   final ApiClient _api = Get.find<ApiClient>();
+  final FiscalYearController _fiscalYearController = Get.find<FiscalYearController>();
 
   @override
   void onInit() {
     super.onInit();
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
     loadBalanceSheet();
-  }
-
-  @override
-  void onClose() {
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
-    super.onClose();
   }
 
   String _formatAmount(double amount) {
@@ -70,7 +60,7 @@ class BalanceSheetController extends GetxController {
 
   bool get hasEquitySection => equityData.isNotEmpty || equity.value.abs() >= 0.01;
 
-  // ==================== LOAD BALANCE SHEET FROM API ====================
+  // ─── LOAD BALANCE SHEET FROM API ──────────────────────────────
   Future<void> loadBalanceSheet() async {
     try {
       isLoading.value = true;
@@ -82,10 +72,12 @@ class BalanceSheetController extends GetxController {
         params['period'] = selectedPeriod.value;
       }
 
-      final response = await _api.get('/api/balance-sheet', queryParameters: params);
+      // Add fiscal year ID if selected
+      if (_fiscalYearController.selectedFiscalYear.value != null) {
+        params['fiscalYearId'] = _fiscalYearController.selectedFiscalYear.value!.id;
+      }
 
-      print("📡 Response Status: ${response.statusCode}");
-      print("📡 Response Data: ${response.data}");
+      final response = await _api.get('/api/balance-sheet', queryParameters: params);
 
       if (response.success) {
         final Map<String, dynamic> responseData = response.data;
@@ -93,21 +85,16 @@ class BalanceSheetController extends GetxController {
         if (responseData['success'] == true) {
           final data = responseData['data'];
 
-          print("📊 Data received: $data");
-
           // Parse asOfDate
           if (data['asOfDate'] != null) {
             asOfDate.value = DateTime.parse(data['asOfDate']);
           }
 
           // ─── PARSE ASSETS ──────────────────────────────────────
-          // Backend se assets structure:
-          // assets: { current: [...], fixed: [...], other: [...] }
           assetsData.clear();
           if (data['assets'] != null && data['assets'] is Map) {
             final assetsMap = data['assets'] as Map;
             
-            // Process each category (current, fixed, other)
             assetsMap.forEach((category, items) {
               if (items is List && items.isNotEmpty) {
                 Map<String, double> categoryItems = {};
@@ -121,18 +108,14 @@ class BalanceSheetController extends GetxController {
                   }
                 }
                 if (categoryItems.isNotEmpty) {
-                  // Convert category name to display format
                   String displayCategory = _getCategoryDisplayName(category);
                   assetsData[displayCategory] = categoryItems;
                 }
               }
             });
-            print("📊 Assets Data: ${assetsData}");
           }
 
           // ─── PARSE LIABILITIES ──────────────────────────────────
-          // Backend se liabilities structure:
-          // liabilities: { current: [...], longTerm: [...], other: [...] }
           liabilitiesData.clear();
           if (data['liabilities'] != null && data['liabilities'] is Map) {
             final liabilitiesMap = data['liabilities'] as Map;
@@ -155,12 +138,9 @@ class BalanceSheetController extends GetxController {
                 }
               }
             });
-            print("📊 Liabilities Data: ${liabilitiesData}");
           }
 
           // ─── PARSE EQUITY ──────────────────────────────────────
-          // Backend se equity structure:
-          // equity: { owners: [...], retainedEarnings: -70000 }
           equityData.clear();
           if (data['equity'] != null && data['equity'] is Map) {
             final equityMap = data['equity'] as Map;
@@ -192,7 +172,6 @@ class BalanceSheetController extends GetxController {
                 equityData['Owners Equity']!['Retained Earnings'] = retainedEarnings;
               }
             }
-            print("📊 Equity Data: ${equityData}");
           }
 
           // ─── SET TOTALS ──────────────────────────────────────
@@ -207,40 +186,26 @@ class BalanceSheetController extends GetxController {
           final diff = (totalAssets.value - (totalLiabilities.value + equity.value)).abs();
           balanceDifference.value = diff;
           isBalanced.value = diff < 1;
-
-          print("✅ Balance sheet loaded successfully");
-          print("📊 Total Liabilities: ${totalLiabilities.value}");
-          print("📊 Total Assets: ${totalAssets.value}");
-          print("📊 Equity: ${equity.value}");
-          print("📊 Is Balanced: ${isBalanced.value}");
-          print("📊 Liabilities Data Keys: ${liabilitiesData.keys}");
-          print("📊 Assets Data Keys: ${assetsData.keys}");
-          print("📊 Equity Data Keys: ${equityData.keys}");
         } else {
           hasError.value = true;
-          errorMessage.value =
-              responseData['message'] ?? 'Failed to load balance sheet';
-          print("❌ API returned success=false: ${errorMessage.value}");
+          errorMessage.value = responseData['message'] ?? 'Failed to load balance sheet';
           _showError(errorMessage.value);
         }
       } else {
         hasError.value = true;
         errorMessage.value = response.message ?? 'Server error: ${response.statusCode}';
-        print("❌ HTTP Error: ${response.statusCode}");
         _showError(errorMessage.value);
       }
-    } catch (e, stackTrace) {
+    } catch (e) {
       hasError.value = true;
       errorMessage.value = 'Error: ${e.toString()}';
-      print("🔥 Error loading balance sheet: $e");
-      print("🔥 StackTrace: $stackTrace");
       _showError(errorMessage.value);
     } finally {
       isLoading.value = false;
     }
   }
 
-  // ==================== HELPER: GET CATEGORY DISPLAY NAME ====================
+  // ─── HELPER: GET CATEGORY DISPLAY NAME ──────────────────────────
   String _getCategoryDisplayName(String category) {
     switch (category) {
       case 'current':
@@ -252,7 +217,6 @@ class BalanceSheetController extends GetxController {
       case 'longTerm':
         return 'Long Term Liabilities';
       default:
-        // Capitalize first letter
         if (category.isNotEmpty) {
           return category[0].toUpperCase() + category.substring(1);
         }
@@ -260,7 +224,7 @@ class BalanceSheetController extends GetxController {
     }
   }
 
-  // ==================== RETRY LOADING ====================
+  // ─── RETRY LOADING ──────────────────────────────────────────────
   void retryLoad() {
     loadBalanceSheet();
   }
@@ -273,69 +237,175 @@ class BalanceSheetController extends GetxController {
 
   String formatAmount(double amount) => CurrencyUtils.format(amount);
 
-  // ==================== EXPORT FUNCTIONS ====================
+  // ─── EXPORT FUNCTIONS ────────────────────────────────────────────
   void exportToExcel() {
-    Get.dialog(
-      Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Export Balance Sheet',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Export Balance Sheet',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: kText,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 18, color: Colors.black),
+                  onPressed: () => Get.back(),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Balance sheet will be exported',
+              style: TextStyle(fontSize: 12, color: kSubText),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: _exportOptionCard(
+                    icon: Icons.picture_as_pdf_outlined,
+                    label: 'PDF',
+                    subtitle: 'Formatted report',
+                    color: const Color(0xFFE53935),
+                    bgColor: const Color(0xFFFFEBEE),
+                    onTap: () {
+                      Get.back();
+                      exportToPdf();
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _exportOptionCard(
+                    icon: Icons.table_chart_outlined,
+                    label: 'Excel',
+                    subtitle: 'Spreadsheet',
+                    color: const Color(0xFF2E7D32),
+                    bgColor: const Color(0xFFE8F5E9),
+                    onTap: () {
+                      Get.back();
+                      exportToExcelFile();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      backgroundColor: kCardBg,
+    );
+  }
+
+  Widget _exportOptionCard({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required Color color,
+    required Color bgColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(10),
               ),
-              const SizedBox(height: 10),
-              Text(
-                'Choose export format',
-                style: TextStyle(fontSize: 14, color: Colors.grey),
+              child: Icon(icon, color: Colors.white, size: 22),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: color,
               ),
-              const SizedBox(height: 20),
-              ListTile(
-                leading: Icon(Icons.picture_as_pdf, color: Color(0xFFE53935)),
-                title: Text('Export as PDF'),
-                onTap: () {
-                  Get.back();
-                  exportToPdf();
-                },
+            ),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 10,
+                color: color.withOpacity(0.7),
               ),
-              ListTile(
-                leading: Icon(Icons.table_chart, color: Color(0xFF2E7D32)),
-                title: Text('Export as Excel'),
-                onTap: () {
-                  Get.back();
-                  exportToExcelFile();
-                },
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
+  // ─── PDF EXPORT ──────────────────────────────────────────────────
   Future<void> exportToPdf() async {
     try {
-      if (!kIsWeb) {
-        Get.dialog(
-          AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 16),
-                Text('Generating PDF...', style: TextStyle(fontSize: 14)),
-              ],
+      Get.dialog(
+        Center(
+          child: Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      color: kPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Generating PDF...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Please wait',
+                    style: TextStyle(fontSize: 12, color: kSubText),
+                  ),
+                ],
+              ),
             ),
           ),
-          barrierDismissible: false,
-        );
-      }
+        ),
+        barrierDismissible: false,
+      );
 
       final pdf = pw.Document();
 
@@ -357,49 +427,22 @@ class BalanceSheetController extends GetxController {
         ),
       );
 
-      final bytes = await pdf.save();
+      final dir = await getTemporaryDirectory();
       final fileName = 'balance_sheet_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsBytes(await pdf.save());
 
-      if (kIsWeb) {
-        final blob = html.Blob([bytes], 'application/pdf');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
+      if (Get.isDialogOpen ?? false) Get.back();
 
-        if (Get.isDialogOpen ?? false) Get.back();
-
-        AppSnackbar.success(
-          Colors.green,
-          'Success',
-          'Balance sheet exported to PDF',
-          duration: const Duration(seconds: 2),
-        );
-      } else {
-        final dir = await getTemporaryDirectory();
-        final file = File('${dir.path}/$fileName');
-        await file.writeAsBytes(bytes);
-
-        if (Get.isDialogOpen ?? false) Get.back();
-
-        AppSnackbar.success(
-          Colors.green,
-          'Success',
-          'Balance sheet exported to PDF',
-          duration: const Duration(seconds: 2),
-        );
-
-        await OpenFile.open(file.path);
-      }
+      AppSnackbar.success(
+        kSuccess,
+        'Success',
+        'Balance sheet exported to PDF',
+      );
+      await OpenFile.open(file.path);
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      AppSnackbar.error(
-        Colors.red,
-        'Error',
-        'Failed to export PDF: $e',
-        duration: const Duration(seconds: 2),
-      );
+      AppSnackbar.error(kDanger, 'Error', 'Failed to export PDF: $e');
     }
   }
 
@@ -407,32 +450,42 @@ class BalanceSheetController extends GetxController {
     return pw.Container(
       padding: const pw.EdgeInsets.only(bottom: 12),
       decoration: const pw.BoxDecoration(
-          border: pw.Border(
-              bottom: pw.BorderSide(color: PdfColors.grey300, width: 1))),
+        border: pw.Border(
+          bottom: pw.BorderSide(color: PdfColors.grey300, width: 1),
+        ),
+      ),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
-          pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
-            pw.Text('Balance Sheet Report',
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text('Balance Sheet Report',
                 style: pw.TextStyle(
-                    fontSize: 18,
-                    fontWeight: pw.FontWeight.bold,
-                    color: PdfColors.indigo800)),
-            pw.Text(
+                  fontSize: 18,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.indigo800,
+                ),
+              ),
+              pw.Text(
                 'Generated: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now())}',
-                style: pw.TextStyle(
-                    fontSize: 9, color: PdfColors.grey600)),
-          ]),
+                style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              ),
+            ],
+          ),
           pw.Container(
             padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: pw.BoxDecoration(
-                color: PdfColors.indigo800,
-                borderRadius: pw.BorderRadius.circular(6)),
+              color: PdfColors.indigo800,
+              borderRadius: pw.BorderRadius.circular(6),
+            ),
             child: pw.Text('LedgerPro',
-                style: pw.TextStyle(
-                    color: PdfColors.white,
-                    fontWeight: pw.FontWeight.bold,
-                    fontSize: 10)),
+              style: pw.TextStyle(
+                color: PdfColors.white,
+                fontWeight: pw.FontWeight.bold,
+                fontSize: 10,
+              ),
+            ),
           ),
         ],
       ),
@@ -443,15 +496,19 @@ class BalanceSheetController extends GetxController {
     return pw.Container(
       padding: const pw.EdgeInsets.only(top: 8),
       decoration: const pw.BoxDecoration(
-          border: pw.Border(
-              top: pw.BorderSide(color: PdfColors.grey300, width: 1))),
+        border: pw.Border(
+          top: pw.BorderSide(color: PdfColors.grey300, width: 1),
+        ),
+      ),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
           pw.Text('Confidential - For Internal Use Only',
-              style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500)),
+            style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
+          ),
           pw.Text('Page ${ctx.pageNumber} of ${ctx.pagesCount}',
-              style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500)),
+            style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
+          ),
         ],
       ),
     );
@@ -461,15 +518,20 @@ class BalanceSheetController extends GetxController {
     return pw.Container(
       padding: const pw.EdgeInsets.all(12),
       decoration: pw.BoxDecoration(
-          color: PdfColors.indigo50,
-          borderRadius: pw.BorderRadius.circular(8),
-          border: pw.Border.all(color: PdfColors.indigo200)),
+        color: PdfColors.indigo50,
+        borderRadius: pw.BorderRadius.circular(8),
+        border: pw.Border.all(color: PdfColors.indigo200),
+      ),
       child: pw.Column(
         children: [
-          pw.Text('As of Date: ${DateFormat('dd MMM yyyy').format(asOfDate.value)}',
-              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
-          pw.Text('Period: ${selectedPeriod.value}',
-              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+          pw.Text(
+            'As of Date: ${DateFormat('dd MMM yyyy').format(asOfDate.value)}',
+            style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+          ),
+          pw.Text(
+            'Period: ${selectedPeriod.value}',
+            style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+          ),
           pw.SizedBox(height: 8),
           pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
@@ -487,11 +549,16 @@ class BalanceSheetController extends GetxController {
   pw.Widget _pdfSummaryItem(String label, String value, PdfColor color) {
     return pw.Column(children: [
       pw.Text(label,
-          style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
+        style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+      ),
       pw.SizedBox(height: 4),
       pw.Text(value,
-          style: pw.TextStyle(
-              fontSize: 11, fontWeight: pw.FontWeight.bold, color: color)),
+        style: pw.TextStyle(
+          fontSize: 11,
+          fontWeight: pw.FontWeight.bold,
+          color: color,
+        ),
+      ),
     ]);
   }
 
@@ -501,7 +568,8 @@ class BalanceSheetController extends GetxController {
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text('ASSETS',
-              style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.green700)),
+            style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.green700),
+          ),
           pw.SizedBox(height: 8),
           pw.Text('No assets found', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
         ],
@@ -512,7 +580,8 @@ class BalanceSheetController extends GetxController {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text('ASSETS',
-            style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.green700)),
+          style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.green700),
+        ),
         pw.SizedBox(height: 8),
         ...assetsData.keys.map((category) => _pdfCategorySection(category, assetsData[category] ?? {}, false)).toList(),
         pw.Divider(),
@@ -533,7 +602,8 @@ class BalanceSheetController extends GetxController {
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text('LIABILITIES',
-              style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.red700)),
+            style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.red700),
+          ),
           pw.SizedBox(height: 8),
           pw.Text('No liabilities found', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
         ],
@@ -544,7 +614,8 @@ class BalanceSheetController extends GetxController {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text('LIABILITIES',
-            style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.red700)),
+          style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.red700),
+        ),
         pw.SizedBox(height: 8),
         ...liabilitiesData.keys.map((category) => _pdfCategorySection(category, liabilitiesData[category] ?? {}, true)).toList(),
         pw.Divider(),
@@ -564,7 +635,8 @@ class BalanceSheetController extends GetxController {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text('EQUITY',
-            style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.indigo700)),
+          style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.indigo700),
+        ),
         pw.SizedBox(height: 8),
         pw.Padding(
           padding: const pw.EdgeInsets.symmetric(vertical: 4),
@@ -577,12 +649,14 @@ class BalanceSheetController extends GetxController {
         pw.Container(
           padding: const pw.EdgeInsets.all(8),
           decoration: pw.BoxDecoration(
-              color: PdfColors.indigo50,
-              borderRadius: pw.BorderRadius.circular(8)),
+            color: PdfColors.indigo50,
+            borderRadius: pw.BorderRadius.circular(8),
+          ),
           child: pw.Row(children: [
             pw.Expanded(child: pw.Text('Total Liabilities & Equity', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold))),
             pw.Text(_formatAmount(totalLiabilities.value + equity.value),
-                style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.indigo800)),
+              style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.indigo800),
+            ),
           ]),
         ),
       ],
@@ -596,8 +670,10 @@ class BalanceSheetController extends GetxController {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(category,
-            style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold,
-                color: isLiability ? PdfColors.red600 : PdfColors.green600)),
+          style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold,
+            color: isLiability ? PdfColors.red600 : PdfColors.green600,
+          ),
+        ),
         pw.SizedBox(height: 4),
         ...items.entries.map((item) => pw.Container(
           padding: pw.EdgeInsets.only(left: 16),
@@ -611,7 +687,8 @@ class BalanceSheetController extends GetxController {
           child: pw.Row(children: [
             pw.Expanded(child: pw.Text('Total $category', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold))),
             pw.Text(_formatAmount(items.values.fold(0.0, (sum, val) => sum + val)),
-                style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+            ),
           ]),
         ),
         pw.SizedBox(height: 4),
@@ -619,24 +696,49 @@ class BalanceSheetController extends GetxController {
     );
   }
 
+  // ─── EXCEL EXPORT ──────────────────────────────────────────────────
   Future<void> exportToExcelFile() async {
     try {
-      if (!kIsWeb) {
-        Get.dialog(
-          AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 16),
-                Text('Building Excel...', style: TextStyle(fontSize: 14)),
-              ],
+      Get.dialog(
+        Center(
+          child: Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      color: kPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Building Excel...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Please wait',
+                    style: TextStyle(fontSize: 12, color: kSubText),
+                  ),
+                ],
+              ),
             ),
           ),
-          barrierDismissible: false,
-        );
-      }
+        ),
+        barrierDismissible: false,
+      );
 
       final excelFile = Excel.createExcel();
 
@@ -751,48 +853,22 @@ class BalanceSheetController extends GetxController {
       final bytes = excelFile.save();
       if (bytes == null) throw Exception('Excel save failed');
 
+      final dir = await getTemporaryDirectory();
       final fileName = 'balance_sheet_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsBytes(bytes);
 
-      if (kIsWeb) {
-        final blob = html.Blob([bytes], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
+      if (Get.isDialogOpen ?? false) Get.back();
 
-        if (Get.isDialogOpen ?? false) Get.back();
-
-        AppSnackbar.success(
-          Colors.green,
-          'Success',
-          'Balance sheet exported to Excel',
-          duration: const Duration(seconds: 2),
-        );
-      } else {
-        final dir = await getTemporaryDirectory();
-        final file = File('${dir.path}/$fileName');
-        await file.writeAsBytes(bytes);
-
-        if (Get.isDialogOpen ?? false) Get.back();
-
-        AppSnackbar.success(
-          Colors.green,
-          'Success',
-          'Balance sheet exported to Excel',
-          duration: const Duration(seconds: 2),
-        );
-
-        await OpenFile.open(file.path);
-      }
+      AppSnackbar.success(
+        kSuccess,
+        'Success',
+        'Balance sheet exported to Excel',
+      );
+      await OpenFile.open(file.path);
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      AppSnackbar.error(
-        Colors.red,
-        'Error',
-        'Failed to export Excel: $e',
-        duration: const Duration(seconds: 2),
-      );
+      AppSnackbar.error(kDanger, 'Error', 'Failed to export Excel: $e');
     }
   }
 
@@ -807,7 +883,8 @@ class BalanceSheetController extends GetxController {
     String fontColor = '000000',
   }) {
     final cell = sheet.cell(
-        CellIndex.indexByColumnRow(columnIndex: col, rowIndex: row));
+      CellIndex.indexByColumnRow(columnIndex: col, rowIndex: row),
+    );
 
     if (value == null) {
       cell.value = TextCellValue('0');
@@ -831,27 +908,21 @@ class BalanceSheetController extends GetxController {
     );
   }
 
-  // ==================== PRINT BALANCE SHEET ====================
+  // ─── PRINT BALANCE SHEET ──────────────────────────────────────────
   void printBalanceSheet() {
     AppSnackbar.success(
-      Colors.blue,
+      kPrimary,
       'Print',
       'Preparing balance sheet for print...',
-      duration: const Duration(seconds: 2),
     );
   }
 
-  // ==================== SHOW ERROR ====================
+  // ─── SHOW ERROR ──────────────────────────────────────────────────
   void _showError(String message) {
-    AppSnackbar.error(
-      Colors.red,
-      'Error',
-      message,
-      duration: const Duration(seconds: 3),
-    );
+    AppSnackbar.error(kDanger, 'Error', message);
   }
 
-  // ==================== GETTERS FOR UI ====================
+  // ─── GETTERS FOR UI ──────────────────────────────────────────────
   List<String> get liabilityCategories => liabilitiesData.keys.toList();
   List<String> get assetCategories => assetsData.keys.toList();
   List<String> get equityCategories => equityData.keys.toList();

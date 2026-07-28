@@ -1,6 +1,7 @@
 // settings_controller.dart
 import 'package:get/get.dart';
 import 'package:LedgerPro_app/Services/api_client.dart';
+import 'package:flutter/material.dart';
 
 // ============================================================
 // MODELS
@@ -91,8 +92,11 @@ const List<SettingCategory> orderSettingCategories = [
 // ============================================================
 // CONTROLLER
 // ============================================================
-class SettingsController extends GetxController {
+class SettingsController extends GetxController with GetSingleTickerProviderStateMixin {
   final ApiClient _api = Get.find<ApiClient>();
+
+  // ─── Tab Controller ──────────────────────────────────────────
+  late final TabController tabController;
 
   final RxString activeCategory = 'productType'.obs;
   final RxList<SettingItem> items = <SettingItem>[].obs;
@@ -120,18 +124,57 @@ class SettingsController extends GetxController {
     }
   }
 
+  // ─── Get categories based on active tab ─────────────────────
+  List<SettingCategory> get currentCategories {
+    final tabIndex = tabController.index;
+    return tabIndex == 0 ? productSettingCategories : orderSettingCategories;
+  }
+
+  // ─── Get current tab label ──────────────────────────────────
+  String get currentTabLabel {
+    return tabController.index == 0 ? 'Product' : 'Order';
+  }
+
+  // ─── Lifecycle ──────────────────────────────────────────────
   @override
   void onInit() {
     super.onInit();
+    tabController = TabController(length: 2, vsync: this);
+    
+    // Listen to tab changes
+    tabController.addListener(() {
+      if (!tabController.indexIsChanging) {
+        // When tab changes, reset to first category of that tab
+        final categories = currentCategories;
+        if (categories.isNotEmpty) {
+          activeCategory.value = categories.first.id;
+          searchQuery.value = '';
+          fetchSettings();
+        }
+      }
+    });
+    
+    // Initialize with first product category
+    if (productSettingCategories.isNotEmpty) {
+      activeCategory.value = productSettingCategories.first.id;
+    }
     fetchSettings();
   }
 
+  @override
+  void onClose() {
+    tabController.dispose();
+    super.onClose();
+  }
+
+  // ─── Set category and fetch ─────────────────────────────────
   void setCategory(String categoryId) {
     activeCategory.value = categoryId;
     searchQuery.value = '';
     fetchSettings();
   }
 
+  // ─── Fetch Settings ─────────────────────────────────────────
   Future<void> fetchSettings() async {
     isLoading.value = true;
     errorMessage.value = '';
@@ -203,6 +246,7 @@ class SettingsController extends GetxController {
     }
   }
 
+  // ─── Create Setting ─────────────────────────────────────────
   Future<bool> createSetting(Map<String, dynamic> payload) async {
     isSaving.value = true;
     errorMessage.value = '';
@@ -234,6 +278,7 @@ class SettingsController extends GetxController {
     }
   }
 
+  // ─── Update Setting ─────────────────────────────────────────
   Future<bool> updateSetting(String id, Map<String, dynamic> payload) async {
     isSaving.value = true;
     errorMessage.value = '';
@@ -265,6 +310,7 @@ class SettingsController extends GetxController {
     }
   }
 
+  // ─── Delete Setting ─────────────────────────────────────────
   Future<void> deleteSetting(String id) async {
     final item = items.firstWhereOrNull((i) => i.id == id);
     if (item?.isDefault == true) {
@@ -294,6 +340,7 @@ class SettingsController extends GetxController {
     }
   }
 
+  // ─── Helper Methods ─────────────────────────────────────────
   void _showSuccess(String msg) {
     successMessage.value = msg;
     Future.delayed(const Duration(seconds: 3), () => successMessage.value = '');

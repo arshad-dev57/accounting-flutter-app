@@ -1,3 +1,5 @@
+// lib/core/transactions/controller/transaction_controller.dart - FIXED
+
 import 'package:LedgerPro_app/Utils/currency_utils.dart';
 import 'dart:convert';
 import 'package:LedgerPro_app/Utils/colors.dart';
@@ -21,10 +23,9 @@ class TransactionController extends GetxController {
   var selectedPeriod = 'This Month'.obs;
   var selectedDateRange = Rxn<DateTimeRange>();
   var searchQuery = ''.obs;
-  var selectedType =
-      'All'.obs; // All, income, expense, receivable, payable, etc.
+  var selectedType = 'All'.obs;
 
-  // Summary data
+  // Summary data - ✅ FIXED: Use 0.0 as default
   var totalIncome = 0.0.obs;
   var totalExpense = 0.0.obs;
   var totalReceivable = 0.0.obs;
@@ -115,9 +116,17 @@ class TransactionController extends GetxController {
 
       if (response.success) {
         final data = response.data;
-        incomeCategories.value = List<String>.from(data['data']['income']);
-        expenseCategories.value = List<String>.from(data['data']['expense']);
-        otherCategories.value = List<String>.from(data['data']['other'] ?? []);
+        if (data['data'] != null) {
+          incomeCategories.value = List<String>.from(
+            data['data']['income'] ?? [],
+          );
+          expenseCategories.value = List<String>.from(
+            data['data']['expense'] ?? [],
+          );
+          otherCategories.value = List<String>.from(
+            data['data']['other'] ?? [],
+          );
+        }
       }
     } catch (e) {
       print('Error loading categories: $e');
@@ -156,6 +165,25 @@ class TransactionController extends GetxController {
     }
   }
 
+  // ✅ FIXED: Helper to safely parse numeric values
+  double _safeDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    if (value is num) return value.toDouble();
+    return 0.0;
+  }
+
+  int _safeInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? 0;
+    if (value is num) return value.toInt();
+    return 0;
+  }
+
   Future<void> loadTransactions() async {
     try {
       isLoading.value = true;
@@ -166,12 +194,10 @@ class TransactionController extends GetxController {
         'limit': pageSize.toString(),
       };
 
-      // Add type filter (All, income, expense, receivable, etc.)
       if (selectedType.value != 'All') {
         params['type'] = selectedType.value.toLowerCase();
       }
 
-      // ✅ DEBUG: Print selected period
       print("🔍 ========== LOAD TRANSACTIONS DEBUG ==========");
       print("📅 SELECTED PERIOD: ${selectedPeriod.value}");
       print("📅 SELECTED DATE RANGE: ${selectedDateRange.value}");
@@ -179,7 +205,6 @@ class TransactionController extends GetxController {
       print("📅 SELECTED TYPE: ${selectedType.value}");
       print("==========================================");
 
-      // Add date range filter
       if (selectedDateRange.value != null) {
         params['startDate'] = DateFormat(
           'yyyy-MM-dd',
@@ -187,21 +212,14 @@ class TransactionController extends GetxController {
         params['endDate'] = DateFormat(
           'yyyy-MM-dd',
         ).format(selectedDateRange.value!.end);
-        print(
-          "📅 USING CUSTOM RANGE: ${params['startDate']} to ${params['endDate']}",
-        );
       } else {
-        // Apply period filter
         final now = DateTime.now();
-        print("📅 CURRENT DATE TIME: $now");
-
         switch (selectedPeriod.value) {
           case 'Today':
             params['startDate'] = DateFormat(
               'yyyy-MM-dd',
             ).format(DateTime(now.year, now.month, now.day));
             params['endDate'] = DateFormat('yyyy-MM-dd').format(now);
-            print("📅 TODAY: ${params['startDate']} to ${params['endDate']}");
             break;
           case 'This Week':
             final start = now.subtract(Duration(days: now.weekday - 1));
@@ -209,18 +227,12 @@ class TransactionController extends GetxController {
               'yyyy-MM-dd',
             ).format(DateTime(start.year, start.month, start.day));
             params['endDate'] = DateFormat('yyyy-MM-dd').format(now);
-            print(
-              "📅 THIS WEEK: ${params['startDate']} to ${params['endDate']}",
-            );
             break;
           case 'This Month':
             params['startDate'] = DateFormat(
               'yyyy-MM-dd',
             ).format(DateTime(now.year, now.month, 1));
             params['endDate'] = DateFormat('yyyy-MM-dd').format(now);
-            print(
-              "📅 THIS MONTH: ${params['startDate']} to ${params['endDate']}",
-            );
             break;
           case 'This Quarter':
             final quarter = (now.month - 1) ~/ 3;
@@ -229,25 +241,16 @@ class TransactionController extends GetxController {
               'yyyy-MM-dd',
             ).format(DateTime(now.year, startMonth, 1));
             params['endDate'] = DateFormat('yyyy-MM-dd').format(now);
-            print(
-              "📅 THIS QUARTER: ${params['startDate']} to ${params['endDate']}",
-            );
             break;
           case 'This Year':
             params['startDate'] = DateFormat(
               'yyyy-MM-dd',
             ).format(DateTime(now.year, 1, 1));
             params['endDate'] = DateFormat('yyyy-MM-dd').format(now);
-            print(
-              "📅 THIS YEAR: ${params['startDate']} to ${params['endDate']}",
-            );
             break;
-          default:
-            print("⚠️ DEFAULT CASE - NO PERIOD SELECTED");
         }
       }
 
-      // Add search filter
       if (searchQuery.value.isNotEmpty) {
         params['search'] = searchQuery.value;
       }
@@ -263,20 +266,29 @@ class TransactionController extends GetxController {
 
       if (response.success) {
         final data = response.data;
-        transactions.value = List<Map<String, dynamic>>.from(data['data']);
-        totalPages.value = data['pages'];
+
+        // ✅ FIXED: Safe data extraction
+        final dataList = data['data'] as List? ?? [];
+        transactions.value = dataList
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
+
+        totalPages.value = _safeInt(data['pages']);
         hasMore.value = currentPage.value < totalPages.value;
 
-        // Update summary
-        totalIncome.value = (data['summary']['totalIncome'] ?? 0).toDouble();
-        totalExpense.value = (data['summary']['totalExpense'] ?? 0).toDouble();
-        totalReceivable.value = (data['summary']['totalReceivable'] ?? 0)
-            .toDouble();
-        totalPayable.value = (data['summary']['totalPayable'] ?? 0).toDouble();
-        netCashFlow.value = (data['summary']['netCashFlow'] ?? 0).toDouble();
+        // ✅ FIXED: Safe summary extraction
+        final summary = data['summary'] as Map<String, dynamic>? ?? {};
+        totalIncome.value = _safeDouble(summary['totalIncome']);
+        totalExpense.value = _safeDouble(summary['totalExpense']);
+        totalReceivable.value = _safeDouble(summary['totalReceivable']);
+        totalPayable.value = _safeDouble(summary['totalPayable']);
+        netCashFlow.value = _safeDouble(summary['netCashFlow']);
 
         print("✅ Transactions loaded: ${transactions.length} records");
         print("✅ Total pages: $totalPages");
+        print(
+          "✅ Summary: Income=${totalIncome.value}, Expense=${totalExpense.value}",
+        );
       } else {
         hasError.value = true;
         errorMessage.value = 'Failed to load transactions';
@@ -367,13 +379,14 @@ class TransactionController extends GetxController {
 
       if (response.success) {
         final data = response.data;
-        List<dynamic> newTransactions = data['data'];
+        final dataList = data['data'] as List? ?? [];
         transactions.addAll(
-          newTransactions.map((e) => e as Map<String, dynamic>).toList(),
+          dataList.map((e) => Map<String, dynamic>.from(e)).toList(),
         );
-        hasMore.value = currentPage.value < data['pages'];
+        totalPages.value = _safeInt(data['pages']);
+        hasMore.value = currentPage.value < totalPages.value;
         print(
-          "✅ Loaded ${newTransactions.length} more transactions. Total: ${transactions.length}",
+          "✅ Loaded ${dataList.length} more transactions. Total: ${transactions.length}",
         );
       }
     } catch (e) {
@@ -421,7 +434,7 @@ class TransactionController extends GetxController {
         );
         _resetAndReload();
       } else {
-        final errorData = response.data;
+        final errorData = response.data as Map<String, dynamic>? ?? {};
         AppSnackbar.error(
           kDanger,
           'Error',
@@ -449,7 +462,6 @@ class TransactionController extends GetxController {
 
   void changeType(String type) {
     selectedType.value = type;
-    // Update tab based on type
     if (type == 'All') {
       selectedTab.value = 0;
     } else if (type == 'Income') {
@@ -467,7 +479,6 @@ class TransactionController extends GetxController {
       selectedDateRange.value = null;
       print("🔄 Date range cleared");
     }
-    // Force reload with new period
     _resetAndReload();
   }
 
@@ -535,7 +546,11 @@ class TransactionController extends GetxController {
 
     if (transaction['color'] != null) {
       final colorStr = transaction['color'] as String;
-      return Color(int.parse(colorStr.replaceAll('#', '0xFF')));
+      try {
+        return Color(int.parse(colorStr.replaceAll('#', '0xFF')));
+      } catch (_) {
+        // Fallback if color parsing fails
+      }
     }
 
     switch (source) {
@@ -605,8 +620,12 @@ class TransactionController extends GetxController {
     }
 
     if (dueDate != null) {
-      subtitle =
-          '$subtitle • Due: ${DateFormat('dd MMM yyyy').format(DateTime.parse(dueDate))}';
+      try {
+        subtitle =
+            '$subtitle • Due: ${DateFormat('dd MMM yyyy').format(DateTime.parse(dueDate))}';
+      } catch (_) {
+        // If date parsing fails, just ignore
+      }
     }
 
     return subtitle;

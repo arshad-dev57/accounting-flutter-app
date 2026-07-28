@@ -42,6 +42,13 @@ class InvoiceController extends GetxController {
     return 0.0;
   }
 
+  /// Safe conversion of any JSON value to String
+  static String toStringSafe(dynamic value) {
+    if (value == null) return '';
+    if (value is String) return value;
+    return value.toString();
+  }
+
   String _formatAmount(double amount) {
     return CurrencyUtils.format(amount);
   }
@@ -53,7 +60,7 @@ class InvoiceController extends GetxController {
 
       if (response.success) {
         bankAccounts.value = List<Map<String, dynamic>>.from(
-          response.data['data'],
+          response.data['data'] ?? [],
         );
       }
     } catch (e) {
@@ -123,7 +130,7 @@ class InvoiceController extends GetxController {
 
       if (response.success) {
         customers.value = List<Map<String, dynamic>>.from(
-          response.data['data'],
+          response.data['data'] ?? [],
         );
       }
     } catch (e) {
@@ -153,17 +160,43 @@ class InvoiceController extends GetxController {
         params['endDate'] = endDate.value!.toIso8601String();
       }
 
-      final response = await _api.get('/api/warehouse/invoices', queryParameters: params);
+      final response = await _api.get(
+        '/api/warehouse/invoices',
+        queryParameters: params,
+      );
 
       if (response.success) {
         final data = response.data;
-        invoices.value = (data['data'] as List)
-            .map((e) => Invoice.fromJson(e))
+        // Safe null check for data
+        final List<dynamic> invoiceList = data['data'] as List? ?? [];
+
+        invoices.value = invoiceList
+            .map((e) => Invoice.fromJson(e as Map<String, dynamic>? ?? {}))
             .toList();
 
         _calculateSummary();
+      } else {
+        // Clear invoices on failure
+        invoices.clear();
+        totalAmount.value = 0.0;
+        totalPaid.value = 0.0;
+        totalOutstanding.value = 0.0;
+
+        // Show error message
+        if (response.data != null) {
+          final message =
+              response.data['message']?.toString() ?? 'Failed to load invoices';
+          AppSnackbar.error(kDanger, 'Error', message);
+        }
       }
     } catch (e) {
+      print('❌ Error loading invoices: $e');
+      // Clear invoices on error
+      invoices.clear();
+      totalAmount.value = 0.0;
+      totalPaid.value = 0.0;
+      totalOutstanding.value = 0.0;
+
       AppSnackbar.error(kDanger, 'Error', 'Failed to load invoices: $e');
     } finally {
       isLoading(false);
@@ -180,7 +213,10 @@ class InvoiceController extends GetxController {
     try {
       isCreating(true);
 
-      final response = await _api.post('/api/warehouse/invoices', body: invoiceData);
+      final response = await _api.post(
+        '/api/warehouse/invoices',
+        body: invoiceData,
+      );
 
       if (response.success) {
         AppSnackbar.success(
@@ -2353,25 +2389,67 @@ class Invoice {
   bool get isOverdue => dueDate.isBefore(DateTime.now()) && status != 'Paid';
 
   factory Invoice.fromJson(Map<String, dynamic> json) {
+    // Safe method to get string value
+    String getString(dynamic value) => value?.toString() ?? '';
+
+    // Safe method to get double value
+    double getDouble(dynamic value) {
+      if (value == null) return 0.0;
+      if (value is double) return value;
+      if (value is int) return value.toDouble();
+      if (value is String) return double.tryParse(value) ?? 0.0;
+      return 0.0;
+    }
+
+    // Safe method to get DateTime
+    DateTime getDateTime(dynamic value) {
+      if (value == null) return DateTime.now();
+      try {
+        return DateTime.parse(value.toString());
+      } catch (e) {
+        return DateTime.now();
+      }
+    }
+
+    // Safe method to get customer ID from nested object or string
+    String getCustomerId(dynamic value) {
+      if (value == null) return '';
+      if (value is Map) {
+        return value['_id']?.toString() ?? '';
+      }
+      return value.toString();
+    }
+
+    // Safe method to get items list
+    List<InvoiceItem> getItems(dynamic value) {
+      if (value == null) return [];
+      if (value is List) {
+        return value.map((e) {
+          if (e is Map) {
+            // Convert Map<dynamic, dynamic> to Map<String, dynamic>
+            return InvoiceItem.fromJson(Map<String, dynamic>.from(e));
+          }
+          return InvoiceItem.fromJson({});
+        }).toList();
+      }
+      return [];
+    }
+
     return Invoice(
-      id: json['_id']?.toString() ?? '',
-      invoiceNumber: json['invoiceNumber']?.toString() ?? '',
-      customerId: (json['customerId'] is Map)
-          ? json['customerId']['_id']?.toString() ?? ''
-          : json['customerId']?.toString() ?? '',
-      customerName: json['customerName']?.toString() ?? '',
-      date: DateTime.parse(json['date']),
-      dueDate: DateTime.parse(json['dueDate']),
-      items: (json['items'] as List? ?? [])
-          .map((e) => InvoiceItem.fromJson(e))
-          .toList(),
-      subtotal: InvoiceController.toDouble(json['subtotal']),
-      taxTotal: InvoiceController.toDouble(json['taxTotal']),
-      discount: InvoiceController.toDouble(json['discount']),
-      totalAmount: InvoiceController.toDouble(json['totalAmount']),
-      paidAmount: InvoiceController.toDouble(json['paidAmount']),
-      status: json['status']?.toString() ?? 'Unpaid',
-      notes: json['notes']?.toString() ?? '',
+      id: getString(json['_id']),
+      invoiceNumber: getString(json['invoiceNumber']),
+      customerId: getCustomerId(json['customerId']),
+      customerName: getString(json['customerName']),
+      date: getDateTime(json['date']),
+      dueDate: getDateTime(json['dueDate']),
+      items: getItems(json['items']),
+      subtotal: getDouble(json['subtotal']),
+      taxTotal: getDouble(json['taxTotal']),
+      discount: getDouble(json['discount']),
+      totalAmount: getDouble(json['totalAmount']),
+      paidAmount: getDouble(json['paidAmount']),
+      status: getString(json['status']),
+      notes: getString(json['notes']),
     );
   }
 }
@@ -2394,15 +2472,34 @@ class InvoiceItem {
   });
 
   factory InvoiceItem.fromJson(Map<String, dynamic> json) {
+    // Safe method to get string value
+    String getString(dynamic value) => value?.toString() ?? '';
+
+    // Safe method to get double value
+    double getDouble(dynamic value) {
+      if (value == null) return 0.0;
+      if (value is double) return value;
+      if (value is int) return value.toDouble();
+      if (value is String) return double.tryParse(value) ?? 0.0;
+      return 0.0;
+    }
+
+    // Safe method to get int value
+    int getInt(dynamic value) {
+      if (value == null) return 0;
+      if (value is int) return value;
+      if (value is double) return value.toInt();
+      if (value is String) return int.tryParse(value) ?? 0;
+      return 0;
+    }
+
     return InvoiceItem(
-      description: json['description']?.toString() ?? '',
-      quantity: (json['quantity'] is int)
-          ? json['quantity']
-          : int.tryParse(json['quantity']?.toString() ?? '0') ?? 0,
-      unitPrice: InvoiceController.toDouble(json['unitPrice']),
-      amount: InvoiceController.toDouble(json['amount']),
-      taxRate: InvoiceController.toDouble(json['taxRate']),
-      taxAmount: InvoiceController.toDouble(json['taxAmount']),
+      description: getString(json['description']),
+      quantity: getInt(json['quantity']),
+      unitPrice: getDouble(json['unitPrice']),
+      amount: getDouble(json['amount']),
+      taxRate: getDouble(json['taxRate']),
+      taxAmount: getDouble(json['taxAmount']),
     );
   }
 }

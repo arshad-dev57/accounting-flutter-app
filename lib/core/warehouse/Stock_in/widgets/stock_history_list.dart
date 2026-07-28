@@ -68,6 +68,8 @@ class StockHistoryList extends StatelessWidget {
       }
 
       return ListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(vertical: 10),
         itemCount: movements.length,
         itemBuilder: (context, index) {
@@ -106,7 +108,7 @@ class StockHistoryList extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
-                          m.type == 'in' ? Icons.arrow_downward : Icons.arrow_upward,
+                          m.getTypeIcon(),
                           color: color,
                           size: 22,
                         ),

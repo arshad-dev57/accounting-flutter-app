@@ -93,26 +93,42 @@ class SalesReturnScreen extends StatelessWidget {
                             letterSpacing: -0.3,
                           ),
                         ),
-                        Obx(() => Text(
-                          '${controller.totalRecords.value} returns',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.black.withOpacity(0.55),
-                            fontWeight: FontWeight.w500,
+                        Obx(
+                          () => Text(
+                            '${controller.totalRecords.value} returns',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.black.withOpacity(0.55),
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        )),
+                        ),
                       ],
                     ),
                   ),
-                  Obx(() => Row(
-                    children: [
-                      _compactKpi('Pending', controller.stats.value.pending.toString(), Colors.orange.shade800),
-                      const SizedBox(width: 10),
-                      _compactKpi('Approved', controller.stats.value.approved.toString(), Colors.green.shade800),
-                      const SizedBox(width: 10),
-                      _compactKpi('Rejected', controller.stats.value.rejected.toString(), Colors.red.shade700),
-                    ],
-                  )),
+                  Obx(
+                    () => Row(
+                      children: [
+                        _compactKpi(
+                          'Pending',
+                          controller.stats.value.pending.toString(),
+                          Colors.orange.shade800,
+                        ),
+                        const SizedBox(width: 10),
+                        _compactKpi(
+                          'Approved',
+                          controller.stats.value.approved.toString(),
+                          Colors.green.shade800,
+                        ),
+                        const SizedBox(width: 10),
+                        _compactKpi(
+                          'Rejected',
+                          controller.stats.value.rejected.toString(),
+                          Colors.red.shade700,
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(width: 10),
                   GestureDetector(
                     onTap: controller.refreshReturns,
@@ -123,7 +139,11 @@ class SalesReturnScreen extends StatelessWidget {
                         color: Colors.black.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(9),
                       ),
-                      child: Icon(Icons.refresh_rounded, size: 17, color: Colors.black.withOpacity(0.65)),
+                      child: Icon(
+                        Icons.refresh_rounded,
+                        size: 17,
+                        color: Colors.black.withOpacity(0.65),
+                      ),
                     ),
                   ),
                 ],
@@ -147,19 +167,41 @@ class SalesReturnScreen extends StatelessWidget {
                 child: _SearchField(controller: controller),
               ),
             ),
-            Obx(() => SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-              child: Row(
-                children: [
-                  _filterChip('All', controller.selectedFilter.value == 'all', () => controller.filterReturns('all')),
-                  _filterChip('Pending', controller.selectedFilter.value == 'Pending', () => controller.filterReturns('Pending')),
-                  _filterChip('Approved', controller.selectedFilter.value == 'Approved', () => controller.filterReturns('Approved')),
-                  _filterChip('Completed', controller.selectedFilter.value == 'Completed', () => controller.filterReturns('Completed')),
-                  _filterChip('Rejected', controller.selectedFilter.value == 'Rejected', () => controller.filterReturns('Rejected')),
-                ],
+            Obx(
+              () => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                child: Row(
+                  children: [
+                    _filterChip(
+                      'All',
+                      controller.selectedFilter.value == 'all',
+                      () => controller.filterReturns('all'),
+                    ),
+                    _filterChip(
+                      'Pending',
+                      controller.selectedFilter.value == 'Pending',
+                      () => controller.filterReturns('Pending'),
+                    ),
+                    _filterChip(
+                      'Approved',
+                      controller.selectedFilter.value == 'Approved',
+                      () => controller.filterReturns('Approved'),
+                    ),
+                    _filterChip(
+                      'Completed',
+                      controller.selectedFilter.value == 'Completed',
+                      () => controller.filterReturns('Completed'),
+                    ),
+                    _filterChip(
+                      'Rejected',
+                      controller.selectedFilter.value == 'Rejected',
+                      () => controller.filterReturns('Rejected'),
+                    ),
+                  ],
+                ),
               ),
-            )),
+            ),
           ],
         ),
       ),
@@ -170,8 +212,22 @@ class SalesReturnScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: color)),
-        Text(label, style: TextStyle(fontSize: 9, color: Colors.black.withOpacity(0.5), fontWeight: FontWeight.w600)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 9,
+            color: Colors.black.withOpacity(0.5),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
     );
   }
@@ -187,7 +243,9 @@ class SalesReturnScreen extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected ? Colors.black : Colors.white.withOpacity(0.18),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: selected ? Colors.black : Colors.white.withOpacity(0.4)),
+            border: Border.all(
+              color: selected ? Colors.black : Colors.white.withOpacity(0.4),
+            ),
           ),
           child: Text(
             label,
@@ -202,7 +260,11 @@ class SalesReturnScreen extends StatelessWidget {
     );
   }
 
-  void _showDetail(BuildContext context, SalesReturnController controller, ReturnModel item) {
+  void _showDetail(
+    BuildContext context,
+    SalesReturnController controller,
+    ReturnModel item,
+  ) {
     controller.selectReturn(item);
     showModalBottomSheet(
       context: context,
@@ -274,7 +336,9 @@ class _SearchFieldState extends State<_SearchField> {
       controller: _searchCtrl,
       onChanged: (v) {
         setState(() {});
-        v.isEmpty ? widget.controller.clearSearch() : widget.controller.searchReturns(v);
+        v.isEmpty
+            ? widget.controller.clearSearch()
+            : widget.controller.searchReturns(v);
       },
       style: const TextStyle(fontSize: 13, color: Colors.black87),
       decoration: InputDecoration(
@@ -292,7 +356,10 @@ class _SearchFieldState extends State<_SearchField> {
               )
             : null,
         border: InputBorder.none,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 11,
+        ),
         isDense: true,
       ),
     );
@@ -306,10 +373,7 @@ class _CreateReturnWizard extends StatelessWidget {
   final SalesReturnController controller;
   final VoidCallback onCancel;
 
-  const _CreateReturnWizard({
-    required this.controller,
-    required this.onCancel,
-  });
+  const _CreateReturnWizard({required this.controller, required this.onCancel});
 
   String _format(double v) {
     final currency = Get.find<CurrencyController>();
@@ -402,7 +466,10 @@ class _CreateReturnWizard extends StatelessWidget {
         onChanged: controller.searchOrders,
       ),
       if (controller.isSearchingOrders.value)
-        const Padding(padding: EdgeInsets.all(8), child: Center(child: CircularProgressIndicator())),
+        const Padding(
+          padding: EdgeInsets.all(8),
+          child: Center(child: CircularProgressIndicator()),
+        ),
       ...controller.orderSearchResults.map(_orderTile),
       if (controller.selectedOrder.value != null)
         _selectedOrderCard(controller.selectedOrder.value!),
@@ -427,8 +494,13 @@ class _CreateReturnWizard extends StatelessWidget {
                     onChanged: (v) {
                       line.selected.value = v ?? false;
                     },
-                    title: Text(line.productName, style: const TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text('SKU: ${line.sku} • Qty ordered: ${line.orderQuantity}'),
+                    title: Text(
+                      line.productName,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Text(
+                      'SKU: ${line.sku} • Qty ordered: ${line.orderQuantity}',
+                    ),
                   ),
                   if (line.selected.value) ...[
                     Row(
@@ -444,7 +516,10 @@ class _CreateReturnWizard extends StatelessWidget {
                             ),
                             onChanged: (v) {
                               final q = int.tryParse(v) ?? 1;
-                              line.returnQuantity.value = q.clamp(1, line.orderQuantity);
+                              line.returnQuantity.value = q.clamp(
+                                1,
+                                line.orderQuantity,
+                              );
                             },
                           ),
                         ),
@@ -458,7 +533,12 @@ class _CreateReturnWizard extends StatelessWidget {
                               border: OutlineInputBorder(),
                             ),
                             items: SalesReturnController.conditionOptions
-                                .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                                .map(
+                                  (c) => DropdownMenuItem(
+                                    value: c,
+                                    child: Text(c),
+                                  ),
+                                )
                                 .toList(),
                             onChanged: (v) {
                               line.condition.value = v ?? 'New';
@@ -468,7 +548,10 @@ class _CreateReturnWizard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    Text('Refund: ${_format(line.refundAmount)}', style: TextStyle(color: kPrimary)),
+                    Text(
+                      'Refund: ${_format(line.refundAmount)}',
+                      style: TextStyle(color: kPrimary),
+                    ),
                   ],
                 ],
               ),
@@ -476,8 +559,10 @@ class _CreateReturnWizard extends StatelessWidget {
           );
         }),
         if (controller.lineDrafts.any((l) => l.selected.value))
-          Text('Subtotal: ${_format(controller.selectedSubtotal)}',
-              style: const TextStyle(fontWeight: FontWeight.w700)),
+          Text(
+            'Subtotal: ${_format(controller.selectedSubtotal)}',
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
       ]);
     });
   }
@@ -510,7 +595,8 @@ class _CreateReturnWizard extends StatelessWidget {
         items: SalesReturnController.methodOptions
             .map((m) => DropdownMenuItem(value: m, child: Text(m)))
             .toList(),
-        onChanged: (v) => controller.returnMethod.value = v ?? 'Original Payment',
+        onChanged: (v) =>
+            controller.returnMethod.value = v ?? 'Original Payment',
       ),
       const SizedBox(height: 12),
       TextField(
@@ -540,7 +626,9 @@ class _CreateReturnWizard extends StatelessWidget {
           Expanded(
             child: TextField(
               controller: controller.restockingFeeController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               decoration: const InputDecoration(
                 labelText: 'Restocking Fee',
                 border: OutlineInputBorder(
@@ -553,7 +641,9 @@ class _CreateReturnWizard extends StatelessWidget {
           Expanded(
             child: TextField(
               controller: controller.shippingCostController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               decoration: const InputDecoration(
                 labelText: 'Shipping Cost',
                 border: OutlineInputBorder(
@@ -578,7 +668,11 @@ class _CreateReturnWizard extends StatelessWidget {
             _summaryRow('Restocking Fee', _format(controller.restockingFee)),
             _summaryRow('Shipping', _format(controller.shippingCost)),
             const Divider(),
-            _summaryRow('Total Refund', _format(controller.totalRefundAmount), bold: true),
+            _summaryRow(
+              'Total Refund',
+              _format(controller.totalRefundAmount),
+              bold: true,
+            ),
           ],
         ),
       ),
@@ -592,10 +686,13 @@ class _CreateReturnWizard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: TextStyle(color: kSubText)),
-          Text(value, style: TextStyle(
-            fontWeight: bold ? FontWeight.w800 : FontWeight.w500,
-            color: bold ? kPrimary : kText,
-          )),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: bold ? FontWeight.w800 : FontWeight.w500,
+              color: bold ? kPrimary : kText,
+            ),
+          ),
         ],
       ),
     );
@@ -620,7 +717,10 @@ class _CreateReturnWizard extends StatelessWidget {
             OutlinedButton(
               onPressed: controller.previousStep,
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -634,20 +734,34 @@ class _CreateReturnWizard extends StatelessWidget {
               onPressed: controller.nextStep,
               style: ElevatedButton.styleFrom(
                 backgroundColor: kPrimary,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
                 elevation: 0,
               ),
-              child: const Text('Next', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
+              child: const Text(
+                'Next',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             )
           else
             ElevatedButton(
-              onPressed: controller.isSubmitting.value ? null : controller.createReturn,
+              onPressed: controller.isSubmitting.value
+                  ? null
+                  : controller.createReturn,
               style: ElevatedButton.styleFrom(
                 backgroundColor: kPrimary,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -657,9 +771,18 @@ class _CreateReturnWizard extends StatelessWidget {
                   ? const SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.black,
+                      ),
                     )
-                  : const Text('Submit Return', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
+                  : const Text(
+                      'Submit Return',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
             ),
         ],
       ),
@@ -702,7 +825,10 @@ class _CreateReturnWizard extends StatelessWidget {
   Widget _orderTile(OrderModel order) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      title: Text(order.orderNumber, style: const TextStyle(fontWeight: FontWeight.w600)),
+      title: Text(
+        order.orderNumber,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
       subtitle: Text('${order.customerName} • ${order.items.length} items'),
       trailing: Icon(Icons.chevron_right, color: kSubText),
       onTap: () => controller.selectOrderForReturn(order),
@@ -721,7 +847,10 @@ class _CreateReturnWizard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(order.orderNumber, style: TextStyle(fontWeight: FontWeight.w700, color: kPrimary)),
+          Text(
+            order.orderNumber,
+            style: TextStyle(fontWeight: FontWeight.w700, color: kPrimary),
+          ),
           Text(order.customerName),
           Text('${order.items.length} line items'),
         ],
@@ -777,7 +906,10 @@ class _ReturnDetailSheetState extends State<_ReturnDetailSheet> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final current = widget.controller.returns.firstWhereOrNull((r) => r.id == widget.returnItem.id) ??
+      final current =
+          widget.controller.returns.firstWhereOrNull(
+            (r) => r.id == widget.returnItem.id,
+          ) ??
           widget.returnItem;
 
       return Column(
@@ -792,7 +924,11 @@ class _ReturnDetailSheetState extends State<_ReturnDetailSheet> {
                   color: _statusColor(current.returnStatus).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.undo, color: _statusColor(current.returnStatus), size: 24),
+                child: Icon(
+                  Icons.undo,
+                  color: _statusColor(current.returnStatus),
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -815,7 +951,10 @@ class _ReturnDetailSheetState extends State<_ReturnDetailSheet> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: _statusColor(current.returnStatus).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
@@ -840,57 +979,60 @@ class _ReturnDetailSheetState extends State<_ReturnDetailSheet> {
           _detailRow('Customer', current.customerName),
           _detailRow('Total Refund', _format(current.totalRefund)),
           _detailRow('Reason', current.reason),
-          if (current.rejectionReason != null && current.rejectionReason!.isNotEmpty)
+          if (current.rejectionReason != null &&
+              current.rejectionReason!.isNotEmpty)
             _detailRow('Rejection', current.rejectionReason!),
-          _detailRow('Date', DateFormat('dd MMM yyyy').format(current.returnDate)),
+          _detailRow(
+            'Date',
+            DateFormat('dd MMM yyyy').format(current.returnDate),
+          ),
           const SizedBox(height: 16),
           Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
           const SizedBox(height: 12),
           const Text(
             'Return Items',
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
-            ),
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
           ),
           const SizedBox(height: 8),
-          ...current.items.map((item) => Container(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: Colors.grey.withOpacity(0.06)),
+          ...current.items.map(
+            (item) => Container(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: Colors.grey.withOpacity(0.06)),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.productName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                        Text(
+                          'Qty: ${item.returnQuantity} • ${item.condition}',
+                          style: TextStyle(fontSize: 12, color: kSubText),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.productName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                            ),
-                          ),
-                          Text(
-                            'Qty: ${item.returnQuantity} • ${item.condition}',
-                            style: TextStyle(fontSize: 12, color: kSubText),
-                          ),
-                        ],
-                      ),
+                  Text(
+                    _format(item.refundAmount),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
                     ),
-                    Text(
-                      _format(item.refundAmount),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              )),
+                  ),
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: 20),
           if (current.returnStatus == 'Pending') ...[
             Row(
@@ -900,7 +1042,9 @@ class _ReturnDetailSheetState extends State<_ReturnDetailSheet> {
                     onPressed: widget.controller.isSubmitting.value
                         ? null
                         : () async {
-                            final ok = await widget.controller.approveReturn(current.id);
+                            final ok = await widget.controller.approveReturn(
+                              current.id,
+                            );
                             if (ok) widget.onClose();
                           },
                     style: ElevatedButton.styleFrom(
@@ -928,7 +1072,10 @@ class _ReturnDetailSheetState extends State<_ReturnDetailSheet> {
                         Get.snackbar('Error', 'Please enter rejection reason');
                         return;
                       }
-                      widget.controller.rejectReturn(current.id, _rejectController.text);
+                      widget.controller.rejectReturn(
+                        current.id,
+                        _rejectController.text,
+                      );
                     },
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -956,7 +1103,10 @@ class _ReturnDetailSheetState extends State<_ReturnDetailSheet> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 isDense: true,
               ),
               style: const TextStyle(fontSize: 13),
@@ -967,7 +1117,9 @@ class _ReturnDetailSheetState extends State<_ReturnDetailSheet> {
               onPressed: widget.controller.isSubmitting.value
                   ? null
                   : () async {
-                      final ok = await widget.controller.completeReturn(current.id);
+                      final ok = await widget.controller.completeReturn(
+                        current.id,
+                      );
                       if (ok) widget.onClose();
                     },
               style: ElevatedButton.styleFrom(
@@ -999,10 +1151,7 @@ class _ReturnDetailSheetState extends State<_ReturnDetailSheet> {
             ),
             child: Text(
               'Close',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: kSubText,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w600, color: kSubText),
             ),
           ),
         ],
@@ -1135,7 +1284,10 @@ class _ReturnListView extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimary,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -1204,10 +1356,7 @@ class _ReturnListView extends StatelessWidget {
                             const SizedBox(height: 3),
                             Text(
                               item.customerName,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: kText,
-                              ),
+                              style: TextStyle(fontSize: 12, color: kText),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -1271,7 +1420,9 @@ class _ReturnListView extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  DateFormat('dd MMM yyyy').format(item.returnDate),
+                                  DateFormat(
+                                    'dd MMM yyyy',
+                                  ).format(item.returnDate),
                                   style: TextStyle(
                                     fontSize: 9,
                                     color: kSubText,

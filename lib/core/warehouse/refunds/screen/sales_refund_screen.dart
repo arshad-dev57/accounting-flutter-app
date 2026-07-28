@@ -67,11 +67,20 @@ class SalesRefundsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title row
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
               child: Row(
                 children: [
+                  GestureDetector(
+                    onTap: () => Get.back(),
+                    child: Icon(
+                      Icons.arrow_back,
+                      size: 17,
+                      color: Colors.black.withOpacity(0.65),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,27 +94,43 @@ class SalesRefundsScreen extends StatelessWidget {
                             letterSpacing: -0.3,
                           ),
                         ),
-                        Obx(() => Text(
-                          '${controller.totalRecords.value} refunds',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.black.withOpacity(0.55),
-                            fontWeight: FontWeight.w500,
+                        Obx(
+                          () => Text(
+                            '${controller.totalRecords.value} refunds',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.black.withOpacity(0.55),
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        )),
+                        ),
                       ],
                     ),
                   ),
                   // Compact KPIs
-                  Obx(() => Row(
-                    children: [
-                      _compactKpi('Pending', controller.stats.value.pending.toString(), Colors.orange.shade800),
-                      const SizedBox(width: 10),
-                      _compactKpi('Processing', controller.stats.value.processing.toString(), Colors.blue.shade800),
-                      const SizedBox(width: 10),
-                      _compactKpi('Completed', controller.stats.value.completed.toString(), Colors.green.shade800),
-                    ],
-                  )),
+                  Obx(
+                    () => Row(
+                      children: [
+                        _compactKpi(
+                          'Pending',
+                          controller.stats.value.pending.toString(),
+                          Colors.orange.shade800,
+                        ),
+                        const SizedBox(width: 10),
+                        _compactKpi(
+                          'Processing',
+                          controller.stats.value.processing.toString(),
+                          Colors.blue.shade800,
+                        ),
+                        const SizedBox(width: 10),
+                        _compactKpi(
+                          'Completed',
+                          controller.stats.value.completed.toString(),
+                          Colors.green.shade800,
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(width: 10),
                   GestureDetector(
                     onTap: controller.refreshRefunds,
@@ -116,7 +141,11 @@ class SalesRefundsScreen extends StatelessWidget {
                         color: Colors.black.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(9),
                       ),
-                      child: Icon(Icons.refresh_rounded, size: 17, color: Colors.black.withOpacity(0.65)),
+                      child: Icon(
+                        Icons.refresh_rounded,
+                        size: 17,
+                        color: Colors.black.withOpacity(0.65),
+                      ),
                     ),
                   ),
                 ],
@@ -142,20 +171,46 @@ class SalesRefundsScreen extends StatelessWidget {
               ),
             ),
             // Filter chips
-            Obx(() => SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-              child: Row(
-                children: [
-                  _filterChip('All', controller.selectedFilter.value == 'all', () => controller.filterRefunds('all')),
-                  _filterChip('Pending', controller.selectedFilter.value == 'Pending', () => controller.filterRefunds('Pending')),
-                  _filterChip('Processing', controller.selectedFilter.value == 'Processing', () => controller.filterRefunds('Processing')),
-                  _filterChip('Completed', controller.selectedFilter.value == 'Completed', () => controller.filterRefunds('Completed')),
-                  _filterChip('Failed', controller.selectedFilter.value == 'Failed', () => controller.filterRefunds('Failed')),
-                  _filterChip('Cancelled', controller.selectedFilter.value == 'Cancelled', () => controller.filterRefunds('Cancelled')),
-                ],
+            Obx(
+              () => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                child: Row(
+                  children: [
+                    _filterChip(
+                      'All',
+                      controller.selectedFilter.value == 'all',
+                      () => controller.filterRefunds('all'),
+                    ),
+                    _filterChip(
+                      'Pending',
+                      controller.selectedFilter.value == 'Pending',
+                      () => controller.filterRefunds('Pending'),
+                    ),
+                    _filterChip(
+                      'Processing',
+                      controller.selectedFilter.value == 'Processing',
+                      () => controller.filterRefunds('Processing'),
+                    ),
+                    _filterChip(
+                      'Completed',
+                      controller.selectedFilter.value == 'Completed',
+                      () => controller.filterRefunds('Completed'),
+                    ),
+                    _filterChip(
+                      'Failed',
+                      controller.selectedFilter.value == 'Failed',
+                      () => controller.filterRefunds('Failed'),
+                    ),
+                    _filterChip(
+                      'Cancelled',
+                      controller.selectedFilter.value == 'Cancelled',
+                      () => controller.filterRefunds('Cancelled'),
+                    ),
+                  ],
+                ),
               ),
-            )),
+            ),
           ],
         ),
       ),
@@ -216,7 +271,11 @@ class SalesRefundsScreen extends StatelessWidget {
 
   // ─── SHOW DETAIL ─────────────────────────────────────────────
 
-  void _showDetail(BuildContext context, SalesRefundController controller, RefundModel refund) {
+  void _showDetail(
+    BuildContext context,
+    SalesRefundController controller,
+    RefundModel refund,
+  ) {
     controller.selectRefund(refund);
     showModalBottomSheet(
       context: context,
@@ -289,7 +348,9 @@ class _SearchFieldState extends State<_SearchField> {
       controller: _searchCtrl,
       onChanged: (v) {
         setState(() {});
-        v.isEmpty ? widget.controller.clearSearch() : widget.controller.searchRefunds(v);
+        v.isEmpty
+            ? widget.controller.clearSearch()
+            : widget.controller.searchRefunds(v);
       },
       style: const TextStyle(fontSize: 13, color: Colors.black87),
       decoration: InputDecoration(
@@ -307,7 +368,10 @@ class _SearchFieldState extends State<_SearchField> {
               )
             : null,
         border: InputBorder.none,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 11,
+        ),
         isDense: true,
       ),
     );
@@ -321,10 +385,7 @@ class _CreateRefundForm extends StatelessWidget {
   final SalesRefundController controller;
   final VoidCallback onCancel;
 
-  const _CreateRefundForm({
-    required this.controller,
-    required this.onCancel,
-  });
+  const _CreateRefundForm({required this.controller, required this.onCancel});
 
   @override
   Widget build(BuildContext context) {
@@ -348,91 +409,73 @@ class _CreateRefundForm extends StatelessWidget {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: Obx(() => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // ─── Find Order ──────────────────────────────────────
-            _section('Find Order', [
-              TextField(
-                controller: controller.orderSearchController,
-                decoration: const InputDecoration(
-                  hintText: 'Search by order # or customer',
-                  prefixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
+        child: Obx(
+          () => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // ─── Find Order ──────────────────────────────────────
+              _section('Find Order', [
+                TextField(
+                  controller: controller.orderSearchController,
+                  decoration: const InputDecoration(
+                    hintText: 'Search by order # or customer',
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
                   ),
+                  onChanged: controller.searchOrders,
                 ),
-                onChanged: controller.searchOrders,
-              ),
-              if (controller.isSearchingOrders.value)
-                const Padding(
-                  padding: EdgeInsets.all(8),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-              if (controller.orderSearchResults.isNotEmpty)
-                ...controller.orderSearchResults.map(_orderTile),
-              if (controller.selectedOrder.value != null) ...[
-                const SizedBox(height: 8),
-                _selectedOrderCard(controller.selectedOrder.value!),
-              ],
-            ]),
-            const SizedBox(height: 16),
+                if (controller.isSearchingOrders.value)
+                  const Padding(
+                    padding: EdgeInsets.all(8),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                if (controller.orderSearchResults.isNotEmpty)
+                  ...controller.orderSearchResults.map(_orderTile),
+                if (controller.selectedOrder.value != null) ...[
+                  const SizedBox(height: 8),
+                  _selectedOrderCard(controller.selectedOrder.value!),
+                ],
+              ]),
+              const SizedBox(height: 16),
 
-            // ─── Refund Details ──────────────────────────────────
-            _section('Refund Details', [
-              TextField(
-                controller: controller.amountController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                  labelText: 'Refund Amount *',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
+              // ─── Refund Details ──────────────────────────────────
+              _section('Refund Details', [
+                TextField(
+                  controller: controller.amountController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Refund Amount *',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                value: controller.refundMethod.value,
-                decoration: const InputDecoration(
-                  labelText: 'Refund Method',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: controller.refundMethod.value,
+                  decoration: const InputDecoration(
+                    labelText: 'Refund Method',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
                   ),
+                  items: SalesRefundController.methodOptions
+                      .where((m) => m != 'all')
+                      .map((m) => DropdownMenuItem(value: m, child: Text(m)))
+                      .toList(),
+                  onChanged: (v) =>
+                      controller.refundMethod.value = v ?? 'Original Payment',
                 ),
-                items: SalesRefundController.methodOptions
-                    .where((m) => m != 'all')
-                    .map((m) => DropdownMenuItem(value: m, child: Text(m)))
-                    .toList(),
-                onChanged: (v) => controller.refundMethod.value = v ?? 'Original Payment',
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: controller.reasonController,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Reason *',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: controller.notesController,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Notes',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                  ),
-                ),
-              ),
-              if (controller.refundMethod.value == 'Bank Transfer') ...[
                 const SizedBox(height: 12),
                 TextField(
-                  controller: controller.bankNameController,
+                  controller: controller.reasonController,
+                  maxLines: 2,
                   decoration: const InputDecoration(
-                    labelText: 'Bank Name *',
+                    labelText: 'Reason *',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(10)),
                     ),
@@ -440,66 +483,94 @@ class _CreateRefundForm extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 TextField(
-                  controller: controller.accountNumberController,
+                  controller: controller.notesController,
+                  maxLines: 2,
                   decoration: const InputDecoration(
-                    labelText: 'Account Number *',
+                    labelText: 'Notes',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(10)),
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: controller.accountHolderController,
-                  decoration: const InputDecoration(
-                    labelText: 'Account Holder *',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                    ),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 12),
-              TextField(
-                controller: controller.referenceController,
-                decoration: const InputDecoration(
-                  labelText: 'Reference Number',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(10)),
-                  ),
-                ),
-              ),
-            ]),
-            const SizedBox(height: 24),
-
-            // ─── Submit Button ───────────────────────────────────
-            ElevatedButton(
-              onPressed: controller.isSubmitting.value ? null : controller.createRefund,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kPrimary,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                elevation: 0,
-              ),
-              child: controller.isSubmitting.value
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
-                    )
-                  : const Text(
-                      'Submit Refund',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
+                if (controller.refundMethod.value == 'Bank Transfer') ...[
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: controller.bankNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Bank Name *',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
                       ),
                     ),
-            ),
-          ],
-        )),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: controller.accountNumberController,
+                    decoration: const InputDecoration(
+                      labelText: 'Account Number *',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: controller.accountHolderController,
+                    decoration: const InputDecoration(
+                      labelText: 'Account Holder *',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(10)),
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 12),
+                TextField(
+                  controller: controller.referenceController,
+                  decoration: const InputDecoration(
+                    labelText: 'Reference Number',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
+                  ),
+                ),
+              ]),
+              const SizedBox(height: 24),
+
+              // ─── Submit Button ───────────────────────────────────
+              ElevatedButton(
+                onPressed: controller.isSubmitting.value
+                    ? null
+                    : controller.createRefund,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 0,
+                ),
+                child: controller.isSubmitting.value
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.black,
+                        ),
+                      )
+                    : const Text(
+                        'Submit Refund',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -524,7 +595,7 @@ class _CreateRefundForm extends StatelessWidget {
         children: [
           Text(
             title,
-            style:  TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w700,
               fontSize: 15,
               color: kText,
@@ -544,8 +615,10 @@ class _CreateRefundForm extends StatelessWidget {
         order.orderNumber,
         style: const TextStyle(fontWeight: FontWeight.w600),
       ),
-      subtitle: Text('${order.customerName} • ${order.grandTotal.toStringAsFixed(2)}'),
-      trailing:  Icon(Icons.chevron_right, color: kSubText),
+      subtitle: Text(
+        '${order.customerName} • ${order.grandTotal.toStringAsFixed(2)}',
+      ),
+      trailing: Icon(Icons.chevron_right, color: kSubText),
       onTap: () => controller.selectOrderForRefund(order),
     );
   }
@@ -609,7 +682,9 @@ class _RefundDetailSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final current = controller.refunds.firstWhereOrNull((r) => r.id == refund.id) ?? refund;
+      final current =
+          controller.refunds.firstWhereOrNull((r) => r.id == refund.id) ??
+          refund;
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -647,7 +722,10 @@ class _RefundDetailSheet extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: _statusColor(current.refundStatus).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
@@ -672,12 +750,16 @@ class _RefundDetailSheet extends StatelessWidget {
           _detailRow('Method', current.refundMethod),
           _detailRow('Order', current.orderNumber),
           _detailRow('Customer', current.customerName),
-          if (current.customerEmail != null && current.customerEmail!.isNotEmpty)
+          if (current.customerEmail != null &&
+              current.customerEmail!.isNotEmpty)
             _detailRow('Email', current.customerEmail!),
           _detailRow('Reason', current.reason),
           if (current.notes != null && current.notes!.isNotEmpty)
             _detailRow('Notes', current.notes!),
-          _detailRow('Date', DateFormat('dd MMM yyyy').format(current.refundDate)),
+          _detailRow(
+            'Date',
+            DateFormat('dd MMM yyyy').format(current.refundDate),
+          ),
 
           if (current.bankName != null && current.bankName!.isNotEmpty) ...[
             const SizedBox(height: 12),
@@ -689,9 +771,11 @@ class _RefundDetailSheet extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             _detailRow('Bank', current.bankName!),
-            if (current.accountNumber != null && current.accountNumber!.isNotEmpty)
+            if (current.accountNumber != null &&
+                current.accountNumber!.isNotEmpty)
               _detailRow('Account Number', current.accountNumber!),
-            if (current.accountHolderName != null && current.accountHolderName!.isNotEmpty)
+            if (current.accountHolderName != null &&
+                current.accountHolderName!.isNotEmpty)
               _detailRow('Account Holder', current.accountHolderName!),
           ],
 
@@ -706,7 +790,9 @@ class _RefundDetailSheet extends StatelessWidget {
                     onPressed: controller.isSubmitting.value
                         ? null
                         : () async {
-                            final ok = await controller.processRefund(current.id);
+                            final ok = await controller.processRefund(
+                              current.id,
+                            );
                             if (ok) onClose();
                           },
                     style: ElevatedButton.styleFrom(
@@ -734,7 +820,9 @@ class _RefundDetailSheet extends StatelessWidget {
                     onPressed: controller.isSubmitting.value
                         ? null
                         : () async {
-                            final ok = await controller.completeRefund(current.id);
+                            final ok = await controller.completeRefund(
+                              current.id,
+                            );
                             if (ok) onClose();
                           },
                     style: ElevatedButton.styleFrom(
@@ -766,7 +854,7 @@ class _RefundDetailSheet extends StatelessWidget {
                     ),
                     side: BorderSide(color: Colors.grey.shade300),
                   ),
-                  child:  Text(
+                  child: Text(
                     'Close',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
@@ -802,7 +890,7 @@ class _RefundDetailSheet extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style:  TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 color: kText,
                 fontWeight: FontWeight.w500,
@@ -909,7 +997,10 @@ class _RefundListView extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimary,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -980,10 +1071,7 @@ class _RefundListView extends StatelessWidget {
                             const SizedBox(height: 3),
                             Text(
                               refund.customerName,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: kText,
-                              ),
+                              style: TextStyle(fontSize: 12, color: kText),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -1028,7 +1116,9 @@ class _RefundListView extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  DateFormat('dd MMM yyyy').format(refund.refundDate),
+                                  DateFormat(
+                                    'dd MMM yyyy',
+                                  ).format(refund.refundDate),
                                   style: TextStyle(
                                     fontSize: 9,
                                     color: kSubText,

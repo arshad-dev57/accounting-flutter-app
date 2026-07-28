@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:LedgerPro_app/Utils/colors.dart';
 import 'package:LedgerPro_app/core/warehouse/Stock_in/controller/stock_in_controller.dart';
+import 'package:LedgerPro_app/core/warehouse/products/screen/product_qr_scan_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class StockProductSearch extends StatefulWidget {
   final StockController controller;
@@ -75,6 +77,58 @@ class _StockProductSearchState extends State<StockProductSearch> {
     });
   }
 
+  Future<void> _scanBarcode() async {
+    final result = await Get.to<Map<String, dynamic>>(
+      () => const ProductQRScanScreen(),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      final scannedBarcode = result['text']?.toString() ?? 
+                              result['id']?.toString() ?? 
+                              result['url']?.toString() ?? 
+                              result['barcode']?.toString() ?? 
+                              result['code']?.toString() ?? 
+                              result['rawValue']?.toString();
+      
+      if (scannedBarcode != null && scannedBarcode.isNotEmpty) {
+        // Search for product by barcode
+        final list = await widget.controller.searchProducts(scannedBarcode);
+        
+        if (list.isNotEmpty) {
+          final product = list.first;
+          setState(() {
+            _searchCtrl.text = product['name']?.toString() ?? scannedBarcode;
+            _results.clear();
+            _results.addAll(list);
+            _showResults = true;
+          });
+          
+          Get.snackbar(
+            'Product Found',
+            'Found: ${product['name']}',
+            backgroundColor: Colors.green.shade100,
+            colorText: Colors.black,
+            snackPosition: SnackPosition.BOTTOM,
+          );
+        } else {
+          setState(() {
+            _searchCtrl.text = scannedBarcode;
+            _results.clear();
+            _showResults = false;
+          });
+          
+          Get.snackbar(
+            'Product Not Found',
+            'No product found with barcode: $scannedBarcode',
+            backgroundColor: Colors.orange.shade100,
+            colorText: Colors.black,
+            snackPosition: SnackPosition.BOTTOM,
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -86,12 +140,27 @@ class _StockProductSearchState extends State<StockProductSearch> {
             labelText: 'Select Product *',
             hintText: 'Search by name or SKU...',
             prefixIcon: const Icon(Icons.search, size: 20),
-            suffixIcon: _loading
-                ? const Padding(
+            suffixIcon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_loading)
+                  const Padding(
                     padding: EdgeInsets.all(12),
                     child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
-                  )
-                : null,
+                  ),
+                GestureDetector(
+                  onTap: _scanBarcode,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Icon(
+                      Icons.qr_code_scanner,
+                      size: 20,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
             border: const OutlineInputBorder(),
             isDense: true,
           ),

@@ -151,7 +151,7 @@ class ChangePasswordController extends GetxController {
       }
     } catch (e) {
       print('Error changing password: $e');
-      _showError('Error. Please check your connection.');
+      _showError('Error. Server Down. Please try again later.');
     } finally {
       isLoading.value = false;
     }

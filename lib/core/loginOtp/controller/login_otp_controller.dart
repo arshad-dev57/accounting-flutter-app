@@ -1,14 +1,18 @@
 // lib/core/loginOtp/controller/login_otp_controller.dart
 
+import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
+
+import 'package:LedgerPro_app/Utils/colors.dart';
+import 'package:LedgerPro_app/Utils/currency_controller.dart';
+import 'package:LedgerPro_app/Utils/toast_utils.dart';
+import 'package:LedgerPro_app/Services/api_client.dart';
+import 'package:LedgerPro_app/Services/notification_Service.dart';
 import 'package:LedgerPro_app/core/plans/controllers/subscription_controller.dart';
 import 'package:LedgerPro_app/core/plans/views/Subscription_plans.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:LedgerPro_app/Services/api_client.dart';
 
 class LoginOtpController extends GetxController {
   final String email;
@@ -60,6 +64,9 @@ class LoginOtpController extends GetxController {
       }
 
       final data = response.data;
+      
+      // ✅ PRINT THE RESPONSE FOR LOGIN/OTP VERIFICATION
+      print('🔐 VERIFY OTP API RESPONSE: ${json.encode(data)}');
 
       if (response.success) {
         // ✅ Check if data has required fields
@@ -76,6 +83,35 @@ class LoginOtpController extends GetxController {
         await subscriptionController.checkSubscriptionStatus();
 
         AppSnackbar.success(kSuccess, 'Success', 'Login successful!');
+
+        // ✅ Notification Service Setup (mobile only)
+        if (!kIsWeb) {
+          try {
+            print('🔔🔔🔔 [LoginOtpController] NOTIFICATION SETUP START 🔔🔔🔔');
+            final userData = data['user'] as Map<String, dynamic>?;
+            if (userData != null && userData['id'] != null) {
+              final userId = userData['id'].toString();
+              print('🔔 [LoginOtpController] Setting up notification service for user: $userId');
+              
+              print('🔔 [LoginOtpController] Calling NotificationService.login()...');
+              await NotificationService.instance.login(userId);
+              
+              print('🔔 [LoginOtpController] Calling verifyDeviceRegistration()...');
+              await NotificationService.instance.verifyDeviceRegistration();
+              
+              print('✅ [LoginOtpController] Notification service setup completed');
+              print('🔔🔔🔔 [LoginOtpController] NOTIFICATION SETUP END 🔔🔔🔔');
+            } else {
+              print('⚠️ [LoginOtpController] User data or user ID is null, skipping notification setup');
+            }
+          } catch (e) {
+            print('❌ [LoginOtpController] Notification service setup error: $e');
+            print('❌ [LoginOtpController] Error type: ${e.runtimeType}');
+            // Don't block login on notification error
+          }
+        } else {
+          print('🔔 [LoginOtpController] Running on web, skipping notification setup');
+        }
 
         if (subscriptionController.hasAccess) {
           Get.offAllNamed('/dashboard');
@@ -112,6 +148,9 @@ class LoginOtpController extends GetxController {
       if (data['user'] != null) {
         final user = data['user'];
         await prefs.setString('user_data', json.encode(user));
+        
+        // Sync/load currency dynamically from database payload
+        Get.find<CurrencyController>().updateFromUserData(user);
 
         final orgName = user['organizationName']?.toString() ?? '';
         if (orgName.isNotEmpty) {

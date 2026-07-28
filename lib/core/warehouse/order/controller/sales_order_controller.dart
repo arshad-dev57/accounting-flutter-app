@@ -190,6 +190,11 @@ class SalesOrderController extends GetxController {
   final RxBool isSubmitting = false.obs;
   final RxString formError = ''.obs;
 
+  // Product selection state for create form
+  final Rx<Map<String, dynamic>?> selectedProduct = Rx<Map<String, dynamic>?>(null);
+  final RxInt quantity = 1.obs;
+  final TextEditingController qtyController = TextEditingController(text: '1');
+
   @override
   void onInit() {
     super.onInit();
@@ -197,6 +202,28 @@ class SalesOrderController extends GetxController {
     print('🟢 [SalesOrderController] Fetching settings and orders...');
     fetchSettings();
     fetchOrders();
+  }
+
+  @override
+  void onClose() {
+    qtyController.dispose();
+    super.onClose();
+  }
+
+  // ─── Product selection for create form ─────────────────────
+  void selectProduct(Map<String, dynamic> product) {
+    selectedProduct.value = product;
+  }
+
+  void clearProductSelection() {
+    selectedProduct.value = null;
+    quantity.value = 1;
+    qtyController.text = '1';
+  }
+
+  void updateQuantity(int qty) {
+    quantity.value = qty;
+    qtyController.text = qty.toString();
   }
 
   // ─── List API ────────────────────────────────────────────────
@@ -659,6 +686,7 @@ class SalesOrderController extends GetxController {
     orderNotes.value = '';
     tagsInput.value = '';
     formError.value = '';
+    clearProductSelection();
     print('✅ [SalesOrderController] Create form reset complete');
   }
 

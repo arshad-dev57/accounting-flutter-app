@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:sizer/sizer.dart';
 
 class IncomeScreen extends StatelessWidget {
   const IncomeScreen({super.key});
@@ -15,243 +14,359 @@ class IncomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(IncomeController());
-    return _buildMobileLayout(context, controller);
-  }
 
-  // ==================== MOBILE/TABLET LAYOUT ====================
-
-  Widget _buildMobileLayout(BuildContext context, IncomeController controller) {
     return Scaffold(
-      backgroundColor: kBg,
-      appBar: _buildAppBar(context, controller),
-      body: Obx(() {
-        if (controller.isLoading.value && controller.incomes.isEmpty) {
-          return Center(
-            child: LoadingAnimationWidget.discreteCircle(
-              color: kPrimary,
-              size: 40,
-            ),
-          );
-        }
-
-        return Column(
-          children: [
-            _buildFilterBar(controller, context),
-            _buildSummaryCards(controller, context),
-            Expanded(
-              child: NotificationListener<ScrollNotification>(
-                onNotification: (scrollInfo) {
-                  if (!controller.isLoadingMore.value &&
-                      scrollInfo.metrics.pixels >=
-                          scrollInfo.metrics.maxScrollExtent - 200) {
-                    controller.loadMoreData();
-                  }
-                  return false;
-                },
-                child: _buildIncomeList(controller, context),
-              ),
-            ),
-            Obx(() => controller.isLoadingMore.value
-                ? Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Center(
-                      child: LoadingAnimationWidget.discreteCircle(
-                        color: kPrimary,
-                        size: 30,
-                      ),
-                    ),
-                  )
-                : const SizedBox.shrink()),
-          ],
-        );
-      }),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddIncomeDialog(controller, context),
-        backgroundColor: kPrimary,
-        child: const Icon(Icons.add, color: Colors.black87),
-      ),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar(BuildContext context, IncomeController controller) {
-    return AppBar(
-      title: const Text(
-        'Income',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w800,
-          color: Colors.black87,
-        ),
-      ),
-      backgroundColor: kPrimary,
-      elevation: 0,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.search, color: Colors.black87),
-          onPressed: () => _showSearchDialog(context, controller),
-        ),
-        IconButton(
-          icon: const Icon(Icons.filter_alt_outlined, color: Colors.black87),
-          onPressed: () => _showFilterDialog(controller, context),
-        ),
-        IconButton(
-          icon: const Icon(Icons.download_outlined, color: Colors.black87),
-          onPressed: () => controller.exportIncomes(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFilterBar(IncomeController controller, BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: kCardBg,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Obx(
-          () => Row(
-            children: controller.incomeTypes.map((type) {
-              final isSelected = controller.selectedType.value == type;
+      backgroundColor: kBgLight,
+      body: Column(
+        children: [
+          _buildTopHeader(context, controller),
+          Expanded(
+            child: Obx(() {
+              if (controller.isLoading.value && controller.incomes.isEmpty) {
+                return Center(
+                  child: LoadingAnimationWidget.discreteCircle(
+                    color: kPrimary,
+                    size: 40,
+                  ),
+                );
+              }
               return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: FilterChip(
-                  label: Text(type),
-                  selected: isSelected,
-                  onSelected: (_) =>
-                      controller.applyTypeFilter(isSelected ? 'All' : type),
-                  backgroundColor: kBg,
-                  selectedColor: kPrimary.withOpacity(0.2),
-                  labelStyle: TextStyle(
-                    color: isSelected ? kPrimary : kSubText,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                    fontSize: 12,
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 6,
-                  ),
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+                child: Column(
+                  children: [
+                    _buildSummaryCards(controller),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: _buildListView(controller, context),
+                    ),
+                  ],
                 ),
               );
-            }).toList(),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSummaryCards(IncomeController controller, BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Obx(
-          () => Row(
-            children: [
-              _buildSummaryCard(
-                'Total Income',
-                controller.formatAmount(controller.totalIncome.value),
-                kSuccess,
-                Icons.trending_up,
-              ),
-              const SizedBox(width: 12),
-              _buildSummaryCard(
-                'This Month',
-                controller.formatAmount(controller.thisMonthTotal.value),
-                kPrimary,
-                Icons.calendar_month,
-              ),
-              const SizedBox(width: 12),
-              _buildSummaryCard(
-                'This Week',
-                controller.formatAmount(controller.thisWeekTotal.value),
-                kWarning,
-                Icons.calendar_today,
-              ),
-              const SizedBox(width: 12),
-              _buildSummaryCard(
-                'Total Tax',
-                controller.formatAmount(controller.totalTax.value),
-                kWarning,
-                Icons.receipt,
-              ),
-              const SizedBox(width: 12),
-              _buildSummaryCard(
-                'Records',
-                controller.totalCount.value.toString(),
-                kPrimary,
-                Icons.receipt_long,
-                isNumber: true,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSummaryCard(
-    String title,
-    String amount,
-    Color color,
-    IconData icon, {
-    bool isNumber = false,
-  }) {
-    return Container(
-      width: 140,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: kCardBg,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
+            }),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 16, color: color),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: kSubText,
-                    fontWeight: FontWeight.w500,
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: kPrimary.withOpacity(0.4),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: () => _showAddIncomeDialog(controller, context),
+          backgroundColor: kPrimary,
+          elevation: 0,
+          child: const Icon(Icons.add, color: Colors.black, size: 24),
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // TOP HEADER
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildTopHeader(BuildContext context, IncomeController controller) {
+    return Container(
+      color: kPrimary,
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // AppBar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    onPressed: () => Navigator.of(context).pop(),
                   ),
-                  overflow: TextOverflow.ellipsis,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Income',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.black,
+                          ),
+                        ),
+                        Obx(
+                          () => Text(
+                            '${controller.incomes.length} entries',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.black.withOpacity(0.55),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: controller.refreshData,
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.refresh_rounded,
+                        size: 18,
+                        color: Colors.black.withOpacity(0.65),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8,),
+                  GestureDetector(
+                    onTap: () => controller.exportIncomes(),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.download_outlined,
+                        size: 18,
+                        color: Colors.black.withOpacity(0.65),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Filter Chips
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Obx(
+                () => SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: controller.incomeTypes.map((type) {
+                      final isSelected = controller.selectedType.value == type;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: GestureDetector(
+                          onTap: () =>
+                              controller.applyTypeFilter(isSelected ? 'All' : type),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? Colors.black
+                                  : Colors.white.withOpacity(0.18),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: isSelected
+                                    ? Colors.black
+                                    : Colors.white.withOpacity(0.4),
+                              ),
+                            ),
+                            child: Text(
+                              type,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: isSelected ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            amount,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: color,
             ),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+            // Search Field
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Container(
+                height: 38,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: controller.searchController,
+                  style: const TextStyle(fontSize: 12),
+                  decoration: InputDecoration(
+                    hintText: 'Search income...',
+                    hintStyle: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade400,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      size: 16,
+                      color: Colors.grey.shade400,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildIncomeList(IncomeController controller, BuildContext context) {
+  // ═══════════════════════════════════════════════════════════════
+  // PROFESSIONAL SUMMARY CARDS
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildSummaryCards(IncomeController controller) {
+    return Obx(
+      () => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 8),
+        child: Row(
+          children: [
+            _buildProfessionalCard(
+              title: 'Total Income',
+              amount: controller.formatAmount(controller.totalIncome.value),
+              color: kSuccess,
+              icon: Icons.trending_up,
+              bgColor: kSuccess.withOpacity(0.08),
+              borderColor: kSuccess.withOpacity(0.2),
+            ),
+            const SizedBox(width: 8),
+            _buildProfessionalCard(
+              title: 'This Month',
+              amount: controller.formatAmount(controller.thisMonthTotal.value),
+              color: kPrimary,
+              icon: Icons.calendar_month,
+              bgColor: kPrimary.withOpacity(0.08),
+              borderColor: kPrimary.withOpacity(0.2),
+            ),
+            const SizedBox(width: 8),
+            _buildProfessionalCard(
+              title: 'Records',
+              amount: controller.totalCount.value.toString(),
+              color: kWarning,
+              icon: Icons.receipt_long,
+              bgColor: kWarning.withOpacity(0.08),
+              borderColor: kWarning.withOpacity(0.2),
+              isNumber: true,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfessionalCard({
+    required String title,
+    required String amount,
+    required Color color,
+    required IconData icon,
+    required Color bgColor,
+    required Color borderColor,
+    bool isNumber = false,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: kCardBg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: borderColor, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, size: 14, color: color),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: kSubText,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              amount,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: color,
+                letterSpacing: -0.5,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Container(
+              height: 2,
+              width: 30,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [color, color.withOpacity(0.3)],
+                ),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // LIST VIEW WITH LAZY LOADING
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildListView(IncomeController controller, BuildContext context) {
     return Obx(() {
       final incomes = controller.incomes;
-
-      if (controller.isLoading.value && incomes.isEmpty) {
-        return const SizedBox.shrink();
-      }
 
       if (incomes.isEmpty) {
         return Center(
@@ -268,7 +383,7 @@ class IncomeScreen extends StatelessWidget {
                 'No income records found',
                 style: TextStyle(fontSize: 16, color: kSubText),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: () => _showAddIncomeDialog(controller, context),
                 style: ElevatedButton.styleFrom(
@@ -277,6 +392,7 @@ class IncomeScreen extends StatelessWidget {
                     horizontal: 24,
                     vertical: 10,
                   ),
+                  elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -286,7 +402,7 @@ class IncomeScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: Colors.black,
                   ),
                 ),
               ),
@@ -295,19 +411,49 @@ class IncomeScreen extends StatelessWidget {
         );
       }
 
-      return ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: incomes.length,
-        itemBuilder: (context, index) {
-          final income = incomes[index];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _buildIncomeCard(income, controller, context),
-          );
+      // ✅ Lazy Loading with NotificationListener
+      return NotificationListener<ScrollNotification>(
+        onNotification: (ScrollNotification scrollInfo) {
+          if (!controller.isLoadingMore.value &&
+              scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent) {
+            controller.loadMoreData();
+          }
+          return false;
         },
+        child: ListView.builder(
+          controller: controller.scrollController,
+          padding: const EdgeInsets.all(8),
+          itemCount: incomes.length + 1,
+          itemBuilder: (context, index) {
+            if (index == incomes.length) {
+              return Obx(
+                () => controller.isLoadingMore.value
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Center(
+                          child: LoadingAnimationWidget.discreteCircle(
+                            color: kPrimary,
+                            size: 30,
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              );
+            }
+            final income = incomes[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _buildIncomeCard(income, controller, context),
+            );
+          },
+        ),
       );
     });
   }
+
+  // ═══════════════════════════════════════════════════════════════
+  // PROFESSIONAL INCOME CARD
+  // ═══════════════════════════════════════════════════════════════
 
   Widget _buildIncomeCard(
     Income income,
@@ -319,19 +465,33 @@ class IncomeScreen extends StatelessWidget {
         : income.status == 'Draft'
             ? kWarning
             : kDanger;
-    final typeColor = Color(int.parse(
+    final typeColor = Color(
+      int.parse(
             controller.getTypeColor(income.incomeType).substring(1, 7),
-            radix: 16) +
-        0xFF000000);
+            radix: 16,
+          ) +
+          0xFF000000,
+    );
 
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
       decoration: BoxDecoration(
         color: kCardBg,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: statusColor.withOpacity(0.2),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: statusColor.withOpacity(0.06),
+            blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
@@ -340,28 +500,39 @@ class IncomeScreen extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () => _showIncomeDetails(income, controller, context),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
                     Container(
-                      width: 40,
-                      height: 40,
+                      width: 48,
+                      height: 48,
                       decoration: BoxDecoration(
-                        color: typeColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
+                        gradient: LinearGradient(
+                          colors: [
+                            typeColor.withOpacity(0.15),
+                            typeColor.withOpacity(0.05),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: typeColor.withOpacity(0.2),
+                          width: 1,
+                        ),
                       ),
                       child: Icon(
                         controller.getTypeIcon(income.incomeType),
-                        size: 20,
+                        size: 22,
                         color: typeColor,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -369,60 +540,76 @@ class IncomeScreen extends StatelessWidget {
                           Text(
                             income.incomeNumber,
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 15,
                               fontWeight: FontWeight.w700,
                               color: kText,
+                              letterSpacing: -0.2,
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            income.customerName.isNotEmpty
-                                ? '${income.incomeType} • ${income.customerName}'
-                                : income.incomeType,
-                            style: TextStyle(fontSize: 11, color: kSubText),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 4),
                           Row(
                             children: [
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
+                                  horizontal: 8,
+                                  vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
                                   color: statusColor.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(4),
+                                  borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
                                   income.status,
                                   style: TextStyle(
-                                    fontSize: 8,
-                                    color: statusColor,
+                                    fontSize: 10,
                                     fontWeight: FontWeight.w600,
+                                    color: statusColor,
+                                    letterSpacing: 0.3,
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: 6),
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
+                                  horizontal: 8,
+                                  vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: kBg,
-                                  borderRadius: BorderRadius.circular(4),
+                                  color: kBgLight,
+                                  borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
                                   income.paymentMethod,
                                   style: TextStyle(
-                                    fontSize: 8,
+                                    fontSize: 10,
                                     color: kSubText,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ),
+                              if (income.customerName.isNotEmpty) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: kPrimary.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    income.customerName,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: kPrimary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ],
@@ -434,62 +621,79 @@ class IncomeScreen extends StatelessWidget {
                         Text(
                           controller.formatAmount(income.totalAmount),
                           style: const TextStyle(
-                            fontSize: 14,
+                            fontSize: 16,
                             fontWeight: FontWeight.w800,
                             color: kSuccess,
+                            letterSpacing: -0.3,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           DateFormat('dd MMM yy').format(income.date),
-                          style: TextStyle(fontSize: 9, color: kSubText),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: kSubText,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 14),
                 Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 Row(
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () =>
                             _showIncomeDetails(income, controller, context),
-                        icon: Icon(Icons.visibility, size: 14, color: kSubText),
+                        icon: Icon(
+                          Icons.visibility_outlined,
+                          size: 14,
+                          color: kSubText,
+                        ),
                         label: Text(
                           'Details',
-                          style: TextStyle(fontSize: 11, color: kText),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: kText,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(color: Colors.grey.withOpacity(0.3)),
-                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
                       ),
                     ),
                     if (income.status == 'Draft') ...[
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: () => controller.postIncome(income.id),
                           icon: const Icon(
                             Icons.check_circle,
                             size: 14,
-                            color: Colors.black87,
+                            color: Colors.black,
                           ),
                           label: const Text(
                             'Post',
-                            style: TextStyle(fontSize: 11, color: Colors.black87),
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black,
+                            ),
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: kSuccess,
-                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                             elevation: 0,
                           ),
@@ -506,17 +710,19 @@ class IncomeScreen extends StatelessWidget {
     );
   }
 
-  // ==================== ADD INCOME DIALOG ====================
+  // ═══════════════════════════════════════════════════════════════
+  // ADD INCOME DIALOG - PROFESSIONAL DESIGN
+  // ═══════════════════════════════════════════════════════════════
 
   void _showAddIncomeDialog(IncomeController controller, BuildContext ctx) {
     final formKey = GlobalKey<FormState>();
     DateTime selectedDate = DateTime.now();
     String incomeType = 'Sales';
-    String? selectedIncomeAccountId; // ✅ NEW: Income Account
+    String? selectedIncomeAccountId;
     String? selectedCustomerId;
     double simpleAmount = 0;
     List<Map<String, dynamic>> items = [
-      {'description': '', 'quantity': 1, 'unitPrice': 0.0}
+      {'description': '', 'quantity': 1, 'unitPrice': 0.0},
     ];
     double taxRate = 0;
     String description = '';
@@ -532,284 +738,208 @@ class IncomeScreen extends StatelessWidget {
         builder: (context, setState) {
           double calculateTotal() {
             if (requiresItems()) {
-              double total = items.fold(
+              double subtotal = items.fold(
                 0.0,
-                (s, i) => s +
-                    (i['quantity'] ?? 1).toDouble() *
-                        (i['unitPrice'] ?? 0).toDouble(),
+                (s, i) =>
+                    s +
+                    (i['quantity'] as num).toDouble() *
+                        (i['unitPrice'] as num).toDouble(),
               );
-              return total + total * (taxRate / 100);
+              return subtotal + subtotal * (taxRate / 100);
             }
             return simpleAmount;
           }
 
           return Dialog(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(24),
             ),
+            backgroundColor: Colors.transparent,
             child: Container(
-              width: 92.w,
-              constraints: BoxConstraints(maxHeight: 85.h),
-              padding: EdgeInsets.all(5.w),
+              width: double.infinity,
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.92,
+                maxWidth: 500,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Header
-                  Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: kSuccess.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                    decoration: BoxDecoration(
+                      color: kSuccess.withOpacity(0.05),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(24),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: kSuccess,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.trending_up,
+                            color: Colors.black,
+                            size: 22,
+                          ),
                         ),
-                        child: Icon(Icons.trending_up, size: 18, color: kSuccess),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Add Income',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w800,
-                          color: kText,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Add Income',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: kText,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Create a new income entry',
+                                style: TextStyle(fontSize: 12, color: kSubText),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        icon: const Icon(Icons.close, size: 18),
-                        onPressed: () => Navigator.pop(context),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                    ],
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 20),
+                          onPressed: controller.isSaving.value
+                              ? null
+                              : () => Navigator.pop(context),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
+                    ),
                   ),
-                  Divider(
-                    height: 16,
-                    color: Colors.grey.withOpacity(0.2),
-                  ),
+
+                  // Body
                   Expanded(
                     child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
                       child: Form(
                         key: formKey,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Date Picker
                             _buildDatePickerField(
                               'Date',
                               selectedDate,
                               (d) => setState(() => selectedDate = d),
                               context,
                             ),
-                            const SizedBox(height: 12),
-                            
-                            // Income Type Dropdown
+                            const SizedBox(height: 16),
+
                             _buildDropdownField(
                               label: 'Income Type',
                               value: incomeType,
                               items: controller.incomeTypes.skip(1).toList(),
                               onChanged: (v) => setState(() => incomeType = v!),
                             ),
-                            const SizedBox(height: 12),
-                            
-                            // ─── ✅ NEW: Income Account Dropdown ──────
-                            if (controller.incomeAccounts.isNotEmpty) ...[
-                              _buildIncomeAccountDropdownField(
-                                selectedIncomeAccountId,
-                                (v) => setState(() => selectedIncomeAccountId = v),
-                                controller.incomeAccounts,
-                              ),
-                              const SizedBox(height: 12),
-                            ],
-                            
-                            // Customer Dropdown
-                            if (controller.customers.isNotEmpty)
-                              _buildCustomerDropdownField(
-                                selectedCustomerId,
+                            const SizedBox(height: 16),
+
+                            Obx(() {
+                              final hasMatch = selectedIncomeAccountId == null ||
+                                  controller.incomeAccounts.any(
+                                    (a) => (a['id'] ?? a['_id']).toString() ==
+                                        selectedIncomeAccountId,
+                                  );
+                              return _buildIncomeAccountDropdownField(
+                                hasMatch ? selectedIncomeAccountId : null,
+                                (v) => setState(
+                                  () => selectedIncomeAccountId = v,
+                                ),
+                                controller.incomeAccounts.toList(),
+                              );
+                            }),
+                            const SizedBox(height: 16),
+
+                            Obx(() {
+                              if (controller.customers.isEmpty)
+                                return const SizedBox.shrink();
+                              final hasMatch = selectedCustomerId == null ||
+                                  controller.customers.any(
+                                    (c) => (c['id'] ?? c['_id']).toString() ==
+                                        selectedCustomerId,
+                                  );
+                              return _buildCustomerDropdownField(
+                                hasMatch ? selectedCustomerId : null,
                                 (v) => setState(() => selectedCustomerId = v),
-                                controller.customers,
-                              ),
-                            if (controller.customers.isNotEmpty)
-                              const SizedBox(height: 12),
-                            
+                                controller.customers.toList(),
+                              );
+                            }),
+                            const SizedBox(height: 16),
+
                             // Items or Simple Amount
                             if (requiresItems()) ...[
-                              Text(
-                                'Items',
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: kText,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              ...items.asMap().entries.map((entry) {
-                                final idx = entry.key;
-                                final item = entry.value;
-                                return Container(
-                                  margin: const EdgeInsets.only(bottom: 10),
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: kBg,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: kBorder),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: _formField(
-                                              'Description *',
-                                              '',
-                                              (v) => item['description'] = v,
-                                              initialValue: item['description'],
-                                            ),
-                                          ),
-                                          if (items.length > 1) ...[
-                                            const SizedBox(width: 8),
-                                            InkWell(
-                                              onTap: () => setState(() {
-                                                items.removeAt(idx);
-                                              }),
-                                              child: Icon(
-                                                Icons.delete,
-                                                size: 18,
-                                                color: kDanger,
-                                              ),
-                                            ),
-                                          ],
-                                        ],
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: _formField(
-                                              'Qty',
-                                              '1',
-                                              (v) => item['quantity'] =
-                                                  int.tryParse(v) ?? 1,
-                                              initialValue: item['quantity']
-                                                  .toString(),
-                                              keyboardType:
-                                                  TextInputType.number,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            flex: 2,
-                                            child: _formField(
-                                              'Unit Price *',
-                                              '0.00',
-                                              (v) => item['unitPrice'] =
-                                                  double.tryParse(v) ?? 0,
-                                              initialValue: item['unitPrice']
-                                                  .toString(),
-                                              keyboardType:
-                                                  TextInputType.number,
-                                              prefixText: CurrencyUtils.prefix,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }).toList(),
-                              TextButton.icon(
-                                onPressed: () => setState(() {
-                                  items.add({
-                                    'description': '',
-                                    'quantity': 1,
-                                    'unitPrice': 0.0
-                                  });
-                                }),
-                                icon: const Icon(Icons.add, size: 16),
-                                label: const Text(
-                                  'Add Item',
-                                  style: TextStyle(fontSize: 12),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              _formField(
-                                'Tax Rate (%)',
-                                '0',
-                                (v) => taxRate = double.tryParse(v) ?? 0,
-                                keyboardType: TextInputType.number,
-                              ),
-                            ] else
-                              _formField(
-                                'Amount *',
-                                '0.00',
-                                (v) => simpleAmount = double.tryParse(v) ?? 0,
-                                keyboardType: TextInputType.number,
-                                prefixText: CurrencyUtils.prefix,
-                              ),
-                            const SizedBox(height: 12),
-                            
-                            // Description and Reference
-                            _formField(
-                              'Description',
-                              '',
-                              (v) => description = v,
+                              _buildItemsSection(items, setState),
+                              const SizedBox(height: 16),
+                              _buildTaxField(taxRate, (v) => setState(() => taxRate = v)),
+                            ] else ...[
+                              _buildAmountField(simpleAmount, (v) => setState(() => simpleAmount = v)),
+                            ],
+                            const SizedBox(height: 16),
+
+                            _buildDescriptionField(description, (v) => description = v),
+                            const SizedBox(height: 16),
+
+                            _buildReferenceField(reference, (v) => reference = v),
+                            const SizedBox(height: 16),
+
+                            _buildPaymentMethodField(
+                              paymentMethod,
+                              (v) => setState(() {
+                                paymentMethod = v!;
+                                if (paymentMethod == 'Cash') {
+                                  selectedBankAccountId = null;
+                                }
+                              }),
                             ),
-                            const SizedBox(height: 12),
-                            _formField(
-                              'Reference #',
-                              '',
-                              (v) => reference = v,
-                            ),
-                            const SizedBox(height: 12),
-                            
-                            // Payment Method Dropdown
-                            _buildDropdownField(
-                              label: 'Payment Method',
-                              value: paymentMethod,
-                              items: const [
-                                'Cash',
-                                'Bank Transfer',
-                                'Cheque',
-                                'Credit Card'
-                              ],
-                              onChanged: (v) {
-                                setState(() {
-                                  paymentMethod = v!;
-                                  if (paymentMethod == 'Cash') {
-                                    selectedBankAccountId = null;
-                                  }
-                                });
-                              },
-                            ),
-                            
-                            // Bank Account dropdown - show only for non-Cash
+                            const SizedBox(height: 16),
+
                             if (paymentMethod != 'Cash' &&
-                                controller.bankAccounts.isNotEmpty) ...[
-                              const SizedBox(height: 12),
+                                controller.bankAccounts.isNotEmpty)
                               _buildBankDropdownField(
                                 selectedBankAccountId,
-                                (v) {
-                                  setState(() {
-                                    selectedBankAccountId = v;
-                                    print('🔍 Bank account selected: $v');
-                                  });
-                                },
+                                (v) => setState(() => selectedBankAccountId = v),
                                 controller.bankAccounts,
                               ),
-                            ],
-                            const SizedBox(height: 12),
-                            
-                            // Total Amount
+                            const SizedBox(height: 16),
+
+                            // Total Box
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 16,
-                                vertical: 12,
+                                vertical: 14,
                               ),
                               decoration: BoxDecoration(
-                                color: kSuccess.withOpacity(0.08),
-                                borderRadius: BorderRadius.circular(8),
+                                gradient: LinearGradient(
+                                  colors: [
+                                    kSuccess.withOpacity(0.08),
+                                    kSuccess.withOpacity(0.02),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: kSuccess.withOpacity(0.2),
                                 ),
@@ -822,7 +952,7 @@ class IncomeScreen extends StatelessWidget {
                                     'Total Amount',
                                     style: TextStyle(
                                       fontWeight: FontWeight.w600,
-                                      fontSize: 13.sp,
+                                      fontSize: 14,
                                       color: kText,
                                     ),
                                   ),
@@ -830,8 +960,9 @@ class IncomeScreen extends StatelessWidget {
                                     controller.formatAmount(calculateTotal()),
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w800,
-                                      fontSize: 15,
+                                      fontSize: 18,
                                       color: kSuccess,
+                                      letterSpacing: -0.3,
                                     ),
                                   ),
                                 ],
@@ -842,40 +973,57 @@ class IncomeScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            side: BorderSide(
-                              color: Colors.grey.withOpacity(0.4),
+
+                  // Footer Buttons
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, -5),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: controller.isSaving.value
+                                ? null
+                                : () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: kPrimary,
+                              side: const BorderSide(color: kPrimary),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          child: Text(
-                            'Cancel',
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              color: kSubText,
+                            child: Text(
+                              'Cancel',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.black,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Obx(
-                          () => ElevatedButton(
-                            onPressed: controller.isProcessing.value
-                                ? null
-                                : () async {
-                                    if (formKey.currentState!.validate()) {
-                                      // ─── ✅ Validate Income Account ──
-                                      if (selectedIncomeAccountId == null || selectedIncomeAccountId!.isEmpty) {
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Obx(
+                            () => ElevatedButton(
+                              onPressed: controller.isSaving.value
+                                  ? null
+                                  : () async {
+                                      if (!formKey.currentState!.validate())
+                                        return;
+
+                                      if (selectedIncomeAccountId == null ||
+                                          selectedIncomeAccountId!.isEmpty) {
                                         AppSnackbar.error(
                                           kWarning,
                                           'Error',
@@ -889,9 +1037,8 @@ class IncomeScreen extends StatelessWidget {
                                           final desc = (i['description'] ?? '')
                                               .toString()
                                               .trim();
-                                          final price = double.tryParse(
-                                                  i['unitPrice'].toString()) ??
-                                              0.0;
+                                          final price = (i['unitPrice'] as num)
+                                              .toDouble();
                                           return desc.isEmpty || price <= 0;
                                         });
                                         if (hasInvalidItem) {
@@ -911,7 +1058,6 @@ class IncomeScreen extends StatelessWidget {
                                         return;
                                       }
 
-                                      // Bank Transfer requires a bank account
                                       if (paymentMethod != 'Cash' &&
                                           (selectedBankAccountId == null ||
                                               selectedBankAccountId!.isEmpty)) {
@@ -928,57 +1074,53 @@ class IncomeScreen extends StatelessWidget {
                                               ? null
                                               : selectedBankAccountId;
 
-                                      print('🔍 Payment Method: $paymentMethod');
-                                      print('🔍 Selected Income Account: $selectedIncomeAccountId');
-                                      print('🔍 Selected Bank Account: $selectedBankAccountId');
-                                      print('🔍 Final Bank Account ID: $finalBankAccountId');
-
                                       Navigator.pop(context);
                                       await controller.createIncome(
                                         date: selectedDate,
                                         incomeType: incomeType,
-                                        incomeAccountId: selectedIncomeAccountId, // ✅ NEW
+                                        incomeAccountId: selectedIncomeAccountId,
                                         customerId: selectedCustomerId,
                                         items: requiresItems() ? items : [],
-                                        amount: requiresItems()
-                                            ? null
-                                            : simpleAmount,
+                                        amount: requiresItems() ? null : simpleAmount,
                                         taxRate: requiresItems() ? taxRate : 0,
                                         description: description,
                                         reference: reference,
                                         paymentMethod: paymentMethod,
                                         bankAccountId: finalBankAccountId,
                                       );
-                                    }
-                                  },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: kPrimary,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6),
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: kPrimary,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
-                              elevation: 0,
+                              child: controller.isSaving.value
+                                  ? SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            const AlwaysStoppedAnimation<Color>(
+                                                Colors.black),
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Save Income',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.black,
+                                      ),
+                                    ),
                             ),
-                            child: controller.isProcessing.value
-                                ? SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: LoadingAnimationWidget.waveDots(
-                                      color: Colors.black87,
-                                      size: 20,
-                                    ),
-                                  )
-                                : Text(
-                                    'Save Income',
-                                    style: TextStyle(
-                                      fontSize: 13.sp,
-                                      color: Colors.black87,
-                                    ),
-                                  ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -989,44 +1131,9 @@ class IncomeScreen extends StatelessWidget {
     );
   }
 
-  // ─── ✅ NEW: Income Account Dropdown Field ──────────────────
-  Widget _buildIncomeAccountDropdownField(
-    String? selectedId,
-    void Function(String?) onChanged,
-    List<Map<String, dynamic>> incomeAccounts,
-  ) {
-    return DropdownButtonFormField<String>(
-      value: selectedId,
-      decoration: InputDecoration(
-        labelText: 'Income Account *',
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        isDense: true,
-        labelStyle: TextStyle(fontSize: 11.sp, color: kSubText),
-      ),
-      style: TextStyle(fontSize: 12.sp, color: kText),
-      hint: Text(
-        'Select income account',
-        style: TextStyle(fontSize: 12.sp, color: kSubText),
-      ),
-      items: incomeAccounts.map((a) => DropdownMenuItem<String>(
-        value: (a['id'] ?? a['_id']).toString(),
-        child: Text(
-          '${a['code']} - ${a['name']}',
-          overflow: TextOverflow.ellipsis,
-        ),
-      )).toList(),
-      onChanged: onChanged,
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please select an income account';
-        }
-        return null;
-      },
-    );
-  }
-
-  // ==================== INCOME DETAILS DIALOG ====================
+  // ═══════════════════════════════════════════════════════════════
+  // INCOME DETAILS DIALOG - PROFESSIONAL DESIGN
+  // ═══════════════════════════════════════════════════════════════
 
   void _showIncomeDetails(
     Income income,
@@ -1039,236 +1146,288 @@ class IncomeScreen extends StatelessWidget {
             ? kWarning
             : kDanger;
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Container(
-          width: 92.w,
-          constraints: const BoxConstraints(maxHeight: 600),
-          padding: const EdgeInsets.all(20),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.65,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (_, scrollCtrl) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: kSuccess.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      Icons.trending_up,
-                      size: 28,
-                      color: kSuccess,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          income.incomeNumber,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: kText,
-                          ),
-                        ),
-                        Text(
-                          '${income.incomeType} • ${DateFormat('dd MMM yyyy').format(income.date)}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: kSubText,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: Text(
-                      income.status,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: statusColor,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.close, size: 18),
-                    onPressed: () => Navigator.pop(ctx),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-              const SizedBox(height: 14),
-              Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
-              const SizedBox(height: 14),
-              Flexible(
+              Expanded(
                 child: SingleChildScrollView(
+                  controller: scrollCtrl,
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildDetailRow('Income Type', income.incomeType),
-                      
-                      // ─── ✅ NEW: Show Income Account ──────────────
-                      if (income.incomeAccount != null) ...[
-                        _buildDetailRow(
-                          'Income Account',
-                          '${income.incomeAccount?['code']} - ${income.incomeAccount?['name']}',
-                        ),
-                      ],
-                      
-                      if (income.customerName.isNotEmpty)
-                        _buildDetailRow('Customer', income.customerName),
-                      _buildDetailRow('Payment Method', income.paymentMethod),
-                      if (income.reference.isNotEmpty)
-                        _buildDetailRow('Reference', income.reference),
-                      _buildDetailRow('Subtotal', _formatAmount(income.subtotal)),
-                      if (income.taxRate > 0)
-                        _buildDetailRow(
-                          'Tax (${income.taxRate.toStringAsFixed(0)}%)',
-                          _formatAmount(income.taxAmount),
-                        ),
-                      Divider(height: 20, color: Colors.grey.withOpacity(0.15)),
-                      _buildDetailRow(
-                        'Total Amount',
-                        _formatAmount(income.totalAmount),
-                        valueColor: kSuccess,
-                      ),
-                      if (income.description.isNotEmpty)
-                        _buildDetailRow('Description', income.description),
-                      if (income.items.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            'Items',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: kText,
+                      // Header
+                      Row(
+                        children: [
+                          Container(
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              color: kSuccess.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: const Icon(
+                              Icons.trending_up,
+                              size: 26,
+                              color: kSuccess,
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        ...income.items.map((item) => Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: kBg,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
                                   children: [
-                                    Text(
-                                      item.description,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: kText,
+                                    Expanded(
+                                      child: Text(
+                                        income.incomeNumber,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w800,
+                                          color: kText,
+                                        ),
                                       ),
                                     ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: statusColor.withOpacity(0.08),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        income.status,
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                          color: statusColor,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
                                     Text(
-                                      '${item.quantity} × ${_formatAmount(item.unitPrice)}',
+                                      '• ${DateFormat('dd MMM yyyy').format(income.date)}',
                                       style: TextStyle(
-                                        fontSize: 10,
+                                        fontSize: 11,
                                         color: kSubText,
                                       ),
                                     ),
                                   ],
                                 ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // KPI Cards
+                      Row(
+                        children: [
+                          _miniKpi(
+                            'Total',
+                            controller.formatAmount(income.totalAmount),
+                            kSuccess,
+                            Icons.trending_up,
+                          ),
+                          const SizedBox(width: 8),
+                          _miniKpi(
+                            'Subtotal',
+                            controller.formatAmount(income.subtotal),
+                            kPrimary,
+                            Icons.receipt,
+                          ),
+                          const SizedBox(width: 8),
+                          _miniKpi(
+                            'Tax',
+                            controller.formatAmount(income.taxAmount),
+                            kWarning,
+                            Icons.receipt,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      const SizedBox(height: 16),
+
+                      // Details
+                      _detailRow('Income Type', income.incomeType),
+                      if (income.incomeAccount != null)
+                        _detailRow(
+                          'Income Account',
+                          '${income.incomeAccount?['code'] ?? ''} - ${income.incomeAccount?['name'] ?? ''}',
+                        ),
+                      if (income.customerName.isNotEmpty)
+                        _detailRow('Customer', income.customerName),
+                      _detailRow('Payment Method', income.paymentMethod),
+                      if (income.reference.isNotEmpty)
+                        _detailRow('Reference', income.reference),
+                      if (income.description.isNotEmpty)
+                        _detailRow('Description', income.description),
+                      const SizedBox(height: 16),
+                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      const SizedBox(height: 16),
+
+                      // Items
+                      if (income.items.isNotEmpty) ...[
+                        Text(
+                          'Items',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: kText,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        ...income.items.map(
+                          (item) => Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: kBgLight,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: Colors.grey.withOpacity(0.1),
                               ),
-                              Text(
-                                _formatAmount(item.amount),
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: kSuccess,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item.description,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                          color: kText,
+                                        ),
+                                      ),
+                                      Text(
+                                        '${item.quantity} × ${controller.formatAmount(item.unitPrice)}',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: kSubText,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  controller.formatAmount(item.amount),
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w800,
+                                    color: kSuccess,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ).toList(),
+                        const SizedBox(height: 16),
+                        Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                        const SizedBox(height: 16),
+                      ],
+
+                      // Footer Buttons
+                      Row(
+                        children: [
+                          if (income.status == 'Draft') ...[
+                            Expanded(
+                              child: SizedBox(
+                                height: 46,
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    controller.postIncome(income.id);
+                                  },
+                                  icon: const Icon(
+                                    Icons.check_circle,
+                                    size: 16,
+                                    color: Colors.black,
+                                  ),
+                                  label: const Text(
+                                    'Post Income',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: kSuccess,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ],
+                            ),
+                            const SizedBox(width: 10),
+                          ],
+                          Expanded(
+                            child: SizedBox(
+                              height: 46,
+                              child: OutlinedButton(
+                                onPressed: () => Navigator.pop(context),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: kPrimary,
+                                  side: const BorderSide(color: kPrimary),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Close',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
-                        )).toList(),
-                      ],
+                        ],
+                      ),
+                      const SizedBox(height: 16),
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  if (income.status == 'Draft') ...[
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.pop(ctx);
-                          controller.postIncome(income.id);
-                        },
-                        icon: const Icon(
-                          Icons.check_circle,
-                          size: 16,
-                          color: Colors.black87,
-                        ),
-                        label: const Text(
-                          'Post Income',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: kSuccess,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          elevation: 0,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                  ],
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        side: BorderSide(color: Colors.grey.withOpacity(0.4)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                      child: Text(
-                        'Close',
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          color: kSubText,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
               ),
             ],
           ),
@@ -1277,158 +1436,381 @@ class IncomeScreen extends StatelessWidget {
     );
   }
 
-  // ==================== DIALOGS ====================
+  // ═══════════════════════════════════════════════════════════════
+  // HELPER WIDGETS
+  // ═══════════════════════════════════════════════════════════════
 
-  void _showSearchDialog(BuildContext context, IncomeController controller) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text(
-          'Search Income',
-          style: TextStyle(fontWeight: FontWeight.w700),
+  Widget _miniKpi(String label, String value, Color color, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withOpacity(0.15)),
         ),
-        content: TextField(
-          controller: controller.searchController,
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'Enter income number, customer...',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.search),
-          ),
-          onSubmitted: (_) => Navigator.pop(ctx),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              controller.searchController.clear();
-              Navigator.pop(ctx);
-            },
-            child: const Text('Clear'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Done'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showFilterDialog(IncomeController controller, BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text(
-          'Filter Options',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ListTile(
-              leading: Icon(Icons.date_range, color: kPrimary),
-              title: const Text(
-                'Select Date Range',
-                style: TextStyle(fontSize: 14),
+            Icon(icon, size: 14, color: color),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: color,
               ),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () async {
-                final range = await showDateRangePicker(
-                  context: context,
-                  firstDate: DateTime(2020),
-                  lastDate: DateTime.now(),
-                  initialDateRange: controller.startDate.value != null &&
-                          controller.endDate.value != null
-                      ? DateTimeRange(
-                          start: controller.startDate.value!,
-                          end: controller.endDate.value!,
-                        )
-                      : null,
-                );
-                if (range != null) {
-                  controller.setDateRange(range.start, range.end);
-                  Navigator.pop(context);
-                }
-              },
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            ListTile(
-              leading: Icon(Icons.clear_all, color: kDanger),
-              title: const Text(
-                'Clear All Filters',
-                style: TextStyle(fontSize: 14),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 9,
+                color: Colors.black.withOpacity(0.5),
+                fontWeight: FontWeight.w600,
               ),
-              onTap: () {
-                controller.clearFilters();
-                Navigator.pop(context);
-              },
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+      ),
+    );
+  }
+
+  Widget _detailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: kSubText,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: kText,
+            ),
           ),
         ],
       ),
     );
   }
 
-  // ==================== HELPER WIDGETS ====================
-
-  Widget _formField(
-    String label,
-    String hint,
-    void Function(String) onChanged, {
-    String initialValue = '',
-    FormFieldValidator<String>? validator,
-    TextInputType? keyboardType,
-    String? prefixText,
-    int maxLines = 1,
-  }) {
-    return TextFormField(
-      initialValue: initialValue,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        prefixText: prefixText,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        isDense: true,
-        labelStyle: TextStyle(fontSize: 11.sp, color: kSubText),
-      ),
-      style: TextStyle(fontSize: 12.sp, color: kText),
-      keyboardType: keyboardType,
-      maxLines: maxLines,
-      onChanged: onChanged,
-      validator: validator,
+  Widget _buildItemsSection(
+    List<Map<String, dynamic>> items,
+    void Function(void Function()) setState,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Items',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: kText,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...items.asMap().entries.map((entry) {
+          final idx = entry.key;
+          final item = entry.value;
+          return Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: kBgLight,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: kBorder),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        initialValue: item['description'],
+                        decoration: InputDecoration(
+                          labelText: 'Description *',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          isDense: true,
+                          labelStyle: TextStyle(
+                            fontSize: 11,
+                            color: kSubText,
+                          ),
+                        ),
+                        style: const TextStyle(fontSize: 13, color: Colors.black),
+                        onChanged: (v) => setState(() => item['description'] = v),
+                        validator: (v) =>
+                            (v == null || v.trim().isEmpty) ? 'Required' : null,
+                      ),
+                    ),
+                    if (items.length > 1) ...[
+                      const SizedBox(width: 8),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: InkWell(
+                          onTap: () => setState(() => items.removeAt(idx)),
+                          child: Icon(Icons.delete, size: 18, color: kDanger),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        initialValue: item['quantity'].toString(),
+                        decoration: InputDecoration(
+                          labelText: 'Qty',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          isDense: true,
+                          labelStyle: TextStyle(fontSize: 11, color: kSubText),
+                        ),
+                        style: const TextStyle(fontSize: 13, color: Colors.black),
+                        keyboardType: TextInputType.number,
+                        onChanged: (v) => setState(() {
+                          item['quantity'] = int.tryParse(v) ?? 1;
+                        }),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      flex: 2,
+                      child: TextFormField(
+                        initialValue: item['unitPrice'].toString(),
+                        decoration: InputDecoration(
+                          labelText: 'Unit Price *',
+                          prefixText: CurrencyUtils.prefix,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          isDense: true,
+                          labelStyle: TextStyle(fontSize: 11, color: kSubText),
+                        ),
+                        style: const TextStyle(fontSize: 13, color: Colors.black),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        onChanged: (v) => setState(() {
+                          item['unitPrice'] = double.tryParse(v) ?? 0;
+                        }),
+                        validator: (v) =>
+                            (double.tryParse(v ?? '') ?? 0) <= 0
+                                ? 'Enter valid price'
+                                : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+        TextButton.icon(
+          onPressed: () => setState(() {
+            items.add({
+              'description': '',
+              'quantity': 1,
+              'unitPrice': 0.0,
+            });
+          }),
+          icon: const Icon(Icons.add, size: 16, color: kPrimary),
+          label: Text(
+            'Add Item',
+            style: TextStyle(fontSize: 12, color: kPrimary),
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildDropdownField<T extends String>({
-    required String label,
-    required T value,
-    required List<T> items,
-    required void Function(T?) onChanged,
-  }) {
-    return DropdownButtonFormField<T>(
+  Widget _buildTaxField(double taxRate, void Function(double) onChanged) {
+    return TextFormField(
+      initialValue: '0',
+      decoration: InputDecoration(
+        labelText: 'Tax Rate (%)',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+        isDense: true,
+        labelStyle: TextStyle(fontSize: 11, color: kSubText),
+      ),
+      style: const TextStyle(fontSize: 13, color: Colors.black),
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      onChanged: (v) => onChanged(double.tryParse(v) ?? 0),
+    );
+  }
+
+  Widget _buildAmountField(double amount, void Function(double) onChanged) {
+    return TextFormField(
+      decoration: InputDecoration(
+        labelText: 'Amount *',
+        prefixText: CurrencyUtils.prefix,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+        isDense: true,
+        labelStyle: TextStyle(fontSize: 11, color: kSubText),
+      ),
+      style: const TextStyle(fontSize: 13, color: Colors.black),
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      onChanged: (v) => onChanged(double.tryParse(v) ?? 0),
+      validator: (v) => (double.tryParse(v ?? '') ?? 0) <= 0
+          ? 'Enter valid amount'
+          : null,
+    );
+  }
+
+  Widget _buildDescriptionField(String value, void Function(String) onChanged) {
+    return TextFormField(
+      decoration: InputDecoration(
+        labelText: 'Description',
+        hintText: 'Enter description',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+        isDense: true,
+        labelStyle: TextStyle(fontSize: 11, color: kSubText),
+      ),
+      style: const TextStyle(fontSize: 13, color: Colors.black),
+      maxLines: 2,
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _buildReferenceField(String value, void Function(String) onChanged) {
+    return TextFormField(
+      decoration: InputDecoration(
+        labelText: 'Reference #',
+        hintText: 'e.g., INV-001',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+        isDense: true,
+        labelStyle: TextStyle(fontSize: 11, color: kSubText),
+      ),
+      style: const TextStyle(fontSize: 13, color: Colors.black),
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _buildPaymentMethodField(
+    String value,
+    void Function(String?) onChanged,
+  ) {
+    return DropdownButtonFormField<String>(
       value: value,
       decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        labelText: 'Payment Method',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
         isDense: true,
-        labelStyle: TextStyle(fontSize: 11.sp, color: kSubText),
+        labelStyle: TextStyle(fontSize: 11, color: kSubText),
       ),
-      style: TextStyle(fontSize: 12.sp, color: kText),
-      items: items
-          .map((item) => DropdownMenuItem(
-                value: item,
-                child: Text(item),
-              ))
-          .toList(),
+      style: TextStyle(fontSize: 13, color: kText),
+      items: const [
+        'Cash',
+        'Bank Transfer',
+        'Cheque',
+        'Credit Card',
+      ].map((method) => DropdownMenuItem(
+        value: method,
+        child: Text(method),
+      )).toList(),
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _buildBankDropdownField(
+    String? selectedId,
+    void Function(String?) onChanged,
+    List<Map<String, dynamic>> bankAccounts,
+  ) {
+    return DropdownButtonFormField<String>(
+      value: selectedId,
+      decoration: InputDecoration(
+        labelText: 'Bank Account',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+        isDense: true,
+        labelStyle: TextStyle(fontSize: 11, color: kSubText),
+      ),
+      style: TextStyle(fontSize: 13, color: kText),
+      hint: Text(
+        'Select bank account',
+        style: TextStyle(fontSize: 12, color: kSubText),
+      ),
+      items: [
+        const DropdownMenuItem<String>(
+          value: null,
+          child: Text('None (Cash)'),
+        ),
+        ...bankAccounts.map(
+          (a) => DropdownMenuItem<String>(
+            value: (a['id'] ?? a['_id']).toString(),
+            child: Text(
+              a['accountName'] ?? '',
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+      ],
       onChanged: onChanged,
     );
   }
@@ -1453,7 +1835,7 @@ class IncomeScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey.withOpacity(0.4)),
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           children: [
@@ -1465,12 +1847,12 @@ class IncomeScreen extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: TextStyle(fontSize: 10.sp, color: kSubText),
+                    style: TextStyle(fontSize: 11, color: kSubText),
                   ),
                   Text(
                     DateFormat('dd MMM yyyy').format(date),
                     style: TextStyle(
-                      fontSize: 12.sp,
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: kText,
                     ),
@@ -1478,9 +1860,91 @@ class IncomeScreen extends StatelessWidget {
                 ],
               ),
             ),
+            Icon(
+              Icons.arrow_drop_down,
+              size: 20,
+              color: kSubText,
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildDropdownField<T extends String>({
+    required String label,
+    required T value,
+    required List<T> items,
+    required void Function(T?) onChanged,
+  }) {
+    return DropdownButtonFormField<T>(
+      value: value,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+        isDense: true,
+        labelStyle: TextStyle(fontSize: 11, color: kSubText),
+      ),
+      style: TextStyle(fontSize: 13, color: kText),
+      items: items
+          .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+          .toList(),
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _buildIncomeAccountDropdownField(
+    String? selectedId,
+    void Function(String?) onChanged,
+    List<Map<String, dynamic>> incomeAccounts,
+  ) {
+    return DropdownButtonFormField<String>(
+      value: selectedId,
+      decoration: InputDecoration(
+        labelText: 'Income Account *',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+        isDense: true,
+        labelStyle: TextStyle(fontSize: 11, color: kSubText),
+      ),
+      style: TextStyle(fontSize: 13, color: kText),
+      hint: Text(
+        incomeAccounts.isEmpty
+            ? 'No accounts available'
+            : 'Select income account',
+        style: TextStyle(fontSize: 12, color: kSubText),
+      ),
+      items: incomeAccounts.isEmpty
+          ? []
+          : incomeAccounts
+              .map(
+                (a) => DropdownMenuItem<String>(
+                  value: (a['id'] ?? a['_id']).toString(),
+                  child: Text(
+                    '${a['code'] ?? ''} - ${a['name'] ?? ''}',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              )
+              .toList(),
+      onChanged: incomeAccounts.isEmpty ? null : onChanged,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please select an income account';
+        }
+        return null;
+      },
     );
   }
 
@@ -1493,104 +1957,34 @@ class IncomeScreen extends StatelessWidget {
       value: selectedId,
       decoration: InputDecoration(
         labelText: 'Customer',
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
         isDense: true,
-        labelStyle: TextStyle(fontSize: 11.sp, color: kSubText),
+        labelStyle: TextStyle(fontSize: 11, color: kSubText),
       ),
-      style: TextStyle(fontSize: 12.sp, color: kText),
+      style: TextStyle(fontSize: 13, color: kText),
       hint: Text(
         'Select customer',
-        style: TextStyle(fontSize: 12.sp, color: kSubText),
+        style: TextStyle(fontSize: 12, color: kSubText),
       ),
       items: customers
-          .map((c) => DropdownMenuItem<String>(
-                value: (c['id'] ?? c['_id']).toString(),
-                child: Text(
-                  c['name'] ?? '',
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ))
+          .map(
+            (c) => DropdownMenuItem<String>(
+              value: (c['id'] ?? c['_id']).toString(),
+              child: Text(
+                c['name'] ?? '',
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          )
           .toList(),
       onChanged: onChanged,
     );
   }
 
-  Widget _buildBankDropdownField(
-    String? selectedId,
-    void Function(String?) onChanged,
-    List<Map<String, dynamic>> bankAccounts,
-  ) {
-    return DropdownButtonFormField<String>(
-      value: selectedId,
-      decoration: InputDecoration(
-        labelText: 'Bank Account',
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        isDense: true,
-        labelStyle: TextStyle(fontSize: 11.sp, color: kSubText),
-      ),
-      style: TextStyle(fontSize: 12.sp, color: kText),
-      hint: Text(
-        'Select bank account',
-        style: TextStyle(fontSize: 12.sp, color: kSubText),
-      ),
-      items: [
-        const DropdownMenuItem<String>(
-          value: null,
-          child: Text('None (Cash)'),
-        ),
-        ...bankAccounts.map((a) => DropdownMenuItem<String>(
-              value: (a['id'] ?? a['_id']).toString(),
-              child: Text(
-                a['accountName'] ?? '',
-                overflow: TextOverflow.ellipsis,
-              ),
-            )),
-      ],
-      onChanged: (value) {
-        onChanged(value);
-        print('🔍 Selected bank account: $value');
-      },
-    );
-  }
-
-  Widget _buildDetailRow(
-    String label,
-    String value, {
-    Color? valueColor,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 13.sp,
-                color: kSubText,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: 13.sp,
-                fontWeight: FontWeight.w600,
-                color: valueColor ?? kText,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatAmount(double amount) => CurrencyUtils.format(amount);
 }

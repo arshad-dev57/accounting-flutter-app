@@ -3,7 +3,6 @@
 import 'package:LedgerPro_app/Utils/colors.dart';
 import 'package:LedgerPro_app/Utils/responsive_utils.dart';
 import 'package:LedgerPro_app/core/warehouse/reports/controller/reports_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/widgets/drawer_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
@@ -14,9 +13,7 @@ class ReportsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(ReportsController());
-    final isMobile = ResponsiveUtils.isMobile(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
-    final isWeb = ResponsiveUtils.isWeb(context);
+
 
     return Scaffold(
       backgroundColor: kBg,
@@ -58,12 +55,9 @@ class ReportsScreen extends StatelessWidget {
         children: [
           const SizedBox(height: 16),
 
-          // ─── Report Cards - Grid of 2 ────────────────────────────
           _buildReportGrid(controller, isMobile, isWeb),
 
           const SizedBox(height: 24),
-
-          // ─── Recently Viewed ──────────────────────────────────────
           _buildRecentReports(controller, isMobile),
 
           const SizedBox(height: 16),
@@ -72,18 +66,12 @@ class ReportsScreen extends StatelessWidget {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // REPORT GRID - 2 Columns
-  // ═══════════════════════════════════════════════════════════════
-
   Widget _buildReportGrid(
     ReportsController controller,
     bool isMobile,
     bool isWeb,
   ) {
     final reports = controller.reports;
-
-    // For mobile: 2 columns, For tablet/web: 2 columns
     final crossAxisCount = isWeb ? 4 : 2;
     final childAspectRatio = isWeb ? 1.1 : 1.0;
 
@@ -169,7 +157,6 @@ class ReportsScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Icon with gradient background
             Container(
               padding: EdgeInsets.all(isMobile ? 12 : 14),
               decoration: BoxDecoration(

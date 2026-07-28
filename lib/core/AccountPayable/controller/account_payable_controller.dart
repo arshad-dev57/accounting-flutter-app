@@ -1,6 +1,5 @@
-// core/AccountsPayable/controllers/accounts_payable_controller.dart
-
 import 'package:LedgerPro_app/Utils/currency_utils.dart';
+import 'package:LedgerPro_app/Utils/colors.dart';
 import 'package:LedgerPro_app/Utils/toast_utils.dart';
 import 'package:LedgerPro_app/Services/api_client.dart';
 import 'package:flutter/material.dart';
@@ -18,23 +17,43 @@ import 'package:excel/excel.dart';
 class AccountsPayableController extends GetxController {
   final ApiClient _apiClient = Get.find<ApiClient>();
 
-  // ✅ Changed: vendors → suppliers (using Supplier from warehouse)
+  // Observable variables
   var suppliers = <Supplier>[].obs;
   var bills = <Bill>[].obs;
   var isLoading = true.obs;
+  var isLoadingMore = false.obs;
   var isProcessing = false.obs;
+  var isSaving = false.obs;
+
   var selectedFilter = 'All'.obs;
-  var selectedSupplierId = ''.obs;  // ✅ Changed: selectedVendorId → selectedSupplierId
-  var startDate = Rx<DateTime?>(null);
-  var endDate = Rx<DateTime?>(null);
+  var selectedSupplierId = ''.obs;
+  var startDate = Rxn<DateTime>();
+  var endDate = Rxn<DateTime>();
+  var searchQuery = ''.obs;
 
   var bankAccounts = <Map<String, dynamic>>[].obs;
 
+  // Summary totals
   var totalOutstanding = 0.0.obs;
   var totalOverdue = 0.0.obs;
   var totalDueThisWeek = 0.0.obs;
   var totalDueThisMonth = 0.0.obs;
-  var activeSuppliers = 0.obs;  // ✅ Changed: activeVendors → activeSuppliers
+  var activeSuppliers = 0.obs;
+
+  // ✅ Pagination variables
+  var currentPage = 1.obs;
+  var totalPages = 1.obs;
+  var totalItems = 0.obs;
+  var hasNextPage = false.obs;
+  var hasPrevPage = false.obs;
+  var itemsPerPage = 20.obs;
+  var serverSupportsPagination = false.obs;
+
+  // ✅ Search controller
+  final TextEditingController searchController = TextEditingController();
+
+  // ✅ Scroll controller for lazy loading
+  final ScrollController scrollController = ScrollController();
 
   double _toDouble(dynamic value) {
     if (value == null) return 0.0;
@@ -51,15 +70,34 @@ class AccountsPayableController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    searchController.addListener(_onSearchChanged);
     fetchAllData();
     fetchBankAccounts();
   }
 
-  Future<void> fetchAllData() async {
-    await Future.wait([fetchSuppliers(), fetchBills(), fetchSummary()]);
+  @override
+  void onClose() {
+    searchController.removeListener(_onSearchChanged);
+    searchController.dispose();
+    scrollController.dispose();
+    super.onClose();
   }
 
-  // ─── ✅ FIXED: Fetch Suppliers from Warehouse ────────────────────
+  void _onSearchChanged() {
+    searchQuery.value = searchController.text;
+    fetchBills(resetPage: true);
+  }
+
+  // ─── Fetch All Data ──────────────────────────────────────────────
+  Future<void> fetchAllData() async {
+    await Future.wait([
+      fetchSuppliers(),
+      fetchBills(resetPage: true),
+      fetchSummary(),
+    ]);
+  }
+
+  // ─── Fetch Suppliers ─────────────────────────────────────────────
   Future<void> fetchSuppliers() async {
     try {
       final response = await _apiClient.get('/api/accounts-payable/suppliers');
@@ -70,7 +108,7 @@ class AccountsPayableController extends GetxController {
           suppliers.value = (data['data'] as List)
               .map((e) => Supplier.fromJson(e))
               .toList();
-          print('✅ Loaded ${suppliers.length} suppliers from warehouse');
+          print('✅ Loaded ${suppliers.length} suppliers');
         }
       }
     } catch (e) {
@@ -78,6 +116,7 @@ class AccountsPayableController extends GetxController {
     }
   }
 
+  // ─── Fetch Summary ───────────────────────────────────────────────
   Future<void> fetchSummary() async {
     try {
       final response = await _apiClient.get('/api/accounts-payable/summary');
@@ -89,7 +128,7 @@ class AccountsPayableController extends GetxController {
           totalOverdue.value = _toDouble(data['data']['overdue']);
           totalDueThisWeek.value = _toDouble(data['data']['dueThisWeek']);
           totalDueThisMonth.value = _toDouble(data['data']['dueThisMonth']);
-          activeSuppliers.value = data['data']['activeSuppliers'] ?? 0;  // ✅ Changed
+          activeSuppliers.value = data['data']['activeSuppliers'] ?? 0;
         }
       }
     } catch (e) {
@@ -97,51 +136,120 @@ class AccountsPayableController extends GetxController {
     }
   }
 
-  // ─── ✅ FIXED: Fetch Bills with supplier filter ──────────────────
-  Future<void> fetchBills() async {
+  // ─── Fetch Bills with Pagination ─────────────────────────────────
+  Future<void> fetchBills({bool resetPage = true}) async {
     try {
-      isLoading(true);
-
-      String endpoint = '/api/accounts-payable/bills';
-      Map<String, dynamic> queryParams = {};
-
-      if (selectedFilter.value != 'All') {
-        queryParams['status'] = selectedFilter.value;
+      if (resetPage) {
+        currentPage.value = 1;
+        isLoading.value = true;
+      } else {
+        isLoadingMore.value = true;
       }
 
-      // ✅ Changed: vendorId → supplierId
+      Map<String, dynamic> params = {};
+
+      if (serverSupportsPagination.value) {
+        params['page'] = currentPage.value;
+        params['limit'] = itemsPerPage.value;
+      }
+
+      if (selectedFilter.value != 'All') {
+        params['status'] = selectedFilter.value;
+      }
+
       if (selectedSupplierId.value.isNotEmpty) {
-        queryParams['supplierId'] = selectedSupplierId.value;
+        params['supplierId'] = selectedSupplierId.value;
+      }
+
+      if (searchQuery.value.isNotEmpty) {
+        params['search'] = searchQuery.value;
       }
 
       if (startDate.value != null) {
-        queryParams['startDate'] = startDate.value!.toIso8601String();
+        params['startDate'] = startDate.value!.toIso8601String();
       }
 
       if (endDate.value != null) {
-        queryParams['endDate'] = endDate.value!.toIso8601String();
+        params['endDate'] = endDate.value!.toIso8601String();
       }
 
       final response = await _apiClient.get(
-        endpoint,
-        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+        '/api/accounts-payable/bills',
+        queryParameters: params.isNotEmpty ? params : null,
       );
 
       if (response.success && response.statusCode == 200) {
         final data = response.data;
         if (data['success'] ?? true) {
-          bills.value = (data['data'] as List)
+          final newBills = (data['data'] as List)
               .map((e) => Bill.fromJson(e))
               .toList();
+
+          if (resetPage) {
+            bills.value = newBills;
+          } else {
+            bills.addAll(newBills);
+          }
+
+          // Parse pagination info
+          if (data['pagination'] != null) {
+            final pagination = data['pagination'];
+            totalPages.value = pagination['pages'] ?? pagination['totalPages'] ?? 1;
+            totalItems.value = pagination['total'] ?? pagination['totalItems'] ?? newBills.length;
+            hasNextPage.value = pagination['hasNext'] ?? pagination['nextPage'] != null ?? false;
+            hasPrevPage.value = pagination['hasPrev'] ?? pagination['prevPage'] != null ?? false;
+            serverSupportsPagination.value = true;
+          } else if (data['total'] != null) {
+            totalPages.value = data['pages'] ?? 1;
+            totalItems.value = data['total'];
+            hasNextPage.value = data['hasNext'] ?? false;
+            hasPrevPage.value = data['hasPrev'] ?? false;
+            serverSupportsPagination.value = true;
+          } else if (data['totalCount'] != null) {
+            totalItems.value = data['totalCount'];
+            totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
+            hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+            hasPrevPage.value = currentPage.value > 1;
+            serverSupportsPagination.value = false;
+          } else {
+            totalItems.value = bills.length;
+            totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
+            hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+            hasPrevPage.value = currentPage.value > 1;
+            serverSupportsPagination.value = false;
+          }
+
+          bills.refresh();
         }
       }
     } catch (e) {
       print('Error fetching bills: $e');
     } finally {
-      isLoading(false);
+      isLoading.value = false;
+      isLoadingMore.value = false;
     }
   }
 
+  // ─── Load More Data (Lazy Loading) ──────────────────────────────
+  Future<void> loadMoreData() async {
+    if (hasNextPage.value && !isLoadingMore.value && !isLoading.value) {
+      currentPage.value++;
+      await fetchBills(resetPage: false);
+    }
+  }
+
+  // ─── Refresh Data ────────────────────────────────────────────────
+  Future<void> refreshData() async {
+    await fetchAllData();
+  }
+
+  // ─── Search Bills ────────────────────────────────────────────────
+  void searchBills(String query) {
+    searchQuery.value = query;
+    fetchBills(resetPage: true);
+  }
+
+  // ─── Fetch Bank Accounts ─────────────────────────────────────────
   Future<void> fetchBankAccounts() async {
     try {
       final response = await _apiClient.get('/api/bank-accounts');
@@ -157,19 +265,116 @@ class AccountsPayableController extends GetxController {
     }
   }
 
-  // ─── ✅ FIXED: Create Bill with supplierId ──────────────────────
-  Future<void> createBill(Map<String, dynamic> billData) async {
+  // ─── Get Next Bill Number ───────────────────────────────────────────
+  Future<String> getNextBillNumber() async {
     try {
-      isProcessing(true);
+      final response = await _apiClient.get('/api/accounts-payable/next-bill-number');
+      
+      if (response.success && response.statusCode == 200) {
+        final data = response.data;
+        if (data['success'] ?? true) {
+          return data['data']['billNumber'] ?? 'BILL-0001';
+        }
+      }
+    } catch (e) {
+      print('Error fetching next bill number: $e');
+    }
+    
+    // Fallback: generate locally based on existing bills
+    if (bills.isNotEmpty) {
+      final lastBill = bills.first;
+      final parts = lastBill.billNumber.split('-');
+      final lastNum = int.tryParse(parts[parts.length - 1]) ?? 0;
+      final nextNum = lastNum + 1;
+      return 'BILL-${nextNum.toString().padLeft(4, '0')}';
+    }
+    
+    return 'BILL-0001';
+  }
 
-      // ✅ Ensure supplierId is used instead of vendorId
+  // ─── Create Bill ──────────────────────────────────────────────────
+  Future<void> createBill(Map<String, dynamic> billData) async {
+    // Show loading dialog
+    Get.dialog(
+      Center(
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: kSuccess,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Creating bill...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kText,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Please wait',
+                  style: TextStyle(fontSize: 12, color: kSubText),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+
+    try {
+      isSaving.value = true;
+
+      // Calculate totals from items
+      double subtotal = 0;
+      final items = (billData['items'] as List).map((item) {
+        final qty = (item['quantity'] as num).toDouble();
+        final price = (item['unitPrice'] as num).toDouble();
+        final amount = qty * price;
+        subtotal += amount;
+        return {
+          'description': item['description'],
+          'quantity': qty.toInt(),
+          'unitPrice': price,
+          'amount': amount,
+          'taxRate': 0,
+          'taxAmount': 0,
+        };
+      }).toList();
+
+      final taxRate = (billData['taxRate'] ?? 0).toDouble();
+      final discount = (billData['discount'] ?? 0).toDouble();
+      final taxAmount = subtotal * (taxRate / 100);
+      final totalAmount = subtotal + taxAmount - discount;
+
       final payload = {
-        'supplierId': billData['supplierId'],  // ✅ Changed
+        'supplierId': billData['supplierId'],
+        'billNumber': billData['billNumber'],
         'date': billData['date'],
         'dueDate': billData['dueDate'],
-        'items': billData['items'],
-        'discount': billData['discount'] ?? 0,
-        'notes': billData['notes'] ?? '',
+        'reference': billData['reference'] ?? '',
+        'description': billData['description'] ?? '',
+        'items': items,
+        'subtotal': subtotal,
+        'taxRate': taxRate,
+        'taxTotal': taxAmount,
+        'discount': discount,
+        'totalAmount': totalAmount,
       };
 
       final response = await _apiClient.post(
@@ -177,30 +382,32 @@ class AccountsPayableController extends GetxController {
         body: payload,
       );
 
+      // Close loading dialog
+      Get.back();
+
       if (response.success && response.statusCode == 201) {
         AppSnackbar.success(
-          Colors.green,
-          'Success',
-          'Bill created successfully!\nJournal entry created',
+          kSuccess,
+          'Success ✅',
+          'Bill created successfully!',
           duration: const Duration(seconds: 3),
         );
-        await fetchBills();
-        await fetchSummary();
-        await fetchSuppliers();
+        await fetchAllData();
       } else {
         final errorMsg = response.data['message'] ?? 'Failed to create bill';
-        AppSnackbar.error(Colors.red, 'Error', errorMsg);
+        AppSnackbar.error(kDanger, 'Error', errorMsg);
       }
     } catch (e) {
-      AppSnackbar.error(Colors.red, 'Error', 'Failed to create bill: $e');
+      if (Get.isDialogOpen ?? false) Get.back();
+      AppSnackbar.error(kDanger, 'Error', 'Failed to create bill: $e');
     } finally {
-      isProcessing(false);
+      isSaving.value = false;
     }
   }
 
-  // ─── ✅ FIXED: Record Payment with supplierId ──────────────────
+  // ─── Record Payment ──────────────────────────────────────────────
   Future<void> recordPayment({
-    required String supplierId,  // ✅ Changed: vendorId → supplierId
+    required String supplierId,
     required String billId,
     required double amount,
     required DateTime paymentDate,
@@ -209,11 +416,54 @@ class AccountsPayableController extends GetxController {
     required String? bankAccountId,
     String notes = '',
   }) async {
+    // Show loading dialog
+    Get.dialog(
+      Center(
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: kSuccess,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Recording payment...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kText,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Please wait',
+                  style: TextStyle(fontSize: 12, color: kSubText),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+
     try {
-      isProcessing(true);
+      isProcessing.value = true;
 
       final body = {
-        'supplierId': supplierId,  // ✅ Changed
+        'supplierId': supplierId,
         'billId': billId,
         'amount': amount,
         'paymentDate': DateFormat('yyyy-MM-dd').format(paymentDate),
@@ -223,49 +473,49 @@ class AccountsPayableController extends GetxController {
         'notes': notes,
       };
 
-      // ✅ FIXED: Correct endpoint
       final response = await _apiClient.post(
-        '/api/accounts-payable/payments',  // ✅ Fixed endpoint
+        '/api/accounts-payable/payments',
         body: body,
       );
 
+      // Close loading dialog
+      Get.back();
+
       if (response.success && (response.statusCode == 201 || response.statusCode == 200)) {
         AppSnackbar.success(
-          Colors.green,
-          'Success',
-          'Payment recorded successfully!\nJournal entry created',
+          kSuccess,
+          'Success ✅',
+          'Payment recorded successfully!',
           duration: const Duration(seconds: 3),
         );
-        await fetchBills();
-        await fetchSummary();
-        await fetchSuppliers();
+        await fetchAllData();
       } else {
         final errorMsg = response.data['message'] ?? 'Failed to record payment';
-        AppSnackbar.error(Colors.red, 'Error', errorMsg);
+        AppSnackbar.error(kDanger, 'Error', errorMsg);
       }
     } catch (e) {
-      AppSnackbar.error(Colors.red, 'Error', 'Failed to record payment: $e');
+      if (Get.isDialogOpen ?? false) Get.back();
+      AppSnackbar.error(kDanger, 'Error', 'Failed to record payment: $e');
     } finally {
-      isProcessing(false);
+      isProcessing.value = false;
     }
   }
 
   // ─── Filter Methods ──────────────────────────────────────────────
   void changeFilter(String filter) {
     selectedFilter.value = filter;
-    fetchBills();
+    fetchBills(resetPage: true);
   }
 
-  // ✅ Changed: filterByVendor → filterBySupplier
   void filterBySupplier(String supplierId) {
     selectedSupplierId.value = supplierId;
-    fetchBills();
+    fetchBills(resetPage: true);
   }
 
   void setDateRange(DateTime? start, DateTime? end) {
     startDate.value = start;
     endDate.value = end;
-    fetchBills();
+    fetchBills(resetPage: true);
   }
 
   void clearFilters() {
@@ -273,7 +523,9 @@ class AccountsPayableController extends GetxController {
     selectedSupplierId.value = '';
     startDate.value = null;
     endDate.value = null;
-    fetchBills();
+    searchController.clear();
+    searchQuery.value = '';
+    fetchBills(resetPage: true);
   }
 
   Bill? getBillById(String id) {
@@ -284,14 +536,12 @@ class AccountsPayableController extends GetxController {
     }
   }
 
-  // ✅ Changed: getUnpaidBillsForVendor → getUnpaidBillsForSupplier
   List<Bill> getUnpaidBillsForSupplier(String supplierId) {
     return bills
         .where((b) => b.supplierId == supplierId && b.status != 'Paid')
         .toList();
   }
 
-  // ✅ Changed: getSupplierName
   String getSupplierName(String supplierId) {
     try {
       final supplier = suppliers.firstWhere((s) => s.id == supplierId);
@@ -301,12 +551,11 @@ class AccountsPayableController extends GetxController {
     }
   }
 
-  // ─── Get Display Suppliers ──────────────────────────────────────
   List<Supplier> get displaySuppliers {
     return suppliers;
   }
 
-  // ─── Export Functions (Same as before, just updated variable names) ──
+  // ─── Export Functions ─────────────────────────────────────────────
   void exportReport() {
     Get.bottomSheet(
       Container(
@@ -318,31 +567,61 @@ class AccountsPayableController extends GetxController {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Export Accounts Payable',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Row(
+              children: [
+                Text(
+                  'Export Report',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: kText,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 18, color: Colors.black),
+                  onPressed: () => Get.back(),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 4),
             Text(
-              'Choose export format',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+              '${bills.length} bills will be exported',
+              style: TextStyle(fontSize: 12, color: kSubText),
             ),
             const SizedBox(height: 20),
-            ListTile(
-              leading: Icon(Icons.picture_as_pdf, color: Color(0xFFE53935)),
-              title: Text('Export as PDF'),
-              onTap: () {
-                Get.back();
-                exportToPdf();
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.table_chart, color: Color(0xFF2E7D32)),
-              title: Text('Export as Excel'),
-              onTap: () {
-                Get.back();
-                exportToExcel();
-              },
+            Row(
+              children: [
+                Expanded(
+                  child: _exportOptionCard(
+                    icon: Icons.picture_as_pdf_outlined,
+                    label: 'PDF',
+                    subtitle: 'Formatted report',
+                    color: const Color(0xFFE53935),
+                    bgColor: const Color(0xFFFFEBEE),
+                    onTap: () {
+                      Get.back();
+                      exportToPdf();
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _exportOptionCard(
+                    icon: Icons.table_chart_outlined,
+                    label: 'Excel',
+                    subtitle: 'Spreadsheet',
+                    color: const Color(0xFF2E7D32),
+                    bgColor: const Color(0xFFE8F5E9),
+                    onTap: () {
+                      Get.back();
+                      exportToExcel();
+                    },
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -350,25 +629,98 @@ class AccountsPayableController extends GetxController {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      backgroundColor: kCardBg,
     );
   }
 
-  // ─── PDF Export (Updated to use suppliers) ──────────────────────
+  Widget _exportOptionCard({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required Color color,
+    required Color bgColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: Colors.white, size: 22),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 10,
+                color: color.withOpacity(0.7),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── PDF Export ──────────────────────────────────────────────────
   Future<void> exportToPdf() async {
     try {
       if (!kIsWeb) {
         Get.dialog(
-          AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 16),
-                Text('Generating PDF...', style: TextStyle(fontSize: 14)),
-              ],
+          Center(
+            child: Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                        color: kPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'Generating PDF...',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Please wait',
+                      style: TextStyle(fontSize: 12, color: kSubText),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
           barrierDismissible: false,
@@ -408,7 +760,7 @@ class AccountsPayableController extends GetxController {
         if (Get.isDialogOpen ?? false) Get.back();
 
         AppSnackbar.success(
-          Colors.green,
+          kSuccess,
           'Success',
           '${bills.length} bills exported to PDF',
         );
@@ -420,7 +772,7 @@ class AccountsPayableController extends GetxController {
         if (Get.isDialogOpen ?? false) Get.back();
 
         AppSnackbar.success(
-          Colors.green,
+          kSuccess,
           'Success',
           '${bills.length} bills exported to PDF',
         );
@@ -429,7 +781,7 @@ class AccountsPayableController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      AppSnackbar.error(Colors.red, 'Error', 'Failed to export PDF: $e');
+      AppSnackbar.error(kDanger, 'Error', 'Failed to export PDF: $e');
     }
   }
 
@@ -594,7 +946,6 @@ class AccountsPayableController extends GetxController {
     );
   }
 
-  // ✅ Changed: _pdfVendorsSection → _pdfSuppliersSection
   pw.Widget _pdfSuppliersSection() {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -791,7 +1142,6 @@ class AccountsPayableController extends GetxController {
     );
   }
 
-  // ─── _pdfBillsSection (Same as before) ──────────────────────────
   pw.Widget _pdfBillsSection() {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -886,7 +1236,7 @@ class AccountsPayableController extends GetxController {
                     pw.Expanded(
                       flex: 3,
                       child: pw.Text(
-                        bill.supplierName,  // ✅ Changed
+                        bill.supplierName,
                         style: const pw.TextStyle(fontSize: 9),
                       ),
                     ),
@@ -995,17 +1345,41 @@ class AccountsPayableController extends GetxController {
     try {
       if (!kIsWeb) {
         Get.dialog(
-          AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 16),
-                Text('Building Excel...', style: TextStyle(fontSize: 14)),
-              ],
+          Center(
+            child: Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                        color: kPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'Building Excel...',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Please wait',
+                      style: TextStyle(fontSize: 12, color: kSubText),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
           barrierDismissible: false,
@@ -1211,7 +1585,7 @@ class AccountsPayableController extends GetxController {
         suppliersSheet.setColumnWidth(i, supplierColWidths[i]);
       }
 
-      // Bills Sheet (same as before)
+      // Bills Sheet
       final billsSheet = excel['Bills'];
       final billHeaders = [
         'Bill #',
@@ -1367,7 +1741,7 @@ class AccountsPayableController extends GetxController {
         if (Get.isDialogOpen ?? false) Get.back();
 
         AppSnackbar.success(
-          Colors.green,
+          kSuccess,
           'Success',
           '${bills.length} bills exported to Excel',
         );
@@ -1379,7 +1753,7 @@ class AccountsPayableController extends GetxController {
         if (Get.isDialogOpen ?? false) Get.back();
 
         AppSnackbar.success(
-          Colors.green,
+          kSuccess,
           'Success',
           '${bills.length} bills exported to Excel',
         );
@@ -1388,7 +1762,7 @@ class AccountsPayableController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      AppSnackbar.error(Colors.red, 'Error', 'Failed to export Excel: $e');
+      AppSnackbar.error(kDanger, 'Error', 'Failed to export Excel: $e');
     }
   }
 
@@ -1424,7 +1798,6 @@ class AccountsPayableController extends GetxController {
 
 // ─────────────────────── MODELS ───────────────────────
 
-// ✅ Changed: Vendor → Supplier
 class Supplier {
   final String id;
   final String code;
@@ -1482,12 +1855,11 @@ class Supplier {
     );
   }
 }
-
 class Bill {
   final String id;
   final String billNumber;
-  final String supplierId;  // ✅ Changed: vendorId → supplierId
-  final String supplierName;  // ✅ Changed: vendorName → supplierName
+  final String supplierId;
+  final String supplierName;
   final DateTime date;
   final DateTime dueDate;
   final List<BillItem> items;
@@ -1498,6 +1870,8 @@ class Bill {
   final double paidAmount;
   final String status;
   final String notes;
+  final String reference;
+  final String description;  // ✅ ADDED: description field
 
   Bill({
     required this.id,
@@ -1514,6 +1888,8 @@ class Bill {
     required this.paidAmount,
     required this.status,
     required this.notes,
+    this.reference = '',
+    this.description = '',  // ✅ ADDED: default value
   });
 
   double get outstanding => (totalAmount - paidAmount).toDouble();
@@ -1532,7 +1908,6 @@ class Bill {
       return 0.0;
     }
 
-    // Handle vendor relation (from backend)
     dynamic vendorData = json['vendor'] ?? json['vendorId'] ?? {};
     String supplierId = '';
     String supplierName = json['vendorName'] ?? '';
@@ -1567,10 +1942,11 @@ class Bill {
       paidAmount: safeToDouble(json['paidAmount']),
       status: json['status'] ?? 'Unpaid',
       notes: json['notes'] ?? '',
+      reference: json['reference'] ?? '',
+      description: json['description'] ?? '',  // ✅ ADDED: parse description
     );
   }
 }
-
 class BillItem {
   final String description;
   final int quantity;

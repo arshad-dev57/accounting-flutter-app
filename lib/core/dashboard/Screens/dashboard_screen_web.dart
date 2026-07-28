@@ -1,5 +1,6 @@
 import 'package:LedgerPro_app/Utils/colors.dart';
 import 'package:LedgerPro_app/Utils/currency_utils.dart';
+import 'package:LedgerPro_app/Utils/toast_utils.dart';
 import 'package:LedgerPro_app/core/About/about_app_screen.dart';
 import 'package:LedgerPro_app/core/About/privacypolicy_screen.dart';
 import 'package:LedgerPro_app/core/About/termsofservice_screen.dart';
@@ -585,7 +586,30 @@ class _WebSidebar extends StatelessWidget {
   }
 
   void _onItemTap(String routeName) {
-    onChangeScreen(_getScreenForRoute(routeName), route: routeName);
+    // Handle special routes
+    if (routeName.startsWith('__')) {
+      switch (routeName) {
+        case '__profile':
+          Get.to(() => const ProfileScreen());
+          break;
+        case '__changepassword':
+          Get.to(() => const ChangePasswordScreen());
+          break;
+        case '__userguide':
+          Get.to(() => const UserGuideScreen());
+          break;
+        case '__contact':
+          Get.to(() => const ContactScreen());
+          break;
+        case '__reportissue':
+          Get.to(() => const ReportIssueScreen());
+          break;
+        default:
+          Get.snackbar('Coming Soon', 'This feature is coming soon');
+      }
+    } else {
+      onChangeScreen(_getScreenForRoute(routeName), route: routeName);
+    }
   }
 
   // ─── Navigate to Dashboard Selection ─────────────────────────────
@@ -596,44 +620,170 @@ class _WebSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final w = collapsed ? 68.0 : 256.0;
+    final w = collapsed ? 68.0 : 272.0;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
       curve: Curves.easeInOut,
       width: w,
       decoration: const BoxDecoration(
-        color: _kCardBg,
+        color: Colors.white,
         border: Border(right: BorderSide(color: _kCardBorder)),
       ),
       child: Column(
         children: [
-          _buildLogoArea(),
-          const SizedBox(height: 8),
-          if (!collapsed)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 6),
-              child: Row(
-                children: [
-                  Text(
-                    'NAVIGATION',
-                    style: TextStyle(
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w700,
-                      color: _kTextSecondary.withOpacity(0.55),
-                      letterSpacing: 1.4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          _DrawerHeader(
+            collapsed: collapsed,
+            onBack: _navigateToDashboardSelection,
+            profileCtrl: profileCtrl,
+            subCtrl: subCtrl,
+          ),
           Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.symmetric(horizontal: collapsed ? 8 : 10),
-              itemCount: _sections.length,
-              itemBuilder: (_, i) => _buildSectionTile(i),
+            child: ListView(
+              padding: const EdgeInsets.only(top: 8, bottom: 8),
+              children: [
+                _SectionLabel('CORE'),
+                _NavSection(
+                  title: 'LedgerPro Core',
+                  icon: Mdi.account_circle,
+                  currentRoute: ctrl.currentRoute.value,
+                  collapsed: collapsed,
+                  items: const [
+                    ('Chart of Accounts', Mdi.chart_tree, 'chart_of_accounts'),
+                    ('Journal Entries', Mdi.book_open_page_variant, 'journal_entries'),
+                    ('General Ledger', Mdi.book_open_blank_variant, 'general_ledger'),
+                    ('Trial Balance', Mdi.scale_balance, 'trial_balance'),
+                    ('Bank Accounts', Mdi.bank, 'bank_accounts'),
+                    ('Income', Mdi.trending_up, 'income'),
+                    ('Expense', Mdi.trending_down, 'expense'),
+                  ],
+                  onNavigate: _onItemTap,
+                ),
+                const SizedBox(height: 4),
+                _SectionLabel('RECEIVABLES & PAYABLES'),
+                _NavSection(
+                  title: 'Receivables & Payables',
+                  icon: Mdi.swap_horizontal,
+                  currentRoute: ctrl.currentRoute.value,
+                  collapsed: collapsed,
+                  items: const [
+                    ('Accounts Receivable', Mdi.cash_plus, 'accounts_receivable'),
+                    ('Accounts Payable', Mdi.cash_minus, 'accounts_payable'),
+                    ('Customers', Mdi.account_group, 'customers'),
+                    ('Bills', Mdi.file_document_outline, 'bills'),
+                    ('Vendors / Suppliers', Mdi.truck_delivery_outline, 'vendors'),
+                    ('Payments Received', Mdi.credit_card_outline, 'payments_received'),
+                    ('Payments Made', Mdi.cash_check, 'payments_made'),
+                    ('Credit Notes', Mdi.file_undo_outline, 'credit_notes'),
+                  ],
+                  onNavigate: _onItemTap,
+                ),
+                const SizedBox(height: 4),
+                _SectionLabel('ASSETS & LIABILITIES'),
+                _NavSection(
+                  title: 'Assets & Liabilities',
+                  icon: Mdi.business,
+                  currentRoute: ctrl.currentRoute.value,
+                  collapsed: collapsed,
+                  items: const [
+                    ('Fixed Assets', Mdi.office_building_outline, 'fixed_assets'),
+                    ('Loans & Borrowings', Mdi.hand_coin_outline, 'loans'),
+                    ('Capital / Equity', Mdi.chart_donut, 'capital_equity'),
+                  ],
+                  onNavigate: _onItemTap,
+                ),
+                const SizedBox(height: 4),
+                _SectionLabel('FINANCIAL REPORTS'),
+                _NavSection(
+                  title: 'Financial Reports',
+                  icon: Mdi.chart_line,
+                  currentRoute: ctrl.currentRoute.value,
+                  collapsed: collapsed,
+                  items: const [
+                    ('Profit & Loss', Mdi.chart_line, 'profit_loss'),
+                    ('Balance Sheet', Mdi.clipboard_list_outline, 'balance_sheet'),
+                    ('Cash Flow Statement', Mdi.cash, 'cash_flow'),
+                    ('Aged Receivables', Mdi.account_clock, 'aged_receivables'),
+                  ],
+                  onNavigate: _onItemTap,
+                ),
+                const SizedBox(height: 4),
+                _SectionLabel('SETTINGS'),
+                _NavSection(
+                  title: 'Settings',
+                  icon: Mdi.cog,
+                  currentRoute: ctrl.currentRoute.value,
+                  collapsed: collapsed,
+                  items: const [
+                    ('Currency', Mdi.currency_usd, 'currency'),
+                  ],
+                  onNavigate: _onItemTap,
+                ),
+                _NavSection(
+                  title: 'My Account',
+                  icon: Mdi.account,
+                  currentRoute: ctrl.currentRoute.value,
+                  collapsed: collapsed,
+                  items: const [
+                    ('My Profile', Mdi.account_circle_outline, '__profile'),
+                    ('Change Password', Mdi.lock_reset, '__changepassword'),
+                  ],
+                  onNavigate: _onItemTap,
+                ),
+                const SizedBox(height: 4),
+                _SectionLabel('SUPPORT'),
+                _NavSection(
+                  title: 'Subscription',
+                  icon: Mdi.crown,
+                  currentRoute: ctrl.currentRoute.value,
+                  collapsed: collapsed,
+                  items: const [
+                    ('Subscription Plans', Mdi.crown, 'subscription'),
+                  ],
+                  onNavigate: _onItemTap,
+                ),
+                _NavSection(
+                  title: 'Help & Support',
+                  icon: Mdi.help_circle,
+                  currentRoute: ctrl.currentRoute.value,
+                  collapsed: collapsed,
+                  items: const [
+                    ('User Guide', Mdi.book_information_variant, '__userguide'),
+                    ('Contact Support', Mdi.headset, '__contact'),
+                    ('Report an Issue', Mdi.bug_outline, '__reportissue'),
+                  ],
+                  onNavigate: _onItemTap,
+                ),
+                _NavSection(
+                  title: 'Feedback',
+                  icon: Mdi.feedback,
+                  currentRoute: ctrl.currentRoute.value,
+                  collapsed: collapsed,
+                  items: const [
+                    ('Feedback', Mdi.feedback, 'feedback'),
+                  ],
+                  onNavigate: _onItemTap,
+                ),
+                _NavSection(
+                  title: 'About',
+                  icon: Mdi.information,
+                  currentRoute: ctrl.currentRoute.value,
+                  collapsed: collapsed,
+                  items: const [
+                    ('About App', Mdi.information_outline, 'about_app'),
+                    ('Terms of Service', Mdi.file_sign, 'terms'),
+                    ('Privacy Policy', Mdi.shield_lock_outline, 'privacy'),
+                  ],
+                  onNavigate: _onItemTap,
+                ),
+              ],
             ),
           ),
-          _buildUserCard(),
+          _DrawerFooter(
+            collapsed: collapsed,
+            profileCtrl: profileCtrl,
+            subCtrl: subCtrl,
+            onLogout: onLogout,
+          ),
         ],
       ),
     );
@@ -3164,4 +3314,503 @@ String _fmtNum(double v) {
   if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
   if (v >= 1000) return '${(v / 1000).toStringAsFixed(0)}K';
   return v.toStringAsFixed(0);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Drawer Header
+// ══════════════════════════════════════════════════════════════════
+
+class _DrawerHeader extends StatelessWidget {
+  final bool collapsed;
+  final VoidCallback onBack;
+  final ProfileController profileCtrl;
+  final SubscriptionController subCtrl;
+
+  const _DrawerHeader({
+    required this.collapsed,
+    required this.onBack,
+    required this.profileCtrl,
+    required this.subCtrl,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(color: kPrimary),
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 16,
+        left: 16,
+        right: 16,
+        bottom: 16,
+      ),
+      child: collapsed
+          ? Column(
+              children: [
+                GestureDetector(
+                  onTap: onBack,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.arrow_back_rounded, size: 16, color: Colors.black87),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [_kBlue, _kBlueDark]),
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: const Icon(Icons.account_balance_rounded, color: Colors.white, size: 17),
+                ),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Back button
+                GestureDetector(
+                  onTap: onBack,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.arrow_back_rounded, size: 16, color: Colors.black87),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                // Company avatar + name
+                Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.account_balance_rounded, color: Colors.black87, size: 22),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Obx(
+                            () => Text(
+                              profileCtrl.organizationName.value.isEmpty
+                                  ? 'Company'
+                                  : profileCtrl.organizationName.value,
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.3,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(height: 1),
+                          Text(
+                            'Accounting Dashboard',
+                            style: TextStyle(
+                              color: Colors.black.withOpacity(0.55),
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                // Plan badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Iconify(Mdi.shield_account, size: 14, color: Colors.black54),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Current Plan',
+                        style: TextStyle(fontSize: 11, color: Colors.black54),
+                      ),
+                      const Spacer(),
+                      Obx(
+                        () => Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: subCtrl.hasActiveSubscription.value
+                                ? Colors.green.shade600
+                                : Colors.orange.shade600,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            subCtrl.hasActiveSubscription.value
+                                ? 'Premium'
+                                : subCtrl.isTrialActive.value
+                                    ? 'Trial'
+                                    : 'Free',
+                            style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Section Label
+// ══════════════════════════════════════════════════════════════════
+
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  const _SectionLabel(this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 16, 6),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: Colors.grey.shade400,
+          letterSpacing: 1.0,
+        ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Nav Section
+// ══════════════════════════════════════════════════════════════════
+
+class _NavSection extends StatefulWidget {
+  final String title;
+  final String icon;
+  final String currentRoute;
+  final bool collapsed;
+  final List<(String, String, String)> items;
+  final Function(String) onNavigate;
+
+  const _NavSection({
+    required this.title,
+    required this.icon,
+    required this.currentRoute,
+    required this.collapsed,
+    required this.items,
+    required this.onNavigate,
+  });
+
+  @override
+  State<_NavSection> createState() => _NavSectionState();
+}
+
+class _NavSectionState extends State<_NavSection> {
+  bool _expanded = false;
+
+  bool get _hasActiveChild => widget.items.any((i) => _isActive(i.$3));
+
+  bool _isActive(String routeKey) {
+    if (routeKey.startsWith('__')) return false;
+    return widget.currentRoute.toLowerCase().contains(routeKey.toLowerCase());
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded = _hasActiveChild;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.collapsed) {
+      return _buildCollapsed();
+    }
+    return Column(
+      children: [
+        InkWell(
+          onTap: () => setState(() => _expanded = !_expanded),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              children: [
+                Iconify(widget.icon, size: 18, color: _hasActiveChild ? kPrimary : Colors.grey.shade500),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    widget.title,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: _hasActiveChild ? FontWeight.w700 : FontWeight.w600,
+                      color: _hasActiveChild ? Colors.black : Colors.black87,
+                    ),
+                  ),
+                ),
+                Icon(
+                  _expanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                  size: 18,
+                  color: Colors.grey.shade400,
+                ),
+              ],
+            ),
+          ),
+        ),
+        AnimatedCrossFade(
+          duration: const Duration(milliseconds: 200),
+          crossFadeState: _expanded ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+          firstChild: Column(
+            children: widget.items.map((item) {
+              return _NavItem(
+                label: item.$1,
+                icon: item.$2,
+                isActive: _isActive(item.$3),
+                onTap: () => widget.onNavigate(item.$3),
+              );
+            }).toList(),
+          ),
+          secondChild: const SizedBox.shrink(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCollapsed() {
+    return Tooltip(
+      message: widget.title,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: GestureDetector(
+          onTap: () => setState(() => _expanded = !_expanded),
+          child: Center(
+            child: Iconify(widget.icon, size: 18, color: _hasActiveChild ? kPrimary : Colors.grey.shade500),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Nav Item
+// ══════════════════════════════════════════════════════════════════
+
+class _NavItem extends StatelessWidget {
+  final String label;
+  final String icon;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _NavItem({
+    required this.label,
+    required this.icon,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 1),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        decoration: BoxDecoration(
+          color: isActive ? kPrimary.withOpacity(0.10) : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 2,
+              height: 14,
+              margin: const EdgeInsets.only(right: 12),
+              decoration: BoxDecoration(
+                color: isActive ? kPrimary : Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Iconify(icon, size: 16, color: isActive ? kPrimary : Colors.grey.shade500),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                  color: isActive ? kPrimary : Colors.grey.shade700,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (isActive)
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: kPrimary,
+                  shape: BoxShape.circle,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Drawer Footer
+// ══════════════════════════════════════════════════════════════════
+
+class _DrawerFooter extends StatelessWidget {
+  final bool collapsed;
+  final ProfileController profileCtrl;
+  final SubscriptionController subCtrl;
+  final VoidCallback onLogout;
+
+  const _DrawerFooter({
+    required this.collapsed,
+    required this.profileCtrl,
+    required this.subCtrl,
+    required this.onLogout,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (collapsed) {
+      return Container(
+        padding: const EdgeInsets.all(8),
+        child: GestureDetector(
+          onTap: onLogout,
+          child: const Icon(Icons.logout_rounded, color: _kRed, size: 17),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey.shade100, width: 1)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // User card
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.grey.shade100),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [_kBlue, _kBlueDark]),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Center(
+                    child: Icon(Icons.person_rounded, color: Colors.white, size: 17),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Obx(
+                        () => Text(
+                          profileCtrl.organizationName.value.isEmpty
+                              ? 'Company'
+                              : profileCtrl.organizationName.value,
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Colors.black87),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Obx(
+                        () => Text(
+                          subCtrl.hasActiveSubscription.value
+                              ? 'Premium Account'
+                              : subCtrl.isTrialActive.value
+                                  ? 'Trial Account'
+                                  : 'Free Account',
+                          style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.10),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(width: 5, height: 5, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
+                      const SizedBox(width: 4),
+                      const Text('Active', style: TextStyle(fontSize: 9, color: Colors.green, fontWeight: FontWeight.w700)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Logout button
+          InkWell(
+            onTap: onLogout,
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.red.withOpacity(0.12)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Iconify(Mdi.logout, color: Colors.red.shade400, size: 16),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Sign Out',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.red.shade400),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

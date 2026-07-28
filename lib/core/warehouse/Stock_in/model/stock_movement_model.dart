@@ -86,7 +86,7 @@ class StockMovementModel {
       previousStock: (json['previousStock'] as num?)?.toInt() ?? 0,
       newStock: (json['newStock'] as num?)?.toInt() ?? 0,
       stockType: json['stockType']?.toString(),
-      stockDetails: json['stockDetails'] != null
+      stockDetails: json['stockDetails'] != null && json['stockDetails'] is Map
           ? StockDetails.fromJson(Map<String, dynamic>.from(json['stockDetails']))
           : null,
       reason: json['reason']?.toString() ?? '',
@@ -97,7 +97,9 @@ class StockMovementModel {
       notes: json['notes']?.toString(),
       status: json['status']?.toString() ?? 'Completed',
       createdBy: json['createdBy'] != null
-          ? UserInfo.fromJson(Map<String, dynamic>.from(json['createdBy']))
+          ? (json['createdBy'] is String
+              ? UserInfo(id: json['createdBy'], name: 'Unknown User')
+              : UserInfo.fromJson(Map<String, dynamic>.from(json['createdBy'])))
           : null,
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()

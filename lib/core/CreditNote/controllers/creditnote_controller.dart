@@ -1,3 +1,6 @@
+// core/CreditNote/controllers/creditnote_controller.dart
+// COMPLETE CONTROLLER WITH ALL DIALOGS
+
 import 'package:LedgerPro_app/Services/api_client.dart';
 import 'package:LedgerPro_app/Utils/currency_utils.dart';
 import 'dart:io';
@@ -6,15 +9,12 @@ import 'package:LedgerPro_app/Utils/toast_utils.dart';
 import 'package:LedgerPro_app/core/CreditNote/models/credit_note_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:universal_html/html.dart' as html;
 import 'package:intl/intl.dart';
-import 'package:sizer/sizer.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:open_file/open_file.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:excel/excel.dart' hide Border;
+import 'package:excel/excel.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_file/open_file.dart';
 
 class CreditNoteController extends GetxController {
   final ApiClient _apiClient = Get.find<ApiClient>();
@@ -22,7 +22,9 @@ class CreditNoteController extends GetxController {
   var creditNotes = <CreditNote>[].obs;
   var allCreditNotes = <CreditNote>[].obs;
   var customers = <Customer>[].obs;
+  
   var isLoading = true.obs;
+  var isLoadingMore = false.obs;
   var selectedFilter = 'All'.obs;
   var selectedDateRange = Rxn<DateTimeRange>();
   var searchQuery = ''.obs;
@@ -32,6 +34,16 @@ class CreditNoteController extends GetxController {
   var isCreatingCreditNote = false.obs;
   var isApplyingCreditNote = false.obs;
 
+  // Pagination variables
+  var currentPage = 1.obs;
+  var totalPages = 1.obs;
+  var totalItems = 0.obs;
+  var hasNextPage = false.obs;
+  var hasPrevPage = false.obs;
+  var itemsPerPage = 20.obs;
+  var serverSupportsPagination = false.obs;
+
+  // Summary totals
   var totalCount = 0.obs;
   var totalAmount = 0.0.obs;
   var appliedAmount = 0.0.obs;
@@ -40,13 +52,15 @@ class CreditNoteController extends GetxController {
   var thisMonthTotal = 0.0.obs;
   var thisWeekTotal = 0.0.obs;
 
-  TextEditingController searchController = TextEditingController();
+  // Search & Scroll Controllers
+  final TextEditingController searchController = TextEditingController();
+  final ScrollController scrollController = ScrollController();
 
   @override
   void onInit() {
     super.onInit();
     searchController.addListener(_onSearchChanged);
-    loadCreditNotesData();
+    loadCreditNotesData(resetPage: true);
     loadCustomers();
     loadSummary();
   }
@@ -55,69 +69,45 @@ class CreditNoteController extends GetxController {
   void onClose() {
     searchController.removeListener(_onSearchChanged);
     searchController.dispose();
+    scrollController.dispose();
     super.onClose();
   }
 
   void _onSearchChanged() {
     searchQuery.value = searchController.text;
-    if (searchQuery.value.isEmpty) {
-      creditNotes.value = allCreditNotes.value;
-      _updateSummaryForFiltered(allCreditNotes.value);
-    } else {
-      final q = searchQuery.value.toLowerCase();
-      final results = allCreditNotes.where((n) {
-        return n.creditNoteNumber.toLowerCase().contains(q) ||
-            n.customerName.toLowerCase().contains(q) ||
-            n.reason.toLowerCase().contains(q) ||
-            n.reasonType.toLowerCase().contains(q) ||
-            n.originalInvoiceNumber.toLowerCase().contains(q);
-      }).toList();
-      creditNotes.value = results;
-      _updateSummaryForFiltered(results);
-    }
-  }
-
-  void _updateSummaryForFiltered(List<CreditNote> notes) {
-    totalCount.value = notes.length;
-    totalAmount.value = notes.fold(0.0, (s, n) => s + n.amount);
-    appliedAmount.value = notes.fold(0.0, (s, n) => s + n.appliedAmount);
-    remainingAmount.value = notes.fold(0.0, (s, n) => s + n.remainingAmount);
-    expiredAmount.value = notes
-        .where((n) =>
-            n.expiryDate != null && n.expiryDate!.isBefore(DateTime.now()))
-        .fold(0.0, (s, n) => s + n.remainingAmount);
-
-    final now = DateTime.now();
-    final monthStart = DateTime(now.year, now.month, 1);
-    final weekStart = now.subtract(Duration(days: now.weekday - 1));
-
-    thisMonthTotal.value = notes
-        .where((n) => n.date.isAfter(monthStart.subtract(const Duration(days: 1))))
-        .fold(0.0, (s, n) => s + n.amount);
-    thisWeekTotal.value = notes
-        .where((n) => n.date.isAfter(weekStart.subtract(const Duration(days: 1))))
-        .fold(0.0, (s, n) => s + n.amount);
+    loadCreditNotesData(resetPage: true);
   }
 
   String formatAmount(double amount) => CurrencyUtils.format(amount);
 
-  // ============================================================
-  // API CALLS
-  // ============================================================
-
-  Future<void> loadCreditNotesData() async {
+  // ─── LOAD CREDIT NOTES WITH PAGINATION ──────────────────────────
+  Future<void> loadCreditNotesData({bool resetPage = true}) async {
     try {
-      isLoading.value = true;
-      final Map<String, dynamic> params = {};
-      if (selectedFilter.value != 'All' &&
-          selectedFilter.value != 'Custom Range') {
+      if (resetPage) {
+        currentPage.value = 1;
+        isLoading.value = true;
+      } else {
+        isLoadingMore.value = true;
+      }
+
+      Map<String, dynamic> params = {};
+
+      if (serverSupportsPagination.value) {
+        params['page'] = currentPage.value;
+        params['limit'] = itemsPerPage.value;
+      }
+
+      if (selectedFilter.value != 'All' && selectedFilter.value != 'Custom Range') {
         params['status'] = selectedFilter.value;
       }
+
       if (selectedDateRange.value != null) {
-        params['startDate'] =
-            DateFormat('yyyy-MM-dd').format(selectedDateRange.value!.start);
-        params['endDate'] =
-            DateFormat('yyyy-MM-dd').format(selectedDateRange.value!.end);
+        params['startDate'] = DateFormat('yyyy-MM-dd').format(selectedDateRange.value!.start);
+        params['endDate'] = DateFormat('yyyy-MM-dd').format(selectedDateRange.value!.end);
+      }
+
+      if (searchQuery.value.isNotEmpty) {
+        params['search'] = searchQuery.value;
       }
 
       final response = await _apiClient.get(
@@ -128,28 +118,70 @@ class CreditNoteController extends GetxController {
       if (response.success && response.statusCode == 200) {
         final data = response.data;
         if (data['success'] == true) {
-          final notes = (data['data'] as List)
+          final newNotes = (data['data'] as List)
               .map((j) => CreditNote.fromJson(j))
               .toList();
-          allCreditNotes.value = notes;
-          if (searchQuery.value.isNotEmpty) {
-            _onSearchChanged();
+
+          if (resetPage) {
+            allCreditNotes.value = newNotes;
+            creditNotes.value = newNotes;
           } else {
-            creditNotes.value = notes;
+            allCreditNotes.addAll(newNotes);
+            creditNotes.addAll(newNotes);
           }
+
+          // Parse pagination info
+          if (data['pagination'] != null) {
+            final pagination = data['pagination'];
+            totalPages.value = pagination['pages'] ?? pagination['totalPages'] ?? 1;
+            totalItems.value = pagination['total'] ?? pagination['totalItems'] ?? newNotes.length;
+            hasNextPage.value = pagination['hasNext'] ?? pagination['nextPage'] != null ?? false;
+            hasPrevPage.value = pagination['hasPrev'] ?? pagination['prevPage'] != null ?? false;
+            serverSupportsPagination.value = true;
+          } else if (data['total'] != null) {
+            totalPages.value = data['pages'] ?? 1;
+            totalItems.value = data['total'];
+            hasNextPage.value = data['hasNext'] ?? false;
+            hasPrevPage.value = data['hasPrev'] ?? false;
+            serverSupportsPagination.value = true;
+          } else if (data['totalCount'] != null) {
+            totalItems.value = data['totalCount'];
+            totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
+            hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+            hasPrevPage.value = currentPage.value > 1;
+            serverSupportsPagination.value = false;
+          } else {
+            totalItems.value = creditNotes.length;
+            totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
+            hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+            hasPrevPage.value = currentPage.value > 1;
+            serverSupportsPagination.value = false;
+          }
+
+          _updateSummaryForFiltered(creditNotes.value);
+          creditNotes.refresh();
         }
       }
     } catch (e) {
       _showError('Error loading credit notes');
     } finally {
       isLoading.value = false;
+      isLoadingMore.value = false;
     }
   }
 
+  // ─── LOAD MORE DATA (LAZY LOADING) ──────────────────────────────
+  Future<void> loadMoreData() async {
+    if (hasNextPage.value && !isLoadingMore.value && !isLoading.value) {
+      currentPage.value++;
+      await loadCreditNotesData(resetPage: false);
+    }
+  }
+
+  // ─── LOAD CUSTOMERS ──────────────────────────────────────────────
   Future<void> loadCustomers() async {
     try {
-      final response =
-          await _apiClient.get('/api/accounts-receivable/customers');
+      final response = await _apiClient.get('/api/accounts-receivable/customers');
       if (response.success && response.data['success'] == true) {
         customers.value = (response.data['data'] as List)
             .map((j) => Customer.fromJson(j))
@@ -160,14 +192,13 @@ class CreditNoteController extends GetxController {
     }
   }
 
+  // ─── LOAD SUMMARY ──────────────────────────────────────────────────
   Future<void> loadSummary() async {
     try {
-      final Map<String, dynamic> params = {};
+      Map<String, dynamic> params = {};
       if (selectedDateRange.value != null) {
-        params['startDate'] =
-            DateFormat('yyyy-MM-dd').format(selectedDateRange.value!.start);
-        params['endDate'] =
-            DateFormat('yyyy-MM-dd').format(selectedDateRange.value!.end);
+        params['startDate'] = DateFormat('yyyy-MM-dd').format(selectedDateRange.value!.start);
+        params['endDate'] = DateFormat('yyyy-MM-dd').format(selectedDateRange.value!.end);
       }
 
       final response = await _apiClient.get(
@@ -190,8 +221,29 @@ class CreditNoteController extends GetxController {
     }
   }
 
-  Future<List<InvoiceForCreditNote>> getUnpaidInvoices(
-      String customerId) async {
+  void _updateSummaryForFiltered(List<CreditNote> notes) {
+    totalCount.value = notes.length;
+    totalAmount.value = notes.fold(0.0, (s, n) => s + n.amount);
+    appliedAmount.value = notes.fold(0.0, (s, n) => s + n.appliedAmount);
+    remainingAmount.value = notes.fold(0.0, (s, n) => s + n.remainingAmount);
+    expiredAmount.value = notes
+        .where((n) => n.expiryDate != null && n.expiryDate!.isBefore(DateTime.now()))
+        .fold(0.0, (s, n) => s + n.remainingAmount);
+
+    final now = DateTime.now();
+    final monthStart = DateTime(now.year, now.month, 1);
+    final weekStart = now.subtract(Duration(days: now.weekday - 1));
+
+    thisMonthTotal.value = notes
+        .where((n) => n.date.isAfter(monthStart.subtract(const Duration(days: 1))))
+        .fold(0.0, (s, n) => s + n.amount);
+    thisWeekTotal.value = notes
+        .where((n) => n.date.isAfter(weekStart.subtract(const Duration(days: 1))))
+        .fold(0.0, (s, n) => s + n.amount);
+  }
+
+  // ─── GET UNPAID INVOICES ──────────────────────────────────────────
+  Future<List<InvoiceForCreditNote>> getUnpaidInvoices(String customerId) async {
     try {
       isLoadingBills.value = true;
       currentCustomerId.value = customerId;
@@ -215,6 +267,7 @@ class CreditNoteController extends GetxController {
     }
   }
 
+  // ─── CREATE CREDIT NOTE ──────────────────────────────────────────
   Future<void> createCreditNote({
     required String customerId,
     required String originalInvoiceId,
@@ -225,6 +278,49 @@ class CreditNoteController extends GetxController {
     String? notes,
     int? expiryDays,
   }) async {
+    // Show loading dialog
+    Get.dialog(
+      Center(
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: kWarning,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Creating credit note...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kText,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Please wait',
+                  style: TextStyle(fontSize: 12, color: kSubText),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+
     try {
       isCreatingCreditNote.value = true;
 
@@ -241,37 +337,81 @@ class CreditNoteController extends GetxController {
 
       final response = await _apiClient.post('/api/credit-notes', body: body);
 
-      if (response.success &&
-          (response.statusCode == 201 || response.statusCode == 200)) {
+      // Close loading dialog
+      Get.back();
+
+      if (response.success && (response.statusCode == 201 || response.statusCode == 200)) {
         if (response.data['success'] == true) {
-          Get.back();
           AppSnackbar.success(
             kSuccess,
-            'Success',
+            'Success ✅',
             'Credit note created successfully',
           );
-          await loadCreditNotesData();
+          await loadCreditNotesData(resetPage: true);
           await loadSummary();
         } else {
-          _showError(
-              response.data['message'] ?? 'Failed to create credit note');
+          _showError(response.data['message'] ?? 'Failed to create credit note');
         }
       } else {
-        _showError(
-            response.data['message'] ?? 'Failed to create credit note');
+        _showError(response.data['message'] ?? 'Failed to create credit note');
       }
     } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
       _showError('Error creating credit note');
     } finally {
       isCreatingCreditNote.value = false;
     }
   }
 
+  // ─── APPLY CREDIT NOTE ──────────────────────────────────────────
   Future<void> applyCreditNote({
     required String creditNoteId,
     required String invoiceId,
     required double amount,
   }) async {
+    // Show loading dialog
+    Get.dialog(
+      Center(
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: kSuccess,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Applying credit note...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kText,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Please wait',
+                  style: TextStyle(fontSize: 12, color: kSubText),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+
     try {
       isApplyingCreditNote.value = true;
 
@@ -284,33 +424,36 @@ class CreditNoteController extends GetxController {
         },
       );
 
+      // Close loading dialog
+      Get.back();
+
       if (response.success && response.data['success'] == true) {
-        Get.back();
-        AppSnackbar.success(kSuccess, 'Success', 'Credit note applied');
-        await loadCreditNotesData();
+        AppSnackbar.success(
+          kSuccess,
+          'Success ✅',
+          'Credit note applied successfully',
+        );
+        await loadCreditNotesData(resetPage: true);
         await loadSummary();
       } else {
-        _showError(
-            response.data['message'] ?? 'Failed to apply credit note');
+        _showError(response.data['message'] ?? 'Failed to apply credit note');
       }
     } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
       _showError('Error applying credit note');
     } finally {
       isApplyingCreditNote.value = false;
     }
   }
 
-  // ============================================================
-  // FILTER
-  // ============================================================
-
-  void applyDateFilter(String filter) {
+  // ─── FILTERS ──────────────────────────────────────────────────────
+  void applyFilter(String filter) {
     selectedFilter.value = filter;
     if (filter == 'Custom Range') {
       selectDateRange();
     } else {
       selectedDateRange.value = null;
-      loadCreditNotesData();
+      loadCreditNotesData(resetPage: true);
       loadSummary();
     }
   }
@@ -326,7 +469,7 @@ class CreditNoteController extends GetxController {
     if (picked != null) {
       selectedDateRange.value = picked;
       selectedFilter.value = 'Custom Range';
-      loadCreditNotesData();
+      loadCreditNotesData(resetPage: true);
       loadSummary();
     }
   }
@@ -334,24 +477,26 @@ class CreditNoteController extends GetxController {
   void clearDateRange() {
     selectedDateRange.value = null;
     selectedFilter.value = 'All';
-    loadCreditNotesData();
+    loadCreditNotesData(resetPage: true);
     loadSummary();
   }
 
-  // ============================================================
-  // UI ACTIONS
-  // ============================================================
+  // ─── SEARCH ──────────────────────────────────────────────────────
+  void searchNotes(String query) {
+    searchQuery.value = query;
+    loadCreditNotesData(resetPage: true);
+  }
 
-  void viewCreditNoteDetails(CreditNote cn) =>
-      _showCreditNoteDetailsDialog(cn);
+  // ─── UI ACTIONS ──────────────────────────────────────────────────
+  void viewCreditNoteDetails(CreditNote cn) => _showCreditNoteDetailsDialog(cn);
 
   void printCreditNote(CreditNote cn) {
     AppSnackbar.info('Print', 'Printing ${cn.creditNoteNumber}');
   }
 
-  // ============================================================
+  // ═══════════════════════════════════════════════════════════════
   // CREATE CREDIT NOTE DIALOG
-  // ============================================================
+  // ═══════════════════════════════════════════════════════════════
 
   void showCreateCreditNoteDialog() {
     final formKey = GlobalKey<FormState>();
@@ -362,179 +507,303 @@ class CreditNoteController extends GetxController {
     final selectedInvoice = Rxn<InvoiceForCreditNote>();
     final selectedReasonType = 'Return'.obs;
 
-    // Controllers — needed so amount field updates when invoice changes
+    // Controllers
     final reasonController = TextEditingController();
     final amountController = TextEditingController();
     final notesController = TextEditingController();
 
     Get.dialog(
       Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        insetPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.transparent,
         child: Container(
           width: double.infinity,
-          constraints: BoxConstraints(maxHeight: 90.h),
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // ── Header ────────────────────────────────────────
-              Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: kWarning.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.note_add_outlined,
-                      size: 18,
-                      color: kWarning,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'New Credit Note',
-                    style: TextStyle(
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w800,
-                      color: kText,
-                    ),
-                  ),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: () => Get.back(),
-                    child: Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(Icons.close, size: 16, color: kSubText),
-                    ),
-                  ),
-                ],
+          constraints: BoxConstraints(
+            maxHeight: Get.height * 0.92,
+            maxWidth: 500,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
-              const SizedBox(height: 16),
-              Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
-              const SizedBox(height: 16),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                decoration: BoxDecoration(
+                  color: kWarning.withOpacity(0.05),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: kWarning,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.note_add_outlined,
+                        color: Colors.black,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'New Credit Note',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: kText,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Create a credit note for customer',
+                            style: TextStyle(fontSize: 12, color: kSubText),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 20),
+                      onPressed: isCreatingCreditNote.value
+                          ? null
+                          : () {
+                              reasonController.dispose();
+                              amountController.dispose();
+                              notesController.dispose();
+                              Get.back();
+                            },
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+              ),
 
+              // Body
               Expanded(
                 child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
                   child: Form(
                     key: formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // ── Step 1: Customer ────────────────────
-                        _stepLabel('1', 'Select Customer'),
-                        const SizedBox(height: 8),
-                        Obx(() => DropdownButtonFormField<String>(
-                              decoration:
-                                  _inputDeco('Select customer'),
-                              style: TextStyle(
-                                  fontSize: 13.sp, color: kText),
-                              dropdownColor: kCardBg,
-                              value: selectedCustomerId.value.isEmpty
-                                  ? null
-                                  : selectedCustomerId.value,
-                              items: customers.map((c) {
-                                return DropdownMenuItem(
-                                  value: c.id,
-                                  child: Text(c.name,
-                                      overflow: TextOverflow.ellipsis),
-                                );
-                              }).toList(),
-                              onChanged: (val) async {
-                                selectedCustomerId.value = val!;
-                                selectedInvoiceId.value = '';
-                                selectedInvoice.value = null;
-                                amountController.clear();
-                                await getUnpaidInvoices(val);
-                              },
-                              validator: (v) =>
-                                  v == null ? 'Customer required' : null,
-                            )),
+                        // Customer
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Obx(() => DropdownButtonFormField<String>(
+                                    decoration: _inputDecoration('Select Customer *'),
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.black,
+                                    ),
+                                    dropdownColor: kCardBg,
+                                    value: selectedCustomerId.value.isEmpty
+                                        ? null
+                                        : selectedCustomerId.value,
+                                    items: customers.map((c) {
+                                      return DropdownMenuItem(
+                                        value: c.id,
+                                        child: Text(c.name,
+                                            overflow: TextOverflow.ellipsis),
+                                      );
+                                    }).toList(),
+                                    onChanged: (val) async {
+                                      selectedCustomerId.value = val!;
+                                      selectedInvoiceId.value = '';
+                                      selectedInvoice.value = null;
+                                      amountController.clear();
+                                      await getUnpaidInvoices(val);
+                                    },
+                                    validator: (v) =>
+                                        v == null ? 'Customer required' : null,
+                                  )),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              onPressed: () => Get.toNamed('/sales/warehouse-customers'),
+                              icon: Icon(Icons.add, size: 20, color: kPrimary),
+                              style: IconButton.styleFrom(
+                                backgroundColor: kPrimary.withOpacity(0.1),
+                                padding: const EdgeInsets.all(8),
+                                minimumSize: const Size(36, 36),
+                              ),
+                            ),
+                          ],
+                        ),
                         const SizedBox(height: 16),
 
-                        // ── Step 2: Invoice ─────────────────────
+                        // Invoice Selection
                         Obx(() {
                           if (selectedCustomerId.value.isEmpty) {
                             return const SizedBox.shrink();
                           }
+                          if (isLoadingBills.value) {
+                            return _invoiceLoadingState();
+                          }
+                          if (unpaidInvoices.isEmpty) {
+                            return _noInvoicesState();
+                          }
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _stepLabel('2', 'Select Invoice'),
+                              Text(
+                                'Select Invoice *',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: kText,
+                                ),
+                              ),
                               const SizedBox(height: 8),
-                              Obx(() {
-                                if (isLoadingBills.value) {
-                                  return _invoiceLoadingState();
-                                }
-                                if (unpaidInvoices.isEmpty) {
-                                  return _noInvoicesState();
-                                }
-                                return _buildInvoiceList(
-                                  invoices: unpaidInvoices,
-                                  selectedId: selectedInvoiceId,
-                                  onSelect: (inv) {
-                                    selectedInvoiceId.value = inv.id;
-                                    selectedInvoice.value = inv;
-                                    // Pre-fill amount with full outstanding
-                                    amountController.text =
-                                        inv.outstanding.toStringAsFixed(2);
-                                  },
+                              ...unpaidInvoices.map((inv) {
+                                final isSelected = inv.id == selectedInvoiceId.value;
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 6),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? kPrimary.withOpacity(0.05)
+                                        : kBgLight,
+                                    borderRadius: BorderRadius.circular(8),
+                                 
+                                  ),
+                                  child: ListTile(
+                                    dense: true,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 4,
+                                    ),
+                                    leading: Container(
+                                      width: 20,
+                                      height: 20,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                       
+                                        color: isSelected
+                                            ? kPrimary
+                                            : Colors.transparent,
+                                      ),
+                                      child: isSelected
+                                          ? const Icon(Icons.check,
+                                              size: 12, color: Colors.white)
+                                          : null,
+                                    ),
+                                    title: Text(
+                                      inv.invoiceNumber,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: isSelected ? kPrimary : kText,
+                                      ),
+                                    ),
+                                    subtitle: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          DateFormat('dd MMM yyyy').format(inv.date),
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: kSubText,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Outstanding: ${formatAmount(inv.outstanding)}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            color: kWarning,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    trailing: Text(
+                                      formatAmount(inv.amount),
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        color: kText,
+                                      ),
+                                    ),
+                                    onTap: () {
+                                      selectedInvoiceId.value = inv.id;
+                                      selectedInvoice.value = inv;
+                                      amountController.text =
+                                          inv.outstanding.toStringAsFixed(2);
+                                    },
+                                  ),
                                 );
-                              }),
-                              const SizedBox(height: 16),
+                              }).toList(),
                             ],
                           );
                         }),
+                        const SizedBox(height: 16),
 
-                        // ── Step 3: Reason type ─────────────────
-                        _stepLabel('3', 'Reason Type'),
-                        const SizedBox(height: 8),
+                        // Reason Type
                         Obx(() => DropdownButtonFormField<String>(
                               value: selectedReasonType.value,
-                              decoration: _inputDeco(''),
-                              style: TextStyle(
-                                  fontSize: 13.sp, color: kText),
+                              decoration: _inputDecoration('Reason Type *'),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Colors.black,
+                              ),
                               dropdownColor: kCardBg,
                               items: const [
                                 DropdownMenuItem(
-                                    value: 'Return',
-                                    child: Text('Returned Goods')),
+                                  value: 'Return',
+                                  child: Text('Returned Goods'),
+                                ),
                                 DropdownMenuItem(
-                                    value: 'Refund',
-                                    child: Text('Service Refund')),
+                                  value: 'Refund',
+                                  child: Text('Service Refund'),
+                                ),
                                 DropdownMenuItem(
-                                    value: 'Discount',
-                                    child: Text('Discount Allowed')),
+                                  value: 'Discount',
+                                  child: Text('Discount Allowed'),
+                                ),
                                 DropdownMenuItem(
-                                    value: 'Price Adjustment',
-                                    child: Text('Price Adjustment')),
+                                  value: 'Price Adjustment',
+                                  child: Text('Price Adjustment'),
+                                ),
                                 DropdownMenuItem(
-                                    value: 'Damaged Goods',
-                                    child: Text('Damaged Items')),
+                                  value: 'Damaged Goods',
+                                  child: Text('Damaged Items'),
+                                ),
                               ],
-                              onChanged: (v) =>
-                                  selectedReasonType.value = v!,
+                              onChanged: (v) => selectedReasonType.value = v!,
+                              validator: (v) => v == null ? 'Required' : null,
                             )),
                         const SizedBox(height: 16),
 
-                        // ── Step 4: Reason description ──────────
-                        _stepLabel('4', 'Reason Description'),
-                        const SizedBox(height: 8),
+                        // Reason Description
                         TextFormField(
                           controller: reasonController,
-                          decoration: _inputDeco(
-                              'e.g. Customer returned 5 units, item damaged'),
-                          style:
-                              TextStyle(fontSize: 13.sp, color: kText),
+                          decoration: _inputDecoration(
+                            'Reason Description *',
+                            hint: 'e.g. Customer returned 5 units, item damaged',
+                          ),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.black,
+                          ),
                           maxLines: 2,
                           validator: (v) => v == null || v.trim().isEmpty
                               ? 'Reason required'
@@ -542,45 +811,53 @@ class CreditNoteController extends GetxController {
                         ),
                         const SizedBox(height: 16),
 
-                        // ── Step 5: Credit amount ───────────────
+                        // Amount
                         Obx(() {
                           final inv = selectedInvoice.value;
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _stepLabel('5', 'Credit Amount'),
+                              Text(
+                                'Credit Amount *',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: kText,
+                                ),
+                              ),
                               if (inv != null) ...[
                                 const SizedBox(height: 4),
                                 Text(
                                   'Invoice: ${formatAmount(inv.amount)}  •  Outstanding: ${formatAmount(inv.outstanding)}',
                                   style: TextStyle(
-                                      fontSize: 11.sp,
-                                      color: kPrimary,
-                                      fontWeight: FontWeight.w600),
+                                    fontSize: 12,
+                                    color: kPrimary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ],
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: amountController,
-                                decoration: _inputDeco('0.00')
-                                    .copyWith(prefixText: 'Rs. '),
-                                style: TextStyle(
-                                    fontSize: 13.sp, color: kText),
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                        decimal: true),
+                                decoration: _inputDecoration('Amount')
+                                    .copyWith(prefixText: '${CurrencyUtils.prefix} '),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.black,
+                                ),
+                                keyboardType: const TextInputType.numberWithOptions(
+                                  decimal: true,
+                                ),
                                 validator: (v) {
                                   if (v == null || v.trim().isEmpty) {
                                     return 'Amount required';
                                   }
-                                  final amt =
-                                      double.tryParse(v.trim()) ?? 0;
+                                  final amt = double.tryParse(v.trim()) ?? 0;
                                   if (amt <= 0) {
                                     return 'Amount must be greater than 0';
                                   }
                                   final inv = selectedInvoice.value;
-                                  if (inv != null &&
-                                      amt > inv.outstanding) {
+                                  if (inv != null && amt > inv.outstanding) {
                                     return 'Cannot exceed outstanding: ${formatAmount(inv.outstanding)}';
                                   }
                                   return null;
@@ -591,15 +868,17 @@ class CreditNoteController extends GetxController {
                         }),
                         const SizedBox(height: 16),
 
-                        // ── Notes (optional) ────────────────────
-                        _stepLabel('6', 'Notes (optional)'),
-                        const SizedBox(height: 8),
+                        // Notes
                         TextFormField(
                           controller: notesController,
-                          decoration:
-                              _inputDeco('Any additional notes...'),
-                          style:
-                              TextStyle(fontSize: 13.sp, color: kText),
+                          decoration: _inputDecoration(
+                            'Notes',
+                            hint: 'Any additional notes...',
+                          ),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.black,
+                          ),
                           maxLines: 2,
                         ),
                       ],
@@ -608,60 +887,72 @@ class CreditNoteController extends GetxController {
                 ),
               ),
 
-              const SizedBox(height: 16),
-
-              // ── Footer buttons ────────────────────────────────
-              Obx(() => Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: isCreatingCreditNote.value
-                              ? null
-                              : () => Get.back(),
-                          style: OutlinedButton.styleFrom(
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 14),
-                            side: BorderSide(
-                                color: Colors.grey.withOpacity(0.4)),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
+              // Footer Buttons
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: isCreatingCreditNote.value
+                            ? null
+                            : () {
+                                reasonController.dispose();
+                                amountController.dispose();
+                                notesController.dispose();
+                                Get.back();
+                              },
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: kPrimary,
+                          side: const BorderSide(color: kPrimary),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Text('Cancel',
-                              style: TextStyle(
-                                  fontSize: 13.sp, color: kSubText)),
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black,
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Obx(
+                        () => ElevatedButton(
                           onPressed: isCreatingCreditNote.value
                               ? null
                               : () {
-                                  // Validate invoice selected
                                   if (selectedInvoiceId.value.isEmpty) {
-                                    _showError(
-                                        'Please select an invoice');
+                                    _showError('Please select an invoice');
                                     return;
                                   }
                                   if (formKey.currentState!.validate()) {
                                     final amt = double.tryParse(
-                                            amountController.text
-                                                .trim()) ??
-                                        0;
+                                        amountController.text.trim()) ?? 0;
                                     createCreditNote(
-                                      customerId:
-                                          selectedCustomerId.value,
-                                      originalInvoiceId:
-                                          selectedInvoiceId.value,
+                                      customerId: selectedCustomerId.value,
+                                      originalInvoiceId: selectedInvoiceId.value,
                                       amount: amt,
                                       reason: reasonController.text.trim(),
-                                      reasonType:
-                                          selectedReasonType.value,
+                                      reasonType: selectedReasonType.value,
                                       items: [
                                         {
-                                          'description':
-                                              reasonController.text
-                                                  .trim(),
+                                          'description': reasonController.text.trim(),
                                           'quantity': 1,
                                           'unitPrice': amt,
                                           'amount': amt,
@@ -674,28 +965,35 @@ class CreditNoteController extends GetxController {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: kWarning,
                             elevation: 0,
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 14),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                           child: isCreatingCreditNote.value
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
+                              ? SizedBox(
+                                  width: 20,
+                                  height: 20,
                                   child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white),
+                                    strokeWidth: 2,
+                                    valueColor: const AlwaysStoppedAnimation<Color>(
+                                        Colors.black),
+                                  ),
                                 )
-                              : Text('Create Credit Note',
+                              : const Text(
+                                  'Create Credit Note',
                                   style: TextStyle(
-                                      fontSize: 13.sp,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w700)),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.black,
+                                  ),
+                                ),
                         ),
                       ),
-                    ],
-                  )),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -704,94 +1002,116 @@ class CreditNoteController extends GetxController {
     );
   }
 
-  // ============================================================
+  // ═══════════════════════════════════════════════════════════════
   // APPLY CREDIT NOTE DIALOG
-  // ============================================================
+  // ═══════════════════════════════════════════════════════════════
 
   void showApplyCreditNoteDialog(CreditNote cn) {
     final formKey = GlobalKey<FormState>();
     final selectedInvoiceId = ''.obs;
     final selectedInvoice = Rxn<InvoiceForCreditNote>();
-    final amountController =
-        TextEditingController(text: cn.remainingAmount.toStringAsFixed(2));
+    final amountController = TextEditingController(
+      text: cn.remainingAmount.toStringAsFixed(2),
+    );
 
     // Load invoices for this customer if not already loaded
-    if (currentCustomerId.value != cn.customerId ||
-        unpaidInvoices.isEmpty) {
+    if (currentCustomerId.value != cn.customerId || unpaidInvoices.isEmpty) {
       getUnpaidInvoices(cn.customerId);
     }
 
     Get.dialog(
       Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        insetPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.transparent,
         child: Container(
           width: double.infinity,
-          constraints: BoxConstraints(maxHeight: 80.h),
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // ── Header ────────────────────────────────────────
-              Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: kSuccess.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(Icons.check_circle_outline,
-                        size: 18, color: kSuccess),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Apply Credit Note',
-                          style: TextStyle(
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w800,
-                              color: kText),
-                        ),
-                        Text(
-                          '${cn.creditNoteNumber}  •  ${formatAmount(cn.remainingAmount)} available',
-                          style:
-                              TextStyle(fontSize: 10.sp, color: kSubText),
-                        ),
-                      ],
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => Get.back(),
-                    child: Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                          color: Colors.grey.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8)),
-                      child: Icon(Icons.close, size: 16, color: kSubText),
-                    ),
-                  ),
-                ],
+          constraints: BoxConstraints(
+            maxHeight: Get.height * 0.85,
+            maxWidth: 500,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
-              const SizedBox(height: 16),
-              Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
-              const SizedBox(height: 16),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                decoration: BoxDecoration(
+                  color: kSuccess.withOpacity(0.05),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: kSuccess,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.check_circle_outline,
+                        color: Colors.black,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Apply Credit Note',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: kText,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${cn.creditNoteNumber}  •  ${formatAmount(cn.remainingAmount)} available',
+                            style: TextStyle(fontSize: 12, color: kSubText),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 20),
+                      onPressed: isApplyingCreditNote.value
+                          ? null
+                          : () {
+                              amountController.dispose();
+                              Get.back();
+                            },
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+              ),
 
-              Flexible(
+              // Body
+              Expanded(
                 child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
                   child: Form(
                     key: formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _stepLabel('1', 'Select Invoice to Apply Against'),
-                        const SizedBox(height: 8),
+                        // Invoice Selection
                         Obx(() {
                           if (isLoadingBills.value) {
                             return _invoiceLoadingState();
@@ -799,62 +1119,151 @@ class CreditNoteController extends GetxController {
                           if (unpaidInvoices.isEmpty) {
                             return _noInvoicesState();
                           }
-                          return _buildInvoiceList(
-                            invoices: unpaidInvoices,
-                            selectedId: selectedInvoiceId,
-                            onSelect: (inv) {
-                              selectedInvoiceId.value = inv.id;
-                              selectedInvoice.value = inv;
-                              // Cap amount at min(remaining, outstanding)
-                              final maxAmt = inv.outstanding < cn.remainingAmount
-                                  ? inv.outstanding
-                                  : cn.remainingAmount;
-                              amountController.text =
-                                  maxAmt.toStringAsFixed(2);
-                            },
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Select Invoice *',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: kText,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              ...unpaidInvoices.map((inv) {
+                                final isSelected = inv.id == selectedInvoiceId.value;
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 6),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? kPrimary.withOpacity(0.05)
+                                        : kBgLight,
+                                    borderRadius: BorderRadius.circular(8),
+                                  
+                                  ),
+                                  child: ListTile(
+                                    dense: true,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 4,
+                                    ),
+                                    leading: Container(
+                                      width: 20,
+                                      height: 20,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                     
+                                        color: isSelected
+                                            ? kPrimary
+                                            : Colors.transparent,
+                                      ),
+                                      child: isSelected
+                                          ? const Icon(Icons.check,
+                                              size: 12, color: Colors.white)
+                                          : null,
+                                    ),
+                                    title: Text(
+                                      inv.invoiceNumber,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: isSelected ? kPrimary : kText,
+                                      ),
+                                    ),
+                                    subtitle: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          DateFormat('dd MMM yyyy').format(inv.date),
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: kSubText,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Outstanding: ${formatAmount(inv.outstanding)}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            color: kWarning,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    trailing: Text(
+                                      formatAmount(inv.amount),
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        color: kText,
+                                      ),
+                                    ),
+                                    onTap: () {
+                                      selectedInvoiceId.value = inv.id;
+                                      selectedInvoice.value = inv;
+                                      final maxAmt = inv.outstanding < cn.remainingAmount
+                                          ? inv.outstanding
+                                          : cn.remainingAmount;
+                                      amountController.text =
+                                          maxAmt.toStringAsFixed(2);
+                                    },
+                                  ),
+                                );
+                              }).toList(),
+                            ],
                           );
                         }),
                         const SizedBox(height: 16),
-                        _stepLabel('2', 'Amount to Apply'),
-                        const SizedBox(height: 8),
+
+                        // Amount
                         Obx(() {
                           final inv = selectedInvoice.value;
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              if (inv != null)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 6),
-                                  child: Text(
-                                    'Invoice outstanding: ${formatAmount(inv.outstanding)}  •  CN remaining: ${formatAmount(cn.remainingAmount)}',
-                                    style: TextStyle(
-                                        fontSize: 11.sp,
-                                        color: kPrimary,
-                                        fontWeight: FontWeight.w600),
+                              Text(
+                                'Amount to Apply *',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: kText,
+                                ),
+                              ),
+                              if (inv != null) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Invoice outstanding: ${formatAmount(inv.outstanding)}  •  CN remaining: ${formatAmount(cn.remainingAmount)}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: kPrimary,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
+                              ],
+                              const SizedBox(height: 8),
                               TextFormField(
                                 controller: amountController,
-                                decoration: _inputDeco('0.00')
-                                    .copyWith(prefixText: 'Rs. '),
-                                style: TextStyle(
-                                    fontSize: 13.sp, color: kText),
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                        decimal: true),
+                                decoration: _inputDecoration('Amount')
+                                    .copyWith(prefixText: '${CurrencyUtils.prefix} '),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.black,
+                                ),
+                                keyboardType: const TextInputType.numberWithOptions(
+                                  decimal: true,
+                                ),
                                 validator: (v) {
                                   if (v == null || v.trim().isEmpty) {
                                     return 'Amount required';
                                   }
-                                  final amt =
-                                      double.tryParse(v.trim()) ?? 0;
+                                  final amt = double.tryParse(v.trim()) ?? 0;
                                   if (amt <= 0) return 'Must be > 0';
                                   if (amt > cn.remainingAmount) {
                                     return 'Cannot exceed CN remaining: ${formatAmount(cn.remainingAmount)}';
                                   }
                                   final inv = selectedInvoice.value;
-                                  if (inv != null &&
-                                      amt > inv.outstanding) {
+                                  if (inv != null && amt > inv.outstanding) {
                                     return 'Cannot exceed invoice outstanding: ${formatAmount(inv.outstanding)}';
                                   }
                                   return null;
@@ -869,43 +1278,61 @@ class CreditNoteController extends GetxController {
                 ),
               ),
 
-              const SizedBox(height: 16),
-              Obx(() => Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: isApplyingCreditNote.value
-                              ? null
-                              : () => Get.back(),
-                          style: OutlinedButton.styleFrom(
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 14),
-                            side: BorderSide(
-                                color: Colors.grey.withOpacity(0.4)),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
+              // Footer Buttons
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: isApplyingCreditNote.value
+                            ? null
+                            : () {
+                                amountController.dispose();
+                                Get.back();
+                              },
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: kPrimary,
+                          side: const BorderSide(color: kPrimary),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Text('Cancel',
-                              style: TextStyle(
-                                  fontSize: 13.sp, color: kSubText)),
+                        ),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black,
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Obx(
+                        () => ElevatedButton(
                           onPressed: isApplyingCreditNote.value
                               ? null
                               : () {
                                   if (selectedInvoiceId.value.isEmpty) {
-                                    _showError(
-                                        'Please select an invoice');
+                                    _showError('Please select an invoice');
                                     return;
                                   }
                                   if (formKey.currentState!.validate()) {
                                     final amt = double.tryParse(
-                                            amountController.text
-                                                .trim()) ??
-                                        0;
+                                        amountController.text.trim()) ?? 0;
                                     applyCreditNote(
                                       creditNoteId: cn.id,
                                       invoiceId: selectedInvoiceId.value,
@@ -916,28 +1343,35 @@ class CreditNoteController extends GetxController {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: kSuccess,
                             elevation: 0,
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 14),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10)),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                           child: isApplyingCreditNote.value
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
+                              ? SizedBox(
+                                  width: 20,
+                                  height: 20,
                                   child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white),
+                                    strokeWidth: 2,
+                                    valueColor: const AlwaysStoppedAnimation<Color>(
+                                        Colors.black),
+                                  ),
                                 )
-                              : Text('Apply',
+                              : const Text(
+                                  'Apply',
                                   style: TextStyle(
-                                      fontSize: 13.sp,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w700)),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.black,
+                                  ),
+                                ),
                         ),
                       ),
-                    ],
-                  )),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -946,9 +1380,9 @@ class CreditNoteController extends GetxController {
     );
   }
 
-  // ============================================================
-  // DETAIL DIALOG
-  // ============================================================
+  // ═══════════════════════════════════════════════════════════════
+  // CREDIT NOTE DETAILS DIALOG
+  // ═══════════════════════════════════════════════════════════════
 
   void _showCreditNoteDetailsDialog(CreditNote cn) {
     final statusColor = cn.status == 'Issued'
@@ -957,201 +1391,233 @@ class CreditNoteController extends GetxController {
             ? kSuccess
             : kDanger;
 
-    Get.dialog(
-      Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        insetPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        child: Container(
-          width: double.infinity,
-          constraints: BoxConstraints(maxHeight: 88.h),
+    showModalBottomSheet(
+      context: Get.context!,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.65,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (_, scrollCtrl) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              // ── Header ────────────────────────────────────────
               Container(
-                padding: const EdgeInsets.fromLTRB(20, 18, 16, 16),
+                margin: const EdgeInsets.only(top: 12),
+                width: 36,
+                height: 4,
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.05),
-                  borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(20)),
-                  border: Border(
-                      bottom: BorderSide(
-                          color: Colors.grey.withOpacity(0.12))),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(Icons.note_alt_outlined,
-                          size: 20, color: statusColor),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            cn.creditNoteNumber,
-                            style: TextStyle(
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.w800,
-                                color: kText),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            DateFormat('EEEE, dd MMM yyyy')
-                                .format(cn.date),
-                            style: TextStyle(
-                                fontSize: 11.sp, color: kSubText),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        GestureDetector(
-                          onTap: () => Get.back(),
-                          child: Container(
-                            width: 26,
-                            height: 26,
-                            decoration: BoxDecoration(
-                                color: Colors.grey.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8)),
-                            child: Icon(Icons.close,
-                                size: 15, color: kSubText),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: statusColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            cn.status,
-                            style: TextStyle(
-                                fontSize: 11.sp,
-                                color: statusColor,
-                                fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-
-              // ── Amount strip ──────────────────────────────────
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20, vertical: 12),
-                decoration: BoxDecoration(
-                  color: kBg,
-                  border: Border(
-                      bottom: BorderSide(
-                          color: Colors.grey.withOpacity(0.12))),
-                ),
-                child: Row(
-                  children: [
-                    _amountChip(
-                        'Credit', formatAmount(cn.amount), kWarning),
-                    _vDivider(),
-                    _amountChip('Applied',
-                        formatAmount(cn.appliedAmount), kSuccess),
-                    _vDivider(),
-                    _amountChip('Remaining',
-                        formatAmount(cn.remainingAmount), kPrimary),
-                  ],
-                ),
-              ),
-
-              // ── Body ──────────────────────────────────────────
-              Flexible(
+              Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
+                  controller: scrollCtrl,
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _detailSection('Invoice Information', [
-                        _detailRow('Customer', cn.customerName),
-                        _detailRow('Invoice', cn.originalInvoiceNumber),
-                        _detailRow('Invoice Amount',
-                            formatAmount(cn.originalInvoiceAmount)),
-                      ]),
-                      const SizedBox(height: 16),
-                      _detailSection('Credit Details', [
-                        _detailRow('Reason Type', cn.reasonType),
-                        _detailRow('Reason', cn.reason),
-                        if (cn.expiryDate != null)
-                          _detailRow(
-                            'Expiry',
-                            DateFormat('dd MMM yyyy')
-                                .format(cn.expiryDate!),
-                            valueColor: cn.expiryDate!
-                                    .isBefore(DateTime.now())
-                                ? kDanger
-                                : null,
+                      // Header
+                      Row(
+                        children: [
+                          Container(
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              color: statusColor.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Icon(
+                              Icons.note_alt_outlined,
+                              size: 26,
+                              color: statusColor,
+                            ),
                           ),
-                        if (cn.notes.isNotEmpty)
-                          _detailRow('Notes', cn.notes),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        cn.creditNoteNumber,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w800,
+                                          color: kText,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: statusColor.withOpacity(0.08),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        cn.status,
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                          color: statusColor,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '• ${DateFormat('dd MMM yyyy').format(cn.date)}',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: kSubText,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // KPI Cards
+                      Row(
+                        children: [
+                          _miniKpi(
+                            'Credit',
+                            formatAmount(cn.amount),
+                            kWarning,
+                            Icons.attach_money,
+                          ),
+                          const SizedBox(width: 8),
+                          _miniKpi(
+                            'Applied',
+                            formatAmount(cn.appliedAmount),
+                            kSuccess,
+                            Icons.check_circle,
+                          ),
+                          const SizedBox(width: 8),
+                          _miniKpi(
+                            'Remaining',
+                            formatAmount(cn.remainingAmount),
+                            kPrimary,
+                            Icons.pending_outlined,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      const SizedBox(height: 16),
+
+                      // Details
+                      _detailRow('Customer', cn.customerName),
+                      _detailRow('Invoice', cn.originalInvoiceNumber),
+                      _detailRow(
+                        'Invoice Amount',
+                        formatAmount(cn.originalInvoiceAmount),
+                      ),
+                      _detailRow('Reason Type', cn.reasonType),
+                      _detailRow('Reason', cn.reason),
+                      if (cn.expiryDate != null)
                         _detailRow(
-                          'Created',
-                          DateFormat('dd MMM yyyy, hh:mm a')
-                              .format(cn.createdAt),
+                          'Expiry',
+                          DateFormat('dd MMM yyyy').format(cn.expiryDate!),
+                          valueColor: cn.expiryDate!.isBefore(DateTime.now())
+                              ? kDanger
+                              : null,
                         ),
-                      ]),
+                      if (cn.notes.isNotEmpty) _detailRow('Notes', cn.notes),
+                      _detailRow(
+                        'Created',
+                        DateFormat('dd MMM yyyy, hh:mm a').format(cn.createdAt),
+                      ),
+                      const SizedBox(height: 16),
+                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      const SizedBox(height: 16),
+
+                      // Footer Buttons
+                      Row(
+                        children: [
+                          if (cn.status == 'Issued') ...[
+                            Expanded(
+                              child: SizedBox(
+                                height: 46,
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    showApplyCreditNoteDialog(cn);
+                                  },
+                                  icon: const Icon(
+                                    Icons.check_circle,
+                                    size: 16,
+                                    color: Colors.black,
+                                  ),
+                                  label: const Text(
+                                    'Apply',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: kSuccess,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                          ],
+                          Expanded(
+                            child: SizedBox(
+                              height: 46,
+                              child: OutlinedButton(
+                                onPressed: () => Navigator.pop(context),
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: kPrimary,
+                                  side: const BorderSide(color: kPrimary),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Close',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
                     ],
                   ),
                 ),
               ),
-
-              // ── Footer ────────────────────────────────────────
-              if (cn.status == 'Issued')
-                Container(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 18),
-                  decoration: BoxDecoration(
-                    color: kCardBg,
-                    borderRadius: const BorderRadius.vertical(
-                        bottom: Radius.circular(20)),
-                    border: Border(
-                        top: BorderSide(
-                            color: Colors.grey.withOpacity(0.12))),
-                  ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Get.back();
-                        showApplyCreditNoteDialog(cn);
-                      },
-                      icon: const Icon(Icons.check_circle_outline,
-                          size: 16, color: Colors.white),
-                      label: Text(
-                        'Apply to Invoice',
-                        style: TextStyle(
-                            fontSize: 13.sp, color: Colors.white),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kSuccess,
-                        elevation: 0,
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 13),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
-                      ),
-                    ),
-                  ),
-                ),
             ],
           ),
         ),
@@ -1159,146 +1625,9 @@ class CreditNoteController extends GetxController {
     );
   }
 
-  // ============================================================
-  // SHARED INVOICE LIST WIDGET
-  // ============================================================
-
-  Widget _buildInvoiceList({
-    required List<InvoiceForCreditNote> invoices,
-    required RxString selectedId,
-    required Function(InvoiceForCreditNote) onSelect,
-  }) {
-    return Obx(() => Container(
-          decoration: BoxDecoration(
-            color: kBg,
-            borderRadius: BorderRadius.circular(10),
-            border:
-                Border.all(color: Colors.grey.withOpacity(0.25)),
-          ),
-          child: Column(
-            children: invoices.asMap().entries.map((entry) {
-              final idx = entry.key;
-              final inv = entry.value;
-              final isSelected = inv.id == selectedId.value;
-              final isLast = idx == invoices.length - 1;
-
-              return GestureDetector(
-                onTap: () => onSelect(inv),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? kPrimary.withOpacity(0.06)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.only(
-                      topLeft: idx == 0
-                          ? const Radius.circular(10)
-                          : Radius.zero,
-                      topRight: idx == 0
-                          ? const Radius.circular(10)
-                          : Radius.zero,
-                      bottomLeft: isLast
-                          ? const Radius.circular(10)
-                          : Radius.zero,
-                      bottomRight: isLast
-                          ? const Radius.circular(10)
-                          : Radius.zero,
-                    ),
-                    border: isLast
-                        ? null
-                        : Border(
-                            bottom: BorderSide(
-                                color:
-                                    Colors.grey.withOpacity(0.12))),
-                  ),
-                  child: Row(
-                    children: [
-                      // Radio indicator
-                      Container(
-                        width: 18,
-                        height: 18,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: isSelected
-                                ? kPrimary
-                                : Colors.grey.withOpacity(0.4),
-                            width: 1.8,
-                          ),
-                          color: isSelected
-                              ? kPrimary
-                              : Colors.transparent,
-                        ),
-                        child: isSelected
-                            ? const Icon(Icons.check,
-                                size: 11, color: Colors.white)
-                            : null,
-                      ),
-                      const SizedBox(width: 12),
-                      // Invoice info
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              inv.invoiceNumber,
-                              style: TextStyle(
-                                fontSize: 12.5.sp,
-                                fontWeight: FontWeight.w700,
-                                color: isSelected ? kPrimary : kText,
-                              ),
-                            ),
-                            Text(
-                              DateFormat('dd MMM yyyy')
-                                  .format(inv.date),
-                              style: TextStyle(
-                                  fontSize: 10.sp, color: kSubText),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Amounts
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            formatAmount(inv.amount),
-                            style: TextStyle(
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w600,
-                                color: kText),
-                          ),
-                          Container(
-                            margin: const EdgeInsets.only(top: 3),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 7, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: kWarning.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'Due: ${formatAmount(inv.outstanding)}',
-                              style: TextStyle(
-                                  fontSize: 9.5.sp,
-                                  fontWeight: FontWeight.w700,
-                                  color: kWarning),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ));
-  }
-
-  // ============================================================
+  // ═══════════════════════════════════════════════════════════════
   // EXPORT
-  // ============================================================
+  // ═══════════════════════════════════════════════════════════════
 
   void exportCreditNotes() {
     Get.bottomSheet(
@@ -1306,129 +1635,482 @@ class CreditNoteController extends GetxController {
         padding: const EdgeInsets.all(20),
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius:
-              BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Row(
+              children: [
+                Text(
+                  'Export Credit Notes',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: kText,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 18, color: Colors.black),
+                  onPressed: () => Get.back(),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
             Text(
-              'Export Credit Notes',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: kText),
+              '${creditNotes.length} notes will be exported',
+              style: TextStyle(fontSize: 12, color: kSubText),
             ),
-            const SizedBox(height: 10),
-            Text('Choose export format',
-                style: TextStyle(fontSize: 14, color: kSubText)),
             const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(Icons.picture_as_pdf,
-                  color: Color(0xFFE53935)),
-              title: Text('Export as PDF',
-                  style: TextStyle(color: kText)),
-              onTap: () {
-                Get.back();
-                exportToPdf();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.table_chart,
-                  color: Color(0xFF2E7D32)),
-              title: Text('Export as Excel',
-                  style: TextStyle(color: kText)),
-              onTap: () {
-                Get.back();
-                exportToExcel();
-              },
+            Row(
+              children: [
+                Expanded(
+                  child: _exportOptionCard(
+                    icon: Icons.picture_as_pdf_outlined,
+                    label: 'PDF',
+                    subtitle: 'Formatted report',
+                    color: const Color(0xFFE53935),
+                    bgColor: const Color(0xFFFFEBEE),
+                    onTap: () {
+                      Get.back();
+                      exportToPdf();
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _exportOptionCard(
+                    icon: Icons.table_chart_outlined,
+                    label: 'Excel',
+                    subtitle: 'Spreadsheet',
+                    color: const Color(0xFF2E7D32),
+                    bgColor: const Color(0xFFE8F5E9),
+                    onTap: () {
+                      Get.back();
+                      exportToExcel();
+                    },
+                  ),
+                ),
+              ],
             ),
           ],
         ),
       ),
       shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      backgroundColor: kCardBg,
+    );
+  }
+
+  Widget _exportOptionCard({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required Color color,
+    required Color bgColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(10),
+      
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: Colors.white, size: 22),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 10,
+                color: color.withOpacity(0.7),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
+  // ─── PDF EXPORT ──────────────────────────────────────────────────
   Future<void> exportToPdf() async {
     try {
+      Get.dialog(
+        Center(
+          child: Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      color: kPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Generating PDF...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Please wait',
+                    style: TextStyle(fontSize: 12, color: kSubText),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        barrierDismissible: false,
+      );
+
       final pdf = pw.Document();
+
       pdf.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(24),
+          header: (ctx) => _pdfHeader(),
+          footer: (ctx) => _pdfFooter(ctx),
           build: (ctx) => [
-            pw.Text('Credit Notes Report',
-                style: pw.TextStyle(
-                    fontSize: 18, fontWeight: pw.FontWeight.bold)),
-            pw.SizedBox(height: 8),
-            pw.Text(
-                'Generated: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now())}',
-                style: pw.TextStyle(
-                    fontSize: 9, color: PdfColors.grey600)),
+            _pdfSummarySection(),
             pw.SizedBox(height: 16),
-            pw.Table.fromTextArray(
-              headers: [
-                'CN #',
-                'Customer',
-                'Date',
-                'Amount',
-                'Applied',
-                'Remaining',
-                'Status'
-              ],
-              data: creditNotes
-                  .map((n) => [
-                        n.creditNoteNumber,
-                        n.customerName,
-                        DateFormat('dd/MM/yy').format(n.date),
-                        formatAmount(n.amount),
-                        formatAmount(n.appliedAmount),
-                        formatAmount(n.remainingAmount),
-                        n.status,
-                      ])
-                  .toList(),
-              headerStyle: pw.TextStyle(
-                  fontWeight: pw.FontWeight.bold, fontSize: 9),
-              cellStyle: const pw.TextStyle(fontSize: 8),
-            ),
+            _pdfCreditNotesTable(),
           ],
         ),
       );
 
-      final bytes = await pdf.save();
+      final dir = await getTemporaryDirectory();
       final fileName =
           'credit_notes_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsBytes(await pdf.save());
 
-      if (kIsWeb) {
-        final blob = html.Blob([bytes], 'application/pdf');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
-      } else {
-        final dir = await getTemporaryDirectory();
-        final file = File('${dir.path}/$fileName');
-        await file.writeAsBytes(bytes);
-        await OpenFile.open(file.path);
-      }
+      if (Get.isDialogOpen ?? false) Get.back();
+
       AppSnackbar.success(
-          kSuccess, 'Success', 'Exported to PDF');
+        Colors.green,
+        'Success',
+        '${creditNotes.length} credit notes exported to PDF',
+      );
+      await OpenFile.open(file.path);
     } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
       _showError('Failed to export PDF: $e');
     }
   }
 
+  pw.Widget _pdfHeader() {
+    return pw.Container(
+      padding: const pw.EdgeInsets.only(bottom: 12),
+      decoration: const pw.BoxDecoration(
+        border: pw.Border(
+          bottom: pw.BorderSide(color: PdfColors.grey300, width: 1),
+        ),
+      ),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(
+                'Credit Notes Report',
+                style: pw.TextStyle(
+                  fontSize: 18,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.indigo800,
+                ),
+              ),
+              pw.Text(
+                'Generated: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now())}',
+                style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              ),
+            ],
+          ),
+          pw.Container(
+            padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: pw.BoxDecoration(
+              color: PdfColors.indigo800,
+              borderRadius: pw.BorderRadius.circular(6),
+            ),
+            child: pw.Text(
+              'LedgerPro',
+              style: pw.TextStyle(
+                color: PdfColors.white,
+                fontWeight: pw.FontWeight.bold,
+                fontSize: 10,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _pdfFooter(pw.Context ctx) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.only(top: 8),
+      decoration: const pw.BoxDecoration(
+        border: pw.Border(
+          top: pw.BorderSide(color: PdfColors.grey300, width: 1),
+        ),
+      ),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Text(
+            'Confidential - For Internal Use Only',
+            style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
+          ),
+          pw.Text(
+            'Page ${ctx.pageNumber} of ${ctx.pagesCount}',
+            style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
+          ),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _pdfSummarySection() {
+    return pw.Container(
+      padding: const pw.EdgeInsets.all(12),
+      decoration: pw.BoxDecoration(
+        color: PdfColors.indigo50,
+        borderRadius: pw.BorderRadius.circular(8),
+        border: pw.Border.all(color: PdfColors.indigo200),
+      ),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
+        children: [
+          _pdfSummaryItem('Total Notes', totalCount.value.toString(), PdfColors.indigo700),
+          _pdfSummaryItem('Total Amount', formatAmount(totalAmount.value), PdfColors.indigo700),
+          _pdfSummaryItem('Applied', formatAmount(appliedAmount.value), PdfColors.green700),
+          _pdfSummaryItem('Remaining', formatAmount(remainingAmount.value), PdfColors.indigo700),
+          _pdfSummaryItem('Expired', formatAmount(expiredAmount.value), PdfColors.red700),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _pdfSummaryItem(String label, String value, PdfColor color) {
+    return pw.Column(
+      children: [
+        pw.Text(label, style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
+        pw.SizedBox(height: 4),
+        pw.Text(value, style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: color)),
+      ],
+    );
+  }
+
+  pw.Widget _pdfCreditNotesTable() {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text('Credit Note Details', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+        pw.SizedBox(height: 8),
+        pw.Container(
+          padding: const pw.EdgeInsets.symmetric(vertical: 8),
+          decoration: const pw.BoxDecoration(
+            border: pw.Border(
+              bottom: pw.BorderSide(color: PdfColors.grey300, width: 1),
+            ),
+          ),
+          child: pw.Row(
+            children: [
+              pw.Expanded(flex: 2, child: pw.Text('CN #', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+              pw.Expanded(flex: 3, child: pw.Text('Customer', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+              pw.Expanded(flex: 2, child: pw.Text('Date', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+              pw.Expanded(flex: 2, child: pw.Text('Amount', textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+              pw.Expanded(flex: 2, child: pw.Text('Applied', textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+              pw.Expanded(flex: 2, child: pw.Text('Remaining', textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+              pw.Expanded(flex: 2, child: pw.Text('Status', textAlign: pw.TextAlign.center, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+            ],
+          ),
+        ),
+        ...creditNotes.map((note) => pw.Container(
+          padding: const pw.EdgeInsets.symmetric(vertical: 6),
+          decoration: const pw.BoxDecoration(
+            border: pw.Border(
+              bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.5),
+            ),
+          ),
+          child: pw.Row(
+            children: [
+              pw.Expanded(flex: 2, child: pw.Text(note.creditNoteNumber, style: pw.TextStyle(fontSize: 9))),
+              pw.Expanded(flex: 3, child: pw.Text(note.customerName, style: pw.TextStyle(fontSize: 9))),
+              pw.Expanded(flex: 2, child: pw.Text(DateFormat('dd/MM/yy').format(note.date), style: pw.TextStyle(fontSize: 9))),
+              pw.Expanded(flex: 2, child: pw.Text(formatAmount(note.amount), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 9))),
+              pw.Expanded(flex: 2, child: pw.Text(formatAmount(note.appliedAmount), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 9))),
+              pw.Expanded(flex: 2, child: pw.Text(formatAmount(note.remainingAmount), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 9))),
+              pw.Expanded(flex: 2, child: pw.Text(note.status, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 9))),
+            ],
+          ),
+        )).toList(),
+        pw.Divider(),
+        pw.Padding(
+          padding: const pw.EdgeInsets.only(top: 8),
+          child: pw.Row(
+            children: [
+              pw.Expanded(flex: 7, child: pw.Text('Total', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+              pw.Expanded(flex: 2, child: pw.Text(formatAmount(creditNotes.fold(0.0, (s, n) => s + n.amount)), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+              pw.Expanded(flex: 2, child: pw.Text(formatAmount(creditNotes.fold(0.0, (s, n) => s + n.appliedAmount)), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+              pw.Expanded(flex: 2, child: pw.Text(formatAmount(creditNotes.fold(0.0, (s, n) => s + n.remainingAmount)), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ─── EXCEL EXPORT ──────────────────────────────────────────────────
   Future<void> exportToExcel() async {
     try {
-      final excel = Excel.createExcel();
-      final sheet = excel['Credit Notes'];
-      excel.setDefaultSheet('Credit Notes');
+      Get.dialog(
+        Center(
+          child: Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      color: kPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Building Excel...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Please wait',
+                    style: TextStyle(fontSize: 12, color: kSubText),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        barrierDismissible: false,
+      );
 
+      final excel = Excel.createExcel();
+
+      // Summary Sheet
+      final summarySheet = excel['Summary'];
+      excel.setDefaultSheet('Summary');
+
+      _excelSetCell(
+        summarySheet,
+        0,
+        0,
+        'Credit Notes Report',
+        bold: true,
+        fontSize: 14,
+        bgColor: '1A237E',
+        fontColor: 'FFFFFF',
+      );
+      _excelSetCell(
+        summarySheet,
+        1,
+        0,
+        'Generated: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now())}',
+        fontSize: 9,
+        fontColor: '757575',
+      );
+      _excelSetCell(
+        summarySheet,
+        2,
+        0,
+        'Filter: ${selectedFilter.value}',
+        fontSize: 10,
+        fontColor: '1A237E',
+      );
+
+      _excelSetCell(
+        summarySheet,
+        4,
+        0,
+        'SUMMARY',
+        bold: true,
+        fontSize: 11,
+        bgColor: 'E8EAF6',
+      );
+
+      final summaryRows = [
+        ['Total Notes', totalCount.value.toString()],
+        ['Total Amount', formatAmount(totalAmount.value)],
+        ['Applied Amount', formatAmount(appliedAmount.value)],
+        ['Remaining Amount', formatAmount(remainingAmount.value)],
+        ['Expired Amount', formatAmount(expiredAmount.value)],
+        ['This Month', formatAmount(thisMonthTotal.value)],
+        ['This Week', formatAmount(thisWeekTotal.value)],
+      ];
+
+      for (int r = 0; r < summaryRows.length; r++) {
+        for (int c = 0; c < 2; c++) {
+          _excelSetCell(
+            summarySheet,
+            5 + r,
+            c,
+            summaryRows[r][c],
+            bgColor: r.isEven ? 'FFFFFF' : 'F5F5F5',
+          );
+        }
+      }
+      summarySheet.setColumnWidth(0, 25);
+      summarySheet.setColumnWidth(1, 20);
+
+      // Credit Notes Sheet
+      final notesSheet = excel['Credit Notes'];
       final headers = [
         'CN #',
         'Date',
@@ -1438,109 +2120,184 @@ class CreditNoteController extends GetxController {
         'Applied',
         'Remaining',
         'Reason Type',
-        'Status'
+        'Status',
+        'Notes',
       ];
+
       for (int i = 0; i < headers.length; i++) {
-        _excelCell(sheet, 0, i, headers[i], bold: true);
+        _excelSetCell(
+          notesSheet,
+          0,
+          i,
+          headers[i],
+          bold: true,
+          bgColor: '1A237E',
+          fontColor: 'FFFFFF',
+          fontSize: 10,
+        );
       }
+
       int row = 1;
-      for (final n in creditNotes) {
-        _excelCell(sheet, row, 0, n.creditNoteNumber);
-        _excelCell(
-            sheet, row, 1, DateFormat('dd/MM/yyyy').format(n.date));
-        _excelCell(sheet, row, 2, n.customerName);
-        _excelCell(sheet, row, 3, n.originalInvoiceNumber);
-        _excelCell(sheet, row, 4, formatAmount(n.amount));
-        _excelCell(sheet, row, 5, formatAmount(n.appliedAmount));
-        _excelCell(sheet, row, 6, formatAmount(n.remainingAmount));
-        _excelCell(sheet, row, 7, n.reasonType);
-        _excelCell(sheet, row, 8, n.status);
+      for (final note in creditNotes) {
+        final bg = row.isEven ? 'F5F5F5' : 'FFFFFF';
+        _excelSetCell(notesSheet, row, 0, note.creditNoteNumber, bgColor: bg);
+        _excelSetCell(notesSheet, row, 1, DateFormat('dd MMM yyyy').format(note.date), bgColor: bg);
+        _excelSetCell(notesSheet, row, 2, note.customerName, bgColor: bg);
+        _excelSetCell(notesSheet, row, 3, note.originalInvoiceNumber, bgColor: bg);
+        _excelSetCell(notesSheet, row, 4, note.amount, bgColor: bg);
+        _excelSetCell(notesSheet, row, 5, note.appliedAmount, bgColor: bg);
+        _excelSetCell(notesSheet, row, 6, note.remainingAmount, bgColor: bg);
+        _excelSetCell(notesSheet, row, 7, note.reasonType, bgColor: bg);
+        _excelSetCell(notesSheet, row, 8, note.status, bgColor: bg);
+        _excelSetCell(notesSheet, row, 9, note.notes, bgColor: bg);
         row++;
       }
+
+      final colWidths = [15.0, 12.0, 25.0, 15.0, 15.0, 15.0, 15.0, 18.0, 12.0, 30.0];
+      for (int i = 0; i < colWidths.length; i++) {
+        notesSheet.setColumnWidth(i, colWidths[i]);
+      }
+
       excel.delete('Sheet1');
+
       final bytes = excel.save();
       if (bytes == null) throw Exception('Excel save failed');
 
+      final dir = await getTemporaryDirectory();
       final fileName =
           'credit_notes_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsBytes(bytes);
 
-      if (kIsWeb) {
-        final blob = html.Blob([bytes],
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
-      } else {
-        final dir = await getTemporaryDirectory();
-        final file = File('${dir.path}/$fileName');
-        await file.writeAsBytes(bytes);
-        await OpenFile.open(file.path);
-      }
+      if (Get.isDialogOpen ?? false) Get.back();
+
       AppSnackbar.success(
-          kSuccess, 'Success', 'Exported to Excel');
+        Colors.green,
+        'Success',
+        '${creditNotes.length} credit notes exported to Excel',
+      );
+      await OpenFile.open(file.path);
     } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
       _showError('Failed to export Excel: $e');
     }
   }
 
-  void _excelCell(Sheet sheet, int row, int col, dynamic value,
-      {bool bold = false}) {
+  void _excelSetCell(
+    Sheet sheet,
+    int row,
+    int col,
+    dynamic value, {
+    bool bold = false,
+    double fontSize = 10,
+    String? bgColor,
+    String fontColor = '000000',
+  }) {
     final cell = sheet.cell(
-        CellIndex.indexByColumnRow(columnIndex: col, rowIndex: row));
-    cell.value = TextCellValue(value.toString());
-    if (bold) {
-      cell.cellStyle = CellStyle(bold: true);
-    }
-  }
+      CellIndex.indexByColumnRow(columnIndex: col, rowIndex: row),
+    );
+    cell.value = value is double
+        ? DoubleCellValue(value)
+        : value is int
+        ? IntCellValue(value)
+        : TextCellValue(value.toString());
 
-  // ============================================================
-  // WIDGET HELPERS
-  // ============================================================
-
-  Widget _stepLabel(String step, String label) {
-    return Row(
-      children: [
-        Container(
-          width: 20,
-          height: 20,
-          decoration: BoxDecoration(
-            color: kPrimary,
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Center(
-            child: Text(
-              step,
-              style: const TextStyle(
-                  fontSize: 10,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11.5.sp,
-            fontWeight: FontWeight.w600,
-            color: kSubText,
-          ),
-        ),
-      ],
+    cell.cellStyle = CellStyle(
+      bold: bold,
+      fontSize: fontSize.toInt(),
+      fontColorHex: ExcelColor.fromHexString('#$fontColor'),
+      backgroundColorHex: bgColor != null
+          ? ExcelColor.fromHexString('#$bgColor')
+          : ExcelColor.fromHexString('#FFFFFF'),
     );
   }
 
-  InputDecoration _inputDeco(String hint) {
+  // ═══════════════════════════════════════════════════════════════
+  // HELPER WIDGETS
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _miniKpi(String label, String value, Color color, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 14, color: color),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 9,
+                color: Colors.black.withOpacity(0.5),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _detailRow(String label, String value, {Color? valueColor}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: kSubText,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          Flexible(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: valueColor ?? kText,
+              ),
+              textAlign: TextAlign.right,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration(String label, {String? hint}) {
     return InputDecoration(
+      labelText: label,
       hintText: hint,
-      hintStyle:
-          TextStyle(color: kSubText.withOpacity(0.6), fontSize: 12.sp),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      hintStyle: TextStyle(
+        color: kSubText.withOpacity(0.6),
+        fontSize: 12,
+      ),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: 12,
+      ),
       filled: true,
-      fillColor: kBg,
+      fillColor: kBgLight,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
         borderSide: BorderSide(color: Colors.grey.withOpacity(0.25)),
@@ -1568,10 +2325,8 @@ class CreditNoteController extends GetxController {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: kBg,
+        color: kBgLight,
         borderRadius: BorderRadius.circular(10),
-        border:
-            Border.all(color: Colors.grey.withOpacity(0.25)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1579,12 +2334,13 @@ class CreditNoteController extends GetxController {
           SizedBox(
             width: 16,
             height: 16,
-            child: CircularProgressIndicator(
-                strokeWidth: 2, color: kPrimary),
+            child: CircularProgressIndicator(strokeWidth: 2, color: kPrimary),
           ),
           const SizedBox(width: 10),
-          Text('Loading invoices...',
-              style: TextStyle(fontSize: 12.sp, color: kSubText)),
+          Text(
+            'Loading invoices...',
+            style: TextStyle(fontSize: 12, color: kSubText),
+          ),
         ],
       ),
     );
@@ -1594,95 +2350,29 @@ class CreditNoteController extends GetxController {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: kBg,
+        color: kBgLight,
         borderRadius: BorderRadius.circular(10),
-        border:
-            Border.all(color: Colors.grey.withOpacity(0.25)),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(Icons.inbox_outlined,
-              size: 18, color: kSubText.withOpacity(0.5)),
-          const SizedBox(width: 8),
-          Text('No unpaid invoices found',
-              style: TextStyle(fontSize: 12.sp, color: kSubText)),
-        ],
-      ),
-    );
-  }
-
-  Widget _amountChip(String label, String value, Color color) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text(label,
-              style: TextStyle(fontSize: 10.sp, color: kSubText)),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-                fontSize: 13.sp,
-                fontWeight: FontWeight.w800,
-                color: color),
+          Row(
+            children: [
+              Icon(Icons.inbox_outlined, size: 18, color: kSubText.withOpacity(0.5)),
+              const SizedBox(width: 8),
+              Text(
+                'No unpaid invoices found',
+                style: TextStyle(fontSize: 12, color: kSubText),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _vDivider() =>
-      Container(width: 1, height: 32, color: Colors.grey.withOpacity(0.2));
-
-  Widget _detailSection(String title, List<Widget> rows) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w700,
-              color: kText),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: kBg,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.grey.withOpacity(0.15)),
-          ),
-          child: Column(children: rows),
-        ),
-      ],
-    );
-  }
-
-  Widget _detailRow(String label, String value, {Color? valueColor}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 110,
-            child: Text(
-              label,
-              style: TextStyle(
-                  fontSize: 11.sp,
-                  color: kSubText,
-                  fontWeight: FontWeight.w500),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                  fontSize: 12.sp,
-                  color: valueColor ?? kText,
-                  fontWeight: FontWeight.w600),
+          IconButton(
+            onPressed: () => Get.toNamed('/warehouse/invoices'),
+            icon: Icon(Icons.add, size: 20, color: kPrimary),
+            style: IconButton.styleFrom(
+              backgroundColor: kPrimary.withOpacity(0.1),
+              padding: const EdgeInsets.all(8),
+              minimumSize: const Size(36, 36),
             ),
           ),
         ],
@@ -1690,6 +2380,6 @@ class CreditNoteController extends GetxController {
     );
   }
 
-  void _showError(String msg) =>
-      AppSnackbar.error(kDanger, 'Error', msg);
+  // ─── HELPERS ──────────────────────────────────────────────────────
+  void _showError(String msg) => AppSnackbar.error(kDanger, 'Error', msg);
 }

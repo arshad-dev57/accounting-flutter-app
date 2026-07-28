@@ -76,7 +76,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
                     color: Colors.black.withOpacity(0.04),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
-                  )
+                  ),
                 ],
               ),
               child: Column(
@@ -84,9 +84,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
                 children: [
                   _buildSearchBar(),
                   const SizedBox(height: 24),
-                  Expanded(
-                    child: _buildCurrencyList(),
-                  ),
+                  Expanded(child: _buildCurrencyList()),
                 ],
               ),
             ),
@@ -118,7 +116,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
                           color: Colors.black.withOpacity(0.04),
                           blurRadius: 16,
                           offset: const Offset(0, 6),
-                        )
+                        ),
                       ],
                     ),
                     child: ClipRRect(
@@ -140,7 +138,12 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
     final showBackBtn = Navigator.canPop(context) && !isWeb;
 
     return Container(
-      padding: EdgeInsets.fromLTRB(isWeb ? 32 : 16, isWeb ? 32 : 16, isWeb ? 32 : 16, isWeb ? 24 : 16),
+      padding: EdgeInsets.fromLTRB(
+        isWeb ? 32 : 16,
+        isWeb ? 32 : 16,
+        isWeb ? 32 : 16,
+        isWeb ? 24 : 16,
+      ),
       decoration: BoxDecoration(
         color: kCardBg,
         border: Border(bottom: BorderSide(color: kBorder)),
@@ -167,7 +170,11 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
               gradient: LinearGradient(colors: [kPrimary, kPrimaryDark]),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Iconify(Mdi.currency_usd, color: Colors.white, size: 28),
+            child: const Iconify(
+              Mdi.currency_usd,
+              color: Colors.white,
+              size: 28,
+            ),
           ),
           SizedBox(width: isWeb ? 24 : 16),
           Expanded(
@@ -186,10 +193,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
                 const SizedBox(height: 4),
                 Text(
                   'Set your default currency for reports and transactions',
-                  style: TextStyle(
-                    fontSize: isWeb ? 15 : 14,
-                    color: kSubText,
-                  ),
+                  style: TextStyle(fontSize: isWeb ? 15 : 14, color: kSubText),
                 ),
               ],
             ),
@@ -236,11 +240,19 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Iconify(Mdi.magnify_close, size: 64, color: kSubText.withOpacity(0.5)),
+            Iconify(
+              Mdi.magnify_close,
+              size: 64,
+              color: kSubText.withOpacity(0.5),
+            ),
             const SizedBox(height: 16),
             Text(
               'No currencies found',
-              style: TextStyle(fontSize: 16, color: kSubText, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 16,
+                color: kSubText,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
@@ -250,18 +262,23 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
     return ListView.separated(
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: _filteredCurrencies.length,
-      separatorBuilder: (context, index) => Divider(height: 1, thickness: 1, color: kBorder),
+      separatorBuilder: (context, index) =>
+          Divider(height: 1, thickness: 1, color: kBorder),
       itemBuilder: (context, index) {
         final currency = _filteredCurrencies[index];
         return Obx(() {
-          final isSelected = _currencyController.currencyCode.value == currency.code;
+          final isSelected =
+              _currencyController.currencyCode.value == currency.code;
 
           return Material(
             color: isSelected ? kPrimary.withOpacity(0.05) : Colors.transparent,
             child: InkWell(
               onTap: () => _onCurrencySelected(currency),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
                 child: Row(
                   children: [
                     Container(
@@ -293,7 +310,9 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
                             currency.name,
                             style: TextStyle(
                               fontSize: 16,
-                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w600,
                               color: isSelected ? kPrimaryDark : kText,
                             ),
                           ),
@@ -320,10 +339,14 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
                               color: kPrimary.withOpacity(0.4),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
-                            )
+                            ),
                           ],
                         ),
-                        child: const Iconify(Mdi.check, color: Colors.white, size: 16),
+                        child: const Iconify(
+                          Mdi.check,
+                          color: Colors.white,
+                          size: 16,
+                        ),
                       ),
                   ],
                 ),

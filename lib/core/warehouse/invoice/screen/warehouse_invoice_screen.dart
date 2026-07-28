@@ -30,59 +30,76 @@ class WarehouseInvoiceListView extends StatelessWidget {
         TextField(
           decoration: InputDecoration(
             hintText: 'Search invoices...',
-            prefixIcon: const Icon(Icons.search),
+            hintStyle: TextStyle(color: kSubText, fontSize: 13),
+            prefixIcon: Icon(Icons.search, color: kSubText, size: 20),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide.none,
             ),
             filled: true,
             fillColor: kCardBg,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           ),
           onChanged: controller.applySearch,
         ),
         const SizedBox(height: 12),
 
-        // Filter Row
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              ...WarehouseInvoiceController.statusFilters.map((filter) {
+        // ✅ FIXED Filter Chips
+        Obx(() {
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: WarehouseInvoiceController.statusFilters.map((filter) {
                 final isSelected = controller.statusFilter.value == filter;
+                final label = filter == 'all' ? 'All' : filter;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
-                  child: FilterChip(
-                    label: Text(filter == 'all' ? 'All' : filter),
-                    selected: isSelected,
-                    onSelected: (_) => controller.applyStatusFilter(filter),
-                    backgroundColor: kBg,
-                    selectedColor: kPrimary.withOpacity(0.2),
-                    labelStyle: TextStyle(
-                      color: isSelected ? kPrimary : kSubText,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                      fontSize: 12,
+                  child: GestureDetector(
+                    onTap: () => controller.applyStatusFilter(filter),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected ? kPrimary : kCardBg,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSelected ? kPrimary : Colors.grey.withOpacity(0.25),
+                        ),
+                        boxShadow: isSelected
+                            ? [BoxShadow(color: kPrimary.withOpacity(0.25), blurRadius: 6, offset: const Offset(0, 2))]
+                            : [],
+                      ),
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : kSubText,
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          fontSize: 12,
+                        ),
+                      ),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                   ),
                 );
               }).toList(),
-            ],
-          ),
-        ),
+            ),
+          );
+        }),
         const SizedBox(height: 12),
 
         // Stats Summary
         Obx(() {
           final s = controller.stats.value;
-          return Row(
-            children: [
-              _statChip('Total', s.total, kPrimary),
-              _statChip('Unpaid', s.unpaid, Colors.orange),
-              _statChip('Partial', s.partial, Colors.blue),
-              _statChip('Paid', s.paid, kSuccess),
-              _statChip('Overdue', s.overdue, kDanger),
-            ],
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _statChip('Total', s.total, kPrimary),
+                _statChip('Unpaid', s.unpaid, Colors.orange),
+                _statChip('Partial', s.partial, Colors.blue),
+                _statChip('Paid', s.paid, kSuccess),
+                _statChip('Overdue', s.overdue, kDanger),
+              ],
+            ),
           );
         }),
         const SizedBox(height: 12),
@@ -93,14 +110,13 @@ class WarehouseInvoiceListView extends StatelessWidget {
             Expanded(
               child: ElevatedButton.icon(
                 onPressed: onCreate,
-                icon: const Icon(Icons.add, size: 16),
-                label: const Text('Create Invoice'),
+                icon: const Icon(Icons.add, size: 16, color: Colors.white),
+                label: const Text('Create Invoice', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  elevation: 0,
                 ),
               ),
             ),
@@ -108,13 +124,12 @@ class WarehouseInvoiceListView extends StatelessWidget {
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: onImportOrder,
-                icon: const Icon(Icons.download, size: 16),
-                label: const Text('From Order'),
+                icon: Icon(Icons.download, size: 16, color: kPrimary),
+                label: Text('From Order', style: TextStyle(color: kPrimary, fontWeight: FontWeight.w700)),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  side: BorderSide(color: kPrimary),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
               ),
             ),
@@ -126,21 +141,18 @@ class WarehouseInvoiceListView extends StatelessWidget {
         Expanded(
           child: Obx(() {
             if (controller.isLoading.value && controller.invoices.isEmpty) {
-              return const Center(child: CircularProgressIndicator());
+              return Center(child: CircularProgressIndicator(color: kPrimary));
             }
             if (controller.invoices.isEmpty) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.receipt_long, size: 64, color: kSubText.withOpacity(0.5)),
+                    Icon(Icons.receipt_long, size: 64, color: kSubText.withOpacity(0.3)),
                     const SizedBox(height: 12),
-                    Text('No invoices found', style: TextStyle(color: kSubText)),
+                    Text('No invoices found', style: TextStyle(color: kSubText, fontSize: 15, fontWeight: FontWeight.w600)),
                     const SizedBox(height: 8),
-                    Text(
-                      'Create your first invoice',
-                      style: TextStyle(color: kSubText, fontSize: 12),
-                    ),
+                    Text('Create your first invoice', style: TextStyle(color: kSubText.withOpacity(0.6), fontSize: 12)),
                   ],
                 ),
               );
@@ -164,12 +176,26 @@ class WarehouseInvoiceListView extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 IconButton(
-                  onPressed: controller.hasPrev.value ? () => controller.goToPage(controller.currentPage.value - 1) : null,
+                  onPressed: controller.hasPrev.value
+                      ? () => controller.goToPage(controller.currentPage.value - 1)
+                      : null,
                   icon: const Icon(Icons.chevron_left),
                 ),
-                Text('${controller.currentPage.value} / ${controller.totalPages.value}'),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: kCardBg,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${controller.currentPage.value} / ${controller.totalPages.value}',
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                  ),
+                ),
                 IconButton(
-                  onPressed: controller.hasNext.value ? () => controller.goToPage(controller.currentPage.value + 1) : null,
+                  onPressed: controller.hasNext.value
+                      ? () => controller.goToPage(controller.currentPage.value + 1)
+                      : null,
                   icon: const Icon(Icons.chevron_right),
                 ),
               ],
@@ -183,80 +209,123 @@ class WarehouseInvoiceListView extends StatelessWidget {
   Widget _statChip(String label, int count, Color color) {
     return Container(
       margin: const EdgeInsets.only(right: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withOpacity(0.2)),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withOpacity(0.25)),
       ),
       child: Text(
         '$label: $count',
-        style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600),
+        style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w700),
       ),
     );
   }
 
   Widget _buildInvoiceCard(WarehouseInvoiceModel invoice) {
-    final color = Get.find<WarehouseInvoiceController>().statusColor(invoice);
+    final controller = Get.find<WarehouseInvoiceController>();
+    final color = controller.statusColor(invoice);
     final status = invoice.invoiceStatus;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        onTap: () => Get.find<WarehouseInvoiceController>().selectedInvoice.value = invoice,
-        contentPadding: const EdgeInsets.all(12),
-        title: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: kCardBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withOpacity(0.12)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2)),
+        ],
+      ),
+      child: InkWell(
+        onTap: () => controller.selectedInvoice.value = invoice,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  Text(
-                    invoice.invoiceNumber,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                  // Invoice icon
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: kPrimary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.receipt_outlined, color: kPrimary, size: 20),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    invoice.customerName,
-                    style: TextStyle(fontSize: 12, color: kSubText),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          invoice.invoiceNumber,
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          invoice.customerName,
+                          style: TextStyle(fontSize: 12, color: kSubText),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Status badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: color.withOpacity(0.3)),
+                    ),
+                    child: Text(
+                      status,
+                      style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w700),
+                    ),
                   ),
                 ],
               ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(4),
+              const SizedBox(height: 10),
+              Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today_outlined, size: 12, color: kSubText),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Due: ${DateFormat('dd MMM yyyy').format(invoice.dueDate)}',
+                        style: TextStyle(fontSize: 11, color: kSubText),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'Outstanding',
+                        style: TextStyle(fontSize: 10, color: kSubText),
+                      ),
+                      Text(
+                        invoice.outstanding > 0 ? invoice.outstanding.toStringAsFixed(2) : '0.00',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: invoice.outstanding > 0 ? kDanger : kSuccess,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              child: Text(
-                status,
-                style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
-        ),
-        subtitle: Row(
-          children: [
-            Text(
-              'Due: ${DateFormat('dd MMM yyyy').format(invoice.dueDate)}',
-              style: TextStyle(fontSize: 11, color: kSubText),
-            ),
-            const Spacer(),
-            Text(
-              '${invoice.outstanding > 0 ? invoice.outstanding : 0}',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: invoice.outstanding > 0 ? kDanger : kSuccess,
-              ),
-            ),
-          ],
-        ),
-        isThreeLine: false,
-        trailing: IconButton(
-          icon: const Icon(Icons.chevron_right, size: 20),
-          onPressed: () => Get.find<WarehouseInvoiceController>().selectedInvoice.value = invoice,
+            ],
+          ),
         ),
       ),
     );
@@ -284,13 +353,14 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
       appBar: AppBar(
         title: const Text(
           'Invoices',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
         ),
         backgroundColor: kPrimary,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: () => controller.refreshInvoices(),
           ),
         ],
@@ -338,17 +408,22 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
     );
   }
 
+  // ─────────────────────── PROFESSIONAL INVOICE DETAIL VIEW ───────────────────────
+
   Widget _buildDetailView(WarehouseInvoiceController controller) {
     final invoice = controller.selectedInvoice.value!;
+    final statusColor = controller.statusColor(invoice);
+
     return Scaffold(
       backgroundColor: kBg,
       appBar: AppBar(
         title: Text(
           invoice.invoiceNumber,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.black),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
         ),
         backgroundColor: kPrimary,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => controller.selectedInvoice.value = null,
@@ -356,7 +431,7 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
         actions: [
           if (invoice.isUnpaid || invoice.isPartial)
             IconButton(
-              icon: const Icon(Icons.payment),
+              icon: const Icon(Icons.payment, color: Colors.white),
               onPressed: () => _showPaymentDialog(controller, invoice),
             ),
         ],
@@ -364,167 +439,408 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Status
+            // ── INVOICE PAPER ──
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: controller.statusColor(invoice).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(4),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 16, offset: const Offset(0, 4)),
+                ],
               ),
-              child: Text(
-                'Status: ${invoice.invoiceStatus}',
-                style: TextStyle(
-                  color: controller.statusColor(invoice),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Customer Info
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Customer', style: TextStyle(fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 4),
-                    Text(invoice.customerName),
-                    if (invoice.customerEmail != null) Text(invoice.customerEmail!),
-                    if (invoice.customerPhone != null) Text(invoice.customerPhone!),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Invoice Details
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // ── Header: Logo + Status ──
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    decoration: BoxDecoration(
+                      color: kPrimary.withOpacity(0.05),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                      border: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.12))),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
+                        // Logo placeholder
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: kPrimary.withOpacity(0.4)),
+                          ),
+                          child: Text(
+                            'Your Logo',
+                            style: TextStyle(color: kPrimary, fontWeight: FontWeight.w700, fontSize: 13),
+                          ),
+                        ),
+                        // Status badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: statusColor.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: statusColor.withOpacity(0.4)),
+                          ),
+                          child: Text(
+                            invoice.invoiceStatus.toUpperCase(),
+                            style: TextStyle(
+                              color: statusColor,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 11,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // ── FROM / TO ──
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Your Details
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Invoice Date', style: TextStyle(fontSize: 12, color: kSubText)),
-                              Text(DateFormat('dd MMM yyyy').format(invoice.invoiceDate)),
+                              Text('Your details:', style: TextStyle(color: kPrimary, fontSize: 11, fontWeight: FontWeight.w700)),
+                              const SizedBox(height: 2),
+                              Text('FROM', style: TextStyle(color: kSubText, fontSize: 9, letterSpacing: 0.8)),
+                              const SizedBox(height: 6),
+                              const Text('LedgerPro', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                              const SizedBox(height: 4),
+                              Text('Warehouse Management', style: TextStyle(color: kSubText, fontSize: 11)),
+                              Text('Business Address', style: TextStyle(color: kSubText, fontSize: 11)),
                             ],
                           ),
                         ),
+                        // Divider
+                        Container(width: 1, height: 100, color: Colors.grey.withOpacity(0.15)),
+                        const SizedBox(width: 16),
+                        // Client Details
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                               Text('Due Date', style: TextStyle(fontSize: 12, color: kSubText)),
-                              Text(DateFormat('dd MMM yyyy').format(invoice.dueDate)),
+                              Text('Client\'s details:', style: TextStyle(color: kPrimary, fontSize: 11, fontWeight: FontWeight.w700)),
+                              const SizedBox(height: 2),
+                              Text('TO', style: TextStyle(color: kSubText, fontSize: 9, letterSpacing: 0.8)),
+                              const SizedBox(height: 6),
+                              Text(
+                                invoice.customerName,
+                                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                              ),
+                              const SizedBox(height: 4),
+                              if (invoice.customerEmail != null)
+                                Text(invoice.customerEmail!, style: TextStyle(color: kSubText, fontSize: 11)),
+                              if (invoice.customerPhone != null)
+                                Text(invoice.customerPhone!, style: TextStyle(color: kSubText, fontSize: 11)),
                             ],
                           ),
                         ),
                       ],
                     ),
-                    const Divider(),
-                    ...invoice.items.map((item) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
+                  ),
+
+                  // ── Invoice Meta ──
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: kBg,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.withOpacity(0.12)),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Invoice No', style: TextStyle(color: kSubText, fontSize: 10, fontWeight: FontWeight.w600)),
+                              const SizedBox(height: 2),
+                              Text(invoice.invoiceNumber, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Invoice Date', style: TextStyle(color: kSubText, fontSize: 10, fontWeight: FontWeight.w600)),
+                              const SizedBox(height: 2),
+                              Text(DateFormat('dd MMM, yyyy').format(invoice.invoiceDate), style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Due Date', style: TextStyle(color: kSubText, fontSize: 10, fontWeight: FontWeight.w600)),
+                              const SizedBox(height: 2),
+                              Text(
+                                DateFormat('dd MMM, yyyy').format(invoice.dueDate),
+                                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: invoice.isOverdue ? kDanger : null),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // ── Items Table Header ──
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: kPrimary.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 4,
+                          child: Text('ITEM', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: kPrimary, letterSpacing: 0.5)),
+                        ),
+                        SizedBox(
+                          width: 50,
+                          child: Text('QTY', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: kPrimary, letterSpacing: 0.5), textAlign: TextAlign.center),
+                        ),
+                        SizedBox(
+                          width: 70,
+                          child: Text('RATE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: kPrimary, letterSpacing: 0.5), textAlign: TextAlign.right),
+                        ),
+                        SizedBox(
+                          width: 80,
+                          child: Text('SUBTOTAL', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: kPrimary, letterSpacing: 0.5), textAlign: TextAlign.right),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+
+                  // ── Items ──
+                  ...invoice.items.asMap().entries.map((entry) {
+                    final i = entry.key;
+                    final item = entry.value;
+                    final isEven = i % 2 == 0;
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: isEven ? Colors.transparent : Colors.grey.withOpacity(0.04),
+                        border: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.1))),
+                      ),
                       child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
-                            child: Text(
-                              '${item.quantity}x ${item.productName}',
-                              style: const TextStyle(fontSize: 13),
+                            flex: 4,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.productName,
+                                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                                ),
+                                if (item.description != null && item.description!.isNotEmpty && item.description != item.productName)
+                                  Text(
+                                    item.description!,
+                                    style: TextStyle(fontSize: 10, color: kSubText),
+                                  ),
+                                if (item.sku != null && item.sku!.isNotEmpty)
+                                  Text(
+                                    'SKU: ${item.sku}',
+                                    style: TextStyle(fontSize: 10, color: kSubText.withOpacity(0.7)),
+                                  ),
+                              ],
                             ),
                           ),
-                          Text('${item.unitPrice}'),
+                          SizedBox(
+                            width: 50,
+                            child: Text(
+                              '${item.quantity}',
+                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          SizedBox(
+                            width: 70,
+                            child: Text(
+                              item.unitPrice.toStringAsFixed(2),
+                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                          SizedBox(
+                            width: 80,
+                            child: Text(
+                              item.totalPrice.toStringAsFixed(2),
+                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
                         ],
                       ),
-                    )),
-                    const Divider(),
-                    _totalRow('Subtotal', '${invoice.subtotal}'),
-                    _totalRow('Tax', '${invoice.taxTotal}'),
-                    if (invoice.discountTotal > 0)
-                      _totalRow('Discount', '-${invoice.discountTotal}'),
-                    _totalRow('Grand Total', '${invoice.grandTotal}', bold: true),
-                    if (invoice.paidAmount > 0)
-                      _totalRow('Paid', '${invoice.paidAmount}'),
-                    _totalRow('Outstanding', '${invoice.outstanding}', bold: true, color: invoice.outstanding > 0 ? kDanger : kSuccess),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
+                    );
+                  }).toList(),
 
-            // Notes
-            if (invoice.notes != null && invoice.notes!.isNotEmpty)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Notes', style: TextStyle(fontWeight: FontWeight.w700)),
-                      const SizedBox(height: 4),
-                      Text(invoice.notes!),
-                    ],
-                  ),
-                ),
-              ),
-            const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-            // Actions
-            Row(
-              children: [
-                if (invoice.isUnpaid || invoice.isPartial)
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _showPaymentDialog(controller, invoice),
-                      icon: const Icon(Icons.payment),
-                      label: const Text('Record Payment'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kSuccess,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                  // ── Invoice Summary ──
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 20),
+                      width: 260,
+                      decoration: BoxDecoration(
+                        color: kBg,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+                      ),
+                      child: Column(
+                        children: [
+                          // Header
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: kPrimary.withOpacity(0.08),
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Text(
+                                  'Invoice Summary',
+                                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: kPrimary),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Rows
+                          _summaryRow('Subtotal', invoice.subtotal),
+                          if (invoice.taxTotal > 0) _summaryRow('Tax', invoice.taxTotal),
+                          if (invoice.discountTotal > 0) _summaryRow('Discount', -invoice.discountTotal),
+                          Container(
+                            height: 1,
+                            color: Colors.grey.withOpacity(0.2),
+                          ),
+                          _summaryRow('Total', invoice.grandTotal, bold: true, color: kPrimary),
+                          if (invoice.paidAmount > 0) _summaryRow('Paid', invoice.paidAmount, color: kSuccess),
+                          if (invoice.outstanding > 0)
+                            _summaryRow('Outstanding', invoice.outstanding, bold: true, color: kDanger),
+                          const SizedBox(height: 4),
+                        ],
                       ),
                     ),
                   ),
-                if (!invoice.isPaid && !invoice.isCancelled) ...[
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => _showDeleteConfirm(controller, invoice),
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      label: const Text('Delete', style: TextStyle(color: Colors.red)),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.red),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+
+                  // Notes
+                  if (invoice.notes != null && invoice.notes!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withOpacity(0.06),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.amber.withOpacity(0.2)),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.notes, size: 14, color: Colors.amber.shade700),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                invoice.notes!,
+                                style: TextStyle(fontSize: 12, color: kSubText),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
+
+                  const SizedBox(height: 20),
+
+                  // Footer line
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: kPrimary,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                   ),
+                  const SizedBox(height: 20),
                 ],
-              ],
+              ),
             ),
+
+            // ── Action Buttons ──
+            const SizedBox(height: 20),
+            if (invoice.isUnpaid || invoice.isPartial)
+              ElevatedButton.icon(
+                onPressed: () => _showPaymentDialog(controller, invoice),
+                icon: const Icon(Icons.payment, color: Colors.white),
+                label: const Text('Record Payment', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kSuccess,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
+              ),
+            if (!invoice.isPaid && !invoice.isCancelled) ...[
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                onPressed: () => _showDeleteConfirm(controller, invoice),
+                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                label: const Text('Delete Invoice', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w700)),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  side: const BorderSide(color: Colors.red),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
+            const SizedBox(height: 24),
           ],
         ),
       ),
     );
   }
 
-  Widget _totalRow(String label, String value, {bool bold = false, Color? color}) {
+  Widget _summaryRow(String label, double amount, {bool bold = false, Color? color}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontWeight: bold ? FontWeight.w700 : FontWeight.w500)),
           Text(
-            value,
+            label,
             style: TextStyle(
+              fontSize: bold ? 13 : 12,
               fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+              color: kSubText,
+            ),
+          ),
+          Text(
+            amount.toStringAsFixed(2),
+            style: TextStyle(
+              fontSize: bold ? 15 : 13,
+              fontWeight: bold ? FontWeight.w800 : FontWeight.w600,
               color: color,
             ),
           ),
@@ -538,20 +854,41 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Record Payment'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.payment, color: kSuccess, size: 22),
+            const SizedBox(width: 8),
+            const Text('Record Payment', style: TextStyle(fontWeight: FontWeight.w800)),
+          ],
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Invoice: ${invoice.invoiceNumber}'),
-            const SizedBox(height: 8),
-            Text('Outstanding: ${invoice.outstanding}'),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: kBg,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Invoice: ${invoice.invoiceNumber}', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                  const SizedBox(height: 4),
+                  Text('Outstanding: ${invoice.outstanding.toStringAsFixed(2)}', style: TextStyle(color: kDanger, fontWeight: FontWeight.w600, fontSize: 13)),
+                ],
+              ),
+            ),
             const SizedBox(height: 12),
             TextField(
               controller: amountCtrl,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Amount',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: 'Payment Amount',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                prefixIcon: const Icon(Icons.attach_money),
               ),
             ),
           ],
@@ -559,7 +896,7 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text('Cancel', style: TextStyle(color: kSubText)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -571,7 +908,11 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
               Navigator.pop(ctx);
               await controller.recordPayment(invoice.id, amount);
             },
-            child: const Text('Record'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kSuccess,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('Record', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -582,19 +923,33 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Invoice'),
-        content: Text('Delete invoice ${invoice.invoiceNumber}?'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.red),
+            SizedBox(width: 8),
+            Text('Delete Invoice', style: TextStyle(fontWeight: FontWeight.w800)),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to delete invoice ${invoice.invoiceNumber}? This action cannot be undone.',
+          style: TextStyle(color: kSubText),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text('Cancel', style: TextStyle(color: kSubText)),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx);
               await controller.deleteInvoice(invoice);
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('Delete', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -605,52 +960,90 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (_) {
         controller.fetchBillableOrders();
-        return DraggableScrollableSheet(
-          initialChildSize: 0.7,
-          maxChildSize: 0.9,
-          minChildSize: 0.5,
-          expand: false,
-          builder: (context, scrollController) {
-            return Obx(() {
-              final orders = controller.billableOrders;
-              return Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(
-                      'Select Order to Create Invoice',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: DraggableScrollableSheet(
+            initialChildSize: 0.7,
+            maxChildSize: 0.9,
+            minChildSize: 0.5,
+            expand: false,
+            builder: (context, scrollController) {
+              return Obx(() {
+                final orders = controller.billableOrders;
+                return Column(
+                  children: [
+                    // Handle
+                    Container(
+                      margin: const EdgeInsets.only(top: 12),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(color: Colors.grey.withOpacity(0.3), borderRadius: BorderRadius.circular(4)),
                     ),
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      controller: scrollController,
-                      itemCount: orders.length,
-                      itemBuilder: (context, index) {
-                        final order = orders[index];
-                        return ListTile(
-                          title: Text(order.orderNumber),
-                          subtitle: Text(order.customerName),
-                          trailing: Text('${order.subtotal}'),
-                          onTap: () {
-                            final draft = controller.draftFromOrder(order);
-                            Navigator.pop(context);
-                            _orderDraft = draft;
-                            controller.openCreateForm();
-                          },
-                        );
-                      },
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Icon(Icons.download_outlined, color: kPrimary),
+                          const SizedBox(width: 8),
+                          Text('Select Order to Create Invoice', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              );
-            });
-          },
+                    Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
+                    Expanded(
+                      child: orders.isEmpty
+                          ? Center(child: Text('No billable orders found', style: TextStyle(color: kSubText)))
+                          : ListView.builder(
+                              controller: scrollController,
+                              itemCount: orders.length,
+                              padding: const EdgeInsets.all(12),
+                              itemBuilder: (context, index) {
+                                final order = orders[index];
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 8),
+                                  decoration: BoxDecoration(
+                                    color: kCardBg,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(color: Colors.grey.withOpacity(0.12)),
+                                  ),
+                                  child: ListTile(
+                                    onTap: () {
+                                      final draft = controller.draftFromOrder(order);
+                                      Navigator.pop(context);
+                                      _orderDraft = draft;
+                                      controller.openCreateForm();
+                                    },
+                                    leading: Container(
+                                      width: 36,
+                                      height: 36,
+                                      decoration: BoxDecoration(
+                                        color: kPrimary.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Icon(Icons.shopping_bag_outlined, color: kPrimary, size: 18),
+                                    ),
+                                    title: Text(order.orderNumber, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                                    subtitle: Text(order.customerName, style: TextStyle(fontSize: 12, color: kSubText)),
+                                    trailing: Text(
+                                      order.subtotal.toStringAsFixed(2),
+                                      style: TextStyle(fontWeight: FontWeight.w700, color: kPrimary),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                );
+              });
+            },
+          ),
         );
       },
     );
@@ -686,7 +1079,7 @@ class _CreateWarehouseInvoiceFormState extends State<CreateWarehouseInvoiceForm>
   bool _loadingProducts = false;
   Timer? _debounce;
 
-  String _format(double v) => '${v.toStringAsFixed(2)}';
+  String _format(double v) => v.toStringAsFixed(2);
 
   @override
   void initState() {
@@ -783,32 +1176,48 @@ class _CreateWarehouseInvoiceFormState extends State<CreateWarehouseInvoiceForm>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Header
           Row(
             children: [
-              IconButton(onPressed: widget.onCancel, icon: const Icon(Icons.arrow_back)),
+              IconButton(
+                onPressed: widget.onCancel,
+                icon: const Icon(Icons.arrow_back),
+                style: IconButton.styleFrom(backgroundColor: kCardBg),
+              ),
+              const SizedBox(width: 8),
               const Expanded(
                 child: Text('Create Invoice', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
               ),
             ],
           ),
+          const SizedBox(height: 16),
+
+          // From order banner
           if (_draft.sourceOrderNumber != null)
             Container(
               margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: Colors.blue.shade100),
               ),
-              child: Text('From warehouse order: ${_draft.sourceOrderNumber}', style: TextStyle(color: Colors.blue.shade900, fontSize: 12)),
+              child: Row(
+                children: [
+                  Icon(Icons.link, color: Colors.blue.shade700, size: 16),
+                  const SizedBox(width: 8),
+                  Text('From warehouse order: ${_draft.sourceOrderNumber}', style: TextStyle(color: Colors.blue.shade900, fontSize: 12, fontWeight: FontWeight.w600)),
+                ],
+              ),
             ),
+
           _section('Customer', [
             Obx(() {
               return DropdownButtonFormField<String>(
                 value: _draft.customerId,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Select warehouse customer *',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                   isDense: true,
                 ),
                 items: widget.controller.customers.map((c) {
@@ -835,40 +1244,77 @@ class _CreateWarehouseInvoiceFormState extends State<CreateWarehouseInvoiceForm>
             const SizedBox(height: 8),
             TextFormField(
               initialValue: _draft.customerName,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Customer name (if not in list)',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 isDense: true,
               ),
               onChanged: (v) => _draft.customerName = v.trim(),
             ),
           ]),
           const SizedBox(height: 12),
+
           _section('Invoice Dates', [
             Row(
               children: [
                 Expanded(
-                  child: ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Issue date', style: TextStyle(fontSize: 12)),
-                    subtitle: Text(DateFormat('dd MMM yyyy').format(_draft.issueDate)),
-                    trailing: const Icon(Icons.calendar_today, size: 18),
+                  child: GestureDetector(
                     onTap: () => _pickDate(true),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: kBg,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.grey.withOpacity(0.25)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.calendar_today, size: 16, color: kPrimary),
+                          const SizedBox(width: 8),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Issue date', style: TextStyle(fontSize: 10, color: kSubText)),
+                              Text(DateFormat('dd MMM yyyy').format(_draft.issueDate), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
+                const SizedBox(width: 10),
                 Expanded(
-                  child: ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Due date', style: TextStyle(fontSize: 12)),
-                    subtitle: Text(DateFormat('dd MMM yyyy').format(_draft.dueDate)),
-                    trailing: const Icon(Icons.event, size: 18),
+                  child: GestureDetector(
                     onTap: () => _pickDate(false),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: kBg,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.grey.withOpacity(0.25)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.event, size: 16, color: kPrimary),
+                          const SizedBox(width: 8),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Due date', style: TextStyle(fontSize: 10, color: kSubText)),
+                              Text(DateFormat('dd MMM yyyy').format(_draft.dueDate), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
           ]),
           const SizedBox(height: 12),
+
           _section('Line Items', [
             TextField(
               controller: _productSearchCtrl,
@@ -876,55 +1322,105 @@ class _CreateWarehouseInvoiceFormState extends State<CreateWarehouseInvoiceForm>
                 labelText: 'Add product from warehouse catalog',
                 hintText: 'Search name or SKU...',
                 prefixIcon: const Icon(Icons.search),
-                suffixIcon: _loadingProducts ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))) : null,
-                border: const OutlineInputBorder(),
+                suffixIcon: _loadingProducts
+                    ? const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                      )
+                    : null,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 isDense: true,
               ),
               onChanged: _searchProducts,
             ),
             if (_productResults.isNotEmpty)
-              ..._productResults.map((p) => ListTile(
+              Container(
+                margin: const EdgeInsets.only(top: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.grey.withOpacity(0.15)),
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8)],
+                ),
+                child: Column(
+                  children: _productResults.map((p) => ListTile(
                     dense: true,
-                    contentPadding: EdgeInsets.zero,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
                     title: Text(p['name']?.toString() ?? '', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                    subtitle: Text('${p['sku']} • ${_format((p['sellingPrice'] as num?)?.toDouble() ?? 0)}'),
-                    trailing: IconButton(icon: const Icon(Icons.add_circle_outline), onPressed: () => _addProduct(p)),
-                  )),
+                    subtitle: Text('${p['sku']} • ${_format((p['sellingPrice'] as num?)?.toDouble() ?? 0)}', style: TextStyle(fontSize: 11, color: kSubText)),
+                    trailing: IconButton(
+                      icon: Icon(Icons.add_circle, color: kPrimary),
+                      onPressed: () => _addProduct(p),
+                    ),
+                  )).toList(),
+                ),
+              ),
             const SizedBox(height: 8),
             ...List.generate(_draft.lines.length, (index) => _lineCard(index)),
             if (_draft.lines.isEmpty)
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Text('No line items yet', style: TextStyle(color: kSubText, fontSize: 12)),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(Icons.playlist_add, size: 36, color: kSubText.withOpacity(0.4)),
+                      const SizedBox(height: 6),
+                      Text('No line items yet', style: TextStyle(color: kSubText, fontSize: 12)),
+                    ],
+                  ),
+                ),
               ),
           ]),
           const SizedBox(height: 12),
+
           _section('Totals', [
             _totalRow('Subtotal', _format(_draft.subtotal)),
             _totalRow('Tax', _format(_draft.taxTotal)),
+            const SizedBox(height: 8),
             TextField(
               controller: _discountCtrl,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: 'Discount', border: OutlineInputBorder(), isDense: true),
+              decoration: InputDecoration(
+                labelText: 'Discount',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                isDense: true,
+              ),
               onChanged: (_) => setState(() => _draft.discount = double.tryParse(_discountCtrl.text) ?? 0),
             ),
-            const Divider(),
+            const Divider(height: 20),
             _totalRow('Grand Total', _format(_draft.grandTotal), bold: true),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             TextField(
               controller: _notesCtrl,
               maxLines: 3,
-              decoration: const InputDecoration(labelText: 'Notes / Terms', border: OutlineInputBorder()),
+              decoration: InputDecoration(
+                labelText: 'Notes / Terms',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              ),
             ),
           ]),
           const SizedBox(height: 20),
+
           Obx(() => ElevatedButton(
                 onPressed: widget.controller.isSubmitting.value ? null : _submit,
-                style: ElevatedButton.styleFrom(backgroundColor: kPrimary, padding: const EdgeInsets.symmetric(vertical: 14)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
                 child: widget.controller.isSubmitting.value
-                    ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
-                    : const Text('Create Invoice', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w800)),
+                    ? const SizedBox(
+                        height: 22,
+                        width: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text(
+                        'Create Invoice',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15),
+                      ),
               )),
+          const SizedBox(height: 30),
         ],
       ),
     );
@@ -932,26 +1428,54 @@ class _CreateWarehouseInvoiceFormState extends State<CreateWarehouseInvoiceForm>
 
   Widget _lineCard(int index) {
     final line = _draft.lines[index];
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 6)],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Expanded(child: Text(line.description, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
-                IconButton(icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red), onPressed: () => _removeLine(index)),
+                Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: kPrimary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Center(
+                    child: Text('${index + 1}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: kPrimary)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(child: Text(line.description, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13))),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                  onPressed: () => _removeLine(index),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
               ],
             ),
+            const SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
                   child: TextFormField(
                     initialValue: '${line.quantity}',
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Qty', isDense: true, border: OutlineInputBorder()),
+                    decoration: InputDecoration(
+                      labelText: 'Qty',
+                      isDense: true,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
                     onChanged: (v) => setState(() => line.quantity = int.tryParse(v) ?? 1),
                   ),
                 ),
@@ -960,7 +1484,11 @@ class _CreateWarehouseInvoiceFormState extends State<CreateWarehouseInvoiceForm>
                   child: TextFormField(
                     initialValue: line.unitPrice.toStringAsFixed(2),
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(labelText: 'Unit price', isDense: true, border: OutlineInputBorder()),
+                    decoration: InputDecoration(
+                      labelText: 'Unit price',
+                      isDense: true,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
                     onChanged: (v) => setState(() => line.unitPrice = double.tryParse(v) ?? 0),
                   ),
                 ),
@@ -969,14 +1497,24 @@ class _CreateWarehouseInvoiceFormState extends State<CreateWarehouseInvoiceForm>
                   child: TextFormField(
                     initialValue: line.taxRate.toStringAsFixed(1),
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(labelText: 'Tax %', isDense: true, border: OutlineInputBorder()),
+                    decoration: InputDecoration(
+                      labelText: 'Tax %',
+                      isDense: true,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
                     onChanged: (v) => setState(() => line.taxRate = double.tryParse(v) ?? 0),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
-            Text('Line total: ${_format(line.lineTotal)}', style: TextStyle(fontSize: 12, color: kPrimary, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 6),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'Line total: ${_format(line.lineTotal)}',
+                style: TextStyle(fontSize: 12, color: kPrimary, fontWeight: FontWeight.w700),
+              ),
+            ),
           ],
         ),
       ),
@@ -985,16 +1523,16 @@ class _CreateWarehouseInvoiceFormState extends State<CreateWarehouseInvoiceForm>
 
   Widget _section(String title, List<Widget> children) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: kCardBg,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.withOpacity(0.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+          Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
           const SizedBox(height: 12),
           ...children,
         ],
@@ -1008,8 +1546,8 @@ class _CreateWarehouseInvoiceFormState extends State<CreateWarehouseInvoiceForm>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontWeight: bold ? FontWeight.w800 : FontWeight.w500)),
-          Text(value, style: TextStyle(fontWeight: bold ? FontWeight.w800 : FontWeight.w600)),
+          Text(label, style: TextStyle(fontWeight: bold ? FontWeight.w800 : FontWeight.w500, color: kSubText)),
+          Text(value, style: TextStyle(fontWeight: bold ? FontWeight.w800 : FontWeight.w600, fontSize: bold ? 16 : 14)),
         ],
       ),
     );

@@ -35,8 +35,10 @@ class SuppliersScreen extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
                 child: _MobileSuppliersList(
                   controller: controller,
-                  onSupplierTap: (s) => _showSupplierDetails(context, s, controller),
-                  onAddSupplier: () => _showAddSupplierDialog(context, controller),
+                  onSupplierTap: (s) =>
+                      _showSupplierDetails(context, s, controller),
+                  onAddSupplier: () =>
+                      _showAddSupplierDialog(context, controller),
                 ),
               );
             }),
@@ -64,11 +66,21 @@ class SuppliersScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title row
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
               child: Row(
                 children: [
+                  GestureDetector(
+                    onTap: () {
+                      Get.back();
+                    },
+                    child: Icon(
+                      Icons.arrow_back,
+                      color: Colors.black,
+                      size: 24,
+                    ),
+                  ),
+                  SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,25 +94,37 @@ class SuppliersScreen extends StatelessWidget {
                             letterSpacing: -0.3,
                           ),
                         ),
-                        Obx(() => Text(
-                          '${controller.totalSuppliers.value} suppliers',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.black.withOpacity(0.55),
-                            fontWeight: FontWeight.w500,
+                        Obx(
+                          () => Text(
+                            '${controller.totalSuppliers.value} suppliers',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.black.withOpacity(0.55),
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        )),
+                        ),
                       ],
                     ),
                   ),
                   // Compact KPIs
-                  Obx(() => Row(
-                    children: [
-                      _compactKpi('Active', controller.activeCount.value.toString(), Colors.green.shade800),
-                      const SizedBox(width: 10),
-                      _compactKpi('Inactive', controller.inactiveCount.value.toString(), Colors.red.shade700),
-                    ],
-                  )),
+                  Obx(
+                    () => Row(
+                      children: [
+                        _compactKpi(
+                          'Active',
+                          controller.activeCount.value.toString(),
+                          Colors.green.shade800,
+                        ),
+                        const SizedBox(width: 10),
+                        _compactKpi(
+                          'Inactive',
+                          controller.inactiveCount.value.toString(),
+                          Colors.red.shade700,
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(width: 10),
                   GestureDetector(
                     onTap: controller.refreshAll,
@@ -111,7 +135,11 @@ class SuppliersScreen extends StatelessWidget {
                         color: Colors.black.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(9),
                       ),
-                      child: Icon(Icons.refresh_rounded, size: 17, color: Colors.black.withOpacity(0.65)),
+                      child: Icon(
+                        Icons.refresh_rounded,
+                        size: 17,
+                        color: Colors.black.withOpacity(0.65),
+                      ),
                     ),
                   ),
                 ],
@@ -137,40 +165,50 @@ class SuppliersScreen extends StatelessWidget {
               ),
             ),
             // Filter chips
-            Obx(() => SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-              child: Row(
-                children: controller.filters.map((filter) {
-                  final isSelected = controller.selectedFilter.value == filter;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: GestureDetector(
-                      onTap: () => controller.filterSuppliers(filter),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: isSelected ? Colors.black : Colors.white.withOpacity(0.18),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: isSelected ? Colors.black : Colors.white.withOpacity(0.4),
+            Obx(
+              () => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                child: Row(
+                  children: controller.filters.map((filter) {
+                    final isSelected =
+                        controller.selectedFilter.value == filter;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: GestureDetector(
+                        onTap: () => controller.filterSuppliers(filter),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 5,
                           ),
-                        ),
-                        child: Text(
-                          filter,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: isSelected ? Colors.white : Colors.black87,
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? Colors.black
+                                : Colors.white.withOpacity(0.18),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isSelected
+                                  ? Colors.black
+                                  : Colors.white.withOpacity(0.4),
+                            ),
+                          ),
+                          child: Text(
+                            filter,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: isSelected ? Colors.white : Colors.black87,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }).toList(),
+                ),
               ),
-            )),
+            ),
           ],
         ),
       ),
@@ -210,7 +248,9 @@ class SuppliersScreen extends StatelessWidget {
   ) {
     final status = supplier['status'] ?? 'active';
     final isActive = status == 'active';
-    final statusColor = isActive ? const Color(0xFF2ECC71) : const Color(0xFFE74C3C);
+    final statusColor = isActive
+        ? const Color(0xFF2ECC71)
+        : const Color(0xFFE74C3C);
 
     showModalBottomSheet(
       context: context,
@@ -255,7 +295,11 @@ class SuppliersScreen extends StatelessWidget {
                               color: kPrimary.withOpacity(0.12),
                               borderRadius: BorderRadius.circular(14),
                             ),
-                            child: Icon(Icons.storefront, color: kPrimary, size: 26),
+                            child: Icon(
+                              Icons.storefront,
+                              color: kPrimary,
+                              size: 26,
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -272,14 +316,21 @@ class SuppliersScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  supplier['contactPerson'] ?? 'No contact person',
-                                  style: TextStyle(fontSize: 12, color: kSubText),
+                                  supplier['contactPerson'] ??
+                                      'No contact person',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: kSubText,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: statusColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(10),
@@ -298,11 +349,17 @@ class SuppliersScreen extends StatelessWidget {
                       const SizedBox(height: 16),
                       Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
                       const SizedBox(height: 16),
-                      _detailRow('Contact Person', supplier['contactPerson'] ?? '-'),
+                      _detailRow(
+                        'Contact Person',
+                        supplier['contactPerson'] ?? '-',
+                      ),
                       _detailRow('Email', supplier['email'] ?? '-'),
                       _detailRow('Phone', supplier['phone'] ?? '-'),
                       _detailRow('GST Number', supplier['gstNumber'] ?? '-'),
-                      _detailRow('Payment Terms', supplier['paymentTerms'] ?? '-'),
+                      _detailRow(
+                        'Payment Terms',
+                        supplier['paymentTerms'] ?? '-',
+                      ),
                       _detailRow('Address', supplier['address'] ?? '-'),
                       const SizedBox(height: 16),
                       Row(
@@ -311,12 +368,18 @@ class SuppliersScreen extends StatelessWidget {
                             child: OutlinedButton(
                               onPressed: () {
                                 Navigator.pop(context);
-                                _showEditSupplierDialog(context, supplier, controller);
+                                _showEditSupplierDialog(
+                                  context,
+                                  supplier,
+                                  controller,
+                                );
                               },
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: kPrimary,
                                 side: const BorderSide(color: kPrimary),
-                                padding: const EdgeInsets.symmetric(vertical: 13),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 13,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
@@ -337,7 +400,9 @@ class SuppliersScreen extends StatelessWidget {
                               onPressed: () => Navigator.pop(context),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: kPrimary,
-                                padding: const EdgeInsets.symmetric(vertical: 13),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 13,
+                                ),
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
@@ -439,10 +504,14 @@ class SuppliersScreen extends StatelessWidget {
                   color: kPrimary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.storefront_outlined, color: kPrimary, size: 20),
+                child: Icon(
+                  Icons.storefront_outlined,
+                  color: kPrimary,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
-               Text(
+              Text(
                 'Add New Supplier',
                 style: TextStyle(
                   fontSize: 18,
@@ -468,8 +537,9 @@ class SuppliersScreen extends StatelessWidget {
                       hint: 'e.g., ABC Traders',
                       icon: Icons.storefront_outlined,
                     ),
-                    style:  TextStyle(fontSize: 13, color: kText),
-                    validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+                    style: TextStyle(fontSize: 13, color: kText),
+                    validator: (v) =>
+                        v == null || v.trim().isEmpty ? 'Required' : null,
                   ),
                   const SizedBox(height: 12),
                   _fieldLabel('Contact Person'),
@@ -480,7 +550,7 @@ class SuppliersScreen extends StatelessWidget {
                       hint: 'e.g., Ali Khan',
                       icon: Icons.person_outline,
                     ),
-                    style:  TextStyle(fontSize: 13, color: kText),
+                    style: TextStyle(fontSize: 13, color: kText),
                   ),
                   const SizedBox(height: 12),
                   _fieldLabel('Email'),
@@ -492,7 +562,7 @@ class SuppliersScreen extends StatelessWidget {
                       hint: 'supplier@example.com',
                       icon: Icons.email_outlined,
                     ),
-                    style:  TextStyle(fontSize: 13, color: kText),
+                    style: TextStyle(fontSize: 13, color: kText),
                     validator: (v) {
                       if (v != null && v.isNotEmpty && !v.contains('@')) {
                         return 'Enter valid email';
@@ -510,7 +580,7 @@ class SuppliersScreen extends StatelessWidget {
                       hint: '+92 300 0000000',
                       icon: Icons.phone_outlined,
                     ),
-                    style:  TextStyle(fontSize: 13, color: kText),
+                    style: TextStyle(fontSize: 13, color: kText),
                   ),
                   const SizedBox(height: 12),
                   _fieldLabel('GST Number'),
@@ -521,7 +591,7 @@ class SuppliersScreen extends StatelessWidget {
                       hint: 'GST-XXXXXXX',
                       icon: Icons.receipt_long_outlined,
                     ),
-                    style:  TextStyle(fontSize: 13, color: kText),
+                    style: TextStyle(fontSize: 13, color: kText),
                   ),
                   const SizedBox(height: 12),
                   _fieldLabel('Payment Terms'),
@@ -557,7 +627,8 @@ class SuppliersScreen extends StatelessWidget {
                             ),
                           );
                         }).toList(),
-                        onChanged: (v) => setState(() => selectedPaymentTerms = v),
+                        onChanged: (v) =>
+                            setState(() => selectedPaymentTerms = v),
                       ),
                     ),
                   ),
@@ -567,10 +638,8 @@ class SuppliersScreen extends StatelessWidget {
                   TextFormField(
                     controller: addressCtrl,
                     maxLines: 2,
-                    decoration: _inputDec(
-                      hint: 'Street, City, Country...',
-                    ),
-                    style:  TextStyle(fontSize: 13, color: kText),
+                    decoration: _inputDec(hint: 'Street, City, Country...'),
+                    style: TextStyle(fontSize: 13, color: kText),
                   ),
                 ],
               ),
@@ -579,10 +648,7 @@ class SuppliersScreen extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: kSubText),
-              ),
+              child: Text('Cancel', style: TextStyle(color: kSubText)),
             ),
             Obx(
               () => ElevatedButton(
@@ -628,7 +694,10 @@ class SuppliersScreen extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                 ),
                 child: controller.isSubmitting.value
                     ? const SizedBox(
@@ -662,7 +731,9 @@ class SuppliersScreen extends StatelessWidget {
   ) {
     final formKey = GlobalKey<FormState>();
     final nameCtrl = TextEditingController(text: supplier['name'] ?? '');
-    final contactPersonCtrl = TextEditingController(text: supplier['contactPerson'] ?? '');
+    final contactPersonCtrl = TextEditingController(
+      text: supplier['contactPerson'] ?? '',
+    );
     final emailCtrl = TextEditingController(text: supplier['email'] ?? '');
     final phoneCtrl = TextEditingController(text: supplier['phone'] ?? '');
     final gstCtrl = TextEditingController(text: supplier['gstNumber'] ?? '');
@@ -699,7 +770,7 @@ class SuppliersScreen extends StatelessWidget {
                 child: Icon(Icons.edit_outlined, color: kPrimary, size: 20),
               ),
               const SizedBox(width: 12),
-               Text(
+              Text(
                 'Edit Supplier',
                 style: TextStyle(
                   fontSize: 18,
@@ -721,21 +792,18 @@ class SuppliersScreen extends StatelessWidget {
                   const SizedBox(height: 4),
                   TextFormField(
                     controller: nameCtrl,
-                    decoration: _inputDec(
-                      icon: Icons.storefront_outlined,
-                    ),
-                    style:  TextStyle(fontSize: 13, color: kText),
-                    validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+                    decoration: _inputDec(icon: Icons.storefront_outlined),
+                    style: TextStyle(fontSize: 13, color: kText),
+                    validator: (v) =>
+                        v == null || v.trim().isEmpty ? 'Required' : null,
                   ),
                   const SizedBox(height: 12),
                   _fieldLabel('Contact Person'),
                   const SizedBox(height: 4),
                   TextFormField(
                     controller: contactPersonCtrl,
-                    decoration: _inputDec(
-                      icon: Icons.person_outline,
-                    ),
-                    style:  TextStyle(fontSize: 13, color: kText),
+                    decoration: _inputDec(icon: Icons.person_outline),
+                    style: TextStyle(fontSize: 13, color: kText),
                   ),
                   const SizedBox(height: 12),
                   _fieldLabel('Email'),
@@ -743,10 +811,8 @@ class SuppliersScreen extends StatelessWidget {
                   TextFormField(
                     controller: emailCtrl,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: _inputDec(
-                      icon: Icons.email_outlined,
-                    ),
-                    style:  TextStyle(fontSize: 13, color: kText),
+                    decoration: _inputDec(icon: Icons.email_outlined),
+                    style: TextStyle(fontSize: 13, color: kText),
                     validator: (v) {
                       if (v != null && v.isNotEmpty && !v.contains('@')) {
                         return 'Enter valid email';
@@ -760,20 +826,16 @@ class SuppliersScreen extends StatelessWidget {
                   TextFormField(
                     controller: phoneCtrl,
                     keyboardType: TextInputType.phone,
-                    decoration: _inputDec(
-                      icon: Icons.phone_outlined,
-                    ),
-                    style:  TextStyle(fontSize: 13, color: kText),
+                    decoration: _inputDec(icon: Icons.phone_outlined),
+                    style: TextStyle(fontSize: 13, color: kText),
                   ),
                   const SizedBox(height: 12),
                   _fieldLabel('GST Number'),
                   const SizedBox(height: 4),
                   TextFormField(
                     controller: gstCtrl,
-                    decoration: _inputDec(
-                      icon: Icons.receipt_long_outlined,
-                    ),
-                    style:  TextStyle(fontSize: 13, color: kText),
+                    decoration: _inputDec(icon: Icons.receipt_long_outlined),
+                    style: TextStyle(fontSize: 13, color: kText),
                   ),
                   const SizedBox(height: 12),
                   _fieldLabel('Payment Terms'),
@@ -809,7 +871,8 @@ class SuppliersScreen extends StatelessWidget {
                             ),
                           );
                         }).toList(),
-                        onChanged: (v) => setState(() => selectedPaymentTerms = v),
+                        onChanged: (v) =>
+                            setState(() => selectedPaymentTerms = v),
                       ),
                     ),
                   ),
@@ -820,7 +883,7 @@ class SuppliersScreen extends StatelessWidget {
                     controller: addressCtrl,
                     maxLines: 2,
                     decoration: _inputDec(),
-                    style:  TextStyle(fontSize: 13, color: kText),
+                    style: TextStyle(fontSize: 13, color: kText),
                   ),
                   const SizedBox(height: 12),
                   _fieldLabel('Status'),
@@ -859,7 +922,8 @@ class SuppliersScreen extends StatelessWidget {
                             ),
                           ),
                         ],
-                        onChanged: (v) => setState(() => selectedStatus = v ?? 'active'),
+                        onChanged: (v) =>
+                            setState(() => selectedStatus = v ?? 'active'),
                       ),
                     ),
                   ),
@@ -870,10 +934,7 @@ class SuppliersScreen extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: kSubText),
-              ),
+              child: Text('Cancel', style: TextStyle(color: kSubText)),
             ),
             Obx(
               () => ElevatedButton(
@@ -923,7 +984,10 @@ class SuppliersScreen extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                 ),
                 child: controller.isSubmitting.value
                     ? const SizedBox(
@@ -958,14 +1022,12 @@ class SuppliersScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Row(
           children: [
             Icon(Icons.warning_amber_rounded, color: kDanger, size: 22),
             const SizedBox(width: 10),
-             Text(
+            Text(
               'Delete Supplier',
               style: TextStyle(
                 fontSize: 18,
@@ -981,10 +1043,7 @@ class SuppliersScreen extends StatelessWidget {
           children: [
             Text(
               'Are you sure you want to delete "${supplier['name']}"?',
-              style: TextStyle(
-                fontSize: 14,
-                color: kText,
-              ),
+              style: TextStyle(fontSize: 14, color: kText),
             ),
             const SizedBox(height: 12),
             Container(
@@ -1001,10 +1060,7 @@ class SuppliersScreen extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'If this supplier has linked products or purchases, they will be deactivated instead.',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: kDanger,
-                      ),
+                      style: TextStyle(fontSize: 13, color: kDanger),
                     ),
                   ),
                 ],
@@ -1015,15 +1071,14 @@ class SuppliersScreen extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: kSubText),
-            ),
+            child: Text('Cancel', style: TextStyle(color: kSubText)),
           ),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
-              final success = await controller.deleteSupplier(supplier['_id'] ?? supplier['id'] ?? '');
+              final success = await controller.deleteSupplier(
+                supplier['_id'] ?? supplier['id'] ?? '',
+              );
               Get.snackbar(
                 success ? 'Success' : 'Error',
                 success
@@ -1059,18 +1114,19 @@ class SuppliersScreen extends StatelessWidget {
   // ─── HELPERS ────────────────────────────────────────────────────
 
   Widget _fieldLabel(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 4),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: kSubText,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.only(bottom: 4),
+    child: Text(
+      text,
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: kSubText,
+      ),
+    ),
+  );
 
-  InputDecoration _inputDec({String hint = '', IconData? icon}) => InputDecoration(
+  InputDecoration _inputDec({String hint = '', IconData? icon}) =>
+      InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(color: kSubText.withOpacity(0.5), fontSize: 13),
         prefixIcon: icon != null ? Icon(icon, size: 16, color: kSubText) : null,
@@ -1086,7 +1142,10 @@ class SuppliersScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: kPrimary, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
         isDense: true,
         filled: true,
         fillColor: kCardBg,
@@ -1119,7 +1178,9 @@ class _SearchFieldState extends State<_SearchField> {
       controller: _searchCtrl,
       onChanged: (v) {
         setState(() {});
-        v.isEmpty ? widget.controller.clearSearch() : widget.controller.searchSuppliers(v);
+        v.isEmpty
+            ? widget.controller.clearSearch()
+            : widget.controller.searchSuppliers(v);
       },
       style: const TextStyle(fontSize: 13, color: Colors.black87),
       decoration: InputDecoration(
@@ -1137,7 +1198,10 @@ class _SearchFieldState extends State<_SearchField> {
               )
             : null,
         border: InputBorder.none,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 11,
+        ),
         isDense: true,
       ),
     );
@@ -1181,7 +1245,8 @@ class _MobileSuppliersListState extends State<_MobileSuppliersList> {
   void _onScroll() {
     if (!_scrollController.hasClients) return;
     final position = _scrollController.position;
-    if (position.pixels >= position.maxScrollExtent - 300 && position.maxScrollExtent > 0) {
+    if (position.pixels >= position.maxScrollExtent - 300 &&
+        position.maxScrollExtent > 0) {
       widget.controller.fetchMoreSuppliers();
     }
   }
@@ -1238,7 +1303,10 @@ class _MobileSuppliersListState extends State<_MobileSuppliersList> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimary,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -1261,7 +1329,9 @@ class _MobileSuppliersListState extends State<_MobileSuppliersList> {
             final supplier = suppliers[index];
             final status = supplier['status'] ?? 'active';
             final isActive = status == 'active';
-            final statusColor = isActive ? const Color(0xFF2ECC71) : const Color(0xFFE74C3C);
+            final statusColor = isActive
+                ? const Color(0xFF2ECC71)
+                : const Color(0xFFE74C3C);
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -1295,7 +1365,11 @@ class _MobileSuppliersListState extends State<_MobileSuppliersList> {
                             color: kPrimary.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Icon(Icons.storefront, color: kPrimary, size: 22),
+                          child: Icon(
+                            Icons.storefront,
+                            color: kPrimary,
+                            size: 22,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         // Info
@@ -1401,7 +1475,8 @@ class _MobileSuppliersListState extends State<_MobileSuppliersList> {
         ),
       );
     }
-    if (!widget.controller.hasMore.value && widget.controller.suppliers.isNotEmpty) {
+    if (!widget.controller.hasMore.value &&
+        widget.controller.suppliers.isNotEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 14),
         child: Center(

@@ -18,40 +18,27 @@ class StockScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: kBgLight,
-      body: Obx(() {
-        return Column(
-          children: [
-            _buildTopHeader(controller),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 16),
-                    _buildTabBar(controller),
-                    const SizedBox(height: 16),
-                    if (controller.activeTab.value == 'in')
-                      StockInForm(
-                        controller: controller,
-                        onSuccess: controller.refreshMovements,
-                      )
-                    else
-                      StockOutForm(
-                        controller: controller,
-                        onSuccess: controller.refreshMovements,
-                      ),
-                    const SizedBox(height: 20),
-                    StockHistoryList(
-                      controller: controller,
-                      onView: (m) => _showDetail(context, controller, m),
-                    ),
-                  ],
-                ),
+      body: Column(
+        children: [
+          _buildTopHeader(controller),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+              child: Column(
+                children: [
+                  const SizedBox(height: 16),
+                  _buildActionButtons(context, controller),
+                  const SizedBox(height: 16),
+                  StockHistoryList(
+                    controller: controller,
+                    onView: (m) => _showDetail(context, controller, m),
+                  ),
+                ],
               ),
             ),
-          ],
-        );
-      }),
+          ),
+        ],
+      ),
     );
   }
 
@@ -67,6 +54,10 @@ class StockScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
               child: Row(
                 children: [
+                  IconButton(
+                    onPressed: () => Get.back(),
+                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                  ),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,26 +71,42 @@ class StockScreen extends StatelessWidget {
                             letterSpacing: -0.3,
                           ),
                         ),
-                        Obx(() => Text(
-                          '${controller.totalRecords.value} movements',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.black.withOpacity(0.55),
-                            fontWeight: FontWeight.w500,
+                        Obx(
+                          () => Text(
+                            '${controller.totalRecords.value} movements',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.black.withOpacity(0.55),
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        )),
+                        ),
                       ],
                     ),
                   ),
-                  Obx(() => Row(
-                    children: [
-                      _compactKpi('In', controller.totalInCount.value.toString(), Colors.green.shade800),
-                      const SizedBox(width: 10),
-                      _compactKpi('Out', controller.totalOutCount.value.toString(), Colors.red.shade800),
-                      const SizedBox(width: 10),
-                      _compactKpi('Today', controller.todayCount.value.toString(), Colors.blue.shade800),
-                    ],
-                  )),
+                  Obx(
+                    () => Row(
+                      children: [
+                        _compactKpi(
+                          'In',
+                          controller.totalInCount.value.toString(),
+                          Colors.green.shade800,
+                        ),
+                        const SizedBox(width: 10),
+                        _compactKpi(
+                          'Out',
+                          controller.totalOutCount.value.toString(),
+                          Colors.red.shade800,
+                        ),
+                        const SizedBox(width: 10),
+                        _compactKpi(
+                          'Today',
+                          controller.todayCount.value.toString(),
+                          Colors.blue.shade800,
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(width: 10),
                   GestureDetector(
                     onTap: controller.refreshMovements,
@@ -110,7 +117,11 @@ class StockScreen extends StatelessWidget {
                         color: Colors.black.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(9),
                       ),
-                      child: Icon(Icons.refresh_rounded, size: 17, color: Colors.black.withOpacity(0.65)),
+                      child: Icon(
+                        Icons.refresh_rounded,
+                        size: 17,
+                        color: Colors.black.withOpacity(0.65),
+                      ),
                     ),
                   ),
                 ],
@@ -134,17 +145,31 @@ class StockScreen extends StatelessWidget {
                 child: _SearchField(controller: controller),
               ),
             ),
-            Obx(() => SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-              child: Row(
-                children: [
-                  _filterChip('All', controller.typeFilter.value == 'all', () => controller.applyTypeFilter('all')),
-                  _filterChip('Stock In', controller.typeFilter.value == 'in', () => controller.applyTypeFilter('in')),
-                  _filterChip('Stock Out', controller.typeFilter.value == 'out', () => controller.applyTypeFilter('out')),
-                ],
+            Obx(
+              () => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                child: Row(
+                  children: [
+                    _filterChip(
+                      'All',
+                      controller.typeFilter.value == 'all',
+                      () => controller.applyTypeFilter('all'),
+                    ),
+                    _filterChip(
+                      'Stock In',
+                      controller.typeFilter.value == 'in',
+                      () => controller.applyTypeFilter('in'),
+                    ),
+                    _filterChip(
+                      'Stock Out',
+                      controller.typeFilter.value == 'out',
+                      () => controller.applyTypeFilter('out'),
+                    ),
+                  ],
+                ),
               ),
-            )),
+            ),
           ],
         ),
       ),
@@ -155,8 +180,22 @@ class StockScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: color)),
-        Text(label, style: TextStyle(fontSize: 9, color: Colors.black.withOpacity(0.5), fontWeight: FontWeight.w600)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 9,
+            color: Colors.black.withOpacity(0.5),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
     );
   }
@@ -172,77 +211,76 @@ class StockScreen extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected ? Colors.black : Colors.white.withOpacity(0.18),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: selected ? Colors.black : Colors.white.withOpacity(0.4)),
+            border: Border.all(
+              color: selected ? Colors.black : Colors.white.withOpacity(0.4),
+            ),
           ),
           child: Text(
             label,
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: selected ? Colors.white : Colors.black87),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: selected ? Colors.white : Colors.black87,
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildTabBar(StockController controller) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: kCardBg,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _tabButton(
-              label: 'Stock In',
-              icon: Icons.trending_up,
-              selected: controller.activeTab.value == 'in',
-              selectedColor: Colors.green.shade600,
-              onTap: () => controller.setActiveTab('in'),
-            ),
+  Widget _buildActionButtons(BuildContext context, StockController controller) {
+    return Row(
+      children: [
+        Expanded(
+          child: _actionButton(
+            label: 'Stock In',
+            icon: Icons.add_circle_outline,
+            color: Colors.green.shade600,
+            onTap: () => _showFormDialog(context, controller, true),
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: _tabButton(
-              label: 'Stock Out',
-              icon: Icons.trending_down,
-              selected: controller.activeTab.value == 'out',
-              selectedColor: Colors.red.shade600,
-              onTap: () => controller.setActiveTab('out'),
-            ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _actionButton(
+            label: 'Stock Out',
+            icon: Icons.remove_circle_outline,
+            color: Colors.red.shade600,
+            onTap: () => _showFormDialog(context, controller, false),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _tabButton({
+  Widget _actionButton({
     required String label,
     required IconData icon,
-    required bool selected,
-    required Color selectedColor,
+    required Color color,
     required VoidCallback onTap,
   }) {
     return Material(
-      color: selected ? selectedColor : Colors.transparent,
-      borderRadius: BorderRadius.circular(10),
+      color: color.withOpacity(0.1),
+      borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            border: Border.all(color: color.withOpacity(0.3)),
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 18, color: selected ? Colors.white : kSubText),
+              Icon(icon, size: 20, color: color),
               const SizedBox(width: 8),
               Text(
                 label,
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                  color: selected ? Colors.white : kSubText,
+                  fontSize: 14,
+                  color: color,
                 ),
               ),
             ],
@@ -252,7 +290,49 @@ class StockScreen extends StatelessWidget {
     );
   }
 
-  void _showDetail(BuildContext context, StockController controller, StockMovementModel movement) {
+  void _showFormDialog(
+    BuildContext context,
+    StockController controller,
+    bool isStockIn,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          insetPadding: const EdgeInsets.all(16),
+          child: SingleChildScrollView(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              child: isStockIn
+                  ? StockInForm(
+                      controller: controller,
+                      onSuccess: () {
+                        controller.refreshMovements();
+                        Navigator.pop(context);
+                      },
+                    )
+                  : StockOutForm(
+                      controller: controller,
+                      onSuccess: () {
+                        controller.refreshMovements();
+                        Navigator.pop(context);
+                      },
+                    ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showDetail(
+    BuildContext context,
+    StockController controller,
+    StockMovementModel movement,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -320,7 +400,9 @@ class _SearchFieldState extends State<_SearchField> {
       controller: _searchCtrl,
       onChanged: (v) {
         setState(() {});
-        v.isEmpty ? widget.controller.clearSearch() : widget.controller.searchMovements(v);
+        v.isEmpty
+            ? widget.controller.clearSearch()
+            : widget.controller.searchMovements(v);
       },
       style: const TextStyle(fontSize: 13, color: Colors.black87),
       decoration: InputDecoration(
@@ -338,7 +420,10 @@ class _SearchFieldState extends State<_SearchField> {
               )
             : null,
         border: InputBorder.none,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 11,
+        ),
         isDense: true,
       ),
     );

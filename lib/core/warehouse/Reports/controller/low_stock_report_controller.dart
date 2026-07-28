@@ -42,31 +42,24 @@ class LowStockReportController extends GetxController {
       isLoading.value = true;
 
       final response = await _apiClient.get(
-        '/api/warehouse/products',
-        queryParameters: {'limit': 1000},
+        '/api/warehouse/reports/low-stock',
         requiresAuth: true,
       );
 
       if (response.success && response.data != null) {
-        final data = response.data['data'] as List;
-        final allProducts = data
+        final data = response.data['data'];
+        
+        // Parse summary stats
+        totalProducts.value = data['summary']['totalProducts'] ?? 0;
+        totalLowStock.value = data['summary']['lowStockCount'] ?? 0;
+        criticalCount.value = data['summary']['criticalCount'] ?? 0;
+        lowCount.value = data['summary']['lowCount'] ?? 0;
+
+        // Parse low stock products
+        final lowStockList = data['lowStockProducts'] as List;
+        lowStockProducts.value = lowStockList
             .map((item) => ProductModel.fromJson(item))
             .toList();
-        totalProducts.value = allProducts.length;
-
-        // Filter low stock products
-        lowStockProducts.value = allProducts
-            .where((p) => p.isLowStock || p.isOutOfStock)
-            .toList();
-
-        // Calculate counts
-        totalLowStock.value = lowStockProducts.length;
-        criticalCount.value = lowStockProducts
-            .where((p) => p.currentStock == 0)
-            .length;
-        lowCount.value = lowStockProducts
-            .where((p) => p.currentStock > 0 && p.isLowStock)
-            .length;
       }
     } catch (e) {
       print('Error loading low stock data: $e');

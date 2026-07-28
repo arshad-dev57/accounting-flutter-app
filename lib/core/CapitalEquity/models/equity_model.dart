@@ -40,7 +40,23 @@ class EquityAccount {
       notes: json['description'] ?? '',
     );
   }
-  
+
+  // Equity API endpoint se data convert karne ke liye
+  factory EquityAccount.fromJson(Map<String, dynamic> json) {
+    return EquityAccount(
+      id: json['id'] ?? '',
+      accountName: json['accountName'] ?? '',
+      accountCode: json['accountCode'] ?? '',
+      accountType: json['accountType'] ?? 'Capital',
+      openingBalance: (json['openingBalance'] ?? 0).toDouble(),
+      currentBalance: (json['currentBalance'] ?? 0).toDouble(),
+      additions: (json['additions'] ?? 0).toDouble(),
+      withdrawals: (json['withdrawals'] ?? 0).toDouble(),
+      lastUpdated: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : DateTime.now(),
+      notes: json['notes'] ?? '',
+    );
+  }
+
   static String _mapAccountType(String type) {
     // Equity ke andar subtypes
     if (type == 'Equity') {

@@ -1,13 +1,11 @@
 // core/paymentReceived/controller/payment_received_controller.dart
-// COMPLETE FIXED VERSION - WITH MULTI-INVOICE SUPPORT
+// COMPLETE FIXED VERSION - WITH LAZY LOADING & PAGINATION (NO WEB)
 
 import 'package:LedgerPro_app/Services/api_client.dart';
 import 'package:LedgerPro_app/Utils/currency_utils.dart';
 import 'package:LedgerPro_app/Utils/colors.dart';
 import 'package:LedgerPro_app/Utils/toast_utils.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:universal_html/html.dart' as html;
 import 'package:get/get.dart';
 import 'dart:io';
 import 'package:intl/intl.dart';
@@ -25,12 +23,22 @@ class PaymentReceivedController extends GetxController {
   var allPayments = <Payment>[].obs;
 
   var isLoading = true.obs;
+  var isLoadingMore = false.obs;
   var isRecording = false.obs;
   var selectedFilter = 'All'.obs;
   var selectedDateRange = Rx<DateTimeRange?>(null);
   var searchQuery = ''.obs;
 
-  // ✅ NEW: Selected invoices for payment
+  // ✅ Pagination variables
+  var currentPage = 1.obs;
+  var totalPages = 1.obs;
+  var totalItems = 0.obs;
+  var hasNextPage = false.obs;
+  var hasPrevPage = false.obs;
+  var itemsPerPage = 20.obs;
+  var serverSupportsPagination = false.obs;
+
+  // ✅ Selected invoices for payment
   var selectedInvoiceIds = <String>[].obs;
   var totalSelectedOutstanding = 0.0.obs;
   var totalSelectedAmount = 0.0.obs;
@@ -43,6 +51,10 @@ class PaymentReceivedController extends GetxController {
   var pendingCount = 0.obs;
   var prefillCustomerId = ''.obs;
   var prefillInvoiceId = ''.obs;
+
+  // ✅ Search & Scroll Controllers
+  final TextEditingController searchController = TextEditingController();
+  final ScrollController scrollController = ScrollController();
 
   final ApiClient _api = Get.find<ApiClient>();
 
@@ -61,37 +73,46 @@ class PaymentReceivedController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    print('🔵 [DEBUG] PaymentReceivedController onInit called');
+    searchController.addListener(_onSearchChanged);
     fetchCustomers();
     fetchBankAccounts();
-    fetchPayments();
+    fetchPayments(resetPage: true);
     fetchSummary();
   }
 
-  // ─── Fetch Customers from Warehouse ─────────────────────────────
+  @override
+  void onClose() {
+    searchController.removeListener(_onSearchChanged);
+    searchController.dispose();
+    scrollController.dispose();
+    super.onClose();
+  }
+
+  void _onSearchChanged() {
+    searchQuery.value = searchController.text;
+    fetchPayments(resetPage: true);
+  }
+
+  // ─── Fetch Customers ─────────────────────────────────────────────
   Future<void> fetchCustomers() async {
-    print('🟡 [DEBUG] fetchCustomers called');
     try {
       final response = await _api.get('/api/warehouse/customers');
-      print('🟡 [DEBUG] fetchCustomers statusCode: ${response.statusCode}');
-      
+
       if (response.success) {
         final data = response.data;
         if (data['success'] == true) {
           customers.value = (data['data'] as List)
               .map((e) => Customer.fromJson(e))
               .toList();
-          print('🟡 [DEBUG] fetchCustomers customers count: ${customers.length}');
         }
       }
     } catch (e) {
-      print('❌ [DEBUG] fetchCustomers error: $e');
+      print('❌ Error fetching customers: $e');
     }
   }
 
   // ─── Fetch Bank Accounts ──────────────────────────────────────────
   Future<void> fetchBankAccounts() async {
-    print('🟡 [DEBUG] fetchBankAccounts called');
     try {
       final response = await _api.get('/api/bank-accounts');
       if (response.success) {
@@ -100,35 +121,30 @@ class PaymentReceivedController extends GetxController {
           bankAccounts.value = (data['data'] as List)
               .map((e) => BankAccount.fromJson(e))
               .toList();
-          print('🟡 [DEBUG] fetchBankAccounts count: ${bankAccounts.length}');
         }
       }
     } catch (e) {
-      print('❌ [DEBUG] fetchBankAccounts error: $e');
+      print('❌ Error fetching bank accounts: $e');
     }
   }
 
-  // ─── Fetch Unpaid Invoices from Warehouse ──────────────────────
+  // ─── Fetch Unpaid Invoices ──────────────────────────────────────
   Future<void> fetchUnpaidInvoices(String customerId) async {
-    print('🟡 [DEBUG] fetchUnpaidInvoices called for customerId: $customerId');
     try {
       final response = await _api.get(
         '/api/accounts-receivable/customers/$customerId/invoices/unpaid',
       );
-      
+
       if (response.success) {
         final data = response.data;
         if (data['success'] == true) {
           unpaidInvoices.value = (data['data'] as List)
               .map((e) => InvoiceForPayment.fromJson(e))
               .toList();
-          
-          // Clear selections when customer changes
+
           selectedInvoiceIds.clear();
           totalSelectedOutstanding.value = 0;
           totalSelectedAmount.value = 0;
-          
-          print('🟡 [DEBUG] fetchUnpaidInvoices count: ${unpaidInvoices.length}');
         } else {
           unpaidInvoices.value = [];
         }
@@ -136,7 +152,7 @@ class PaymentReceivedController extends GetxController {
         unpaidInvoices.value = [];
       }
     } catch (e) {
-      print('❌ [DEBUG] fetchUnpaidInvoices error: $e');
+      print('❌ Error fetching unpaid invoices: $e');
       unpaidInvoices.value = [];
     }
   }
@@ -151,7 +167,6 @@ class PaymentReceivedController extends GetxController {
       totalSelectedOutstanding.value += outstanding;
     }
     totalSelectedAmount.value = totalSelectedOutstanding.value;
-    print('🟡 [DEBUG] Selected invoices: ${selectedInvoiceIds.length}, Total: ${totalSelectedOutstanding.value}');
   }
 
   // ─── Clear all selections ────────────────────────────────────────
@@ -161,85 +176,113 @@ class PaymentReceivedController extends GetxController {
     totalSelectedAmount.value = 0;
   }
 
-  // ─── Fetch Payments ──────────────────────────────────────────────
- Future<void> fetchPayments() async {
-  print('🟡 [DEBUG] fetchPayments called');
-  print('🟡 [DEBUG] selectedDateRange: ${selectedDateRange.value}');
-  print('🟡 [DEBUG] searchQuery: ${searchQuery.value}');
-  print('🟡 [DEBUG] selectedFilter: ${selectedFilter.value}');
-  
-  try {
-    isLoading(true);
-
-    Map<String, dynamic> queryParams = {};
-    if (selectedDateRange.value != null) {
-      queryParams['startDate'] = selectedDateRange.value!.start.toIso8601String();
-      queryParams['endDate'] = selectedDateRange.value!.end.toIso8601String();
-      print('🟡 [DEBUG] Date range applied: ${queryParams['startDate']} to ${queryParams['endDate']}');
-    }
-
-    print('🟡 [DEBUG] Calling API: /api/accounts-receivable/payments with params: $queryParams');
-    final response = await _api.get(
-      '/api/payments-received',
-      queryParameters: queryParams.isNotEmpty ? queryParams : null,
-    );
-    
-    print('🟡 [DEBUG] fetchPayments statusCode: ${response.statusCode}');
-    print('🟡 [DEBUG] fetchPayments success: ${response.success}');
-    print('🟡 [DEBUG] fetchPayments response data: ${response.data}');
-
-    if (response.success) {
-      final data = response.data;
-      print('🟡 [DEBUG] response.data["success"]: ${data['success']}');
-      
-      if (data['success'] == true) {
-        print('🟡 [DEBUG] response.data["data"] type: ${data['data'].runtimeType}');
-        print('🟡 [DEBUG] response.data["data"] length: ${data['data'] != null ? (data['data'] as List).length : 0}');
-        
-        final paymentsData = (data['data'] as List)
-            .map((e) => Payment.fromJson(e))
-            .toList();
-        print('🟡 [DEBUG] paymentsData parsed count: ${paymentsData.length}');
-        
-        allPayments.value = paymentsData;
-        print('🟡 [DEBUG] allPayments updated with ${allPayments.length} payments');
-        
-        if (searchQuery.value.isNotEmpty) {
-          print('🟡 [DEBUG] searchQuery is not empty: ${searchQuery.value} - calling searchPayments');
-          searchPayments(searchQuery.value);
-        } else {
-          print('🟡 [DEBUG] Setting payments to allPayments (${allPayments.length} items)');
-          payments.value = paymentsData;
-        }
+  // ─── Fetch Payments with Pagination ─────────────────────────────
+  Future<void> fetchPayments({bool resetPage = true}) async {
+    try {
+      if (resetPage) {
+        currentPage.value = 1;
+        isLoading.value = true;
       } else {
-        print('❌ [DEBUG] API returned success: false - ${data['message']}');
+        isLoadingMore.value = true;
       }
-    } else {
-      print('❌ [DEBUG] fetchPayments failed: ${response.message}');
-      print('❌ [DEBUG] statusCode: ${response.statusCode}');
+
+      Map<String, dynamic> params = {};
+
+      if (serverSupportsPagination.value) {
+        params['page'] = currentPage.value;
+        params['limit'] = itemsPerPage.value;
+      }
+
+      if (selectedDateRange.value != null) {
+        params['startDate'] = selectedDateRange.value!.start.toIso8601String();
+        params['endDate'] = selectedDateRange.value!.end.toIso8601String();
+      }
+
+      if (searchQuery.value.isNotEmpty) {
+        params['search'] = searchQuery.value;
+      }
+
+      final response = await _api.get(
+        '/api/payments-received',
+        queryParameters: params.isNotEmpty ? params : null,
+      );
+
+      if (response.success) {
+        final data = response.data;
+        if (data['success'] == true) {
+          final newPayments = (data['data'] as List)
+              .map((e) => Payment.fromJson(e))
+              .toList();
+
+          if (resetPage) {
+            allPayments.value = newPayments;
+            payments.value = newPayments;
+          } else {
+            allPayments.addAll(newPayments);
+            payments.addAll(newPayments);
+          }
+
+          // Parse pagination info
+          if (data['pagination'] != null) {
+            final pagination = data['pagination'];
+            totalPages.value = pagination['pages'] ?? pagination['totalPages'] ?? 1;
+            totalItems.value = pagination['total'] ?? pagination['totalItems'] ?? newPayments.length;
+            hasNextPage.value = pagination['hasNext'] ?? pagination['nextPage'] != null ?? false;
+            hasPrevPage.value = pagination['hasPrev'] ?? pagination['prevPage'] != null ?? false;
+            serverSupportsPagination.value = true;
+          } else if (data['total'] != null) {
+            totalPages.value = data['pages'] ?? 1;
+            totalItems.value = data['total'];
+            hasNextPage.value = data['hasNext'] ?? false;
+            hasPrevPage.value = data['hasPrev'] ?? false;
+            serverSupportsPagination.value = true;
+          } else if (data['totalCount'] != null) {
+            totalItems.value = data['totalCount'];
+            totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
+            hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+            hasPrevPage.value = currentPage.value > 1;
+            serverSupportsPagination.value = false;
+          } else {
+            totalItems.value = payments.length;
+            totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
+            hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+            hasPrevPage.value = currentPage.value > 1;
+            serverSupportsPagination.value = false;
+          }
+
+          _updateSummaryForFiltered(payments.value);
+          payments.refresh();
+        }
+      }
+    } catch (e) {
+      print('❌ Error fetching payments: $e');
+      AppSnackbar.error(Colors.red, 'Error', 'Failed to load payments: $e');
+    } finally {
+      isLoading.value = false;
+      isLoadingMore.value = false;
     }
-  } catch (e) {
-    print('❌ [DEBUG] fetchPayments error: $e');
-    print('❌ [DEBUG] Stack trace: ${StackTrace.current}');
-    AppSnackbar.error(Colors.red, 'Error', 'Failed to load payments: $e');
-  } finally {
-    isLoading(false);
-    print('🟡 [DEBUG] fetchPayments isLoading set to false');
   }
-}
+
+  // ─── Load More Data (Lazy Loading) ──────────────────────────────
+  Future<void> loadMoreData() async {
+    if (hasNextPage.value && !isLoadingMore.value && !isLoading.value) {
+      currentPage.value++;
+      await fetchPayments(resetPage: false);
+    }
+  }
+
   // ─── Fetch Summary ──────────────────────────────────────────────
   Future<void> fetchSummary() async {
-    print('🟡 [DEBUG] fetchSummary called');
     try {
-      Map<String, dynamic> queryParams = {};
+      Map<String, dynamic> params = {};
       if (selectedDateRange.value != null) {
-        queryParams['startDate'] = selectedDateRange.value!.start.toIso8601String();
-        queryParams['endDate'] = selectedDateRange.value!.end.toIso8601String();
+        params['startDate'] = selectedDateRange.value!.start.toIso8601String();
+        params['endDate'] = selectedDateRange.value!.end.toIso8601String();
       }
 
       final response = await _api.get(
         '/api/accounts-receivable/payments/summary',
-        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+        queryParameters: params.isNotEmpty ? params : null,
       );
 
       if (response.success) {
@@ -253,81 +296,167 @@ class PaymentReceivedController extends GetxController {
         }
       }
     } catch (e) {
-      print('❌ [DEBUG] fetchSummary error: $e');
+      print('❌ Error fetching summary: $e');
     }
   }
 
- // ─── Record Payment (SINGLE INVOICE) ──────────────────────────────
-Future<void> recordPayment({
-  required String customerId,
-  required String invoiceId,  // ✅ Changed from List<String> to String
-  required double amount,
-  required DateTime paymentDate,
-  required String paymentMethod,
-  required String reference,
-  required String? bankAccountId,
-  required String notes,
-}) async {
-  print('🟢 [DEBUG] recordPayment called');
-  print('🟢 [DEBUG] invoiceId: $invoiceId, amount: $amount');
-  
-  try {
-    isRecording(true);
+  // ─── Record Payment ──────────────────────────────────────────────
+  Future<void> recordPayment({
+    required String customerId,
+    required String invoiceId,
+    required double amount,
+    required DateTime paymentDate,
+    required String paymentMethod,
+    required String reference,
+    required String? bankAccountId,
+    required String notes,
+  }) async {
+    // Show loading dialog
+    Get.dialog(
+      Center(
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: kSuccess,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Recording payment...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kText,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Please wait',
+                  style: TextStyle(fontSize: 12, color: kSubText),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
 
-    final body = {
-      'customerId': customerId,
-      'invoiceId': invoiceId,  // ✅ Changed from invoiceIds to invoiceId
-      'amount': amount,
-      'paymentDate': paymentDate.toIso8601String(),
-      'paymentMethod': paymentMethod,
-      'reference': reference,
-      'bankAccountId': bankAccountId,
-      'notes': notes,
-    };
-    print('🟢 [DEBUG] recordPayment body: $body');
+    try {
+      isRecording(true);
 
-    final response = await _api.post('/api/accounts-receivable/payments', body: body);
-    print('🟢 [DEBUG] recordPayment statusCode: ${response.statusCode}');
+      final body = {
+        'customerId': customerId,
+        'invoiceId': invoiceId,
+        'amount': amount,
+        'paymentDate': paymentDate.toIso8601String(),
+        'paymentMethod': paymentMethod,
+        'reference': reference,
+        'bankAccountId': bankAccountId,
+        'notes': notes,
+      };
 
-    if (response.success) {
-      AppSnackbar.success(
-        kSuccess,
-        'Success',
-        'Payment recorded successfully!\nJournal entry created',
-        duration: const Duration(seconds: 3),
-      );
-      clearInvoiceSelections();
-      await fetchPayments();
-      await fetchSummary();
-      await fetchUnpaidInvoices(customerId);
-    } else {
-      AppSnackbar.error(
-        kDanger,
-        'Error',
-        response.message.isNotEmpty ? response.message : 'Failed to record payment',
-      );
+      final response = await _api.post('/api/accounts-receivable/payments', body: body);
+
+      // Close loading dialog
+      Get.back();
+
+      if (response.success) {
+        AppSnackbar.success(
+          kSuccess,
+          'Success ✅',
+          'Payment recorded successfully!',
+          duration: const Duration(seconds: 3),
+        );
+        clearInvoiceSelections();
+        await fetchPayments(resetPage: true);
+        await fetchSummary();
+        await fetchUnpaidInvoices(customerId);
+      } else {
+        AppSnackbar.error(
+          kDanger,
+          'Error',
+          response.message.isNotEmpty ? response.message : 'Failed to record payment',
+        );
+      }
+    } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
+      AppSnackbar.error(Colors.red, 'Error', 'Failed to record payment: $e');
+    } finally {
+      isRecording(false);
     }
-  } catch (e) {
-    print('❌ [DEBUG] recordPayment error: $e');
-    AppSnackbar.error(Colors.red, 'Error', 'Failed to record payment: $e');
-  } finally {
-    isRecording(false);
   }
-}
-  // ─── Delete Payment with Reversal ───────────────────────────────
+
+  // ─── Delete Payment ──────────────────────────────────────────────
   Future<void> deletePayment(String paymentId) async {
-    print('🟢 [DEBUG] deletePayment called: $paymentId');
-    
+    // Show loading dialog
+    Get.dialog(
+      Center(
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: Colors.red,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Deleting payment...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kText,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Please wait',
+                  style: TextStyle(fontSize: 12, color: kSubText),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+
     try {
       final response = await _api.delete('/api/accounts-receivable/payments/$paymentId');
-      
+
+      // Close loading dialog
+      Get.back();
+
       if (response.success) {
         AppSnackbar.success(
           kSuccess,
           'Success',
           'Payment deleted and journal entry reversed',
         );
-        await fetchPayments();
+        await fetchPayments(resetPage: true);
         await fetchSummary();
       } else {
         AppSnackbar.error(
@@ -337,25 +466,69 @@ Future<void> recordPayment({
         );
       }
     } catch (e) {
-      print('❌ [DEBUG] deletePayment error: $e');
+      if (Get.isDialogOpen ?? false) Get.back();
       AppSnackbar.error(Colors.red, 'Error', 'Failed to delete payment: $e');
     }
   }
 
   // ─── Clear Cheque Payment ──────────────────────────────────────
   Future<void> clearChequePayment(String paymentId) async {
-    print('🟢 [DEBUG] clearChequePayment called: $paymentId');
-    
+    // Show loading dialog
+    Get.dialog(
+      Center(
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: kSuccess,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Clearing cheque...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kText,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Please wait',
+                  style: TextStyle(fontSize: 12, color: kSubText),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+
     try {
       final response = await _api.post('/api/accounts-receivable/payments/$paymentId/clear');
-      
+
+      // Close loading dialog
+      Get.back();
+
       if (response.success) {
         AppSnackbar.success(
           kSuccess,
           'Success',
           'Cheque payment cleared successfully',
         );
-        await fetchPayments();
+        await fetchPayments(resetPage: true);
         await fetchSummary();
       } else {
         AppSnackbar.error(
@@ -365,7 +538,7 @@ Future<void> recordPayment({
         );
       }
     } catch (e) {
-      print('❌ [DEBUG] clearChequePayment error: $e');
+      if (Get.isDialogOpen ?? false) Get.back();
       AppSnackbar.error(Colors.red, 'Error', 'Failed to clear cheque: $e');
     }
   }
@@ -377,7 +550,7 @@ Future<void> recordPayment({
       selectedDateRange.value = null;
       _applyDateFilter(filter);
     }
-    fetchPayments();
+    fetchPayments(resetPage: true);
     fetchSummary();
   }
 
@@ -386,28 +559,13 @@ Future<void> recordPayment({
     if (range != null) {
       selectedFilter.value = 'Custom Range';
     }
-    fetchPayments();
+    fetchPayments(resetPage: true);
     fetchSummary();
   }
 
   void searchPayments(String query) {
     searchQuery.value = query;
-
-    if (query.isEmpty) {
-      payments.value = allPayments.value;
-      _updateSummaryForFiltered(allPayments.value);
-    } else {
-      final searchLower = query.toLowerCase();
-      final results = allPayments.where((payment) {
-        return payment.paymentNumber.toLowerCase().contains(searchLower) ||
-            payment.customerName.toLowerCase().contains(searchLower) ||
-            payment.invoiceNumber.toLowerCase().contains(searchLower) ||
-            payment.paymentMethod.toLowerCase().contains(searchLower) ||
-            payment.reference.toLowerCase().contains(searchLower);
-      }).toList();
-      payments.value = results;
-      _updateSummaryForFiltered(results);
-    }
+    fetchPayments(resetPage: true);
   }
 
   void _updateSummaryForFiltered(List<Payment> filteredPayments) {
@@ -477,31 +635,61 @@ Future<void> recordPayment({
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Export Payments',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Row(
+              children: [
+                Text(
+                  'Export Payments',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: kText,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 18, color: Colors.black),
+                  onPressed: () => Get.back(),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 4),
             Text(
-              'Choose export format',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+              '${payments.length} payments will be exported',
+              style: TextStyle(fontSize: 12, color: kSubText),
             ),
             const SizedBox(height: 20),
-            ListTile(
-              leading: Icon(Icons.picture_as_pdf, color: Color(0xFFE53935)),
-              title: Text('Export as PDF'),
-              onTap: () {
-                Get.back();
-                exportToPdf();
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.table_chart, color: Color(0xFF2E7D32)),
-              title: Text('Export as Excel'),
-              onTap: () {
-                Get.back();
-                exportToExcel();
-              },
+            Row(
+              children: [
+                Expanded(
+                  child: _exportOptionCard(
+                    icon: Icons.picture_as_pdf_outlined,
+                    label: 'PDF',
+                    subtitle: 'Formatted report',
+                    color: const Color(0xFFE53935),
+                    bgColor: const Color(0xFFFFEBEE),
+                    onTap: () {
+                      Get.back();
+                      exportToPdf();
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _exportOptionCard(
+                    icon: Icons.table_chart_outlined,
+                    label: 'Excel',
+                    subtitle: 'Spreadsheet',
+                    color: const Color(0xFF2E7D32),
+                    bgColor: const Color(0xFFE8F5E9),
+                    onTap: () {
+                      Get.back();
+                      exportToExcel();
+                    },
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -509,34 +697,103 @@ Future<void> recordPayment({
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      backgroundColor: kCardBg,
     );
   }
 
-  Future<void> exportToPdf() async {
-    print('🟢 [DEBUG] exportToPdf called');
-    try {
-      if (!kIsWeb) {
-        print('🟢 [DEBUG] exportToPdf showing loading dialog');
-        Get.dialog(
-          AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+  Widget _exportOptionCard({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required Color color,
+    required Color bgColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: Colors.white, size: 22),
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 16),
-                Text('Generating PDF...', style: TextStyle(fontSize: 14)),
-              ],
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 10,
+                color: color.withOpacity(0.7),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── PDF Export ──────────────────────────────────────────────────
+  Future<void> exportToPdf() async {
+    try {
+      Get.dialog(
+        Center(
+          child: Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      color: kPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Generating PDF...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Please wait',
+                    style: TextStyle(fontSize: 12, color: kSubText),
+                  ),
+                ],
+              ),
             ),
           ),
-          barrierDismissible: false,
-        );
-      }
+        ),
+        barrierDismissible: false,
+      );
 
       final pdf = pw.Document();
-      print('🟢 [DEBUG] exportToPdf PDF document created');
 
       pdf.addPage(
         pw.MultiPage(
@@ -551,61 +808,29 @@ Future<void> recordPayment({
           ],
         ),
       );
-      print('🟢 [DEBUG] exportToPdf PDF page added');
 
-      final bytes = await pdf.save();
-      print('🟢 [DEBUG] exportToPdf PDF bytes saved, size: ${bytes.length}');
-      
+      final dir = await getTemporaryDirectory();
       final fileName =
           'payments_received_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
-      print('🟢 [DEBUG] exportToPdf fileName: $fileName');
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsBytes(await pdf.save());
 
-      if (kIsWeb) {
-        print('🟢 [DEBUG] exportToPdf web platform - downloading PDF');
-        final blob = html.Blob([bytes], 'application/pdf');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
+      if (Get.isDialogOpen ?? false) Get.back();
 
-        if (Get.isDialogOpen ?? false) Get.back();
+      AppSnackbar.success(
+        Colors.green,
+        'Success',
+        '${payments.length} payments exported to PDF',
+      );
 
-        AppSnackbar.success(
-          Colors.green,
-          'Success',
-          '${payments.length} payments exported to PDF',
-        );
-      } else {
-        print('🟢 [DEBUG] exportToPdf mobile platform - saving PDF');
-        final dir = await getTemporaryDirectory();
-        print('🟢 [DEBUG] exportToPdf temporary directory: ${dir.path}');
-        
-        final file = File('${dir.path}/$fileName');
-        await file.writeAsBytes(bytes);
-        print('🟢 [DEBUG] exportToPdf file saved: ${file.path}');
-
-        if (Get.isDialogOpen ?? false) Get.back();
-
-        AppSnackbar.success(
-          Colors.green,
-          'Success',
-          '${payments.length} payments exported to PDF',
-        );
-
-        print('🟢 [DEBUG] exportToPdf opening file');
-        await OpenFile.open(file.path);
-      }
-    } catch (e, stackTrace) {
-      print('❌ [DEBUG] exportToPdf error: $e');
-      print('❌ [DEBUG] exportToPdf stackTrace: $stackTrace');
+      await OpenFile.open(file.path);
+    } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
       AppSnackbar.error(Colors.red, 'Error', 'Failed to export PDF: $e');
     }
   }
 
   pw.Widget _pdfHeader() {
-    print('🟡 [DEBUG] _pdfHeader called');
     return pw.Container(
       padding: const pw.EdgeInsets.only(bottom: 12),
       decoration: const pw.BoxDecoration(
@@ -678,7 +903,6 @@ Future<void> recordPayment({
   }
 
   pw.Widget _pdfSummarySection() {
-    print('🟡 [DEBUG] _pdfSummarySection called');
     return pw.Container(
       padding: const pw.EdgeInsets.all(12),
       decoration: pw.BoxDecoration(
@@ -755,7 +979,6 @@ Future<void> recordPayment({
   }
 
   pw.Widget _pdfPaymentsSection() {
-    print('🟡 [DEBUG] _pdfPaymentsSection called, payments count: ${payments.length}');
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
@@ -911,36 +1134,55 @@ Future<void> recordPayment({
     );
   }
 
+  // ─── Excel Export ──────────────────────────────────────────────────
   Future<void> exportToExcel() async {
-    print('🟢 [DEBUG] exportToExcel called');
     try {
-      if (!kIsWeb) {
-        print('🟢 [DEBUG] exportToExcel showing loading dialog');
-        Get.dialog(
-          AlertDialog(
+      Get.dialog(
+        Center(
+          child: Card(
+            elevation: 4,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: 16),
-                Text('Building Excel...', style: TextStyle(fontSize: 14)),
-              ],
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      color: kPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Building Excel...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Please wait',
+                    style: TextStyle(fontSize: 12, color: kSubText),
+                  ),
+                ],
+              ),
             ),
           ),
-          barrierDismissible: false,
-        );
-      }
+        ),
+        barrierDismissible: false,
+      );
 
       final excel = Excel.createExcel();
-      print('🟢 [DEBUG] exportToExcel Excel created');
 
       // Summary Sheet
       final summarySheet = excel['Summary'];
       excel.setDefaultSheet('Summary');
-      print('🟢 [DEBUG] exportToExcel Summary sheet created');
 
       _excelSetCell(
         summarySheet,
@@ -1024,8 +1266,6 @@ Future<void> recordPayment({
 
       // Payments Sheet
       final paymentsSheet = excel['Payments'];
-      print('🟢 [DEBUG] exportToExcel Payments sheet created');
-      
       final headers = [
         'Payment #',
         'Date',
@@ -1053,7 +1293,6 @@ Future<void> recordPayment({
       }
 
       int row = 1;
-      print('🟢 [DEBUG] exportToExcel adding ${payments.length} payment rows');
       for (final payment in payments) {
         final bg = row.isEven ? 'F5F5F5' : 'FFFFFF';
         _excelSetCell(paymentsSheet, row, 0, payment.paymentNumber, bgColor: bg);
@@ -1125,55 +1364,26 @@ Future<void> recordPayment({
       }
 
       excel.delete('Sheet1');
-      print('🟢 [DEBUG] exportToExcel deleted default Sheet1');
 
       final bytes = excel.save();
       if (bytes == null) throw Exception('Excel save failed');
-      print('🟢 [DEBUG] exportToExcel Excel saved, size: ${bytes.length}');
 
+      final dir = await getTemporaryDirectory();
       final fileName =
           'payments_received_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
-      print('🟢 [DEBUG] exportToExcel fileName: $fileName');
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsBytes(bytes);
 
-      if (kIsWeb) {
-        print('🟢 [DEBUG] exportToExcel web platform - downloading Excel');
-        final blob = html.Blob([bytes], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
+      if (Get.isDialogOpen ?? false) Get.back();
 
-        if (Get.isDialogOpen ?? false) Get.back();
+      AppSnackbar.success(
+        Colors.green,
+        'Success',
+        '${payments.length} payments exported to Excel',
+      );
 
-        AppSnackbar.success(
-          Colors.green,
-          'Success',
-          '${payments.length} payments exported to Excel',
-        );
-      } else {
-        print('🟢 [DEBUG] exportToExcel mobile platform - saving Excel');
-        final dir = await getTemporaryDirectory();
-        print('🟢 [DEBUG] exportToExcel temporary directory: ${dir.path}');
-        
-        final file = File('${dir.path}/$fileName');
-        await file.writeAsBytes(bytes);
-        print('🟢 [DEBUG] exportToExcel file saved: ${file.path}');
-
-        if (Get.isDialogOpen ?? false) Get.back();
-
-        AppSnackbar.success(
-          Colors.green,
-          'Success',
-          '${payments.length} payments exported to Excel',
-        );
-
-        print('🟢 [DEBUG] exportToExcel opening file');
-        await OpenFile.open(file.path);
-      }
-    } catch (e, stackTrace) {
-      print('❌ [DEBUG] exportToExcel error: $e');
-      print('❌ [DEBUG] exportToExcel stackTrace: $stackTrace');
+      await OpenFile.open(file.path);
+    } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
       AppSnackbar.error(Colors.red, 'Error', 'Failed to export Excel: $e');
     }
@@ -1209,12 +1419,10 @@ Future<void> recordPayment({
   }
 
   void printPayments() {
-    print('🟡 [DEBUG] printPayments called');
     AppSnackbar.success(kPrimary, 'Print', 'Preparing payments report...');
   }
 
   void _handleSessionExpired() {
-    print('⚠️ [DEBUG] _handleSessionExpired called');
     AppSnackbar.error(kDanger, 'Session Expired', 'Please login again');
   }
 }

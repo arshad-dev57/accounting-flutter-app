@@ -15,12 +15,24 @@ import 'package:LedgerPro_app/core/plans/controllers/subscription_controller.dar
 import 'package:LedgerPro_app/core/plans/views/Subscription_plans.dart';
 import 'package:LedgerPro_app/core/plans/views/payment_cancel_screen.dart';
 import 'package:LedgerPro_app/core/plans/views/payment_sucess_screen.dart';
+import 'package:LedgerPro_app/core/purchaseInvoice/purchase_invoice_controller.dart';
+import 'package:LedgerPro_app/core/purchaseInvoice/purchase_invoice_screen.dart';
+import 'package:LedgerPro_app/core/purchasePaymentmade/purchase_payment_controller.dart';
+import 'package:LedgerPro_app/core/purchasePaymentmade/purchase_payment_screen.dart';
+import 'package:LedgerPro_app/core/purchaseReturn/purchase_return_controller.dart';
+import 'package:LedgerPro_app/core/purchaseReturn/purchase_return_screen.dart';
 import 'package:LedgerPro_app/core/warehouse/Delievery/deleivery_controller.dart';
 import 'package:LedgerPro_app/core/warehouse/Delievery/deleivery_screen.dart';
+import 'package:LedgerPro_app/core/warehouse/Reports/screen/expiry_report_screen.dart';
+import 'package:LedgerPro_app/core/warehouse/Reports/screen/low_stock_report_screen.dart';
+import 'package:LedgerPro_app/core/warehouse/Reports/screen/stock_summary_report_screen.dart';
 import 'package:LedgerPro_app/core/warehouse/Stock_in/screen/stock_in_screen.dart';
 import 'package:LedgerPro_app/core/warehouse/category/category_screen.dart';
 import 'package:LedgerPro_app/core/warehouse/dashboard/warehouse_dashboard_screen.dart';
+import 'package:LedgerPro_app/core/warehouse/inventory_valuation/screen/inventory_valuation_screen.dart';
+import 'package:LedgerPro_app/core/warehouse/invoice/screen/warehouse_invoice_screen.dart';
 import 'package:LedgerPro_app/core/warehouse/order/screen/Sales_order_screen.dart';
+import 'package:LedgerPro_app/core/warehouse/products/controller/product_controller.dart';
 import 'package:LedgerPro_app/core/warehouse/products/screen/product_screen.dart';
 import 'package:LedgerPro_app/core/warehouse/purchases/controller/purchase_order_controller.dart';
 import 'package:LedgerPro_app/core/warehouse/purchases/screen/purchase_order_screen.dart';
@@ -35,14 +47,22 @@ import 'package:LedgerPro_app/core/warehouse/salesPayment/sales_payment_controll
 import 'package:LedgerPro_app/core/warehouse/salesPayment/sales_payment_screen.dart';
 import 'package:LedgerPro_app/core/warehouse/supplier/controller/supplier_controller.dart';
 import 'package:LedgerPro_app/core/warehouse/supplier/screen/supplier_screen.dart';
+import 'package:LedgerPro_app/core/warehousecustomer/warehouse_customer_controller.dart';
+import 'package:LedgerPro_app/core/warehousecustomer/warehouse_customer_screen.dart';
+import 'package:LedgerPro_app/core/Users/screen/user_list_screen.dart';
+import 'package:LedgerPro_app/core/Users/screen/user_form_screen.dart';
+import 'package:LedgerPro_app/core/Users/screen/access_management_screen.dart';
 
-
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:get/get.dart';
 import 'package:sizer/sizer.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:LedgerPro_app/Services/api_client.dart';
+import 'package:LedgerPro_app/Services/notification_Service.dart';
+import 'package:LedgerPro_app/core/FiscalYear/controller/fiscal_year_controller.dart';
 
 class ThemeController extends GetxController {
   var isDarkMode = false.obs;
@@ -56,6 +76,7 @@ void main() {
   Get.put(SubscriptionController(), permanent: true);
   Get.put(ThemeController(), permanent: true);
   Get.put(CurrencyController(), permanent: true);
+  Get.put(FiscalYearController(), permanent: true);
 
   runApp(const MyApp());
 }
@@ -65,6 +86,18 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!kIsWeb) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await NotificationService.instance.init();
+        final prefs = await SharedPreferences.getInstance();
+        final userId = prefs.getString('auth_user_id');
+        if (userId != null && userId.isNotEmpty) {
+          await NotificationService.instance.login(userId);
+          await NotificationService.instance.verifyDeviceRegistration();
+        }
+      });
+    }
+
     return Sizer(
       builder: (context, orientation, deviceType) {
         return GetMaterialApp(
@@ -78,7 +111,7 @@ class MyApp extends StatelessWidget {
           initialRoute: '/',
           getPages: [
             // ========== AUTH ROUTES ==========
-            GetPage(name: '/', page: () =>  SplashScreen()),
+            GetPage(name: '/', page: () => SplashScreen()),
             GetPage(name: '/login', page: () => const LoginScreen()),
             GetPage(name: '/register', page: () => RegistrationScreen()),
             GetPage(name: '/onboarding', page: () => const OnboardingScreen()),
@@ -93,49 +126,80 @@ class MyApp extends StatelessWidget {
               page: () => const DashboardScreen(),
             ),
             GetPage(
-  name: '/sales-invoices',
-  page: () => const SalesInvoiceScreen(),
-  binding: BindingsBuilder(() {
-    Get.lazyPut(() => SalesInvoiceController());
-  }),
-),
+              name: '/sales-invoices',
+              page: () => const SalesInvoiceScreen(),
+              binding: BindingsBuilder(() {
+                Get.lazyPut(() => SalesInvoiceController());
+              }),
+            ),
 
-  GetPage(
-  name: '/purchase-order',
-  page: () => const PurchaseOrderScreen(),
-  binding: BindingsBuilder(() {
-    Get.lazyPut(() => PurchaseOrderController());
-  }),
-),
+            GetPage(
+              name: '/purchase-order',
+              page: () => const PurchaseOrderScreen(),
+              binding: BindingsBuilder(() {
+                Get.lazyPut(() => PurchaseOrderController());
+              }),
+            ),
 
-     GetPage(
-  name: '/sales-payments',
-  page: () => const SalesPaymentScreen(),
-  binding: BindingsBuilder(() {
-    Get.lazyPut(() => SalesPaymentController());
-  }),
-),
             GetPage(
-  name: '/sales/quotations',
-  page: () => const QuotationScreen(),
-  binding: BindingsBuilder(() {
-    Get.lazyPut(() => QuotationController());
-  }),
-),
-GetPage(
-  name: '/purchase/goods-receiving',
-  page: () => const GoodsReceivingScreen(),
-  binding: BindingsBuilder(() {
-    Get.lazyPut(() => GoodsReceivingController());
-  }),
-),
+              name: '/sales-payments',
+              page: () => const SalesPaymentScreen(),
+              binding: BindingsBuilder(() {
+                Get.lazyPut(() => SalesPaymentController());
+              }),
+            ),
             GetPage(
-  name: '/sales/delievery',
-  page: () => const DeliveryScreen(),
-  binding: BindingsBuilder(() {
-    Get.lazyPut(() => DeliveryController());
-  }),
-),
+              name: '/sales/quotations',
+              page: () => const QuotationScreen(),
+              binding: BindingsBuilder(() {
+                Get.lazyPut(() => QuotationController());
+              }),
+            ),
+            GetPage(
+              name: '/purchase/invoices',
+              page: () => const PurchaseInvoiceScreen(),
+              binding: BindingsBuilder(() {
+                Get.lazyPut(() => PurchaseInvoiceController());
+              }),
+            ),
+            GetPage(
+              name: '/purchase/purchase-return',
+              page: () => const PurchaseReturnScreen(),
+              binding: BindingsBuilder(() {
+                Get.lazyPut(() => PurchaseReturnController());
+              }),
+            ),
+
+            GetPage(
+              name: '/purchase/purchase-payment',
+              page: () => PurchasePaymentScreen(),
+              binding: BindingsBuilder(() {
+                Get.lazyPut(() => PurchasePaymentController());
+              }),
+            ),
+            GetPage(
+              name: '/purchase/goods-receiving',
+              page: () => const GoodsReceivingScreen(),
+              binding: BindingsBuilder(() {
+                Get.lazyPut(() => GoodsReceivingController());
+              }),
+            ),
+
+            GetPage(
+              name: '/sales/warehouse-customers',
+              page: () => const WarehouseCustomerScreen(),
+              binding: BindingsBuilder(() {
+                Get.lazyPut(() => WarehouseCustomerController());
+              }),
+            ),
+
+            GetPage(
+              name: '/sales/delievery',
+              page: () => const DeliveryScreen(),
+              binding: BindingsBuilder(() {
+                Get.lazyPut(() => DeliveryController());
+              }),
+            ),
             // ========== SUBSCRIPTION ROUTES ==========
             GetPage(name: '/plans', page: () => const SelectPlanScreen()),
             GetPage(
@@ -152,9 +216,16 @@ GetPage(
               name: '/warehouse/dashboard',
               page: () => WarehouseDashboard(),
             ),
+             GetPage(
+              name: '/warehouse/invoices',
+              page: () => const WarehouseInvoiceScreen(),
+            ),
             GetPage(
               name: '/warehouse/products',
               page: () => const ProductsScreen(),
+              binding: BindingsBuilder(() {
+                Get.lazyPut(() => ProductsController());
+              }),
             ),
             GetPage(
               name: '/warehouse/categories',
@@ -163,11 +234,9 @@ GetPage(
             GetPage(
               name: '/warehouse/suppliers',
               page: () => const SuppliersScreen(),
-               binding: BindingsBuilder(() {
-    Get.lazyPut(() => SupplierController());
-  }),
-
-  
+              binding: BindingsBuilder(() {
+                Get.lazyPut(() => SupplierController());
+              }),
             ),
             GetPage(
               name: '/warehouse/orders',
@@ -183,17 +252,29 @@ GetPage(
             ),
             GetPage(
               name: '/warehouse/returns',
-              page: () =>  SalesReturnScreen(),
+              page: () => SalesReturnScreen(),
             ),
-            GetPage(
-              name: '/warehouse/stock',
-              page: () => const StockScreen(),
-            ),
+            GetPage(name: '/warehouse/stock', page: () => const StockScreen()),
             GetPage(
               name: '/warehouse/reports',
               page: () => const ReportsScreen(),
             ),
-            
+              GetPage(
+              name: '/warehouse/inventory',
+              page: () => const InventoryValuationScreen(),
+            ),
+               GetPage(
+              name: '/warehouse/reports/stock-summary',
+              page: () => const StockSummaryReportScreen(),
+            ),
+               GetPage(
+              name: '/warehouse/reports/low-stock',
+              page: () => const LowStockReportScreen(),
+            ),
+              GetPage(
+              name: '/warehouse/reports/expiry',
+              page: () => const ExpiryReportScreen(),
+            ),
             // ========== SALES ROUTES ==========
             GetPage(
               name: '/sales/orders',
@@ -201,7 +282,8 @@ GetPage(
             ),
             GetPage(
               name: '/sales/invoices',
-              page: () => const SalesDashboardScreen(), // TODO: Replace with actual invoice screen
+              page: () =>
+                  const SalesDashboardScreen(), // TODO: Replace with actual invoice screen
             ),
             GetPage(
               name: '/sales/returns',
@@ -210,6 +292,29 @@ GetPage(
             GetPage(
               name: '/sales/refunds',
               page: () => const SalesRefundsScreen(),
+            ),
+            // ========== USER MANAGEMENT ROUTES ==========
+            GetPage(
+              name: '/admin/users',
+              page: () => const UserListScreen(),
+            ),
+            GetPage(
+              name: '/admin/users/add',
+              page: () => const UserFormScreen(),
+            ),
+            GetPage(
+              name: '/admin/users/edit/:id',
+              page: () {
+                final id = Get.parameters['id'];
+                return UserFormScreen(userId: id);
+              },
+            ),
+            GetPage(
+              name: '/admin/users/access/:id',
+              page: () {
+                final id = Get.parameters['id'];
+                return AccessManagementScreen(userId: id ?? '');
+              },
             ),
           ],
         );

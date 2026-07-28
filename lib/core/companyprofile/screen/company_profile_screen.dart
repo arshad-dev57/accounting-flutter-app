@@ -1,762 +1,1126 @@
-// lib/core/companyprofile/views/profile_screen.dart - WITH BUSINESS DETAILS
 
+import 'dart:io';
 import 'package:LedgerPro_app/Utils/colors.dart';
 import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/Utils/responsive_utils.dart';
 import 'package:LedgerPro_app/Utils/toast_utils.dart';
 import 'package:LedgerPro_app/core/companyprofile/controller/profile_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:iconify_flutter/iconify_flutter.dart';
-import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  static const Color _bg = Color(0xFFF5F5F7);
+  static const Color _cardBg = Colors.white;
+  static const Color _textPrimary = Color(0xFF1A1A2E);
+  static const Color _textSecondary = Color(0xFF8E8E9A);
+  static const Color _divider = Color(0xFFF0F0F5);
+
 
   @override
   Widget build(BuildContext context) {
     final ProfileController controller = Get.put(ProfileController());
-    final isWeb = ResponsiveUtils.isWeb(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
-    final isMobile = ResponsiveUtils.isMobile(context);
 
     return Scaffold(
-      backgroundColor: kBg,
-      appBar: _buildAppBar(controller, context),
-      body: _buildBody(controller, context),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar(ProfileController controller, BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-    final isMobile = ResponsiveUtils.isMobile(context);
-    
-    return AppBar(
-      title: Text(
-        'Profile',
-        style: TextStyle(
-          fontSize: ResponsiveUtils.getHeadingFontSize(context),
-          fontWeight: FontWeight.w800,
-          color: Colors.white,
-          letterSpacing: -0.3,
-        ),
-      ),
-      backgroundColor: kPrimary,
-      elevation: 0,
-      centerTitle: isMobile,
-      actions: [
-        Obx(() {
-          if (!controller.isEditing.value && !controller.isLoading.value) {
-            return TextButton(
-              onPressed: controller.toggleEdit,
-              child: Text(
-                'Edit',
+      backgroundColor: _bg,
+      body: Obx(() {
+        if (controller.isLoading.value) {
+          return Center(
+            child: LoadingAnimationWidget.discreteCircle(
+              color: kPrimary,
+              size: 44,
+            ),
+          );
+        }
+        return CustomScrollView(
+          slivers: [
+            // ── AppBar ──
+            SliverAppBar(
+              pinned: true,
+              elevation: 0,
+              backgroundColor: _bg,
+              surfaceTintColor: Colors.transparent,
+              leading: GestureDetector(
+                onTap: () => Get.back(),
+                child: const Icon(Icons.chevron_left_rounded,
+                    color: _textPrimary, size: 28),
+              ),
+              title: const Text(
+                'Profile',
                 style: TextStyle(
-                  fontSize: ResponsiveUtils.getSubheadingFontSize(context),
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: _textPrimary,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-            );
-          }
-          if (controller.isEditing.value) {
-            return TextButton(
-              onPressed: controller.toggleEdit,
-              child: Text(
-                'Cancel',
-                style: TextStyle(
-                  fontSize: ResponsiveUtils.getSubheadingFontSize(context),
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white70,
-                ),
-              ),
-            );
-          }
-          return const SizedBox.shrink();
-        }),
-        SizedBox(width: isWeb ? 16 : 8),
-      ],
-    );
-  }
-
-  Widget _buildBody(ProfileController controller, BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
-    
-    return Obx(() {
-      if (controller.isLoading.value) {
-        return Center(
-          child: LoadingAnimationWidget.discreteCircle(
-            color: kPrimary,
-            size: ResponsiveUtils.isWeb(context) ? 32 : 40,
-          ),
-        );
-      }
-      
-      return SingleChildScrollView(
-        padding: ResponsiveUtils.getScreenPadding(context),
-        child: Center(
-          child: SizedBox(
-            width: ResponsiveUtils.getFormWidth(context),
-            child: Column(
-              children: [
-                SizedBox(height: ResponsiveUtils.isMobile(context) ? 8 : 16),
-                _buildProfileHeader(controller, context),
-                SizedBox(height: ResponsiveUtils.isMobile(context) ? 24 : 32),
-                _buildProfileForm(controller, context),
-                SizedBox(height: ResponsiveUtils.isMobile(context) ? 24 : 32),
-                _buildBusinessDetailsForm(controller, context),
-                SizedBox(height: ResponsiveUtils.isMobile(context) ? 24 : 32),
-                _buildCurrencySettings(context),
-                SizedBox(height: ResponsiveUtils.isMobile(context) ? 24 : 32),
-                if (controller.isEditing.value) _buildSaveButton(controller, context),
+              centerTitle: true,
+              actions: [
+                Obx(() => _buildEditAction(controller)),
+                const SizedBox(width: 8),
               ],
             ),
-          ),
-        ),
-      );
-    });
+
+            SliverToBoxAdapter(
+              child: Column(
+                    children: [
+                      const SizedBox(height: 8),
+
+                      // ── Avatar + Name block ──
+                      _buildAvatarSection(controller),
+
+                      const SizedBox(height: 16),
+
+                      // ── Quick action cards (like screenshot's "New" / "My Recent Order") ──
+                      _buildQuickActions(controller),
+
+                      const SizedBox(height: 20),
+
+                      _buildSectionHeader('Organization Information'),
+                      _buildMenuCard([
+                        _buildMenuItem(
+                          icon: Icons.business_center_rounded,
+                          label: 'Organization Name',
+                          value: controller.organizationName.value.isEmpty
+                              ? 'Not set'
+                              : controller.organizationName.value,
+                          isEditing: controller.isEditing.value,
+                          controller: controller.orgNameController,
+                          hint: 'Enter organization name',
+                        ),
+                        _buildMenuDivider(),
+                        _buildMenuItem(
+                          icon: Icons.person_rounded,
+                          label: 'Contact Person',
+                          value: controller.personName.value.isEmpty
+                              ? 'Not set'
+                              : controller.personName.value,
+                          isEditing: controller.isEditing.value,
+                          controller: controller.firstNameController,
+                          hint: 'First name',
+                        ),
+                        _buildMenuDivider(),
+                        _buildMenuItem(
+                          icon: Icons.location_on_rounded,
+                          label: 'Country',
+                          value: controller.country.value.isEmpty
+                              ? 'Not set'
+                              : controller.country.value,
+                          isEditing: controller.isEditing.value,
+                          controller: controller.countryController,
+                          hint: 'Country',
+                        ),
+                      ]),
+
+                      const SizedBox(height: 20),
+
+                      // ── Contact section ──
+                      _buildSectionHeader('Contact Details'),
+                      _buildMenuCard([
+                        _buildMenuItem(
+                          icon: Icons.email_rounded,
+                          label: 'Email Address',
+                          value: controller.emailController.text.isEmpty
+                              ? 'Not set'
+                              : controller.emailController.text,
+                          isEditing: controller.isEditing.value,
+                          controller: controller.emailController,
+                          hint: 'company@example.com',
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                        _buildMenuDivider(),
+                        _buildMenuItem(
+                          icon: Icons.phone_rounded,
+                          label: 'Contact Number',
+                          value: controller.contactNoController.text.isEmpty
+                              ? 'Not set'
+                              : controller.contactNoController.text,
+                          isEditing: controller.isEditing.value,
+                          controller: controller.contactNoController,
+                          hint: '+92 300 0000000',
+                          keyboardType: TextInputType.phone,
+                        ),
+                        _buildMenuDivider(),
+                        _buildMenuItem(
+                          icon: Icons.language_rounded,
+                          label: 'Website',
+                          value: controller.websiteController.text.isEmpty
+                              ? 'Not set'
+                              : controller.websiteController.text,
+                          isEditing: controller.isEditing.value,
+                          controller: controller.websiteController,
+                          hint: 'https://yourcompany.com',
+                          keyboardType: TextInputType.url,
+                        ),
+                      ]),
+
+                      const SizedBox(height: 20),
+
+                      // ── Business section ──
+                      _buildSectionHeader('Business Details'),
+                      _buildMenuCard([
+                        _buildMenuItem(
+                          icon: Icons.factory_rounded,
+                          label: 'Industry',
+                          value: controller.industryController.text.isEmpty
+                              ? 'Not set'
+                              : controller.industryController.text,
+                          isEditing: controller.isEditing.value,
+                          controller: controller.industryController,
+                          hint: 'e.g., Retail, Manufacturing',
+                        ),
+                        _buildMenuDivider(),
+                        _buildDropdownItem(
+                          icon: Icons.schema_rounded,
+                          label: 'Business Type',
+                          value: controller.businessType.value,
+                          items: controller.businessTypes,
+                          enabled: controller.isEditing.value,
+                          onChanged: (v) {
+                            if (v != null) {
+                              controller.businessTypeController.text = v;
+                              controller.businessType.value = v;
+                            }
+                          },
+                        ),
+                        _buildMenuDivider(),
+                        _buildDropdownItem(
+                          icon: Icons.calendar_month_rounded,
+                          label: 'Fiscal Year',
+                          value: controller.fiscalYear.value,
+                          items: controller.fiscalYears,
+                          enabled: controller.isEditing.value,
+                          onChanged: (v) {
+                            if (v != null) {
+                              controller.fiscalYearController.text = v;
+                              controller.fiscalYear.value = v;
+                            }
+                          },
+                        ),
+                        _buildMenuDivider(),
+                        _buildMenuItem(
+                          icon: Icons.receipt_long_rounded,
+                          label: 'Tax Registration (NTN/GST)',
+                          value: controller.taxRegistrationController.text.isEmpty
+                              ? 'Not set'
+                              : controller.taxRegistrationController.text,
+                          isEditing: controller.isEditing.value,
+                          controller: controller.taxRegistrationController,
+                          hint: 'NTN / GST / VAT Number',
+                        ),
+                      ]),
+
+                      const SizedBox(height: 20),
+
+                      // ── Currency section ──
+                      _buildSectionHeader('Currency Settings'),
+                      _buildCurrencyCard(),
+
+                      const SizedBox(height: 20),
+
+                      // ── Media section ──
+                      _buildSectionHeader('Business Media'),
+                      _buildMenuCard([
+                        _buildMediaRow(
+                          icon: Icons.image_rounded,
+                          label: 'Business Logo',
+                          subtitle: 'Appears on invoices & reports',
+                          path: controller.businessLogo,
+                          enabled: controller.isEditing.value,
+                          onTap: controller.pickBusinessLogo,
+                        ),
+                        _buildMenuDivider(),
+                        _buildMediaRow(
+                          icon: Icons.draw_rounded,
+                          label: 'Authorized Signature',
+                          subtitle: 'Used on official documents',
+                          path: controller.signature,
+                          enabled: controller.isEditing.value,
+                          onTap: () =>
+                              _showSignatureOptions(context, controller),
+                        ),
+                      ]),
+
+                      const SizedBox(height: 100),
+                    ],
+                  ),
+            ),
+          ],
+        );
+      }),
+      bottomNavigationBar: Obx(() {
+        if (!controller.isEditing.value) return const SizedBox.shrink();
+        return _buildBottomSaveBar(controller);
+      }),
+    );
   }
 
-  Widget _buildProfileHeader(ProfileController controller, BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
-    final isMobile = ResponsiveUtils.isMobile(context);
-    
-    return Obx(() => Container(
-      padding: EdgeInsets.all(isWeb ? 24 : isTablet ? 20 : 16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [kPrimary, kPrimaryDark],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(isWeb ? 16 : isTablet ? 14 : 12),
-        boxShadow: [
-          BoxShadow(
-            color: kPrimary.withOpacity(0.3),
-            blurRadius: isWeb ? 20 : 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+  // ═══════════════════════════════════════════════════════════════
+  // AVATAR SECTION  (like screenshot: circle avatar, name, email, edit badge)
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildAvatarSection(ProfileController controller) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
         children: [
-          Column(
+          // Avatar with edit badge
+          Stack(
             children: [
-              Container(
-                padding: EdgeInsets.all(isWeb ? 20 : isTablet ? 16 : 12),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-                child: Iconify(
-                  Mdi.account_circle,
-                  color: kPrimary,
-                  size: isWeb ? 80 : isTablet ? 60 : 50,
+              Obx(() {
+                final logo = controller.businessLogo.value;
+                return Container(
+                  width: 88,
+                  height: 88,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: kPrimary.withOpacity(0.12),
+                    border: Border.all(
+                      color: Colors.white,
+                      width: 3,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: logo.isNotEmpty
+                      ? ClipOval(
+                          child: logo.startsWith('http')
+                              ? Image.network(logo, fit: BoxFit.cover)
+                              : Image.file(File(logo), fit: BoxFit.cover),
+                        )
+                      : Center(
+                          child: Text(
+                            controller.organizationName.value.isEmpty
+                                ? 'LP'
+                                : controller.organizationName.value
+                                    .substring(
+                                        0,
+                                        controller.organizationName.value
+                                                    .length >
+                                                2
+                                            ? 2
+                                            : controller
+                                                .organizationName.value.length)
+                                    .toUpperCase(),
+                            style: TextStyle(
+                              color: kPrimary,
+                              fontSize: 26,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                );
+              }),
+              // Edit badge
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: GestureDetector(
+                  onTap: controller.toggleEdit,
+                  child: Container(
+                    width: 26,
+                    height: 26,
+                    decoration: BoxDecoration(
+                      color: kPrimary,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: const Icon(Icons.edit_rounded,
+                        color: Colors.white, size: 12),
+                  ),
                 ),
               ),
-              SizedBox(height: isWeb ? 16 : isTablet ? 12 : 10),
-              Text(
-                controller.organizationName.value.isEmpty 
-                    ? 'Your Organization' 
+            ],
+          ),
+          const SizedBox(height: 14),
+          // Organization name
+          Obx(() => Text(
+                controller.organizationName.value.isEmpty
+                    ? 'Your Organization'
                     : controller.organizationName.value,
-                style: TextStyle(
-                  fontSize: isWeb ? 20 : isTablet ? 18 : 16,
+                style: const TextStyle(
+                  fontSize: 20,
                   fontWeight: FontWeight.w800,
-                  color: Colors.white,
+                  color: _textPrimary,
                   letterSpacing: -0.3,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: isWeb ? 8 : isTablet ? 6 : 4),
-              Text(
-                controller.personName.value.isEmpty 
-                    ? 'Profile' 
-                    : controller.personName.value,
-                style: TextStyle(
-                  fontSize: isWeb ? 14 : isTablet ? 13 : 12,
-                  color: Colors.white.withOpacity(0.8),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    ));
-  }
-
-  Widget _buildProfileForm(ProfileController controller, BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
-    final isMobile = ResponsiveUtils.isMobile(context);
-    
-    return Container(
-      padding: EdgeInsets.all(isWeb ? 24 : isTablet ? 20 : 16),
-      decoration: BoxDecoration(
-        color: kCardBg,
-        borderRadius: BorderRadius.circular(isWeb ? 16 : isTablet ? 14 : 12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Organization Information',
-            style: TextStyle(
-              fontSize: isWeb ? 18 : isTablet ? 16 : 14,
-              fontWeight: FontWeight.w800,
-              color: kText,
-              letterSpacing: -0.3,
-            ),
-          ),
-          SizedBox(height: isWeb ? 24 : isTablet ? 20 : 16),
-          
-          // Organization Name
-          _buildTextField(
-            label: 'Organization Name',
-            hint: 'Enter your organization name',
-            icon: Mdi.domain,
-            controller: controller.orgNameController,
-            enabled: controller.isEditing.value,
-            context: context,
-          ),
-          
-          SizedBox(height: isWeb ? 20 : isTablet ? 16 : 12),
-          
-          // First Name
-          _buildTextField(
-            label: 'First Name',
-            hint: 'Enter first name',
-            icon: Mdi.account,
-            controller: controller.firstNameController,
-            enabled: controller.isEditing.value,
-            context: context,
-          ),
-          
-          SizedBox(height: isWeb ? 20 : isTablet ? 16 : 12),
-          
-          // Last Name
-          _buildTextField(
-            label: 'Last Name',
-            hint: 'Enter last name',
-            icon: Mdi.account,
-            controller: controller.lastNameController,
-            enabled: controller.isEditing.value,
-            context: context,
-          ),
-          
-          SizedBox(height: isWeb ? 20 : isTablet ? 16 : 12),
-          
-          // Address
-          _buildTextField(
-            label: 'Address',
-            hint: 'Enter your address',
-            icon: Mdi.map_marker,
-            controller: controller.addressController,
-            enabled: controller.isEditing.value,
-            maxLines: 2,
-            context: context,
-          ),
-          
-          SizedBox(height: isWeb ? 20 : isTablet ? 16 : 12),
-          
+              )),
+          const SizedBox(height: 4),
           // Email
-          _buildTextField(
-            label: 'Email Id',
-            hint: 'Enter email address',
-            icon: Mdi.email,
-            controller: controller.emailController,
-            enabled: controller.isEditing.value,
-            keyboardType: TextInputType.emailAddress,
-            context: context,
-          ),
-          
-          SizedBox(height: isWeb ? 20 : isTablet ? 16 : 12),
-          
-          // Contact No
-          _buildTextField(
-            label: 'Contact No',
-            hint: 'Enter contact number',
-            icon: Mdi.phone,
-            controller: controller.contactNoController,
-            enabled: controller.isEditing.value,
-            keyboardType: TextInputType.phone,
-            context: context,
-          ),
-          
-          SizedBox(height: isWeb ? 20 : isTablet ? 16 : 12),
-          
-          // Country
-          _buildTextField(
-            label: 'Country',
-            hint: 'Enter country',
-            icon: Mdi.map,
-            controller: controller.countryController,
-            enabled: controller.isEditing.value,
-            context: context,
-          ),
-          
-          SizedBox(height: isWeb ? 20 : isTablet ? 16 : 12),
-          
-          // Website Link
-          _buildTextField(
-            label: 'Website Link',
-            hint: 'Enter website URL',
-            icon: Mdi.web,
-            controller: controller.websiteController,
-            enabled: controller.isEditing.value,
-            keyboardType: TextInputType.url,
-            context: context,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBusinessDetailsForm(ProfileController controller, BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
-
-    return Container(
-      padding: EdgeInsets.all(isWeb ? 24 : isTablet ? 20 : 16),
-      decoration: BoxDecoration(
-        color: kCardBg,
-        borderRadius: BorderRadius.circular(isWeb ? 16 : isTablet ? 14 : 12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Iconify(Mdi.building, size: isWeb ? 20 : 18, color: kPrimary),
-              SizedBox(width: isWeb ? 8 : 6),
-              Text(
-                'Business Details',
-                style: TextStyle(
-                  fontSize: isWeb ? 18 : isTablet ? 16 : 14,
-                  fontWeight: FontWeight.w800,
-                  color: kText,
-                  letterSpacing: -0.3,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: isWeb ? 8 : 6),
           Text(
-            'These details appear on invoices and reports',
-            style: TextStyle(
-              fontSize: isWeb ? 13 : 12,
-              color: kSubText,
+            controller.emailController.text.isEmpty
+                ? 'No email set'
+                : controller.emailController.text,
+            style: const TextStyle(
+              fontSize: 13,
+              color: _textSecondary,
+              fontWeight: FontWeight.w400,
             ),
           ),
-          SizedBox(height: isWeb ? 24 : isTablet ? 20 : 16),
+        ],
+      ),
+    );
+  }
 
-          _buildTextField(
-            label: 'Industry',
-            hint: 'e.g., Retail, Manufacturing, Services',
-            icon: Mdi.company,
-            controller: controller.industryController,
-            enabled: controller.isEditing.value,
-            context: context,
+  // ═══════════════════════════════════════════════════════════════
+  // QUICK ACTION CARDS  (like screenshot: "New discounts" / "My Recent Order")
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildQuickActions(ProfileController controller) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          // Connect / Upgrade prompt card
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: _cardBg,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: kPrimary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'ERP',
+                          style: TextStyle(
+                            color: kPrimary,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        width: 26,
+                        height: 26,
+                        decoration: BoxDecoration(
+                          color: _textPrimary,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.north_east_rounded,
+                            color: Colors.white, size: 14),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Obx(() => Text(
+                        controller.businessType.value.isEmpty
+                            ? 'Set up your\nbusiness profile'
+                            : 'Manage your\nbusiness settings',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: _textSecondary,
+                          fontWeight: FontWeight.w500,
+                          height: 1.4,
+                        ),
+                      )),
+                ],
+              ),
+            ),
           ),
-
-          SizedBox(height: isWeb ? 20 : isTablet ? 16 : 12),
-
-          // Business Type
-          _buildDropdownField(
-            label: 'Business Type',
-            hint: 'Select business type',
-            icon: Mdi.business,
-            value: controller.businessType.value,
-            items: controller.businessTypes,
-            enabled: controller.isEditing.value,
-            onChanged: (value) {
-              if (value != null) {
-                controller.businessTypeController.text = value;
-                controller.businessType.value = value;
-              }
-            },
-            context: context,
-          ),
-
-          SizedBox(height: isWeb ? 20 : isTablet ? 16 : 12),
-
-          // Fiscal Year
-          _buildDropdownField(
-            label: 'Fiscal Year',
-            hint: 'Select fiscal year',
-            icon: Mdi.calendar,
-            value: controller.fiscalYear.value,
-            items: controller.fiscalYears,
-            enabled: controller.isEditing.value,
-            onChanged: (value) {
-              if (value != null) {
-                controller.fiscalYearController.text = value;
-                controller.fiscalYear.value = value;
-              }
-            },
-            context: context,
-          ),
-
-          SizedBox(height: isWeb ? 20 : isTablet ? 16 : 12),
-
-          // Tax Registration Number
-          _buildTextField(
-            label: 'Tax Registration Number',
-            hint: 'e.g., NTN, GST, VAT Number',
-            icon: Mdi.receipt,
-            controller: controller.taxRegistrationController,
-            enabled: controller.isEditing.value,
-            context: context,
-          ),
-
-          SizedBox(height: isWeb ? 20 : isTablet ? 16 : 12),
-
-          // Business Logo URL
-          _buildTextField(
-            label: 'Business Logo URL',
-            hint: 'https://example.com/logo.png',
-            icon: Mdi.image,
-            controller: controller.businessLogoController,
-            enabled: controller.isEditing.value,
-            keyboardType: TextInputType.url,
-            context: context,
-          ),
-
-          SizedBox(height: isWeb ? 20 : isTablet ? 16 : 12),
-
-          // Signature URL
-          _buildTextField(
-            label: 'Signature URL',
-            hint: 'https://example.com/signature.png',
-            icon: Mdi.pencil,
-            controller: controller.signatureController,
-            enabled: controller.isEditing.value,
-            keyboardType: TextInputType.url,
-            context: context,
+          const SizedBox(width: 12),
+          // Currency / stats card
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: kPrimary,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: kPrimary.withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.attach_money_rounded,
+                            color: Colors.white, size: 14),
+                      ),
+                      const Spacer(),
+                      const Icon(Icons.more_horiz_rounded,
+                          color: Colors.white54, size: 18),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Active Currency',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Obx(() {
+                    final ctrl = Get.find<CurrencyController>();
+                    return Text(
+                      '${ctrl.currencySymbol.value} ${ctrl.currencyCode.value}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  // ════════════════════════════════════════════════════════════════
-  // BUILD TEXT FIELD
-  // ════════════════════════════════════════════════════════════════
-  Widget _buildTextField({
-    required String label,
-    required String hint,
-    required String icon,
-    required TextEditingController controller,
-    required bool enabled,
-    required BuildContext context,
-    int maxLines = 1,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
-    final isMobile = ResponsiveUtils.isMobile(context);
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Iconify(icon, size: isWeb ? 20 : isTablet ? 18 : 16, color: kPrimary),
-            SizedBox(width: isWeb ? 8 : isTablet ? 6 : 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: isWeb ? 13 : isTablet ? 12 : 11,
-                fontWeight: FontWeight.w600,
-                color: kSubText,
-              ),
+  // ═══════════════════════════════════════════════════════════════
+  // SECTION HEADER  (like screenshot: "Personal Information")
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w800,
+          color: _textPrimary,
+          letterSpacing: -0.2,
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // MENU CARD  (white card, list of rows — like screenshot)
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildMenuCard(List<Widget> children) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        decoration: BoxDecoration(
+          color: _cardBg,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
-        SizedBox(height: isWeb ? 8 : isTablet ? 6 : 4),
-        TextFormField(
-          controller: controller,
-          enabled: enabled,
-          maxLines: maxLines,
-          keyboardType: keyboardType,
-          style: TextStyle(
-            fontSize: isWeb ? 14 : isTablet ? 13 : 12,
-            color: kText,
-          ),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(
-              fontSize: isWeb ? 13 : isTablet ? 12 : 11,
-              color: Colors.grey[400],
-            ),
-            filled: true,
-            fillColor: enabled ? Colors.white : kBg.withOpacity(0.5),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(isWeb ? 12 : isTablet ? 10 : 8),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(isWeb ? 12 : isTablet ? 10 : 8),
-              borderSide: BorderSide(color: kBorder.withOpacity(0.5)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(isWeb ? 12 : isTablet ? 10 : 8),
-              borderSide: const BorderSide(color: kPrimary, width: 2),
-            ),
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: isWeb ? 16 : isTablet ? 14 : 12,
-              vertical: maxLines > 1 ? (isWeb ? 16 : isTablet ? 14 : 12) : (isWeb ? 14 : isTablet ? 12 : 10),
-            ),
-          ),
-        ),
-      ],
+        child: Column(children: children),
+      ),
     );
   }
 
-  // ════════════════════════════════════════════════════════════════
-  // BUILD DROPDOWN FIELD (NEW)
-  // ════════════════════════════════════════════════════════════════
-  Widget _buildDropdownField({
+  Widget _buildMenuDivider() {
+    return const Divider(height: 1, color: _divider, indent: 56);
+  }
+
+  // ── Row item: icon + label + value (or text field when editing) ──
+  Widget _buildMenuItem({
+    required IconData icon,
     required String label,
+    required String value,
+    required bool isEditing,
+    required TextEditingController controller,
     required String hint,
-    required String icon,
+    int maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Icon box
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: kPrimary.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: kPrimary, size: 16),
+          ),
+          const SizedBox(width: 12),
+          // Label + value
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: _textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                isEditing
+                    ? TextFormField(
+                        controller: controller,
+                        maxLines: maxLines,
+                        keyboardType: keyboardType,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: _textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: hint,
+                          hintStyle: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey.shade400,
+                            fontWeight: FontWeight.w400,
+                          ),
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 0, vertical: 4),
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide:
+                                BorderSide(color: kPrimary, width: 1.5),
+                          ),
+                        ),
+                      )
+                    : Text(
+                        value,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: value == 'Not set'
+                              ? Colors.grey.shade400
+                              : _textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+              ],
+            ),
+          ),
+          // Chevron (view mode only)
+          if (!isEditing)
+            const Icon(Icons.chevron_right_rounded,
+                color: _textSecondary, size: 20),
+        ],
+      ),
+    );
+  }
+
+  // ── Dropdown item ──
+  Widget _buildDropdownItem({
+    required IconData icon,
+    required String label,
     required String value,
     required List<String> items,
     required bool enabled,
     required Function(String?) onChanged,
-    required BuildContext context,
   }) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: kPrimary.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: kPrimary, size: 16),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: _textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                enabled
+                    ? DropdownButtonFormField<String>(
+                        value: value.isNotEmpty ? value : null,
+                        isExpanded: true,
+                        isDense: true,
+                        hint: Text('Select...',
+                            style: TextStyle(
+                                fontSize: 13, color: Colors.grey.shade400)),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: _textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          contentPadding:
+                              EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                        ),
+                        dropdownColor: Colors.white,
+                        items: items
+                            .map((e) => DropdownMenuItem(
+                                  value: e,
+                                  child: Text(e,
+                                      style: const TextStyle(fontSize: 13)),
+                                ))
+                            .toList(),
+                        onChanged: onChanged,
+                      )
+                    : Text(
+                        value.isEmpty ? 'Not set' : value,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: value.isEmpty
+                              ? Colors.grey.shade400
+                              : _textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+              ],
+            ),
+          ),
+          if (!enabled)
+            const Icon(Icons.chevron_right_rounded,
+                color: _textSecondary, size: 20),
+        ],
+      ),
+    );
+  }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Iconify(icon, size: isWeb ? 20 : isTablet ? 18 : 16, color: kPrimary),
-            SizedBox(width: isWeb ? 8 : isTablet ? 6 : 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: isWeb ? 13 : isTablet ? 12 : 11,
-                fontWeight: FontWeight.w600,
-                color: kSubText,
-              ),
+  // ── Media row (logo / signature preview inline) ──
+  Widget _buildMediaRow({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required RxString path,
+    required bool enabled,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: kPrimary.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: kPrimary, size: 16),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: _textPrimary,
+                      fontWeight: FontWeight.w600,
+                    )),
+                Text(subtitle,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: _textSecondary,
+                    )),
+              ],
+            ),
+          ),
+          Obx(() {
+            final p = path.value;
+            if (p.isNotEmpty) {
+              return GestureDetector(
+                onTap: enabled ? onTap : null,
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: _divider),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(9),
+                    child: p.startsWith('http')
+                        ? Image.network(p, fit: BoxFit.cover)
+                        : Image.file(File(p), fit: BoxFit.cover),
+                  ),
+                ),
+              );
+            }
+            return enabled
+                ? GestureDetector(
+                    onTap: onTap,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: kPrimary.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'Upload',
+                        style: TextStyle(
+                          color: kPrimary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  )
+                : const Icon(Icons.chevron_right_rounded,
+                    color: _textSecondary, size: 20);
+          }),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // CURRENCY CARD
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildCurrencyCard() {
+    final currencyCtrl = Get.find<CurrencyController>();
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        decoration: BoxDecoration(
+          color: _cardBg,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
-        SizedBox(height: isWeb ? 8 : isTablet ? 6 : 4),
-        Container(
-          decoration: BoxDecoration(
-            color: enabled ? Colors.white : kBg.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(isWeb ? 12 : isTablet ? 10 : 8),
-            border: Border.all(
-              color: enabled ? kBorder.withOpacity(0.5) : Colors.transparent,
-            ),
-          ),
-          child: DropdownButtonFormField<String>(
-            value: value.isNotEmpty ? value : null,
-            isExpanded: true,
-            hint: Text(
-              hint,
-              style: TextStyle(
-                fontSize: isWeb ? 13 : isTablet ? 12 : 11,
-                color: Colors.grey[400],
-              ),
-            ),
-            style: TextStyle(
-              fontSize: isWeb ? 14 : isTablet ? 13 : 12,
-              color: enabled ? kText : kSubText,
-            ),
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: isWeb ? 16 : isTablet ? 14 : 12,
-                vertical: isWeb ? 14 : isTablet ? 12 : 10,
-              ),
-            ),
-            items: items.map((item) {
-              return DropdownMenuItem(
-                value: item,
-                child: Text(item),
-              );
-            }).toList(),
-            onChanged: enabled ? onChanged : null,
-            dropdownColor: Colors.white,
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ════════════════════════════════════════════════════════════════
-  // CURRENCY SETTINGS
-  // ════════════════════════════════════════════════════════════════
-  Widget _buildCurrencySettings(BuildContext context) {
-    final currencyCtrl = Get.find<CurrencyController>();
-    final isWeb = ResponsiveUtils.isWeb(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
-
-    return Container(
-      padding: EdgeInsets.all(isWeb ? 24 : isTablet ? 20 : 16),
-      decoration: BoxDecoration(
-        color: kCardBg,
-        borderRadius: BorderRadius.circular(isWeb ? 16 : isTablet ? 14 : 12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
             children: [
-              Icon(Icons.settings, size: isWeb ? 20 : 18, color: kPrimary),
-              SizedBox(width: isWeb ? 8 : 6),
-              Text(
-                'Currency Settings',
-                style: TextStyle(
-                  fontSize: isWeb ? 18 : isTablet ? 16 : 14,
-                  fontWeight: FontWeight.w800,
-                  color: kText,
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: kPrimary.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.currency_exchange_rounded,
+                    color: kPrimary, size: 16),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Default Currency',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: _textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Obx(() => DropdownButtonFormField<String>(
+                          value: currencyCtrl.currencyCode.value,
+                          isExpanded: true,
+                          isDense: true,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: _textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          decoration: const InputDecoration(
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 0, vertical: 4),
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                          ),
+                          dropdownColor: Colors.white,
+                          items: CurrencyController.currencies
+                              .map((c) => DropdownMenuItem(
+                                    value: c.code,
+                                    child: Text(c.displayLabel,
+                                        overflow: TextOverflow.ellipsis,
+                                        style:
+                                            const TextStyle(fontSize: 13)),
+                                  ))
+                              .toList(),
+                          onChanged: (code) async {
+                            if (code == null) return;
+                            await currencyCtrl.setCurrency(code);
+                            AppSnackbar.success(
+                              kSuccess,
+                              'Currency Updated',
+                              'Now using ${currencyCtrl.currencySymbol.value}',
+                            );
+                          },
+                        )),
+                  ],
                 ),
               ),
+              Obx(() => Text(
+                    currencyCtrl.currencySymbol.value,
+                    style: TextStyle(
+                      fontSize: 22,
+                      color: kPrimary,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  )),
             ],
           ),
-          SizedBox(height: isWeb ? 8 : 6),
-          Text(
-            'This currency will be used across the entire app for all amounts.',
-            style: TextStyle(
-              fontSize: isWeb ? 13 : 12,
-              color: kSubText,
-            ),
-          ),
-          SizedBox(height: isWeb ? 20 : 16),
-          Obx(() => DropdownButtonFormField<String>(
-            value: currencyCtrl.currencyCode.value,
-            isExpanded: true,
-            decoration: InputDecoration(
-              labelText: 'Default Currency',
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(isWeb ? 12 : 10),
-                borderSide: BorderSide(color: kBorder.withOpacity(0.5)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(isWeb ? 12 : 10),
-                borderSide: BorderSide(color: kBorder.withOpacity(0.5)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(isWeb ? 12 : 10),
-                borderSide: const BorderSide(color: kPrimary, width: 2),
-              ),
-              prefixIcon: const Icon(Icons.attach_money, color: kPrimary),
-            ),
-            items: CurrencyController.currencies
-                .map((c) => DropdownMenuItem(
-                      value: c.code,
-                      child: Text(c.displayLabel, overflow: TextOverflow.ellipsis),
-                    ))
-                .toList(),
-            onChanged: (code) async {
-              if (code == null) return;
-              await currencyCtrl.setCurrency(code);
-              AppSnackbar.success(
-                kSuccess,
-                'Currency Updated',
-                'All amounts will now display in ${currencyCtrl.currencySymbol.value}',
-              );
-            },
-          )),
-          SizedBox(height: isWeb ? 12 : 10),
-          Obx(() => Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(isWeb ? 14 : 12),
-            decoration: BoxDecoration(
-              color: kPrimary.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(isWeb ? 10 : 8),
-              border: Border.all(color: kPrimary.withOpacity(0.2)),
-            ),
-            child: Text(
-              'Preview: ${currencyCtrl.formatAmount(1234567.89)}',
-              style: TextStyle(
-                fontSize: isWeb ? 14 : 13,
-                fontWeight: FontWeight.w600,
-                color: kPrimary,
-              ),
-            ),
-          )),
-        ],
+        ),
       ),
     );
   }
 
-  // ════════════════════════════════════════════════════════════════
-  // SAVE BUTTON
-  // ════════════════════════════════════════════════════════════════
-  Widget _buildSaveButton(ProfileController controller, BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
-    
-    return Obx(() => SizedBox(
-      width: double.infinity,
-      height: ResponsiveUtils.getButtonHeight(context),
-      child: ElevatedButton(
-        onPressed: controller.isSaving.value 
-            ? null 
-            : () {
-                if (controller.validateForm()) {
-                  controller.saveProfile();
-                }
-              },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: kPrimary,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(isWeb ? 12 : isTablet ? 10 : 8),
+  // ═══════════════════════════════════════════════════════════════
+  // EDIT ACTION BUTTON  (top right)
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildEditAction(ProfileController controller) {
+    if (controller.isEditing.value) {
+      return GestureDetector(
+        onTap: controller.toggleEdit,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+          decoration: BoxDecoration(
+            color: Colors.red.shade50,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            'Cancel',
+            style: TextStyle(
+              color: Colors.red.shade400,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
-        child: controller.isSaving.value
-            ? SizedBox(
-                height: isWeb ? 24 : isTablet ? 20 : 18,
-                width: isWeb ? 24 : isTablet ? 20 : 18,
-                child: const CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              )
-            : Text(
-                'Save Changes',
-                style: TextStyle(
-                  fontSize: isWeb ? 16 : isTablet ? 15 : 14,
-                  fontWeight: FontWeight.w600,
+      );
+    }
+    return GestureDetector(
+      onTap: controller.toggleEdit,
+      child: Container(
+        width: 36,
+        height: 36,
+        decoration: BoxDecoration(
+          color: kPrimary.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(Icons.settings_rounded, color: kPrimary, size: 18),
+      ),
+    );
+  }
+
+  Widget _buildBottomSaveBar(ProfileController controller) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: Obx(() => SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton(
+              onPressed: controller.isSaving.value
+                  ? null
+                  : () {
+                      if (controller.validateForm()) {
+                        controller.saveProfile();
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kPrimary,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: kPrimary.withOpacity(0.5),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
                 ),
               ),
+              child: controller.isSaving.value
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.check_circle_rounded, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Save Changes',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          )),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // SIGNATURE BOTTOM SHEET
+  // ═══════════════════════════════════════════════════════════════
+
+  void _showSignatureOptions(
+      BuildContext context, ProfileController controller) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-    ));
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 0, 20, 12),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Add Signature',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: _textPrimary,
+                    ),
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: kPrimary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.draw_rounded, color: kPrimary, size: 20),
+                ),
+                title: const Text('Draw Signature',
+                    style:
+                        TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                subtitle: const Text('Use your finger to draw',
+                    style: TextStyle(fontSize: 12)),
+                trailing: const Icon(Icons.chevron_right_rounded,
+                    color: _textSecondary),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  controller.drawSignature(context);
+                },
+              ),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF9B59B6).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.image_rounded,
+                      color: Color(0xFF9B59B6), size: 20),
+                ),
+                title: const Text('Upload from Gallery',
+                    style:
+                        TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                subtitle: const Text('Select an image file',
+                    style: TextStyle(fontSize: 12)),
+                trailing: const Icon(Icons.chevron_right_rounded,
+                    color: _textSecondary),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  controller.pickSignatureFromGallery();
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

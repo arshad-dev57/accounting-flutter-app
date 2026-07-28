@@ -64,6 +64,14 @@ class SalesOrdersScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
               child: Row(
                 children: [
+                  GestureDetector(
+                    onTap: () => Get.back(),
+                    child: Icon(
+                      Icons.arrow_back,
+                      color: Colors.black.withOpacity(0.65),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,48 +85,52 @@ class SalesOrdersScreen extends StatelessWidget {
                             letterSpacing: -0.3,
                           ),
                         ),
-                        Obx(() => Text(
-                              '${controller.totalRecords.value} orders',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.black.withOpacity(0.55),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            )),
+                        Obx(
+                          () => Text(
+                            '${controller.totalRecords.value} orders',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.black.withOpacity(0.55),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
                   // Compact KPIs
-                  Obx(() => Row(
-                        children: [
-                          _compactKpi(
-                            'Pending',
-                            controller.orders
-                                .where((o) => o.orderStatus == 'Pending')
-                                .length
-                                .toString(),
-                            Colors.orange.shade800,
-                          ),
-                          const SizedBox(width: 12),
-                          _compactKpi(
-                            'Processing',
-                            controller.orders
-                                .where((o) => o.orderStatus == 'Processing')
-                                .length
-                                .toString(),
-                            Colors.blue.shade800,
-                          ),
-                          const SizedBox(width: 12),
-                          _compactKpi(
-                            'Done',
-                            controller.orders
-                                .where((o) => o.orderStatus == 'Delivered')
-                                .length
-                                .toString(),
-                            Colors.green.shade800,
-                          ),
-                        ],
-                      )),
+                  Obx(
+                    () => Row(
+                      children: [
+                        _compactKpi(
+                          'Pending',
+                          controller.orders
+                              .where((o) => o.orderStatus == 'Pending')
+                              .length
+                              .toString(),
+                          Colors.orange.shade800,
+                        ),
+                        const SizedBox(width: 12),
+                        _compactKpi(
+                          'Processing',
+                          controller.orders
+                              .where((o) => o.orderStatus == 'Processing')
+                              .length
+                              .toString(),
+                          Colors.blue.shade800,
+                        ),
+                        const SizedBox(width: 12),
+                        _compactKpi(
+                          'Done',
+                          controller.orders
+                              .where((o) => o.orderStatus == 'Delivered')
+                              .length
+                              .toString(),
+                          Colors.green.shade800,
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(width: 10),
                   GestureDetector(
                     onTap: controller.refreshOrders,
@@ -161,45 +173,49 @@ class SalesOrdersScreen extends StatelessWidget {
             ),
 
             // ── Filter dropdowns row (replaces chips) ──
-            Obx(() => Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                  child: Row(
-                    children: [
-                      // Status — widest
-                      Expanded(
-                        flex: 5,
-                        child: _headerDropdown(
-                          value: controller.statusFilter.value,
-                          items: SalesOrderController.statusOptions,
-                          label: 'Status',
-                          onChanged: (v) => controller.updateFilter('status', v),
-                        ),
+            Obx(
+              () => Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                child: Row(
+                  children: [
+                    // Status — widest
+                    Expanded(
+                      flex: 5,
+                      child: _headerDropdown(
+                        value: controller.statusFilter.value,
+                        items: SalesOrderController.statusOptions,
+                        label: 'Status',
+                        onChanged: (v) => controller.updateFilter('status', v),
                       ),
-                      const SizedBox(width: 6),
-                      // Payment
-                      Expanded(
-                        flex: 4,
-                        child: _headerDropdown(
-                          value: controller.paymentStatusFilter.value,
-                          items: SalesOrderController.paymentOptions,
-                          label: 'Payment',
-                          onChanged: (v) => controller.updateFilter('paymentStatus', v),
-                        ),
+                    ),
+                    const SizedBox(width: 6),
+                    // Payment
+                    Expanded(
+                      flex: 4,
+                      child: _headerDropdown(
+                        value: controller.paymentStatusFilter.value,
+                        items: SalesOrderController.paymentOptions,
+                        label: 'Payment',
+                        onChanged: (v) =>
+                            controller.updateFilter('paymentStatus', v),
                       ),
-                      const SizedBox(width: 6),
-                      // Priority
-                      Expanded(
-                        flex: 4,
-                        child: _headerDropdown(
-                          value: controller.priorityFilter.value,
-                          items: SalesOrderController.priorityOptions,
-                          label: 'Priority',
-                          onChanged: (v) => controller.updateFilter('priority', v),
-                        ),
+                    ),
+                    const SizedBox(width: 6),
+                    // Priority
+                    Expanded(
+                      flex: 4,
+                      child: _headerDropdown(
+                        value: controller.priorityFilter.value,
+                        items: SalesOrderController.priorityOptions,
+                        label: 'Priority',
+                        onChanged: (v) =>
+                            controller.updateFilter('priority', v),
                       ),
-                    ],
-                  ),
-                )),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -237,16 +253,25 @@ class SalesOrdersScreen extends StatelessWidget {
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Colors.black54),
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            size: 16,
+            color: Colors.black54,
+          ),
           items: items
-              .map((opt) => DropdownMenuItem(
-                    value: opt,
-                    child: Text(
-                      opt == 'all' ? 'All $label' : opt,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+              .map(
+                (opt) => DropdownMenuItem(
+                  value: opt,
+                  child: Text(
+                    opt == 'all' ? 'All $label' : opt,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
                     ),
-                  ))
+                  ),
+                ),
+              )
               .toList(),
           onChanged: (v) {
             if (v != null) onChanged(v);
@@ -262,7 +287,11 @@ class SalesOrdersScreen extends StatelessWidget {
       children: [
         Text(
           value,
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: color),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: color,
+          ),
         ),
         Text(
           label,
@@ -282,7 +311,10 @@ class SalesOrdersScreen extends StatelessWidget {
     return Obx(() {
       if (controller.isLoading.value && controller.orders.isEmpty) {
         return Center(
-          child: LoadingAnimationWidget.discreteCircle(color: kPrimary, size: 40),
+          child: LoadingAnimationWidget.discreteCircle(
+            color: kPrimary,
+            size: 40,
+          ),
         );
       }
 
@@ -307,7 +339,11 @@ class SalesOrdersScreen extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 'No sales orders yet',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: kText),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: kText,
+                ),
               ),
               const SizedBox(height: 6),
               Text(
@@ -320,13 +356,22 @@ class SalesOrdersScreen extends StatelessWidget {
                 icon: const Icon(Icons.add, size: 16, color: Colors.black),
                 label: const Text(
                   'Create Order',
-                  style: TextStyle(fontSize: 13, color: Colors.black, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimary,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
             ],
@@ -441,7 +486,10 @@ class _SearchFieldState extends State<_SearchField> {
               )
             : null,
         border: InputBorder.none,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 11,
+        ),
         isDense: true,
       ),
     );

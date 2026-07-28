@@ -1,8 +1,13 @@
+// screens/loans_borrowings_screen.dart - COMPLETE PROFESSIONAL MOBILE DESIGN
+
+import 'package:LedgerPro_app/Utils/currency_utils.dart';
 import 'package:LedgerPro_app/Utils/colors.dart';
+import 'package:LedgerPro_app/Utils/toast_utils.dart';
 import 'package:LedgerPro_app/core/loanBorrowing/controller/loan_controller.dart';
 import 'package:LedgerPro_app/core/loanBorrowing/models/loan_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class LoansBorrowingsScreen extends StatelessWidget {
@@ -11,182 +16,447 @@ class LoansBorrowingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(LoanController());
-    return _buildMobileLayout(context, controller);
-  }
 
-
-  Widget _buildMobileLayout(BuildContext context, LoanController controller) {
     return Scaffold(
-      backgroundColor: kBg,
-      appBar: _buildAppBar(context, controller),
-      body: Obx(() {
-        if (controller.isLoading.value && controller.loans.isEmpty) {
-          return Center(
-            child: LoadingAnimationWidget.discreteCircle(color: kPrimary, size: 40),
-          );
-        }
-        return Column(
-          children: [
-            _buildFilterBar(controller, context),
-            _buildSummaryCards(controller, context),
-            Expanded(child: _buildLoansList(controller, context)),
-          ],
-        );
-      }),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => controller.showAddLoanDialog(),
-        backgroundColor: kPrimary,
-        child: const Icon(Icons.add, color: Colors.black87),
-      ),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar(BuildContext context, LoanController controller) {
-    return AppBar(
-      title: const Text(
-        'Loans & Borrowings',
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black87),
-      ),
-      backgroundColor: kPrimary,
-      elevation: 0,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.search, color: Colors.black87),
-          onPressed: () => _showSearchDialog(context, controller),
-        ),
-        IconButton(
-          icon: const Icon(Icons.calculate_outlined, color: Colors.black87),
-          onPressed: () => controller.showEMICalculator(),
-        ),
-        IconButton(
-          icon: const Icon(Icons.download_outlined, color: Colors.black87),
-          onPressed: () => controller.exportLoans(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFilterBar(LoanController controller, BuildContext context) {
-    final filters = ['All', 'Active', 'Fully Paid', 'Overdue', 'Defaulted'];
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: kCardBg,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Obx(() => Row(
-          children: filters.map((f) {
-            final isSelected = controller.selectedFilter.value == f;
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: FilterChip(
-                label: Text(f),
-                selected: isSelected,
-                onSelected: (_) => controller.applyFilter(isSelected ? 'All' : f),
-                backgroundColor: kBg,
-                selectedColor: kPrimary.withOpacity(0.2),
-                labelStyle: TextStyle(
-                  color: isSelected ? kPrimary : kSubText,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  fontSize: 12,
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              ),
-            );
-          }).toList(),
-        )),
-      ),
-    );
-  }
-
-  Widget _buildSummaryCards(LoanController controller, BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Obx(() => Row(
-          children: [
-            _buildSummaryCard('Total Loans', controller.totalLoans.value.toString(), kPrimary, Icons.credit_card, isNumber: true),
-            const SizedBox(width: 12),
-            _buildSummaryCard('Total Principal', controller.formatAmount(controller.totalPrincipal.value), kPrimary, Icons.attach_money),
-            const SizedBox(width: 12),
-            _buildSummaryCard('Outstanding', controller.formatAmount(controller.totalOutstanding.value), kDanger, Icons.payment),
-            const SizedBox(width: 12),
-            _buildSummaryCard('Total Paid', controller.formatAmount(controller.totalPaid.value), kSuccess, Icons.check_circle_outline),
-            const SizedBox(width: 12),
-            _buildSummaryCard('Monthly EMI', controller.formatAmount(controller.totalEMI.value), kWarning, Icons.calendar_month),
-          ],
-        )),
-      ),
-    );
-  }
-
-  Widget _buildSummaryCard(String title, String value, Color color, IconData icon, {bool isNumber = false}) {
-    return Container(
-      width: 140,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: kCardBg,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: kBgLight,
+      body: Column(
         children: [
-          Row(children: [
-            Icon(icon, size: 16, color: color),
-            const SizedBox(width: 4),
-            Flexible(child: Text(title, style: TextStyle(fontSize: 11, color: kSubText, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)),
-          ]),
-          const SizedBox(height: 8),
-          Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: color), overflow: TextOverflow.ellipsis),
+          _buildTopHeader(context, controller),
+          Expanded(
+            child: Obx(() {
+              if (controller.isLoading.value && controller.loans.isEmpty) {
+                return Center(
+                  child: LoadingAnimationWidget.discreteCircle(
+                    color: kPrimary,
+                    size: 40,
+                  ),
+                );
+              }
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+                child: Column(
+                  children: [
+                    _buildSummaryCards(controller),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: _buildListView(controller, context),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ),
         ],
       ),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: kPrimary.withOpacity(0.4),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: () => controller.showAddLoanDialog(),
+          backgroundColor: kPrimary,
+          elevation: 0,
+          child: const Icon(Icons.add, color: Colors.black, size: 24),
+        ),
+      ),
     );
   }
 
-  Widget _buildLoansList(LoanController controller, BuildContext context) {
+  // ═══════════════════════════════════════════════════════════════
+  // TOP HEADER
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildTopHeader(BuildContext context, LoanController controller) {
+    return Container(
+      color: kPrimary,
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // AppBar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Loans & Borrowings',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.black,
+                          ),
+                        ),
+                        Obx(
+                          () => Text(
+                            '${controller.loans.length} loans',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.black.withOpacity(0.55),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      controller.loadLoans();
+                      controller.loadSummary();
+                    },
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.refresh_rounded,
+                        size: 18,
+                        color: Colors.black.withOpacity(0.65),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => controller.exportLoans(),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.download_outlined,
+                        size: 18,
+                        color: Colors.black.withOpacity(0.65),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Search & Filter
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.06),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        onChanged: (value) => controller.searchLoans(value),
+                        style: const TextStyle(fontSize: 13, color: Colors.black87),
+                        decoration: InputDecoration(
+                          hintText: 'Search loans...',
+                          hintStyle: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey.shade400,
+                          ),
+                          prefixIcon: Icon(
+                            Icons.search,
+                            size: 18,
+                            color: Colors.grey.shade400,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    height: 40,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: Obx(
+                        () => DropdownButton<String>(
+                          value: controller.selectedFilter.value,
+                          icon: const Icon(Icons.arrow_drop_down, size: 20),
+                          style: const TextStyle(fontSize: 12, color: Colors.black87),
+                          underline: const SizedBox.shrink(),
+                          items: ['All', 'Active', 'Fully Paid', 'Overdue', 'Defaulted'].map((f) {
+                            return DropdownMenuItem(value: f, child: Text(f));
+                          }).toList(),
+                          onChanged: (v) {
+                            if (v != null) controller.applyFilter(v);
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // PROFESSIONAL SUMMARY CARDS
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildSummaryCards(LoanController controller) {
+    return Obx(
+      () => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+        child: Row(
+          children: [
+            _buildProfessionalCard(
+              title: 'Total Loans',
+              amount: controller.totalLoans.value.toString(),
+              color: kPrimary,
+              icon: Icons.credit_card,
+              bgColor: kPrimary.withOpacity(0.08),
+              borderColor: kPrimary.withOpacity(0.2),
+              isNumber: true,
+            ),
+            const SizedBox(width: 8),
+            _buildProfessionalCard(
+              title: 'Outstanding',
+              amount: controller.formatAmount(controller.totalOutstanding.value),
+              color: kDanger,
+              icon: Icons.payment,
+              bgColor: kDanger.withOpacity(0.08),
+              borderColor: kDanger.withOpacity(0.2),
+            ),
+            const SizedBox(width: 8),
+            _buildProfessionalCard(
+              title: 'Monthly EMI',
+              amount: controller.formatAmount(controller.totalEMI.value),
+              color: kWarning,
+              icon: Icons.calendar_month,
+              bgColor: kWarning.withOpacity(0.08),
+              borderColor: kWarning.withOpacity(0.2),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfessionalCard({
+    required String title,
+    required String amount,
+    required Color color,
+    required IconData icon,
+    required Color bgColor,
+    required Color borderColor,
+    bool isNumber = false,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: kCardBg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: borderColor, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, size: 14, color: color),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: kSubText,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.3,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              amount,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: color,
+                letterSpacing: -0.5,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Container(
+              height: 2,
+              width: 30,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [color, color.withOpacity(0.3)],
+                ),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // LIST VIEW WITH LAZY LOADING
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildListView(LoanController controller, BuildContext context) {
     return Obx(() {
       final loans = controller.loans;
-
-      if (controller.isLoading.value && loans.isEmpty) {
-        return const SizedBox.shrink();
-      }
 
       if (loans.isEmpty) {
         return Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.credit_card_outlined, size: 64, color: kSubText.withOpacity(0.5)),
+              Icon(
+                Icons.credit_card_outlined,
+                size: 64,
+                color: kSubText.withOpacity(0.5),
+              ),
               const SizedBox(height: 16),
-              Text('No loans found', style: TextStyle(fontSize: 16, color: kSubText)),
-              const SizedBox(height: 16),
+              Text(
+                'No loans found',
+                style: TextStyle(fontSize: 16, color: kSubText),
+              ),
+              const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: () => controller.showAddLoanDialog(),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimary,
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
-                child: const Text('Add Loan', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87)),
+                child: const Text(
+                  'Add Loan',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
+                  ),
+                ),
               ),
             ],
           ),
         );
       }
 
-      return ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: loans.length,
-        itemBuilder: (context, index) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: _buildLoanCard(loans[index], controller, context),
+      return NotificationListener<ScrollNotification>(
+        onNotification: (ScrollNotification scrollInfo) {
+          if (!controller.isLoadingMore.value &&
+              scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent) {
+            controller.loadMoreData();
+          }
+          return false;
+        },
+        child: ListView.builder(
+          controller: controller.scrollController,
+          padding: const EdgeInsets.all(16),
+          itemCount: loans.length + 1,
+          itemBuilder: (context, index) {
+            if (index == loans.length) {
+              return Obx(
+                () => controller.isLoadingMore.value
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: Center(
+                          child: LoadingAnimationWidget.discreteCircle(
+                            color: kPrimary,
+                            size: 30,
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              );
+            }
+            final loan = loans[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _buildLoanCard(loan, controller, context),
+            );
+          },
         ),
       );
     });
   }
 
-  Widget _buildLoanCard(Loan loan, LoanController controller, BuildContext context) {
+  // ═══════════════════════════════════════════════════════════════
+  // PROFESSIONAL LOAN CARD
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildLoanCard(
+    Loan loan,
+    LoanController controller,
+    BuildContext context,
+  ) {
     final statusColor = loan.status == 'Active'
         ? kPrimary
         : loan.status == 'Fully Paid'
@@ -200,57 +470,99 @@ class LoansBorrowingsScreen extends StatelessWidget {
         loan.nextPaymentDate!.isBefore(DateTime.now()) &&
         loan.status == 'Active';
 
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
       decoration: BoxDecoration(
         color: kCardBg,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2))],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: statusColor.withOpacity(0.2),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: statusColor.withOpacity(0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () => controller.showLoanDetails(loan),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
                     Container(
-                      width: 40, height: 40,
-                      decoration: BoxDecoration(color: typeColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-                      child: Icon(controller.getLoanIcon(loan.loanType), size: 20, color: typeColor),
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            typeColor.withOpacity(0.15),
+                            typeColor.withOpacity(0.05),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: typeColor.withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Icon(
+                        controller.getLoanIcon(loan.loanType),
+                        size: 22,
+                        color: typeColor,
+                      ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(loan.loanNumber,
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: kText)),
-                          const SizedBox(height: 2),
-                          Text(loan.lenderName,
-                              style: TextStyle(fontSize: 11, color: kSubText),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis),
+                          Text(
+                            loan.loanNumber,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: kText,
+                              letterSpacing: -0.2,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           const SizedBox(height: 4),
-                          Row(
+                          Text(
+                            loan.lenderName,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: kSubText,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 6),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
-                                child: Text(loan.status,
-                                    style: TextStyle(fontSize: 8, color: statusColor, fontWeight: FontWeight.w600)),
-                              ),
-                              const SizedBox(width: 4),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(color: kBg, borderRadius: BorderRadius.circular(4)),
-                                child: Text(loan.loanType,
-                                    style: TextStyle(fontSize: 8, color: kSubText, fontWeight: FontWeight.w500)),
-                              ),
+                              _statusBadge(loan.status, statusColor),
+                              _badge(loan.loanType, typeColor),
                             ],
                           ),
                         ],
@@ -259,17 +571,29 @@ class LoansBorrowingsScreen extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text('Outstanding', style: TextStyle(fontSize: 9, color: kSubText)),
-                        Text(controller.formatAmount(loan.outstandingBalance),
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: kDanger)),
-                        const SizedBox(height: 2),
-                        Text('EMI: ${controller.formatAmount(loan.emiAmount)}',
-                            style: TextStyle(fontSize: 10, color: kWarning, fontWeight: FontWeight.w600)),
+                        Text(
+                          controller.formatAmount(loan.outstandingBalance),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: kDanger,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Outstanding',
+                          style: TextStyle(
+                            fontSize: 9,
+                            color: kSubText,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 14),
                 // Repayment progress bar
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -277,79 +601,146 @@ class LoansBorrowingsScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Repaid', style: TextStyle(fontSize: 10, color: kSubText)),
-                        Text('${(paidPercent * 100).toStringAsFixed(1)}%',
-                            style: TextStyle(fontSize: 10, color: paidPercent >= 1.0 ? kSuccess : kPrimary, fontWeight: FontWeight.w600)),
+                        Text(
+                          'Repaid',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: kSubText,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Text(
+                          '${(paidPercent * 100).toStringAsFixed(0)}%',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: paidPercent >= 1.0 ? kSuccess : kPrimary,
+                          ),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
                         value: paidPercent,
-                        backgroundColor: kBg,
-                        valueColor: AlwaysStoppedAnimation<Color>(paidPercent >= 1.0 ? kSuccess : kPrimary),
-                        minHeight: 4,
+                        backgroundColor: kBgLight,
+                        minHeight: 6,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          paidPercent >= 1.0 ? kSuccess : kPrimary,
+                        ),
                       ),
                     ),
                   ],
                 ),
+                // Overdue warning
                 if (isOverdue) ...[
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(color: kDanger.withOpacity(0.08), borderRadius: BorderRadius.circular(6)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: kDanger.withOpacity(0.07),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     child: Row(
                       children: [
                         Icon(Icons.warning_amber_rounded, size: 14, color: kDanger),
                         const SizedBox(width: 6),
-                        Text('Payment Overdue!',
-                            style: TextStyle(fontSize: 11, color: kDanger, fontWeight: FontWeight.w600)),
+                        Text(
+                          'Payment Overdue!',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: kDanger,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ],
-                const SizedBox(height: 10),
+                const SizedBox(height: 14),
                 Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 Row(
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () => controller.showLoanDetails(loan),
-                        icon: Icon(Icons.visibility, size: 14, color: kSubText),
-                        label: Text('Details', style: TextStyle(fontSize: 11, color: kText)),
+                        icon: Icon(
+                          Icons.visibility_outlined,
+                          size: 14,
+                          color: kSubText,
+                        ),
+                        label: Text(
+                          'Details',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: kText,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(color: Colors.grey.withOpacity(0.3)),
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                       ),
                     ),
                     if (loan.status == 'Active') ...[
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: () => controller.viewPaymentSchedule(loan),
-                          icon: Icon(Icons.calendar_view_month, size: 14, color: kPrimary),
-                          label: const Text('Schedule', style: TextStyle(fontSize: 11)),
+                          icon: Icon(
+                            Icons.calendar_view_month,
+                            size: 14,
+                            color: kPrimary,
+                          ),
+                          label: Text(
+                            'Schedule',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: kPrimary,
+                            ),
+                          ),
                           style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: Colors.grey.withOpacity(0.3)),
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                            side: BorderSide(color: kPrimary.withOpacity(0.3)),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: () => controller.showRecordPaymentDialog(loan),
-                          icon: const Icon(Icons.payment, size: 14, color: Colors.black87),
-                          label: const Text('Pay EMI', style: TextStyle(fontSize: 11, color: Colors.black87)),
+                          icon: const Icon(
+                            Icons.payment,
+                            size: 14,
+                            color: Colors.black,
+                          ),
+                          label: const Text(
+                            'Pay EMI',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black,
+                            ),
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: kSuccess,
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                             elevation: 0,
                           ),
                         ),
@@ -365,31 +756,58 @@ class LoansBorrowingsScreen extends StatelessWidget {
     );
   }
 
-  // ==================== HELPERS ====================
+  // ═══════════════════════════════════════════════════════════════
+  // HELPER WIDGETS
+  // ═══════════════════════════════════════════════════════════════
 
-  void _showSearchDialog(BuildContext context, LoanController controller) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text('Search Loans', style: TextStyle(fontWeight: FontWeight.w700)),
-        content: TextField(
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'Loan #, lender, type…',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.search),
+  Widget _statusBadge(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 5,
+            height: 5,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
           ),
-          onChanged: (v) => controller.searchController.text = v,
-          onSubmitted: (_) => Navigator.pop(ctx),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () { controller.searchController.clear(); Navigator.pop(ctx); },
-            child: const Text('Clear'),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+              color: color,
+              letterSpacing: 0.3,
+            ),
           ),
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Done')),
         ],
+      ),
+    );
+  }
+
+  Widget _badge(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
       ),
     );
   }

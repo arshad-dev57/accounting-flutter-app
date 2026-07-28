@@ -27,8 +27,9 @@ class GeneralLedgerScreen extends StatelessWidget {
 
     if (ResponsiveUtils.isMobile(context)) {
       return _buildMobileLayout(context, controller);
+    } else {
+      return _buildWebLayout(context, controller);
     }
-    return _buildWebLayout(context, controller);
   }
 
   Widget _buildMobileLayout(
@@ -77,6 +78,26 @@ class GeneralLedgerScreen extends StatelessWidget {
           ],
         );
       }),
+    );
+  }
+
+  Widget _buildWebLayout(
+    BuildContext context,
+    GeneralLedgerController controller,
+  ) {
+    return Scaffold(
+      backgroundColor: kBg,
+      body: Column(
+        children: [
+          _buildWebTopBar(context, controller),
+          _buildWebKpiStrip(controller),
+          _buildWebToolbar(controller, context),
+          Expanded(
+            child: _buildWebLedgerTable(controller, context),
+          ),
+          _buildWebPaginationBar(controller, context),
+        ],
+      ),
     );
   }
 
@@ -818,59 +839,18 @@ class GeneralLedgerScreen extends StatelessWidget {
     );
   }
 
-  // ==================== WEB LAYOUT ====================
-  Widget _buildWebLayout(
-    BuildContext context,
+  // ==================== SHARED DIALOGS & HELPERS ====================
+  void _selectDateRange(
     GeneralLedgerController controller,
-  ) {
-    return Scaffold(
-      backgroundColor: kBg,
-      body: Column(
-        children: [
-          _buildWebTopBar(context, controller),
-          Expanded(
-            child: Obx(() {
-              if (controller.isLoading.value &&
-                  controller.ledgerEntries.isEmpty) {
-                return Center(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final animationSize = constraints.maxWidth > 1200
-                          ? 48
-                          : constraints.maxWidth > 800
-                          ? 40
-                          : 32;
-                      return Container(
-                        width: animationSize + 40,
-                        height: animationSize + 40,
-                        decoration: BoxDecoration(
-                          color: kPrimary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Center(
-                          child: LoadingAnimationWidget.discreteCircle(
-                            color: kPrimary,
-                            size: animationSize.toDouble(),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              }
-              return Column(
-                children: [
-                  _buildWebKpiStrip(controller),
-                  _buildWebToolbar(controller, context),
-                  Expanded(child: _buildWebLedgerTable(controller, context)),
-                  _buildWebPaginationBar(controller, context),
-                ],
-              );
-            }),
-          ),
-        ],
-      ),
+    BuildContext context,
+  ) async {
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      initialDateRange: controller.selectedDateRange.value,
     );
+    if (picked != null) controller.setDateRange(picked);
   }
 
   Widget _buildWebTopBar(
@@ -1845,19 +1825,6 @@ class GeneralLedgerScreen extends StatelessWidget {
   }
 
   // ==================== SHARED DIALOGS & HELPERS ====================
-  void _selectDateRange(
-    GeneralLedgerController controller,
-    BuildContext context,
-  ) async {
-    final picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-      initialDateRange: controller.selectedDateRange.value,
-    );
-    if (picked != null) controller.setDateRange(picked);
-  }
-
   void _showFilterDialog(
     GeneralLedgerController controller,
     BuildContext context,

@@ -90,7 +90,6 @@ class ChartOfAccountController extends GetxController {
         
         if (hasIncorrectCashAccounts.value) {
           final count = data['data']?['issues']?['incorrectCashAccounts'] ?? 0;
-          // Show warning silently
           print('⚠️ $count cash/bank account(s) have incorrect type');
         }
       }
@@ -148,10 +147,16 @@ class ChartOfAccountController extends GetxController {
       
       Map<String, dynamic> queryParams = {};
       queryParams['page'] = currentPage.value.toString();
-      queryParams['limit'] = '10';
       
+      // 🔥 FIX: Increase limit for 'All' filter to show more accounts
+      if (selectedFilter.value == 'All') {
+        queryParams['limit'] = '50'; // Show more accounts when 'All' is selected
+      } else {
+        queryParams['limit'] = '10';
+      }
+      
+      // Only add type filter if not 'All'
       if (selectedFilter.value != 'All') {
-        // Map frontend type to backend type
         final backendType = mapTypeToBackend(selectedFilter.value);
         queryParams['type'] = backendType;
       }
@@ -159,6 +164,10 @@ class ChartOfAccountController extends GetxController {
       if (searchQuery.value.isNotEmpty) {
         queryParams['search'] = searchQuery.value;
       }
+      
+      // 🔥 ADD: Debug logging
+      print('📊 Fetching accounts - Filter: ${selectedFilter.value}, Page: ${currentPage.value}, Limit: ${queryParams['limit']}');
+      print('📊 Query params: $queryParams');
       
       final response = await _api.get(
         '/api/chart-of-accounts',
@@ -169,21 +178,23 @@ class ChartOfAccountController extends GetxController {
         final data = response.data;
         List<Map<String, dynamic>> newAccounts = List<Map<String, dynamic>>.from(data['data']);
         
+        // 🔥 FIX: Clear accounts only when resetPage is true
         if (resetPage) {
           accounts.value = newAccounts;
         } else {
           accounts.addAll(newAccounts);
         }
         
-        // Update pagination info
         if (data['pagination'] != null) {
           totalPages.value = data['pagination']['pages'] ?? 1;
           totalItems.value = data['pagination']['total'] ?? 0;
           hasNextPage.value = data['pagination']['hasNext'] ?? false;
           hasPrevPage.value = data['pagination']['hasPrev'] ?? false;
+          
+          // 🔥 ADD: Debug logging for pagination
+          print('📊 Total items: ${totalItems.value}, Total pages: ${totalPages.value}, Has next: ${hasNextPage.value}');
         }
         
-        // Update summary totals
         if (resetPage && data['summary'] != null) {
           totalAssets.value = _toDouble(data['summary']['Assets']);
           totalLiabilities.value = _toDouble(data['summary']['Liabilities']);
@@ -197,6 +208,7 @@ class ChartOfAccountController extends GetxController {
         AppSnackbar.error(Colors.red, 'Error', response.message.isNotEmpty ? response.message : 'Something went wrong');
       }
     } catch (e) {
+      print('❌ Error fetching accounts: $e');
       AppSnackbar.error(Colors.red, 'Error', 'Failed to load accounts: $e');
     } finally {
       isLoading(false);
@@ -228,11 +240,25 @@ class ChartOfAccountController extends GetxController {
     }
   }
 
+  // ─── Change filter with proper reset ──────────────────────────────
+  void changeFilter(String filter) {
+    selectedFilter.value = filter;
+    currentPage.value = 1; // Reset to first page
+    accounts.clear(); // Clear existing accounts
+    fetchAccounts(resetPage: true);
+  }
+
+  // ─── Search accounts ──────────────────────────────────────────────
+  void searchAccounts(String query) {
+    searchQuery.value = query;
+    currentPage.value = 1; // Reset to first page
+    accounts.clear(); // Clear existing accounts
+    fetchAccounts(resetPage: true);
+  }
+
   // ─── Create new account ──────────────────────────────────────────
   Future<void> createAccount(Map<String, dynamic> accountData) async {
     try {
-      isLoading(true);
-      
       // Map type to backend
       final backendType = mapTypeToBackend(accountData['type'] ?? 'Assets');
       final mappedData = Map<String, dynamic>.from(accountData);
@@ -253,11 +279,10 @@ class ChartOfAccountController extends GetxController {
           'Invalid Account Type',
           '"$name" must be of type "Asset". Please select "Assets" as account type.'
         );
-        isLoading(false);
         return;
       }
 
-      // ✅ Check: If Equity account with opening balance and opening balance already exists
+      // Check: If Equity account with opening balance and opening balance already exists
       if (backendType == 'Equity' && (accountData['openingBalance'] ?? 0) > 0) {
         final hasExistingOB = await checkOpeningBalanceStatus();
         if (hasExistingOB) {
@@ -266,7 +291,6 @@ class ChartOfAccountController extends GetxController {
             '⚠️ Opening Balance Exists',
             'An opening balance entry already exists. Please set opening balance to 0 for this Equity account.'
           );
-          isLoading(false);
           return;
         }
       }
@@ -285,7 +309,6 @@ class ChartOfAccountController extends GetxController {
           errorMessage = response.data['suggestion'];
         }
 
-        // ✅ Check if backend returned opening balance error
         if (response.data != null && response.data['hasExistingOpeningBalance'] == true) {
           errorMessage = '⚠️ Opening balance already exists! Please set opening balance to 0 for this account.';
         }
@@ -294,23 +317,17 @@ class ChartOfAccountController extends GetxController {
       }
     } catch (e) {
       AppSnackbar.error(Colors.red, 'Error', 'Failed to create account: $e');
-    } finally {
-      isLoading(false);
     }
   }
 
   // ─── Update account ──────────────────────────────────────────────
   Future<void> updateAccount(String id, Map<String, dynamic> accountData) async {
     try {
-      isLoading(true);
-      
-      // Map type to backend if present
       if (accountData.containsKey('type')) {
         final backendType = mapTypeToBackend(accountData['type']);
         accountData['type'] = backendType;
       }
       
-      // Frontend validation for cash/bank
       final name = accountData['name'] ?? '';
       final nameLower = name.toLowerCase();
       final isCashOrBank = nameLower.contains('cash') || 
@@ -325,7 +342,6 @@ class ChartOfAccountController extends GetxController {
           'Invalid Account Type',
           '"$name" must be of type "Asset". Please select "Assets" as account type.'
         );
-        isLoading(false);
         return;
       }
       
@@ -347,8 +363,6 @@ class ChartOfAccountController extends GetxController {
       }
     } catch (e) {
       AppSnackbar.error(Colors.red, 'Error', 'Failed to update account: $e');
-    } finally {
-      isLoading(false);
     }
   }
 
@@ -442,15 +456,11 @@ class ChartOfAccountController extends GetxController {
     }
   }
 
-  // ─── Filter methods ──────────────────────────────────────────────
-  void changeFilter(String filter) {
-    selectedFilter.value = filter;
-    fetchAccounts();
-  }
-
-  void searchAccounts(String query) {
-    searchQuery.value = query;
-    fetchAccounts();
+  // ─── Refresh all accounts ──────────────────────────────────────────
+  void refreshAllAccounts() {
+    currentPage.value = 1;
+    accounts.clear();
+    fetchAccounts(resetPage: true);
   }
 
   // ─── Calculate summary from local data ──────────────────────────
@@ -535,7 +545,7 @@ class ChartOfAccountController extends GetxController {
     return isCashOrBank && type != 'Asset';
   }
 
-  // ─── ✅ NEW: Check if opening balance exists ──────────────────────
+  // ─── Check if opening balance exists ────────────────────────────
   Future<bool> checkOpeningBalanceStatus() async {
     try {
       final response = await _api.get('/api/chart-of-accounts/check-opening-balance');
@@ -552,7 +562,7 @@ class ChartOfAccountController extends GetxController {
     }
   }
 
-  // ─── ✅ NEW: Get detailed opening balance information ────────────
+  // ─── Get detailed opening balance information ────────────────────
   Future<Map<String, dynamic>> getOpeningBalanceDetails() async {
     try {
       final response = await _api.get('/api/chart-of-accounts/opening-balance-status');

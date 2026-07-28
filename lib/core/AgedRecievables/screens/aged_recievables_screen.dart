@@ -1,18 +1,16 @@
+// screens/aged_receivables_screen.dart - COMPLETE PROFESSIONAL MOBILE DESIGN
+
 import 'dart:convert';
 import 'package:LedgerPro_app/Utils/currency_utils.dart';
+import 'package:LedgerPro_app/Utils/colors.dart';
+import 'package:LedgerPro_app/Utils/toast_utils.dart';
 import 'package:LedgerPro_app/config/apiconfig.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/responsive_utils.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:printing/printing.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
 
 class AgedReceivablesScreen extends StatefulWidget {
   const AgedReceivablesScreen({super.key});
@@ -68,17 +66,13 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
         final body = json.decode(response.body);
         if (body['success'] == true) {
           final list = body['data']['customers'] as List? ?? [];
-          final summary =
-              body['data']['summary'] as Map<String, dynamic>? ?? {};
+          final summary = body['data']['summary'] as Map<String, dynamic>? ?? {};
 
           setState(() {
             _customers = list.map((c) {
               final invoices = (c['invoices'] as List? ?? []).map((inv) {
                 return AgedInvoice(
-                  id:
-                      inv['invoiceNumber']?.toString() ??
-                      inv['id']?.toString() ??
-                      '',
+                  id: inv['invoiceNumber']?.toString() ?? inv['id']?.toString() ?? '',
                   date: DateTime.parse(inv['invoiceDate'].toString()),
                   dueDate: DateTime.parse(inv['dueDate'].toString()),
                   amount: (inv['amount'] as num).toDouble(),
@@ -107,8 +101,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
             total31to60 = (summary['days31to60'] as num?)?.toDouble() ?? 0;
             total61to90 = (summary['days61to90'] as num?)?.toDouble() ?? 0;
             totalOver90 = (summary['days90plus'] as num?)?.toDouble() ?? 0;
-            totalOutstanding =
-                (summary['totalOutstanding'] as num?)?.toDouble() ?? 0;
+            totalOutstanding = (summary['totalOutstanding'] as num?)?.toDouble() ?? 0;
           });
           return;
         }
@@ -161,83 +154,160 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
     }
   }
 
-  // ==================== BUILD ====================
+  // ─── BUILD ────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    if (ResponsiveUtils.isMobile(context)) {
-      return _buildMobileLayout(context);
-    }
-    return _buildWebLayout(context);
-  }
-
-  // ==================== MOBILE LAYOUT ====================
-
-  Widget _buildMobileLayout(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBg,
-      appBar: _buildMobileAppBar(context),
-      body: _isLoading
-          ? Center(
-              child: LoadingAnimationWidget.discreteCircle(
-                color: kPrimary,
-                size: 40,
-              ),
-            )
-          : Column(
-              children: [
-                _buildMobileDateBar(context),
-                _buildMobileSummaryCards(context),
-                _buildMobileFilterBar(context),
-                Expanded(child: _buildCustomerList(context)),
-              ],
+      backgroundColor: kBgLight,
+      body: Column(
+        children: [
+          _buildTopHeader(context),
+          Expanded(
+            child: _isLoading
+                ? Center(
+                    child: LoadingAnimationWidget.discreteCircle(
+                      color: kPrimary,
+                      size: 40,
+                    ),
+                  )
+                : Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+                    child: Column(
+                      children: [
+                        _buildDateBar(),
+                        _buildSummaryCards(),
+                        _buildFilterBar(),
+                        const SizedBox(height: 8),
+                        Expanded(
+                          child: _buildCustomerList(context),
+                        ),
+                      ],
+                    ),
+                  ),
+          ),
+        ],
+      ),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: kPrimary.withOpacity(0.4),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _exportToExcel,
-        backgroundColor: kPrimary,
-        child: const Icon(Icons.download, color: Colors.white),
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: _exportToExcel,
+          backgroundColor: kPrimary,
+          elevation: 0,
+          child: const Icon(Icons.download_outlined, color: Colors.black, size: 24),
+        ),
       ),
     );
   }
 
-  PreferredSizeWidget _buildMobileAppBar(BuildContext context) {
-    return AppBar(
-      title: const Text(
-        'Aged Receivables',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w800,
-          color: Colors.black87,
+  // ═══════════════════════════════════════════════════════════════
+  // TOP HEADER
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildTopHeader(BuildContext context) {
+    return Container(
+      color: kPrimary,
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // AppBar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Aged Receivables',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.black,
+                          ),
+                        ),
+                        Text(
+                          '${_customers.length} customers',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.black.withOpacity(0.55),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: _loadAgedReceivablesData,
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.refresh_rounded,
+                        size: 18,
+                        color: Colors.black.withOpacity(0.65),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: _exportToExcel,
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.download_outlined,
+                        size: 18,
+                        color: Colors.black.withOpacity(0.65),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
-      backgroundColor: kPrimary,
-      elevation: 0,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.calendar_today, color: Colors.black87),
-          onPressed: _selectAsAtDate,
-        ),
-        IconButton(
-          icon: const Icon(Icons.picture_as_pdf, color: Colors.black87),
-          onPressed: _generateAndPrintPDF,
-        ),
-        IconButton(
-          icon: const Icon(Icons.print_outlined, color: Colors.black87),
-          onPressed: _printReport,
-        ),
-      ],
     );
   }
 
-  Widget _buildMobileDateBar(BuildContext context) {
+  // ═══════════════════════════════════════════════════════════════
+  // DATE BAR
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildDateBar() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: kCardBg,
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
       child: Row(
         children: [
-          Icon(Icons.calendar_today, size: 16, color: kPrimary),
-          const SizedBox(width: 6),
+          Icon(Icons.calendar_today, size: 14, color: kPrimary),
+          const SizedBox(width: 8),
           Text(
             'As at:',
             style: TextStyle(
@@ -252,7 +322,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: kPrimary.withOpacity(0.1),
+                color: kPrimary.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
@@ -270,53 +340,122 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
     );
   }
 
-  Widget _buildMobileSummaryCards(BuildContext context) {
+  // ═══════════════════════════════════════════════════════════════
+  // PROFESSIONAL SUMMARY CARDS
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildSummaryCards() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      child: Row(
+        children: [
+          _buildProfessionalCard(
+            title: 'Current',
+            amount: _formatAmount(totalCurrent),
+            color: kSuccess,
+            icon: Icons.access_time,
+            bgColor: kSuccess.withOpacity(0.08),
+            borderColor: kSuccess.withOpacity(0.2),
+          ),
+          const SizedBox(width: 8),
+          _buildProfessionalCard(
+            title: '1-30 Days',
+            amount: _formatAmount(total1to30),
+            color: kWarning,
+            icon: Icons.calendar_view_month,
+            bgColor: kWarning.withOpacity(0.08),
+            borderColor: kWarning.withOpacity(0.2),
+          ),
+          const SizedBox(width: 8),
+          _buildProfessionalCard(
+            title: '90+ Days',
+            amount: _formatAmount(totalOver90),
+            color: kDanger,
+            icon: Icons.warning_amber_rounded,
+            bgColor: kDanger.withOpacity(0.08),
+            borderColor: kDanger.withOpacity(0.2),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfessionalCard({
+    required String title,
+    required String amount,
+    required Color color,
+    required IconData icon,
+    required Color bgColor,
+    required Color borderColor,
+    bool isNumber = false,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: kCardBg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: borderColor, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            _buildMobileSummaryCard(
-              'Current',
-              totalCurrent,
-              kSuccess,
-              Icons.access_time,
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, size: 14, color: color),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: kSubText,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.3,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            _buildMobileSummaryCard(
-              '1-30 Days',
-              total1to30,
-              kWarning,
-              Icons.calendar_view_month,
+            const SizedBox(height: 8),
+            Text(
+              amount,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: color,
+                letterSpacing: -0.5,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(width: 12),
-            _buildMobileSummaryCard(
-              '31-60 Days',
-              total31to60,
-              kWarning,
-              Icons.calendar_view_month,
-            ),
-            const SizedBox(width: 12),
-            _buildMobileSummaryCard(
-              '61-90 Days',
-              total61to90,
-              kDanger,
-              Icons.calendar_view_month,
-            ),
-            const SizedBox(width: 12),
-            _buildMobileSummaryCard(
-              '90+ Days',
-              totalOver90,
-              kDanger,
-              Icons.warning,
-            ),
-            const SizedBox(width: 12),
-            _buildMobileSummaryCard(
-              'Total',
-              totalOutstanding,
-              kPrimary,
-              Icons.attach_money,
+            const SizedBox(height: 4),
+            Container(
+              height: 2,
+              width: 30,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [color, color.withOpacity(0.3)],
+                ),
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
           ],
         ),
@@ -324,118 +463,36 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
     );
   }
 
-  Widget _buildMobileSummaryCard(
-    String title,
-    double amount,
-    Color color,
-    IconData icon,
-  ) {
-    return Container(
-      width: 140,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: kCardBg,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 14, color: color),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: kSubText,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            _formatAmount(amount),
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              color: color,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
+  // ═══════════════════════════════════════════════════════════════
+  // FILTER BAR
+  // ═══════════════════════════════════════════════════════════════
 
-  Widget _buildMobileFilterBar(BuildContext context) {
+  Widget _buildFilterBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: kCardBg,
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
           Expanded(
-            flex: 2,
-            child: Container(
-              height: 40,
-              decoration: BoxDecoration(
-                color: kBg,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: kBorder),
-              ),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (_) => setState(() {}),
-                style: const TextStyle(fontSize: 12),
-                decoration: InputDecoration(
-                  hintText: 'Search...',
-                  hintStyle: TextStyle(fontSize: 11, color: kSubText),
-                  prefixIcon: const Icon(Icons.search, size: 18),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            flex: 1,
             child: Container(
               height: 40,
               padding: const EdgeInsets.symmetric(horizontal: 10),
               decoration: BoxDecoration(
-                color: kBg,
+                color: kCardBg,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: kBorder),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: _selectedFilter,
-                  icon: const Icon(Icons.arrow_drop_down, size: 18),
+                  icon: const Icon(Icons.arrow_drop_down, size: 20),
                   isExpanded: true,
-                  style: TextStyle(fontSize: 11, color: kText),
+                  style: const TextStyle(fontSize: 12, color: Colors.black87),
                   dropdownColor: kCardBg,
                   items: _filterOptions
                       .map(
                         (f) => DropdownMenuItem(
                           value: f,
-                          child: Text(
-                            f,
-                            style: const TextStyle(fontSize: 11),
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          child: Text(f),
                         ),
                       )
                       .toList(),
@@ -444,380 +501,43 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  // ==================== WEB LAYOUT ====================
-
-  Widget _buildWebLayout(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kBg,
-      body: Column(
-        children: [
-          _buildWebTopBar(context),
-          if (!_isLoading) ...[_buildWebKpiStrip(), _buildWebToolbar(context)],
+          const SizedBox(width: 8),
           Expanded(
-            child: _isLoading
-                ? Center(
-                    child: LoadingAnimationWidget.discreteCircle(
-                      color: kPrimary,
-                      size: 32,
-                    ),
-                  )
-                : Column(
-                    children: [
-                      Expanded(child: _buildCustomerList(context)),
-                      _buildWebFooterBar(),
-                    ],
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWebTopBar(BuildContext context) {
-    return Container(
-      height: 56,
-      color: kPrimary,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const Text(
-            'Aged Receivables',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
-            ),
-          ),
-          const Expanded(child: SizedBox()),
-          // As-at date pill
-          GestureDetector(
-            onTap: _selectAsAtDate,
             child: Container(
-              height: 34,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              margin: const EdgeInsets.only(right: 8),
+              height: 40,
+              padding: const EdgeInsets.symmetric(horizontal: 10),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.35),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: Colors.black26),
+                color: kCardBg,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: kBorder),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.calendar_today,
-                    size: 14,
-                    color: Colors.black54,
+              child: TextField(
+                controller: _searchController,
+                onChanged: (_) => setState(() {}),
+                style: const TextStyle(fontSize: 12, color: Colors.black87),
+                decoration: InputDecoration(
+                  hintText: 'Search...',
+                  hintStyle: TextStyle(
+                    fontSize: 12,
+                    color: kSubText,
                   ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'As at: ${DateFormat('dd MMM yyyy').format(_asAtDate)}',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          _webTopBarBtn(Icons.download_outlined, 'Export', _exportToExcel),
-          const SizedBox(width: 8),
-          _webTopBarBtn(
-            Icons.picture_as_pdf_outlined,
-            'Save PDF',
-            _generateAndPrintPDF,
-          ),
-          const SizedBox(width: 8),
-          _webTopBarBtn(Icons.print_outlined, 'Print', _printReport),
-        ],
-      ),
-    );
-  }
-
-  Widget _webTopBarBtn(IconData icon, String label, VoidCallback onPressed) {
-    return ElevatedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon, size: 15, color: Colors.black87),
-      label: Text(
-        label,
-        style: const TextStyle(fontSize: 13, color: Colors.black87),
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white.withOpacity(0.4),
-        elevation: 0,
-        minimumSize: const Size(0, 34),
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(6),
-          side: const BorderSide(color: Colors.black26),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWebKpiStrip() {
-    return Container(
-      color: kCardBg,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            _buildWebKpiTile(
-              'Current',
-              totalCurrent,
-              kSuccess,
-              Icons.access_time,
-            ),
-            _buildWebKpiDivider(),
-            _buildWebKpiTile(
-              '1-30 Days',
-              total1to30,
-              kWarning,
-              Icons.calendar_view_month,
-            ),
-            _buildWebKpiDivider(),
-            _buildWebKpiTile(
-              '31-60 Days',
-              total31to60,
-              kWarning,
-              Icons.calendar_view_month,
-            ),
-            _buildWebKpiDivider(),
-            _buildWebKpiTile(
-              '61-90 Days',
-              total61to90,
-              kDanger,
-              Icons.calendar_view_month,
-            ),
-            _buildWebKpiDivider(),
-            _buildWebKpiTile(
-              '90+ Days',
-              totalOver90,
-              kDanger,
-              Icons.warning_amber_outlined,
-            ),
-            _buildWebKpiDivider(),
-            _buildWebKpiTile(
-              'Total Outstanding',
-              totalOutstanding,
-              kPrimary,
-              Icons.attach_money,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWebKpiTile(
-    String label,
-    double amount,
-    Color color,
-    IconData icon,
-  ) {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, size: 15, color: color),
-            ),
-            const SizedBox(width: 9),
-            Flexible(
-              // ← yeh key fix hai
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      color: kSubText,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    _formatAmount(amount),
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: color,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWebKpiDivider() =>
-      Container(width: 1, height: 36, color: Colors.grey.withOpacity(0.15));
-
-  Widget _buildWebToolbar(BuildContext context) {
-    return Container(
-      height: 52,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: BoxDecoration(
-        color: kBg,
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.withOpacity(0.15)),
-          top: BorderSide(color: Colors.grey.withOpacity(0.1)),
-        ),
-      ),
-      child: Row(
-        children: [
-          // Search
-          SizedBox(
-            width: 280,
-            height: 34,
-            child: TextField(
-              controller: _searchController,
-              onChanged: (_) => setState(() {}),
-              style: const TextStyle(fontSize: 13, color: Colors.black87),
-              cursorColor: Colors.black54,
-              decoration: InputDecoration(
-                hintText: 'Search by name, email or phone…',
-                hintStyle: const TextStyle(color: Colors.black45, fontSize: 13),
-                prefixIcon: const Icon(
-                  Icons.search,
-                  size: 16,
-                  color: Colors.black45,
-                ),
-                filled: true,
-                fillColor: kCardBg,
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: 0,
-                  horizontal: 12,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  borderSide: BorderSide(color: kBorder),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  borderSide: const BorderSide(color: Colors.black26),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  borderSide: BorderSide(color: kBorder),
+                  prefixIcon:  Icon(Icons.search, size: 18, color: kSubText),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          // Age filter chips
-          ..._filterOptions.map((f) {
-            final isSelected = _selectedFilter == f;
-            return Padding(
-              padding: const EdgeInsets.only(right: 4),
-              child: InkWell(
-                onTap: () => setState(() => _selectedFilter = f),
-                borderRadius: BorderRadius.circular(4),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? kPrimary.withOpacity(0.1)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(4),
-                    border: isSelected
-                        ? Border.all(color: kPrimary.withOpacity(0.3))
-                        : null,
-                  ),
-                  child: Text(
-                    f,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.w400,
-                      color: isSelected ? kPrimary : kSubText,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWebFooterBar() {
-    final filtered = _getFilteredCustomers();
-    return Container(
-      height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: BoxDecoration(
-        color: kCardBg,
-        border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.15))),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            '${filtered.length} customer${filtered.length == 1 ? '' : 's'}  •  ${_customers.length} total',
-            style: TextStyle(fontSize: 12, color: kSubText),
-          ),
-          Row(
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: kDanger,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Total Outstanding: ${_formatAmount(totalOutstanding)}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: kDanger,
-                ),
-              ),
-            ],
           ),
         ],
       ),
     );
   }
 
-  // ==================== SHARED: CUSTOMER LIST ====================
+  // ═══════════════════════════════════════════════════════════════
+  // CUSTOMER LIST
+  // ═══════════════════════════════════════════════════════════════
 
   Widget _buildCustomerList(BuildContext context) {
-    final isMobile = ResponsiveUtils.isMobile(context);
-    final isWeb = ResponsiveUtils.isWeb(context);
     final filtered = _getFilteredCustomers();
 
     if (filtered.isEmpty) {
@@ -827,14 +547,14 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
           children: [
             Icon(
               Icons.people_outline,
-              size: isMobile ? 64 : 80,
+              size: 64,
               color: kSubText.withOpacity(0.5),
             ),
-            SizedBox(height: isMobile ? 16 : 20),
+            const SizedBox(height: 16),
             Text(
               'No customers found',
               style: TextStyle(
-                fontSize: isMobile ? 14 : 18,
+                fontSize: 16,
                 color: kSubText,
                 fontWeight: FontWeight.w500,
               ),
@@ -845,28 +565,37 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
     }
 
     return ListView.builder(
-      padding: EdgeInsets.all(isWeb ? 20 : 12),
+      padding: const EdgeInsets.all(4),
       itemCount: filtered.length,
       itemBuilder: (context, index) => Padding(
-        padding: EdgeInsets.only(bottom: isWeb ? 12 : 8),
+        padding: const EdgeInsets.only(bottom: 12),
         child: _buildCustomerCard(context, filtered[index]),
       ),
     );
   }
 
-  Widget _buildCustomerCard(BuildContext context, AgedCustomer customer) {
-    final isMobile = ResponsiveUtils.isMobile(context);
-    final isWeb = ResponsiveUtils.isWeb(context);
+  // ═══════════════════════════════════════════════════════════════
+  // PROFESSIONAL CUSTOMER CARD
+  // ═══════════════════════════════════════════════════════════════
 
-    return Container(
+  Widget _buildCustomerCard(BuildContext context, AgedCustomer customer) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
       decoration: BoxDecoration(
         color: kCardBg,
-        borderRadius: BorderRadius.circular(isWeb ? 12 : 12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: customer.totalOutstanding > 0
+              ? kDanger.withOpacity(0.2)
+              : kSuccess.withOpacity(0.2),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -874,34 +603,44 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () => _showCustomerDetails(customer),
-          borderRadius: BorderRadius.circular(12),
-          hoverColor: kPrimary.withOpacity(0.02),
+          borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: EdgeInsets.all(isWeb ? 16 : 12),
+            padding: const EdgeInsets.all(16),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ---- Customer Header ----
                 Row(
                   children: [
                     Container(
-                      width: isWeb ? 46 : 42,
-                      height: isWeb ? 46 : 42,
+                      width: 48,
+                      height: 48,
                       decoration: BoxDecoration(
-                        color: kPrimary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
+                        gradient: LinearGradient(
+                          colors: [
+                            kPrimary.withOpacity(0.15),
+                            kPrimary.withOpacity(0.05),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: kPrimary.withOpacity(0.2),
+                          width: 1,
+                        ),
                       ),
                       child: Center(
                         child: Text(
                           customer.name[0].toUpperCase(),
                           style: TextStyle(
-                            fontSize: isWeb ? 18 : 16,
+                            fontSize: 18,
                             fontWeight: FontWeight.w800,
                             color: kPrimary,
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(width: isWeb ? 14 : 10),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -909,25 +648,36 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                           Text(
                             customer.name,
                             style: TextStyle(
-                              fontSize: isWeb ? 14 : 13,
+                              fontSize: 15,
                               fontWeight: FontWeight.w700,
                               color: kText,
+                              letterSpacing: -0.2,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 4),
                           Text(
                             customer.email,
                             style: TextStyle(
-                              fontSize: isWeb ? 12 : 11,
+                              fontSize: 12,
                               color: kSubText,
+                              fontWeight: FontWeight.w500,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          Text(
-                            customer.phone,
-                            style: TextStyle(
-                              fontSize: isWeb ? 12 : 11,
-                              color: kSubText,
-                            ),
+                          const SizedBox(height: 4),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            children: [
+                              _badge(customer.phone, kSubText),
+                              _badge(
+                                '${customer.invoices.length} invoices',
+                                kPrimary,
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -936,24 +686,29 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          'Outstanding',
-                          style: TextStyle(fontSize: 10, color: kSubText),
+                          _formatAmount(customer.totalOutstanding),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: kDanger,
+                            letterSpacing: -0.3,
+                          ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 4),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
                             vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: kDanger.withOpacity(0.08),
+                            color: kDanger.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            _formatAmount(customer.totalOutstanding),
+                            'Outstanding',
                             style: TextStyle(
-                              fontSize: isWeb ? 14 : 13,
-                              fontWeight: FontWeight.w800,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
                               color: kDanger,
                             ),
                           ),
@@ -962,137 +717,119 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                     ),
                   ],
                 ),
-
-                SizedBox(height: isWeb ? 14 : 10),
-                Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
-                SizedBox(height: isWeb ? 12 : 8),
-
-                // ---- Aging Buckets ----
-                if (!isMobile)
-                  Row(
-                    children: [
-                      _buildAgingBucket(
-                        'Current',
-                        customer.current,
-                        customer.current > 0 ? kSuccess : kSubText,
-                      ),
-                      _buildAgingBucket(
-                        '1-30 Days',
-                        customer.days1to30,
-                        customer.days1to30 > 0 ? kWarning : kSubText,
-                      ),
-                      _buildAgingBucket(
-                        '31-60 Days',
-                        customer.days31to60,
-                        customer.days31to60 > 0 ? kWarning : kSubText,
-                      ),
-                      _buildAgingBucket(
-                        '61-90 Days',
-                        customer.days61to90,
-                        customer.days61to90 > 0 ? kDanger : kSubText,
-                      ),
-                      _buildAgingBucket(
-                        '90+ Days',
-                        customer.daysOver90,
-                        customer.daysOver90 > 0 ? kDanger : kSubText,
-                      ),
-                      _buildAgingBucket(
-                        'Total',
-                        customer.totalOutstanding,
-                        kPrimary,
-                        isBold: true,
-                      ),
-                    ],
-                  )
-                else
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      _buildMobileAgingBucket(
-                        'Current',
-                        customer.current,
-                        customer.current > 0 ? kSuccess : kSubText,
-                      ),
-                      _buildMobileAgingBucket(
-                        '1-30',
-                        customer.days1to30,
-                        customer.days1to30 > 0 ? kWarning : kSubText,
-                      ),
-                      _buildMobileAgingBucket(
-                        '31-60',
-                        customer.days31to60,
-                        customer.days31to60 > 0 ? kWarning : kSubText,
-                      ),
-                      _buildMobileAgingBucket(
-                        '61-90',
-                        customer.days61to90,
-                        customer.days61to90 > 0 ? kDanger : kSubText,
-                      ),
-                      _buildMobileAgingBucket(
-                        '90+',
-                        customer.daysOver90,
-                        customer.daysOver90 > 0 ? kDanger : kSubText,
-                      ),
-                      _buildMobileAgingBucket(
-                        'Total',
-                        customer.totalOutstanding,
-                        kPrimary,
-                        isBold: true,
-                      ),
-                    ],
-                  ),
-
-                SizedBox(height: isWeb ? 12 : 10),
-                Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
-                const SizedBox(height: 6),
-
-                // ---- Action Buttons ----
+                const SizedBox(height: 14),
+                Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
+                const SizedBox(height: 12),
+                // Aging Buckets
+                Row(
+                  children: [
+                    _buildAgingBucket(
+                      'Current',
+                      customer.current,
+                      customer.current > 0 ? kSuccess : kSubText,
+                    ),
+                    _buildAgingBucket(
+                      '1-30',
+                      customer.days1to30,
+                      customer.days1to30 > 0 ? kWarning : kSubText,
+                    ),
+                    _buildAgingBucket(
+                      '31-60',
+                      customer.days31to60,
+                      customer.days31to60 > 0 ? kWarning : kSubText,
+                    ),
+                    _buildAgingBucket(
+                      '61-90',
+                      customer.days61to90,
+                      customer.days61to90 > 0 ? kDanger : kSubText,
+                    ),
+                    _buildAgingBucket(
+                      '90+',
+                      customer.daysOver90,
+                      customer.daysOver90 > 0 ? kDanger : kSubText,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
+                const SizedBox(height: 12),
                 Row(
                   children: [
                     Expanded(
-                      child: TextButton.icon(
+                      child: OutlinedButton.icon(
                         onPressed: () => _viewInvoices(customer),
-                        icon: Icon(Icons.receipt, size: isWeb ? 16 : 14),
-                        label: Text(
-                          'View Invoices',
-                          style: TextStyle(fontSize: isWeb ? 12 : 10),
+                        icon: Icon(
+                          Icons.receipt,
+                          size: 14,
+                          color: kSubText,
                         ),
-                        style: TextButton.styleFrom(foregroundColor: kPrimary),
+                        label: Text(
+                          'Invoices',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: kText,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 10),
                     Expanded(
-                      child: TextButton.icon(
+                      child: OutlinedButton.icon(
                         onPressed: () => _sendReminder(customer),
-                        icon: Icon(Icons.email, size: isWeb ? 16 : 14),
-                        label: Text(
-                          'Send Reminder',
-                          style: TextStyle(fontSize: isWeb ? 12 : 10),
+                        icon: Icon(
+                          Icons.email_outlined,
+                          size: 14,
+                          color: kPrimary,
                         ),
-                        style: TextButton.styleFrom(foregroundColor: kPrimary),
+                        label: Text(
+                          'Reminder',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: kPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: kPrimary.withOpacity(0.3)),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () => _recordPayment(customer),
-                        icon: Icon(
+                        icon: const Icon(
                           Icons.payment,
-                          size: isWeb ? 16 : 14,
-                          color: Colors.white,
+                          size: 14,
+                          color: Colors.black,
                         ),
-                        label: Text(
-                          'Record Payment',
-                          style: TextStyle(fontSize: isWeb ? 12 : 10),
+                        label: const Text(
+                          'Pay',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black,
+                          ),
                         ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: kSuccess,
-                          padding: EdgeInsets.symmetric(
-                            vertical: isWeb ? 8 : 6,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
                           elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6),
-                          ),
                         ),
                       ),
                     ),
@@ -1106,21 +843,16 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
     );
   }
 
-  Widget _buildAgingBucket(
-    String label,
-    double amount,
-    Color color, {
-    bool isBold = false,
-  }) {
+  Widget _buildAgingBucket(String label, double amount, Color color) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
         child: Column(
           children: [
             Text(
               label,
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 9,
                 color: kSubText,
                 fontWeight: FontWeight.w500,
               ),
@@ -1128,23 +860,20 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
             ),
             const SizedBox(height: 4),
             Container(
-              padding: isBold
-                  ? const EdgeInsets.symmetric(horizontal: 6, vertical: 2)
-                  : EdgeInsets.zero,
-              decoration: isBold
-                  ? BoxDecoration(
-                      color: color.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(4),
-                    )
-                  : null,
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(4),
+              ),
               child: Text(
                 _formatAmount(amount),
                 style: TextStyle(
-                  fontSize: isBold ? 12 : 11,
-                  fontWeight: isBold ? FontWeight.w800 : FontWeight.w600,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
                   color: color,
                 ),
                 textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -1153,282 +882,350 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
     );
   }
 
-  Widget _buildMobileAgingBucket(
-    String label,
-    double amount,
-    Color color, {
-    bool isBold = false,
-  }) {
+  // ═══════════════════════════════════════════════════════════════
+  // HELPER WIDGETS
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _badge(String text, Color color) {
     return Container(
-      width: 96,
-      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.06),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.2)),
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(6),
       ),
-      child: Column(
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 9,
-              color: kSubText,
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 3),
-          Text(
-            _formatAmount(amount),
-            style: TextStyle(
-              fontSize: isBold ? 11 : 10,
-              fontWeight: isBold ? FontWeight.w800 : FontWeight.w600,
-              color: color,
-            ),
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
       ),
     );
   }
 
-  // ==================== DIALOGS ====================
+  // ═══════════════════════════════════════════════════════════════
+  // CUSTOMER DETAILS DIALOG
+  // ═══════════════════════════════════════════════════════════════
 
   void _showCustomerDetails(AgedCustomer customer) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-    if (isWeb) {
-      showDialog(
-        context: context,
-        builder: (ctx) => Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Container(
-            width: 500,
-            padding: const EdgeInsets.all(24),
-            child: _buildCustomerDetailsContent(customer),
-          ),
-        ),
-      );
-    } else {
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        builder: (ctx) => DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.75,
-          maxChildSize: 0.95,
-          builder: (_, scrollController) => SingleChildScrollView(
-            controller: scrollController,
-            padding: const EdgeInsets.all(20),
-            child: _buildCustomerDetailsContent(customer),
-          ),
-        ),
-      );
-    }
-  }
-
-  Widget _buildCustomerDetailsContent(AgedCustomer customer) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Header
-        Row(
-          children: [
-            Container(
-              width: isWeb ? 56 : 48,
-              height: isWeb ? 56 : 48,
-              decoration: BoxDecoration(
-                color: kPrimary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: Text(
-                  customer.name[0].toUpperCase(),
-                  style: TextStyle(
-                    fontSize: isWeb ? 22 : 18,
-                    fontWeight: FontWeight.w800,
-                    color: kPrimary,
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(width: isWeb ? 16 : 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    customer.name,
-                    style: TextStyle(
-                      fontSize: isWeb ? 17 : 15,
-                      fontWeight: FontWeight.w800,
-                      color: kText,
-                    ),
-                  ),
-                  Text(
-                    customer.email,
-                    style: TextStyle(
-                      fontSize: isWeb ? 12 : 11,
-                      color: kSubText,
-                    ),
-                  ),
-                  Text(
-                    customer.phone,
-                    style: TextStyle(
-                      fontSize: isWeb ? 12 : 11,
-                      color: kSubText,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: kDanger.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                _formatAmount(customer.totalOutstanding),
-                style: TextStyle(
-                  fontSize: isWeb ? 14 : 13,
-                  fontWeight: FontWeight.w800,
-                  color: kDanger,
-                ),
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: isWeb ? 20 : 16),
-        // Aging breakdown
-        Container(
-          padding: EdgeInsets.all(isWeb ? 14 : 12),
-          decoration: BoxDecoration(
-            color: kBg,
-            borderRadius: BorderRadius.circular(10),
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.65,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (_, scrollCtrl) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: Column(
             children: [
-              _buildDetailRow(
-                'Current',
-                _formatAmount(customer.current),
-                isWeb,
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-              _buildDetailRow(
-                '1-30 Days',
-                _formatAmount(customer.days1to30),
-                isWeb,
-              ),
-              _buildDetailRow(
-                '31-60 Days',
-                _formatAmount(customer.days31to60),
-                isWeb,
-              ),
-              _buildDetailRow(
-                '61-90 Days',
-                _formatAmount(customer.days61to90),
-                isWeb,
-              ),
-              _buildDetailRow(
-                '90+ Days',
-                _formatAmount(customer.daysOver90),
-                isWeb,
-              ),
-              Divider(color: Colors.grey.withOpacity(0.15), height: 16),
-              _buildDetailRow(
-                'Total Outstanding',
-                _formatAmount(customer.totalOutstanding),
-                isWeb,
-                isBold: true,
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollCtrl,
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header
+                      Row(
+                        children: [
+                          Container(
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              color: kPrimary.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Center(
+                              child: Text(
+                                customer.name[0].toUpperCase(),
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w800,
+                                  color: kPrimary,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  customer.name,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    color: kText,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  customer.email,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: kSubText,
+                                  ),
+                                ),
+                                Text(
+                                  customer.phone,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: kSubText,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: kDanger.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              _formatAmount(customer.totalOutstanding),
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: kDanger,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // KPI Cards
+                      Row(
+                        children: [
+                          _miniKpi(
+                            'Current',
+                            _formatAmount(customer.current),
+                            kSuccess,
+                            Icons.access_time,
+                          ),
+                          const SizedBox(width: 8),
+                          _miniKpi(
+                            '1-30',
+                            _formatAmount(customer.days1to30),
+                            kWarning,
+                            Icons.calendar_view_month,
+                          ),
+                          const SizedBox(width: 8),
+                          _miniKpi(
+                            '90+',
+                            _formatAmount(customer.daysOver90),
+                            kDanger,
+                            Icons.warning_amber,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      const SizedBox(height: 16),
+
+                      // Aging Breakdown
+                      Text(
+                        'Aging Breakdown',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: kText,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: kBgLight,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: Colors.grey.withOpacity(0.1),
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            _detailRow('Current', _formatAmount(customer.current)),
+                            _detailRow('1-30 Days', _formatAmount(customer.days1to30)),
+                            _detailRow('31-60 Days', _formatAmount(customer.days31to60)),
+                            _detailRow('61-90 Days', _formatAmount(customer.days61to90)),
+                            _detailRow('90+ Days', _formatAmount(customer.daysOver90)),
+                            Divider(height: 16, color: Colors.grey.withOpacity(0.15)),
+                            _detailRow(
+                              'Total Outstanding',
+                              _formatAmount(customer.totalOutstanding),
+                              isBold: true,
+                              valueColor: kDanger,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      const SizedBox(height: 16),
+
+                      // Invoices
+                      Text(
+                        'Invoices (${customer.invoices.length})',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: kText,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ...customer.invoices.map((inv) => _buildInvoiceItem(inv)),
+                      const SizedBox(height: 16),
+                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      const SizedBox(height: 16),
+
+                      // Footer Buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: SizedBox(
+                              height: 46,
+                              child: OutlinedButton.icon(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  _viewInvoices(customer);
+                                },
+                                icon: Icon(
+                                  Icons.receipt,
+                                  size: 16,
+                                  color: kPrimary,
+                                ),
+                                label: Text(
+                                  'All Invoices',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: kPrimary,
+                                  ),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  side: BorderSide(color: kPrimary),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: SizedBox(
+                              height: 46,
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  _recordPayment(customer);
+                                },
+                                icon: const Icon(
+                                  Icons.payment,
+                                  size: 16,
+                                  color: Colors.black,
+                                ),
+                                label: const Text(
+                                  'Record Payment',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: kSuccess,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
         ),
-        SizedBox(height: isWeb ? 20 : 16),
-        Text(
-          'Invoices',
-          style: TextStyle(
-            fontSize: isWeb ? 15 : 14,
-            fontWeight: FontWeight.w700,
-            color: kText,
-          ),
+      ),
+    );
+  }
+
+  Widget _miniKpi(String label, String value, Color color, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withOpacity(0.15)),
         ),
-        SizedBox(height: isWeb ? 10 : 8),
-        ...customer.invoices.map((inv) => _buildInvoiceItem(inv, isWeb)),
-        SizedBox(height: isWeb ? 20 : 16),
-        Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _viewInvoices(customer);
-                },
-                icon: Icon(Icons.receipt, size: isWeb ? 16 : 14),
-                label: Text(
-                  'View All',
-                  style: TextStyle(fontSize: isWeb ? 13 : 12),
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: kPrimary,
-                  side: BorderSide(color: kPrimary),
-                ),
+            Icon(icon, size: 14, color: color),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: color,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            SizedBox(width: isWeb ? 12 : 8),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _recordPayment(customer);
-                },
-                icon: Icon(
-                  Icons.payment,
-                  size: isWeb ? 16 : 14,
-                  color: Colors.white,
-                ),
-                label: Text(
-                  'Record Payment',
-                  style: TextStyle(
-                    fontSize: isWeb ? 13 : 12,
-                    color: Colors.white,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kSuccess,
-                  elevation: 0,
-                ),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 9,
+                color: Colors.black.withOpacity(0.5),
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
         ),
-      ],
+      ),
     );
   }
 
-  Widget _buildDetailRow(
-    String label,
-    String value,
-    bool isWeb, {
-    bool isBold = false,
-  }) {
+  Widget _detailRow(String label, String value, {bool isBold = false, Color? valueColor}) {
     return Padding(
-      padding: EdgeInsets.only(bottom: isWeb ? 10 : 8),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             label,
             style: TextStyle(
-              fontSize: isWeb ? 12 : 11,
+              fontSize: 12,
               color: kSubText,
               fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
             ),
@@ -1436,9 +1233,9 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
           Text(
             value,
             style: TextStyle(
-              fontSize: isWeb ? 12 : 11,
-              color: kText,
+              fontSize: 13,
               fontWeight: isBold ? FontWeight.w800 : FontWeight.w600,
+              color: valueColor ?? kText,
             ),
           ),
         ],
@@ -1446,22 +1243,25 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
     );
   }
 
-  Widget _buildInvoiceItem(AgedInvoice invoice, bool isWeb) {
+  Widget _buildInvoiceItem(AgedInvoice invoice) {
     final outstanding = invoice.amount - invoice.paidAmount;
     final daysOverdue = _asAtDate.difference(invoice.dueDate).inDays;
     final statusColor = daysOverdue <= 0
         ? kSuccess
         : daysOverdue <= 30
-        ? kWarning
-        : kDanger;
+            ? kWarning
+            : kDanger;
     final isPaid = outstanding <= 0;
 
     return Container(
-      margin: EdgeInsets.only(bottom: isWeb ? 10 : 8),
-      padding: EdgeInsets.all(isWeb ? 12 : 10),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: kBg,
-        borderRadius: BorderRadius.circular(isWeb ? 10 : 8),
+        color: kBgLight,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isPaid ? kSuccess.withOpacity(0.2) : statusColor.withOpacity(0.2),
+        ),
       ),
       child: Row(
         children: [
@@ -1472,14 +1272,17 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                 Text(
                   invoice.id,
                   style: TextStyle(
-                    fontSize: isWeb ? 13 : 12,
+                    fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: kText,
                   ),
                 ),
                 Text(
                   'Due: ${DateFormat('dd MMM yyyy').format(invoice.dueDate)}',
-                  style: TextStyle(fontSize: isWeb ? 11 : 10, color: kSubText),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: kSubText,
+                  ),
                 ),
               ],
             ),
@@ -1488,7 +1291,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
             Text(
               _formatAmount(outstanding),
               style: TextStyle(
-                fontSize: isWeb ? 13 : 12,
+                fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: statusColor,
               ),
@@ -1501,9 +1304,9 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                daysOverdue <= 0 ? 'Current' : '$daysOverdue days',
+                daysOverdue <= 0 ? 'Current' : '$daysOverdue d',
                 style: TextStyle(
-                  fontSize: isWeb ? 10 : 9,
+                  fontSize: 9,
                   color: statusColor,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1519,7 +1322,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
               child: Text(
                 'Paid',
                 style: TextStyle(
-                  fontSize: isWeb ? 10 : 9,
+                  fontSize: 9,
                   color: kSuccess,
                   fontWeight: FontWeight.w700,
                 ),
@@ -1530,430 +1333,9 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
     );
   }
 
-  // ==================== PDF GENERATION ====================
-
-  Future<void> _generateAndPrintPDF() async {
-    try {
-      Get.dialog(
-        Center(
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: kCardBg,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                LoadingAnimationWidget.waveDots(color: kPrimary, size: 40),
-                const SizedBox(height: 16),
-                Text(
-                  'Generating PDF...',
-                  style: TextStyle(fontSize: 13, color: kText),
-                ),
-              ],
-            ),
-          ),
-        ),
-        barrierDismissible: false,
-      );
-      final pdf = _buildPdfDocument();
-      Get.back();
-      await Printing.sharePdf(
-        bytes: await pdf.save(),
-        filename:
-            'Aged_Receivables_${DateFormat('yyyyMMdd').format(_asAtDate)}.pdf',
-      );
-      AppSnackbar.success(
-        Colors.green,
-        'Success',
-        'PDF generated successfully',
-        duration: const Duration(seconds: 2),
-      );
-    } catch (e) {
-      Get.back();
-      AppSnackbar.error(
-        Colors.red,
-        'Error',
-        'Failed to generate PDF: $e',
-        duration: const Duration(seconds: 2),
-      );
-    }
-  }
-
-  Future<void> _printReport() async {
-    try {
-      Get.dialog(
-        Center(
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: kCardBg,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                LoadingAnimationWidget.waveDots(color: kPrimary, size: 40),
-                const SizedBox(height: 16),
-                Text(
-                  'Preparing print...',
-                  style: TextStyle(fontSize: 13, color: kText),
-                ),
-              ],
-            ),
-          ),
-        ),
-        barrierDismissible: false,
-      );
-      final pdf = _buildPdfDocument();
-      Get.back();
-      await Printing.layoutPdf(onLayout: (_) async => pdf.save());
-      AppSnackbar.success(
-        Colors.green,
-        'Success',
-        'Print job sent successfully',
-      );
-    } catch (e) {
-      Get.back();
-      AppSnackbar.error(
-        Colors.red,
-        'Error',
-        'Failed to print: $e',
-        duration: const Duration(seconds: 2),
-      );
-    }
-  }
-
-  pw.Document _buildPdfDocument() {
-    final pdf = pw.Document();
-    pdf.addPage(
-      pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(20),
-        build: (ctx) => [
-          _buildPdfHeader(),
-          pw.SizedBox(height: 20),
-          _buildPdfSummaryRow(),
-          pw.SizedBox(height: 20),
-          _buildPdfTableHeader(),
-          ..._customers.map(_buildPdfCustomerRow),
-          pw.SizedBox(height: 20),
-          _buildPdfTotalRow(),
-          pw.SizedBox(height: 30),
-          _buildPdfFooter(),
-        ],
-      ),
-    );
-    return pdf;
-  }
-
-  pw.Widget _buildPdfHeader() {
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.center,
-      children: [
-        pw.Text(
-          'Aged Receivables Report',
-          style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
-        ),
-        pw.SizedBox(height: 5),
-        pw.Text(
-          'As at ${DateFormat('dd MMM yyyy').format(_asAtDate)}',
-          style: pw.TextStyle(fontSize: 12, color: PdfColors.grey),
-        ),
-        pw.SizedBox(height: 5),
-        pw.Text(
-          'Generated on: ${DateFormat('dd MMM yyyy, HH:mm').format(DateTime.now())}',
-          style: pw.TextStyle(fontSize: 10, color: PdfColors.grey),
-        ),
-        pw.Divider(),
-      ],
-    );
-  }
-
-  pw.Widget _buildPdfSummaryRow() {
-    return pw.Row(
-      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-      children: [
-        _buildPdfSummaryCard('Current', totalCurrent, PdfColors.green),
-        _buildPdfSummaryCard('1-30 Days', total1to30, PdfColors.orange),
-        _buildPdfSummaryCard('31-60 Days', total31to60, PdfColors.orange),
-        _buildPdfSummaryCard('61-90 Days', total61to90, PdfColors.red),
-        _buildPdfSummaryCard('90+ Days', totalOver90, PdfColors.red),
-        _buildPdfSummaryCard('Total', totalOutstanding, PdfColors.blue),
-      ],
-    );
-  }
-
-  pw.Widget _buildPdfSummaryCard(String title, double amount, PdfColor color) {
-    return pw.Container(
-      width: 90,
-      padding: const pw.EdgeInsets.all(8),
-      decoration: pw.BoxDecoration(
-        border: pw.Border.all(color: color),
-        borderRadius: pw.BorderRadius.circular(4),
-      ),
-      child: pw.Column(
-        children: [
-          pw.Text(
-            title,
-            style: pw.TextStyle(fontSize: 9, color: PdfColors.grey),
-          ),
-          pw.SizedBox(height: 3),
-          pw.Text(
-            _formatAmountForPdf(amount),
-            style: pw.TextStyle(
-              fontSize: 9,
-              fontWeight: pw.FontWeight.bold,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  pw.Widget _buildPdfTableHeader() {
-    return pw.Container(
-      padding: const pw.EdgeInsets.all(8),
-      decoration: pw.BoxDecoration(
-        color: PdfColors.grey300,
-        borderRadius: pw.BorderRadius.circular(4),
-      ),
-      child: pw.Row(
-        children: [
-          pw.Expanded(
-            flex: 3,
-            child: pw.Text(
-              'Customer',
-              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
-            ),
-          ),
-          pw.Expanded(
-            flex: 2,
-            child: pw.Text(
-              'Current',
-              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
-              textAlign: pw.TextAlign.right,
-            ),
-          ),
-          pw.Expanded(
-            flex: 2,
-            child: pw.Text(
-              '1-30',
-              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
-              textAlign: pw.TextAlign.right,
-            ),
-          ),
-          pw.Expanded(
-            flex: 2,
-            child: pw.Text(
-              '31-60',
-              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
-              textAlign: pw.TextAlign.right,
-            ),
-          ),
-          pw.Expanded(
-            flex: 2,
-            child: pw.Text(
-              '61-90',
-              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
-              textAlign: pw.TextAlign.right,
-            ),
-          ),
-          pw.Expanded(
-            flex: 2,
-            child: pw.Text(
-              '90+',
-              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
-              textAlign: pw.TextAlign.right,
-            ),
-          ),
-          pw.Expanded(
-            flex: 2,
-            child: pw.Text(
-              'Total',
-              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
-              textAlign: pw.TextAlign.right,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  pw.Widget _buildPdfCustomerRow(AgedCustomer customer) {
-    return pw.Container(
-      padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-      decoration: const pw.BoxDecoration(
-        border: pw.Border(bottom: pw.BorderSide(color: PdfColors.grey300)),
-      ),
-      child: pw.Row(
-        children: [
-          pw.Expanded(
-            flex: 3,
-            child: pw.Text(customer.name, style: pw.TextStyle(fontSize: 10)),
-          ),
-          pw.Expanded(
-            flex: 2,
-            child: pw.Text(
-              _formatAmountForPdf(customer.current),
-              style: pw.TextStyle(fontSize: 10),
-              textAlign: pw.TextAlign.right,
-            ),
-          ),
-          pw.Expanded(
-            flex: 2,
-            child: pw.Text(
-              _formatAmountForPdf(customer.days1to30),
-              style: pw.TextStyle(fontSize: 10),
-              textAlign: pw.TextAlign.right,
-            ),
-          ),
-          pw.Expanded(
-            flex: 2,
-            child: pw.Text(
-              _formatAmountForPdf(customer.days31to60),
-              style: pw.TextStyle(fontSize: 10),
-              textAlign: pw.TextAlign.right,
-            ),
-          ),
-          pw.Expanded(
-            flex: 2,
-            child: pw.Text(
-              _formatAmountForPdf(customer.days61to90),
-              style: pw.TextStyle(fontSize: 10),
-              textAlign: pw.TextAlign.right,
-            ),
-          ),
-          pw.Expanded(
-            flex: 2,
-            child: pw.Text(
-              _formatAmountForPdf(customer.daysOver90),
-              style: pw.TextStyle(fontSize: 10),
-              textAlign: pw.TextAlign.right,
-            ),
-          ),
-          pw.Expanded(
-            flex: 2,
-            child: pw.Text(
-              _formatAmountForPdf(customer.totalOutstanding),
-              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
-              textAlign: pw.TextAlign.right,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  pw.Widget _buildPdfTotalRow() {
-    return pw.Container(
-      padding: const pw.EdgeInsets.all(8),
-      decoration: pw.BoxDecoration(
-        color: PdfColors.grey200,
-        borderRadius: pw.BorderRadius.circular(4),
-      ),
-      child: pw.Row(
-        children: [
-          pw.Expanded(
-            flex: 3,
-            child: pw.Text(
-              'TOTAL',
-              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
-            ),
-          ),
-          pw.Expanded(
-            flex: 2,
-            child: pw.Text(
-              _formatAmountForPdf(totalCurrent),
-              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
-              textAlign: pw.TextAlign.right,
-            ),
-          ),
-          pw.Expanded(
-            flex: 2,
-            child: pw.Text(
-              _formatAmountForPdf(total1to30),
-              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
-              textAlign: pw.TextAlign.right,
-            ),
-          ),
-          pw.Expanded(
-            flex: 2,
-            child: pw.Text(
-              _formatAmountForPdf(total31to60),
-              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
-              textAlign: pw.TextAlign.right,
-            ),
-          ),
-          pw.Expanded(
-            flex: 2,
-            child: pw.Text(
-              _formatAmountForPdf(total61to90),
-              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
-              textAlign: pw.TextAlign.right,
-            ),
-          ),
-          pw.Expanded(
-            flex: 2,
-            child: pw.Text(
-              _formatAmountForPdf(totalOver90),
-              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
-              textAlign: pw.TextAlign.right,
-            ),
-          ),
-          pw.Expanded(
-            flex: 2,
-            child: pw.Text(
-              _formatAmountForPdf(totalOutstanding),
-              style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
-              textAlign: pw.TextAlign.right,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  pw.Widget _buildPdfFooter() {
-    return pw.Column(
-      children: [
-        pw.Divider(),
-        pw.SizedBox(height: 10),
-        pw.Text(
-          'This is a computer-generated document and does not require a signature.',
-          style: pw.TextStyle(fontSize: 8, color: PdfColors.grey),
-          textAlign: pw.TextAlign.center,
-        ),
-      ],
-    );
-  }
-
-  // ==================== HELPER ACTIONS ====================
-
-  void _exportToExcel() {
-    AppSnackbar.success(
-      Colors.blue,
-      'Export',
-      'Exporting to Excel...',
-      duration: const Duration(seconds: 2),
-    );
-  }
-
-  Future<void> _selectAsAtDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _asAtDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null)
-      setState(() {
-        _asAtDate = picked;
-        _calculateAging();
-      });
-  }
+  // ═══════════════════════════════════════════════════════════════
+  // HELPER METHODS
+  // ═══════════════════════════════════════════════════════════════
 
   List<AgedCustomer> _getFilteredCustomers() {
     List<AgedCustomer> filtered = List.from(_customers);
@@ -1977,45 +1359,51 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
     }
     if (_searchController.text.isNotEmpty) {
       final q = _searchController.text.toLowerCase();
-      filtered = filtered
-          .where(
-            (c) =>
-                c.name.toLowerCase().contains(q) ||
-                c.email.toLowerCase().contains(q) ||
-                c.phone.contains(q),
-          )
-          .toList();
+      filtered = filtered.where(
+        (c) =>
+            c.name.toLowerCase().contains(q) ||
+            c.email.toLowerCase().contains(q) ||
+            c.phone.contains(q),
+      ).toList();
     }
     return filtered;
   }
 
-  void _viewInvoices(AgedCustomer customer) => AppSnackbar.success(
-    Colors.blue,
-    'Invoices',
-    'Viewing invoices for ${customer.name}',
-    duration: const Duration(seconds: 2),
-  );
+  void _viewInvoices(AgedCustomer customer) {
+    AppSnackbar.info('Invoices', 'Viewing invoices for ${customer.name}');
+  }
 
-  void _sendReminder(AgedCustomer customer) => AppSnackbar.success(
-    Colors.blue,
-    'Reminder',
-    'Sending reminder to ${customer.name}',
-    duration: const Duration(seconds: 2),
-  );
+  void _sendReminder(AgedCustomer customer) {
+    AppSnackbar.info('Reminder', 'Sending reminder to ${customer.name}');
+  }
 
-  void _recordPayment(AgedCustomer customer) => AppSnackbar.success(
-    Colors.green,
-    'Record Payment',
-    'Recording payment from ${customer.name}',
-    duration: const Duration(seconds: 2),
-  );
+  void _recordPayment(AgedCustomer customer) {
+    AppSnackbar.info('Record Payment', 'Recording payment from ${customer.name}');
+  }
+
+  Future<void> _selectAsAtDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _asAtDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        _asAtDate = picked;
+        _calculateAging();
+      });
+    }
+  }
+
+  void _exportToExcel() {
+    AppSnackbar.info('Export', 'Exporting to Excel...');
+  }
 
   String _formatAmount(double amount) => CurrencyUtils.format(amount);
-
-  String _formatAmountForPdf(double amount) => _formatAmount(amount);
 }
 
-// ==================== DATA MODELS ====================
+// ─── DATA MODELS ────────────────────────────────────────────────────
 
 class AgedCustomer {
   final String id;

@@ -1,20 +1,18 @@
 import 'dart:convert';
-import 'package:LedgerPro_app/Utils/stripe_web_helper.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../config/apiconfig.dart';
-
-// ✅ Web only import — Android/iOS par error nahi dega
+import 'package:LedgerPro_app/config/apiconfig.dart';
 
 class SubscriptionService {
   final String baseUrl = Apiconfig().baseUrl;
 
+  // ─── Get Auth Token ──────────────────────────────────────────────
   Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('auth_token');
   }
 
+  // ─── Build Auth Headers ───────────────────────────────────────────
   Future<Map<String, String>> _getHeaders() async {
     final token = await _getToken();
     return {
@@ -23,7 +21,10 @@ class SubscriptionService {
     };
   }
 
-  // Get subscription plans
+  // ═══════════════════════════════════════════════════════════════════
+  // 1️⃣ GET SUBSCRIPTION PLANS
+  // GET /api/subscription/plans
+  // ═══════════════════════════════════════════════════════════════════
   Future<Map<String, dynamic>> getPlans() async {
     try {
       final headers = await _getHeaders();
@@ -31,13 +32,18 @@ class SubscriptionService {
         Uri.parse('$baseUrl/api/subscription/plans'),
         headers: headers,
       );
-      return json.decode(response.body);
+      return json.decode(response.body) as Map<String, dynamic>;
     } catch (e) {
       return {'success': false, 'message': e.toString()};
     }
   }
 
-  // Check current subscription status
+  // ═══════════════════════════════════════════════════════════════════
+  // 2️⃣ CHECK SUBSCRIPTION STATUS
+  // GET /api/subscription/status
+  // Returns: { success, data: { hasAccess, subscription: { plan, status,
+  //            trialDaysRemaining, subscriptionDaysRemaining, ... } } }
+  // ═══════════════════════════════════════════════════════════════════
   Future<Map<String, dynamic>> checkSubscription() async {
     try {
       final headers = await _getHeaders();
@@ -45,85 +51,52 @@ class SubscriptionService {
         Uri.parse('$baseUrl/api/subscription/status'),
         headers: headers,
       );
-      return json.decode(response.body);
+      return json.decode(response.body) as Map<String, dynamic>;
     } catch (e) {
       return {'success': false, 'message': e.toString()};
     }
   }
-  Future<Map<String, dynamic>> createStripeCheckout({
-    required String plan,
-  }) async {
-    if (!kIsWeb) {
-      return {
-        'success': false,
-        'message': 'Stripe checkout is only available on web',
-      };
-    }
 
+  // ═══════════════════════════════════════════════════════════════════
+  // 3️⃣ START 30-DAY FREE TRIAL
+  // POST /api/subscription/trial/start
+  // ═══════════════════════════════════════════════════════════════════
+  Future<Map<String, dynamic>> startTrial() async {
     try {
       final headers = await _getHeaders();
-
-      final apiUrl = '$baseUrl/api/subscription/stripe/checkout';
-
-      print("🌐 BASE URL => $baseUrl");
-      print("🚀 API URL => $apiUrl");
-      print("📋 PLAN => $plan");
-
       final response = await http.post(
-        Uri.parse(apiUrl),
+        Uri.parse('$baseUrl/api/subscription/trial/start'),
         headers: headers,
-        body: json.encode({'plan': plan}),
       );
 
-      print("📡 STATUS CODE => ${response.statusCode}");
-      print("📨 RAW RESPONSE => ${response.body}");
+      final data = json.decode(response.body) as Map<String, dynamic>;
 
-      final data = json.decode(response.body);
-
-      print("✅ DECODED RESPONSE => $data");
-
-      if (data['success'] == true) {
-        final checkoutUrl = data['data']?['checkoutUrl'];
-
-        print("💳 CHECKOUT URL => $checkoutUrl");
-
-        if (checkoutUrl == null || checkoutUrl.toString().isEmpty) {
-          print("❌ checkoutUrl null ya empty hai");
-          return {
-            'success': false,
-            'message': 'Checkout URL missing',
-          };
-        }
-
-
-
-        if (!checkoutUrl.toString().startsWith('http')) {
-          print("❌ Invalid URL Schema => $checkoutUrl");
-          return {
-            'success': false,
-            'message': 'Invalid checkout URL',
-          };
-        }
-
-        print("➡️ Redirecting to Stripe...");
-        redirectToStripe(checkoutUrl);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'data': data['data'],
+          'message': data['message'] ?? '30-day trial started! 🎉',
+        };
       } else {
-        print("❌ Backend Success False");
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to start trial',
+        };
       }
-
-      return data;
     } catch (e) {
-      print("🔥 ERROR IN STRIPE CHECKOUT => $e");
-
       return {
         'success': false,
-        'message': e.toString(),
+        'message': 'Network error: ${e.toString()}',
       };
     }
   }
 
-  // Manual subscription (fallback / admin use)
-  Future<Map<String, dynamic>> createSubscription({
+  // ═══════════════════════════════════════════════════════════════════
+  // 4️⃣ DIRECT SUBSCRIPTION — NO STRIPE
+  // POST /api/subscription/subscribe
+  // Body: { plan: 'monthly'|'yearly', amount: double }
+  // ═══════════════════════════════════════════════════════════════════
+  Future<Map<String, dynamic>> subscribeDirect({
     required String plan,
     required double amount,
     String? paymentMethod,
@@ -131,23 +104,50 @@ class SubscriptionService {
   }) async {
     try {
       final headers = await _getHeaders();
+
+      print('[SubscriptionService] Subscribing to plan: $plan (amount: $amount)');
+
       final response = await http.post(
-        Uri.parse('$baseUrl/api/subscription/create'),
+        Uri.parse('$baseUrl/api/subscription/subscribe'),
         headers: headers,
         body: json.encode({
           'plan': plan,
           'amount': amount,
-          'paymentMethod': paymentMethod ?? 'in_app_purchase',
-          'transactionId': transactionId ?? 'TXN-${DateTime.now().millisecondsSinceEpoch}',
+          'paymentMethod': paymentMethod ?? 'direct',
+          'transactionId':
+              transactionId ?? 'TXN-${DateTime.now().millisecondsSinceEpoch}',
         }),
       );
-      return json.decode(response.body);
+
+      print('[SubscriptionService] Response ${response.statusCode}: ${response.body}');
+
+      final data = json.decode(response.body) as Map<String, dynamic>;
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'data': data['data'] ?? data,
+          'message': data['message'] ?? 'Subscription activated successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to activate subscription',
+        };
+      }
     } catch (e) {
-      return {'success': false, 'message': e.toString()};
+      print('[SubscriptionService] Error: $e');
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+      };
     }
   }
 
-  // Cancel subscription
+  // ═══════════════════════════════════════════════════════════════════
+  // 5️⃣ CANCEL SUBSCRIPTION
+  // POST /api/subscription/cancel
+  // ═══════════════════════════════════════════════════════════════════
   Future<Map<String, dynamic>> cancelSubscription() async {
     try {
       final headers = await _getHeaders();
@@ -155,13 +155,32 @@ class SubscriptionService {
         Uri.parse('$baseUrl/api/subscription/cancel'),
         headers: headers,
       );
-      return json.decode(response.body);
+
+      final data = json.decode(response.body) as Map<String, dynamic>;
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'Subscription cancelled successfully',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to cancel subscription',
+        };
+      }
     } catch (e) {
-      return {'success': false, 'message': e.toString()};
+      return {
+        'success': false,
+        'message': 'Network error: ${e.toString()}',
+      };
     }
   }
 
-  // Get subscription history
+  // ═══════════════════════════════════════════════════════════════════
+  // 6️⃣ GET SUBSCRIPTION HISTORY
+  // GET /api/subscription/history
+  // ═══════════════════════════════════════════════════════════════════
   Future<Map<String, dynamic>> getSubscriptionHistory() async {
     try {
       final headers = await _getHeaders();
@@ -169,7 +188,45 @@ class SubscriptionService {
         Uri.parse('$baseUrl/api/subscription/history'),
         headers: headers,
       );
-      return json.decode(response.body);
+      return json.decode(response.body) as Map<String, dynamic>;
+    } catch (e) {
+      return {'success': false, 'message': e.toString()};
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 7️⃣ VALIDATE SUBSCRIPTION ACCESS (lightweight)
+  // GET /api/subscription/validate
+  // ═══════════════════════════════════════════════════════════════════
+  Future<Map<String, dynamic>> validateAccess() async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/subscription/validate'),
+        headers: headers,
+      );
+      return json.decode(response.body) as Map<String, dynamic>;
+    } catch (e) {
+      return {
+        'success': false,
+        'hasAccess': false,
+        'message': e.toString(),
+      };
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 8️⃣ GET DETAILED SUBSCRIPTION INFO
+  // GET /api/subscription/details
+  // ═══════════════════════════════════════════════════════════════════
+  Future<Map<String, dynamic>> getSubscriptionDetails() async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/subscription/details'),
+        headers: headers,
+      );
+      return json.decode(response.body) as Map<String, dynamic>;
     } catch (e) {
       return {'success': false, 'message': e.toString()};
     }

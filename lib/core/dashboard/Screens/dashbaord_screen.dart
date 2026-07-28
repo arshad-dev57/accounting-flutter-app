@@ -1,7 +1,7 @@
 import 'package:LedgerPro_app/Utils/colors.dart';
+import 'package:LedgerPro_app/Utils/currency_controller.dart';
 import 'package:LedgerPro_app/Utils/currency_utils.dart';
 import 'package:LedgerPro_app/Utils/responsive_utils.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
 import 'package:LedgerPro_app/core/About/about_app_screen.dart';
 import 'package:LedgerPro_app/core/About/privacypolicy_screen.dart';
 import 'package:LedgerPro_app/core/About/termsofservice_screen.dart';
@@ -19,20 +19,17 @@ import 'package:LedgerPro_app/core/Feedback/feedback_screen.dart';
 import 'package:LedgerPro_app/core/FixedAssets/Screens/fixed_assets_screen.dart';
 import 'package:LedgerPro_app/core/GeneralLedger/Screen/general_ledger_screen.dart';
 import 'package:LedgerPro_app/core/Income/Screen/income_screen.dart';
-import 'package:LedgerPro_app/core/Invoice/Screens/Invoice_Screen.dart';
+import 'package:LedgerPro_app/core/Notifications/screens/notification_screen.dart';
 import 'package:LedgerPro_app/core/PaymentMade/screens/payment_made_screen.dart';
 import 'package:LedgerPro_app/core/ReportIsuue/Report_issue_screen.dart';
 import 'package:LedgerPro_app/core/TrailBalance/Screen/trail_balance_screen.dart';
 import 'package:LedgerPro_app/core/UserGuide/screen/user_guide_screen.dart';
-import 'package:LedgerPro_app/core/Vendor&Supplier/screens/vendor_supplier_screen.dart';
 import 'package:LedgerPro_app/core/balancesheet/screens/balance_sheet_screen.dart';
 import 'package:LedgerPro_app/core/cashflowstatement/screen/cash_flow_statement_screen.dart';
 import 'package:LedgerPro_app/core/changepassword/screen/change_password_screen.dart';
 import 'package:LedgerPro_app/core/chartofaccounts/screens/chart_of_account_screen.dart';
-import 'package:LedgerPro_app/core/companyprofile/screen/company_profile_screen.dart';
 import 'package:LedgerPro_app/core/settings/screens/currency_screen.dart';
 import 'package:LedgerPro_app/core/dashboard/Screens/dashboard_screen_web.dart';
-import 'package:LedgerPro_app/core/dashboard/Screens/transaction_screen.dart';
 import 'package:LedgerPro_app/core/dashboard/controllers/dashboard_controller.dart';
 import 'package:LedgerPro_app/core/journalEntries/Screens/journal_entries_screen.dart';
 import 'package:LedgerPro_app/core/loanBorrowing/screen/_loan_borrowing_screen.dart';
@@ -41,7 +38,7 @@ import 'package:LedgerPro_app/core/paymentRecieved/Screens/payment_recieved_scre
 import 'package:LedgerPro_app/core/plans/controllers/subscription_controller.dart';
 import 'package:LedgerPro_app/core/plans/views/Subscription_plans.dart';
 import 'package:LedgerPro_app/core/profitlossStatement/screens/profit_loss_statement_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/invoice/screen/warehouse_invoice_screen.dart';
+import 'package:LedgerPro_app/core/warehousecustomer/warehouse_customer_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -50,6 +47,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
+
+const _kPageBg = Color(0xFFF3F5FA);
+const _kCardBg = Color(0xFFFFFFFF);
+const _kCardBorder = Color(0xFFE9EBF2);
+const _kTextPrimary = Color(0xFF14162B);
+const _kTextSecondary = Color(0xFF8A8FA6);
+const _kBlue = Color(0xFF4361EE);
+const _kGreen = Color(0xFF2DC653);
+const _kOrange = Color(0xFFF4A228);
+const _kRed = Color(0xFFEF4444);
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -67,12 +74,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   late final DashboardController _controller;
   late final SubscriptionController _subscriptionController;
 
+  // Time period selection
+  String _selectedTimePeriod = 'This Month';
+
   @override
   void initState() {
     super.initState();
     _controller = Get.put(DashboardController());
     _subscriptionController = Get.find<SubscriptionController>();
-
+    
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) _checkSubscriptionPeriodically();
     });
@@ -123,1665 +133,906 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final isWeb = ResponsiveUtils.isWeb(context);
     final isMobile = ResponsiveUtils.isMobile(context);
+    final isTablet = MediaQuery.of(context).size.width >= 600;
 
-    // For web, show the web dashboard screen
     if (isWeb) {
       return const WebDashboardScreen();
     }
 
-    // For mobile/tablet, show the mobile dashboard
     return Scaffold(
       key: _scaffoldKey,
-      appBar: _buildAppBar(context),
-      body: _buildBody(context),
-      bottomNavigationBar: _buildBottomNav(context),
+      backgroundColor: _kPageBg,
+      appBar: _buildAppBar(isMobile),
+      body: Obx(() {
+        if (_controller.isLoading.value && _controller.chartData.isEmpty) {
+          return Center(
+            child: LoadingAnimationWidget.discreteCircle(
+              color: kPrimary,
+              size: 36,
+            ),
+          );
+        }
+
+        return RefreshIndicator(
+          color: kPrimary,
+          backgroundColor: _kCardBg,
+          onRefresh: () async {
+            await _subscriptionController.checkSubscriptionStatus();
+            _controller.loadDashboardData();
+          },
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildGreetingHeader(),
+                const SizedBox(height: 14),
+                _buildTimePeriodSelector(context),
+                const SizedBox(height: 18),
+                _kpiGrid(context, isTablet),
+                const SizedBox(height: 18),
+                _SectionPadding(
+                  child: isTablet
+                      ? Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: _buildRevenueExpenseChart(context)),
+                            const SizedBox(width: 12),
+                            Expanded(child: _buildCashAndOutstanding(context)),
+                          ],
+                        )
+                      : Column(
+                          children: [
+                            _buildRevenueExpenseChart(context),
+                            const SizedBox(height: 12),
+                            _buildCashAndOutstanding(context),
+                          ],
+                        ),
+                ),
+                const SizedBox(height: 14),
+                _SectionPadding(
+                  child: _buildRecentTransactions(context),
+                ),
+                const SizedBox(height: 14),
+                _SectionPadding(
+                  child: _buildQuickActions(context),
+                ),
+              ],
+            ),
+          ),
+        );
+      }),
       drawer: _buildDrawer(context),
     );
   }
 
-  PreferredSizeWidget _buildAppBar(BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-    const titles = ['Dashboard', 'Transactions', 'Invoices', 'More'];
-
+  PreferredSizeWidget _buildAppBar(bool isMobile) {
     return AppBar(
-      title: Text(
-        titles[_currentTab],
-        style: TextStyle(
-          fontSize: isWeb ? 18 : 15,
-          fontWeight: FontWeight.w800,
-          color: Colors.white,
-          letterSpacing: -0.3,
-        ),
-      ),
-      backgroundColor: kPrimary,
+      backgroundColor: _kCardBg,
       elevation: 0,
+      scrolledUnderElevation: 0,
+      centerTitle: false,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(height: 1, color: _kCardBorder),
+      ),
+      leading: isMobile
+          ? Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(Icons.menu_rounded, color: _kTextPrimary),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
+            )
+          : null,
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: kPrimary,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.account_balance_rounded,
+              size: 15,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(width: 8),
+          const Text(
+            'Accounting',
+            style: TextStyle(
+              color: _kTextPrimary,
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.2,
+            ),
+          ),
+        ],
+      ),
       actions: [
         IconButton(
-          icon: Iconify(
-            Mdi.account_outline,
-            color: Colors.white,
-            size: isWeb ? 24 : 22,
+          icon: const Icon(
+            Icons.notifications_none_rounded,
+            color: _kTextSecondary,
           ),
-          onPressed: () => Get.to(() => const ProfileScreen()),
+          onPressed: () {
+            Get.to(() => const NotificationScreen());
+          },
         ),
-        SizedBox(width: isWeb ? 8 : 4),
+        const SizedBox(width: 4),
       ],
     );
   }
 
-  Widget _buildBody(BuildContext context) {
-    switch (_currentTab) {
-      case 0:
-        return _buildDashboardContent(context);
-      case 1:
-        return const TransactionsScreen();
-      case 2:
-        return const WarehouseInvoiceScreen();
-      default:
-        return _buildDashboardContent(context);
-    }
-  }
-
-  Widget _buildDashboardContent(BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
-
-    return RefreshIndicator(
-      onRefresh: () async {
-        // _controller.refreshData();
-        await _subscriptionController.checkSubscriptionStatus();
-      },
-      child: Obx(() {
-        if (_controller.isLoading.value && _controller.chartData.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                LoadingAnimationWidget.discreteCircle(
-                  color: kPrimary,
-                  size: ResponsiveUtils.isWeb(context) ? 32 : 40,
-                ),
-                SizedBox(height: isWeb ? 20 : 16),
-                Text(
-                  'Loading dashboard...',
-                  style: TextStyle(fontSize: isWeb ? 14 : 13, color: kSubText),
-                ),
-              ],
-            ),
-          );
-        }
-
-        if (_controller.hasError.value) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Iconify(
-                  Mdi.alert_circle_outline,
-                  size: isWeb ? 60 : 48,
-                  color: kDanger,
-                ),
-                SizedBox(height: isWeb ? 20 : 16),
-                Text(
-                  _controller.errorMessage.value,
-                  style: TextStyle(fontSize: isWeb ? 14 : 13, color: kDanger),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: isWeb ? 20 : 16),
-                ElevatedButton(
-                  onPressed: () {
-                    // _controller.refreshData();
-                  },
-                  style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
-                  child: Text(
-                    'Retry',
-                    style: TextStyle(fontSize: isWeb ? 14 : 13),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.only(bottom: isWeb ? 32 : 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildWelcomeHeader(context),
-              Transform.translate(
-                offset: Offset(0, isWeb ? -20 : -16),
-                child: _buildKPICards(context),
-              ),
-              SizedBox(height: isWeb ? 4 : 2),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: isWeb ? 24 : 16),
-                child: _buildChartTabs(context),
-              ),
-              SizedBox(height: isWeb ? 20 : 16),
-              _buildRevenueExpenseChart(context),
-              SizedBox(height: isWeb ? 20 : 16),
-              _buildCashAndOutstanding(context),
-              SizedBox(height: isWeb ? 20 : 16),
-              _buildRecentTransactions(context),
-              SizedBox(height: isWeb ? 20 : 16),
-              _buildQuickActions(context),
-              SizedBox(height: isWeb ? 12 : 8),
-            ],
-          ),
-        );
-      }),
-    );
-  }
-
-  Widget _buildSimpleSubscriptionStatus(BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-
-    return Obx(() {
-      String statusText = '';
-      String statusIcon = Mdi.check_circle;
-      bool isExpired = false;
-
-      if (_subscriptionController.isTrialActive.value) {
-        statusText =
-            '${_subscriptionController.trialDaysRemaining.value} days free trial remaining';
-        statusIcon = Mdi.crown;
-      } else if (_subscriptionController.hasActiveSubscription.value) {
-        statusText =
-            '${_subscriptionController.subscriptionPlan.value.toUpperCase()} plan · ${_subscriptionController.subscriptionDaysRemaining.value} days left';
-        statusIcon = Mdi.crown;
-      } else {
-        statusText = 'Subscription expired · Renew to continue';
-        statusIcon = Mdi.alert;
-        isExpired = true;
-      }
-
-      return Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: isWeb ? 12 : 8,
-          vertical: isWeb ? 8 : 6,
-        ),
-        decoration: BoxDecoration(
-          color: isExpired
-              ? Colors.red.withOpacity(0.18)
-              : Colors.white.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(isWeb ? 16 : 12),
-          border: Border.all(
-            color: isExpired
-                ? Colors.red.withOpacity(0.45)
-                : Colors.white.withOpacity(0.30),
-          ),
-        ),
-        child: Row(
-          children: [
-            Iconify(
-              statusIcon,
-              color: isExpired
-                  ? Colors.redAccent.shade100
-                  : Colors.white.withOpacity(0.95),
-              size: isWeb ? 24 : 18,
-            ),
-            SizedBox(width: isWeb ? 12 : 8),
-            Expanded(
-              child: Text(
-                statusText,
-                style: TextStyle(
-                  fontSize: isWeb ? 13 : 11,
-                  fontWeight: FontWeight.w500,
-                  color: isExpired
-                      ? Colors.red.shade100
-                      : Colors.white.withOpacity(0.92),
-                  letterSpacing: 0.1,
-                ),
-              ),
-            ),
-            if (isExpired)
-              GestureDetector(
-                onTap: () => Get.to(() => const SelectPlanScreen()),
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isWeb ? 12 : 8,
-                    vertical: isWeb ? 6 : 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.20),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white.withOpacity(0.35)),
-                  ),
-                  child: Text(
-                    'Renew',
-                    style: TextStyle(
-                      fontSize: isWeb ? 12 : 10,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                ),
-              ),
-            if (_subscriptionController.isTrialActive.value)
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isWeb ? 10 : 6,
-                  vertical: isWeb ? 5 : 3,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.20),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  'FREE',
-                  style: TextStyle(
-                    fontSize: isWeb ? 11 : 9,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-              ),
-          ],
-        ),
-      );
-    });
-  }
-
-  Widget _buildWelcomeHeader(BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
-
+  // ─── Greeting Header ──────────────────────────────────────────────────────
+  Widget _buildGreetingHeader() {
+    final fmt = Get.find<CurrencyController>().formatAmount;
+    
     return Container(
-      margin: EdgeInsets.fromLTRB(isWeb ? 24 : 16, 0, isWeb ? 24 : 16, 0),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            kPrimary,
-            kPrimaryDark,
-            Color.lerp(kPrimaryDark, const Color(0xFF0B8BC4), 0.35)!,
-          ],
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
+          colors: [Color(0xFF1A237E), Color(0xFF3949AB), Color(0xFF5C6BC0)],
         ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(isWeb ? 24 : 20),
-          bottomRight: Radius.circular(isWeb ? 24 : 20),
-        ),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: kPrimary.withOpacity(0.35),
+            color: const Color(0xFF3949AB).withOpacity(0.35),
             blurRadius: 20,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            right: -40,
-            top: -8,
-            child: IgnorePointer(
-              child: Container(
-                width: isWeb ? 200 : 140,
-                height: isWeb ? 200 : 140,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.08),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: -30,
-            bottom: 0,
-            child: IgnorePointer(
-              child: Container(
-                width: isWeb ? 120 : 88,
-                height: isWeb ? 120 : 88,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.06),
-                ),
-              ),
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildSimpleSubscriptionStatus(context),
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                  isWeb ? 24 : 16,
-                  isWeb ? 12 : 8,
-                  isWeb ? 24 : 16,
-                  isWeb ? 32 : 24,
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: isWeb ? 12 : 8,
-                              vertical: isWeb ? 6 : 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.18),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Iconify(
-                                  Mdi.chart_line,
-                                  size: isWeb ? 20 : 14,
-                                  color: Colors.white.withOpacity(0.95),
-                                ),
-                                SizedBox(width: isWeb ? 8 : 4),
-                                Text(
-                                  'Overview',
-                                  style: TextStyle(
-                                    fontSize: isWeb ? 14 : 12,
-                                    color: Colors.white.withOpacity(0.95),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: isWeb ? 16 : 12),
-                          Text(
-                            'Welcome back',
-                            style: TextStyle(
-                              fontSize: isWeb ? 15 : 13,
-                              color: Colors.white.withOpacity(0.85),
-                              letterSpacing: 0.2,
-                            ),
-                          ),
-                          SizedBox(height: isWeb ? 6 : 4),
-                          Obx(
-                            () => Text(
-                              _controller.companyName.value,
-                              style: TextStyle(
-                                fontSize: isWeb ? 22 : 18,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                                height: 1.15,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: isWeb ? 12 : 8),
-                          Text(
-                            'Financial snapshot · ${DateFormat('EEEE').format(DateTime.now())}',
-                            style: TextStyle(
-                              fontSize: isWeb ? 14 : 12,
-                              color: Colors.white.withOpacity(0.78),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: isWeb ? 16 : 12),
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isWeb ? 20 : 16,
-                        vertical: isWeb ? 16 : 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.16),
-                        borderRadius: BorderRadius.circular(isWeb ? 20 : 16),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.22),
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            DateFormat('dd').format(DateTime.now()),
-                            style: TextStyle(
-                              fontSize: isWeb ? 22 : 18,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                              height: 1,
-                            ),
-                          ),
-                          Text(
-                            DateFormat(
-                              'MMM',
-                            ).format(DateTime.now()).toUpperCase(),
-                            style: TextStyle(
-                              fontSize: isWeb ? 15 : 13,
-                              color: Colors.white70,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                          SizedBox(height: isWeb ? 4 : 2),
-                          Text(
-                            DateFormat('yyyy').format(DateTime.now()),
-                            style: TextStyle(
-                              fontSize: isWeb ? 14 : 12,
-                              color: Colors.white60,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildKPICards(BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
-
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: isWeb ? 24 : 16),
-      child: SizedBox(
-        height: isWeb ? 160 : (isTablet ? 150 : 140),
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          itemCount: 4,
-          separatorBuilder: (_, __) => SizedBox(width: isWeb ? 20 : 16),
-          itemBuilder: (context, i) {
-            switch (i) {
-              case 0:
-                return Obx(
-                  () => _buildKPICard(
-                    context,
-                    'Total Revenue',
-                    _controller.totalRevenueFormatted.value,
-                    kSuccess,
-                    Mdi.trending_up,
-                    '${_controller.revenueChange.value.toStringAsFixed(1)}%',
-                    'vs last month',
-                    _controller.isRevenuePositive.value,
-                  ),
-                );
-              case 1:
-                return Obx(
-                  () => _buildKPICard(
-                    context,
-                    'Total Expenses',
-                    _controller.totalExpensesFormatted.value,
-                    kDanger,
-                    Mdi.trending_down,
-                    '${_controller.expenseChange.value.toStringAsFixed(1)}%',
-                    'vs last month',
-                    !_controller.isExpensePositive.value,
-                  ),
-                );
-              case 2:
-                return Obx(
-                  () => _buildKPICard(
-                    context,
-                    'Outstanding',
-                    _controller.outstandingFormatted.value,
-                    kWarning,
-                    Mdi.lan_pending,
-                    '${_controller.outstandingCount.value} invoices',
-                    'due',
-                    true,
-                  ),
-                );
-              case 3:
-                return Obx(
-                  () => _buildKPICard(
-                    context,
-                    'Cash Balance',
-                    _controller.cashBalanceFormatted.value,
-                    kPrimary,
-                    Mdi.wallet,
-                    '${_controller.cashChange.value.toStringAsFixed(1)}%',
-                    'vs last month',
-                    _controller.isCashPositive.value,
-                  ),
-                );
-              default:
-                return const SizedBox.shrink();
-            }
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildKPICard(
-    BuildContext context,
-    String title,
-    String amount,
-    Color color,
-    String icon,
-    String trend,
-    String trendText,
-    bool isPositive,
-  ) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
-    final showArrow = trendText == 'vs last month';
-
-    return Container(
-      width: isWeb ? 280 : (isTablet ? 260 : 220),
-      padding: EdgeInsets.fromLTRB(
-        isWeb ? 20 : 16,
-        isWeb ? 16 : 14,
-        isWeb ? 20 : 16,
-        isWeb ? 16 : 14,
-      ),
-      decoration: BoxDecoration(
-        color: kCardBg,
-        borderRadius: BorderRadius.circular(isWeb ? 24 : 20),
-        border: Border.all(color: kBorder.withOpacity(0.85)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: isWeb ? 4 : 3,
-                height: isWeb ? 32 : 28,
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(2),
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.account_balance_rounded,
+                  size: 18,
+                  color: Colors.white,
                 ),
               ),
-              SizedBox(width: isWeb ? 16 : 12),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Accounting Overview',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    Text(
+                      _getCurrentDate(),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.white.withOpacity(0.65),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              GestureDetector(
+                onTap: () => _controller.loadDashboardData(),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.white.withOpacity(0.2)),
+                  ),
+                  child: const Icon(
+                    Icons.refresh_rounded,
+                    size: 17,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(height: 1, color: Colors.white.withOpacity(0.15)),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              _headerStat(
+                'Total Sales',
+                _controller.totalSalesFormatted.value,
+                Icons.trending_up_rounded,
+                _kGreen,
+              ),
+              _headerDivider(),
+              _headerStat(
+                'Net Profit',
+                _controller.netProfitFormatted.value,
+                Icons.account_balance_wallet_rounded,
+                _controller.netProfit.value >= 0 ? _kGreen : _kRed,
+              ),
+              _headerDivider(),
+              _headerStat(
+                'Outstanding',
+                _controller.outstandingFormatted.value,
+                Icons.pending_actions_rounded,
+                _kOrange,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _headerStat(String label, String value, IconData icon, Color color) {
+    return Expanded(
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 12, color: color),
+              const SizedBox(width: 4),
               Expanded(
                 child: Text(
-                  title,
+                  value,
                   style: TextStyle(
-                    fontSize: isWeb ? 14 : 13,
-                    color: kSubText,
-                    fontWeight: FontWeight.w600,
-                    height: 1.25,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: color,
+                    letterSpacing: -0.5,
                   ),
-                  maxLines: 2,
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.all(isWeb ? 12 : 10),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [color.withOpacity(0.14), color.withOpacity(0.06)],
-                  ),
-                  borderRadius: BorderRadius.circular(isWeb ? 16 : 14),
-                ),
-                child: Iconify(icon, color: color, size: isWeb ? 28 : 24),
-              ),
-            ],
-          ),
-          Text(
-            amount,
-            style: TextStyle(
-              fontSize: isWeb ? 22 : 18,
-              fontWeight: FontWeight.w800,
-              color: kText,
-              letterSpacing: -0.3,
-            ),
-          ),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (showArrow) ...[
-                Padding(
-                  padding: EdgeInsets.only(top: isWeb ? 2 : 1),
-                  child: Iconify(
-                    isPositive ? Mdi.trending_up : Mdi.trending_down,
-                    size: isWeb ? 18 : 16,
-                    color: isPositive ? kSuccess : kDanger,
-                  ),
-                ),
-                SizedBox(width: isWeb ? 6 : 4),
-              ],
-              Expanded(
-                child: RichText(
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  text: TextSpan(
-                    style: TextStyle(
-                      fontSize: isWeb ? 13 : 12,
-                      color: kSubText,
-                      height: 1.25,
-                    ),
-                    children: [
-                      TextSpan(
-                        text: trend,
-                        style: TextStyle(
-                          color: showArrow
-                              ? (isPositive ? kSuccess : kDanger)
-                              : color,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      TextSpan(text: ' · $trendText'),
-                    ],
-                  ),
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 9,
+              color: Colors.white.withOpacity(0.55),
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildChartTabs(BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
+  Widget _headerDivider() {
+    return Container(
+      width: 1,
+      height: 36,
+      color: Colors.white.withOpacity(0.15),
+    );
+  }
+
+  String _getCurrentDate() {
+    final now = DateTime.now();
+    return DateFormat('EEEE, MMM d, yyyy').format(now);
+  }
+
+  // ─── KPI Grid ──────────────────────────────────────────────────
+  Widget _kpiGrid(BuildContext context, bool isTablet) {
+    final kpis = [
+      _KpiData(
+        label: 'TOTAL SALES',
+        value: _controller.totalSalesFormatted.value,
+        icon: Icons.trending_up_rounded,
+        accent: _kGreen,
+        sparkData: _generateSparkData(_controller.totalSales.value),
+        trend: '+12.5%',
+        trendUp: true,
+      ),
+      _KpiData(
+        label: 'NET PROFIT',
+        value: _controller.netProfitFormatted.value,
+        icon: Icons.account_balance_wallet_rounded,
+        accent: _controller.netProfit.value >= 0 ? _kGreen : _kRed,
+        sparkData: _generateSparkData(_controller.netProfit.value),
+        trend: _controller.profitMargin.value.toStringAsFixed(1) + '%',
+        trendUp: _controller.netProfit.value >= 0,
+      ),
+      _KpiData(
+        label: 'BANK BALANCE',
+        value: _controller.totalBankBalanceFormatted.value,
+        icon: Icons.account_balance_wallet_rounded,
+        accent: _kBlue,
+        sparkData: _generateSparkData(_controller.totalBankBalance.value),
+        trend: '+8.2%',
+        trendUp: true,
+      ),
+      _KpiData(
+        label: 'OUTSTANDING',
+        value: _controller.outstandingFormatted.value,
+        icon: Icons.pending_actions_rounded,
+        accent: _kOrange,
+        sparkData: _generateSparkData(_controller.outstanding.value),
+        trend: '-3.1%',
+        trendUp: false,
+      ),
+    ];
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: kpis.length,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: isTablet ? 4 : 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: isTablet ? 1.15 : 0.95,
+      ),
+      itemBuilder: (_, i) => _KpiCard(data: kpis[i]),
+    );
+  }
+
+  List<double> _generateSparkData(double value) {
+    final baseValue = value.isNaN ? 0.0 : value;
+    return [
+      (baseValue * 0.7).toDouble(),
+      (baseValue * 0.85).toDouble(),
+      (baseValue * 0.75).toDouble(),
+      (baseValue * 0.9).toDouble(),
+      (baseValue * 0.8).toDouble(),
+      (baseValue * 0.95).toDouble(),
+      baseValue,
+    ];
+  }
+
+  // ─── Time Period Selector ──────────────────────────────────────────────────────
+  Widget _buildTimePeriodSelector(BuildContext context) {
+    final timePeriods = [
+      'Today',
+      'Last Week',
+      'This Month',
+      'Last Month',
+      'This Quarter',
+      'This Year',
+      'Custom',
+    ];
 
     return Container(
-      padding: EdgeInsets.all(isWeb ? 8 : 6),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      height: 45,
       decoration: BoxDecoration(
-        color: kCardBg,
-        borderRadius: BorderRadius.circular(isWeb ? 24 : 20),
-        border: Border.all(color: kBorder.withOpacity(0.9)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: _kCardBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _kCardBorder),
       ),
-      child: Row(
-        children: [
-          Expanded(child: _buildChartTab(context, 'Revenue vs Expenses', 0)),
-          SizedBox(width: isWeb ? 12 : 8),
-          Expanded(child: _buildChartTab(context, 'Trends', 1)),
-          SizedBox(width: isWeb ? 12 : 8),
-          Expanded(child: _buildChartTab(context, 'Categories', 2)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChartTab(BuildContext context, String title, int index) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-    final isSelected = _selectedChartIndex == index;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => setState(() => _selectedChartIndex = index),
-        borderRadius: BorderRadius.circular(isWeb ? 20 : 16),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOutCubic,
-          padding: EdgeInsets.symmetric(
-            vertical: isWeb ? 12 : 10,
-            horizontal: isWeb ? 8 : 6,
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          hint: Row(
+            children: [
+              Icon(Icons.calendar_today, size: 18, color: _kBlue),
+              const SizedBox(width: 8),
+              const Text('Select Time Period'),
+            ],
           ),
-          decoration: BoxDecoration(
-            gradient: isSelected
-                ? LinearGradient(
-                    colors: [kPrimary, kPrimaryDark],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : null,
-            color: isSelected ? null : kBg,
-            borderRadius: BorderRadius.circular(isWeb ? 20 : 16),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: kPrimary.withOpacity(0.35),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+          value: _selectedTimePeriod,
+          icon: const Icon(Icons.arrow_drop_down, size: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          isExpanded: true,
+          isDense: false,
+          underline: const SizedBox(),
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.black87,
+          ),
+          items: timePeriods.map((period) {
+            return DropdownMenuItem<String>(
+              value: period,
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.access_time,
+                    size: 16,
+                    color: _kBlue,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      period,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ]
-                : null,
-          ),
-          child: Text(
-            title,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: isWeb ? 14 : 13,
-              fontWeight: FontWeight.w700,
-              color: isSelected ? Colors.white : kSubText,
-              letterSpacing: -0.2,
-            ),
-          ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+          onChanged: (value) {
+            if (value != null) {
+              setState(() {
+                _selectedTimePeriod = value;
+              });
+              _controller.loadDashboardData(timePeriod: value);
+            }
+          },
+          dropdownColor: _kCardBg,
+          elevation: 8,
+          menuMaxHeight: 250,
+          borderRadius: BorderRadius.circular(12),
         ),
       ),
     );
   }
 
   Widget _buildRevenueExpenseChart(BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-    final titles = [
-      'Revenue vs expenses',
-      'Monthly financial trends',
-      'Expense breakdown',
-    ];
-
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: isWeb ? 24 : 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: kCardBg,
-        borderRadius: BorderRadius.circular(isWeb ? 28 : 24),
-        border: Border.all(color: kBorder.withOpacity(0.85)),
+        color: _kCardBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _kCardBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(isWeb ? 28 : 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: isWeb ? 24 : 20,
-                vertical: isWeb ? 16 : 14,
-              ),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [kBg, kCardBg],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-                border: Border(
-                  bottom: BorderSide(color: kBorder.withOpacity(0.6)),
-                ),
-              ),
-              child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: EdgeInsets.all(isWeb ? 16 : 12),
-                    decoration: BoxDecoration(
-                      color: kPrimary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(isWeb ? 20 : 16),
-                    ),
-                    child: Iconify(
-                      Mdi.chart_line,
-                      color: kPrimary,
-                      size: isWeb ? 30 : 26,
+                  Text(
+                    'Financial Overview',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: _kTextPrimary,
+                      letterSpacing: -0.2,
                     ),
                   ),
-                  SizedBox(width: isWeb ? 20 : 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          titles[_selectedChartIndex],
-                          style: TextStyle(
-                            fontSize: isWeb ? 18 : 16,
-                            fontWeight: FontWeight.w800,
-                            color: kText,
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-                        SizedBox(height: isWeb ? 4 : 2),
-                        Text(
-                          'Tap tabs above to switch view',
-                          style: TextStyle(
-                            fontSize: isWeb ? 14 : 13,
-                            color: kSubText,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isWeb ? 16 : 12,
-                      vertical: isWeb ? 8 : 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: kPrimary.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: kPrimary.withOpacity(0.2)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Iconify(
-                          Mdi.calendar_month,
-                          size: isWeb ? 18 : 16,
-                          color: kPrimary,
-                        ),
-                        SizedBox(width: isWeb ? 6 : 4),
-                        Text(
-                          DateFormat('yyyy').format(DateTime.now()),
-                          style: TextStyle(
-                            fontSize: isWeb ? 14 : 13,
-                            color: kPrimary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
+                  SizedBox(height: 2),
+                  Text(
+                    'Revenue, Expenses & Profit',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: _kTextSecondary,
                     ),
                   ),
                 ],
               ),
-            ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                isWeb ? 24 : 20,
-                isWeb ? 20 : 16,
-                isWeb ? 24 : 20,
-                isWeb ? 24 : 20,
-              ),
-              child: Column(
-                children: [
-                  SizedBox(
-                    height: isWeb ? 300 : 240,
-                    child: _selectedChartIndex == 0
-                        ? _buildDynamicBarChart(context)
-                        : _selectedChartIndex == 1
-                        ? _buildDynamicLineChart(context)
-                        : _buildDynamicPieChart(context),
-                  ),
-                  if (_selectedChartIndex != 2) ...[
-                    SizedBox(height: isWeb ? 16 : 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _buildLegend(context, 'Revenue', kPrimary),
-                        SizedBox(width: isWeb ? 40 : 32),
-                        _buildLegend(context, 'Expenses', kDanger),
-                      ],
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _kBlue.withOpacity(0.10),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.calendar_today,
+                      size: 12,
+                      color: _kBlue,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'This Month',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: _kBlue,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDynamicBarChart(BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-
-    if (_controller.chartData.isEmpty) {
-      return Center(
-        child: Text(
-          'No chart data available',
-          style: TextStyle(fontSize: isWeb ? 14 : 13, color: kSubText),
-        ),
-      );
-    }
-    double maxValue = 0;
-    for (var data in _controller.chartData) {
-      final revenue = (data['revenue'] ?? 0).toDouble();
-      final expenses = (data['expenses'] ?? 0).toDouble();
-      if (revenue > maxValue) maxValue = revenue;
-      if (expenses > maxValue) maxValue = expenses;
-    }
-    maxValue = maxValue * 1.2;
-
-    return BarChart(
-      BarChartData(
-        alignment: BarChartAlignment.spaceAround,
-        maxY: maxValue,
-        barTouchData: BarTouchData(
-          enabled: true,
-          touchTooltipData: BarTouchTooltipData(
-            getTooltipItem: (group, groupIndex, rod, rodIndex) {
-              return BarTooltipItem(
-                rod.toY.toStringAsFixed(0),
-                TextStyle(
-                  fontSize: isWeb ? 14 : 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
                 ),
-              );
-            },
-          ),
-        ),
-        titlesData: FlTitlesData(
-          show: true,
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (value, meta) {
-                int index = value.toInt();
-                if (index >= 0 && index < _controller.chartData.length) {
-                  return Padding(
-                    padding: EdgeInsets.only(top: isWeb ? 16 : 12),
-                    child: Text(
-                      _controller.getMonthName(index),
-                      style: TextStyle(
-                        fontSize: isWeb ? 12 : 10,
-                        color: kSubText,
-                      ),
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-              reservedSize: isWeb ? 40 : 32,
-            ),
-          ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (value, meta) {
-                return Padding(
-                  padding: EdgeInsets.only(right: isWeb ? 24 : 20),
-                  child: Text(
-                    _formatCompactNumber(value, context),
-                    style: TextStyle(
-                      fontSize: isWeb ? 12 : 10,
-                      color: kSubText,
-                    ),
-                  ),
-                );
-              },
-              reservedSize: isWeb ? 60 : 50,
-            ),
-          ),
-          topTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          rightTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-        ),
-        borderData: FlBorderData(show: false),
-        gridData: FlGridData(
-          show: true,
-          drawHorizontalLine: true,
-          getDrawingHorizontalLine: (value) =>
-              FlLine(color: kBorder, strokeWidth: 0.5),
-        ),
-        barGroups: List.generate(
-          _controller.chartData.length,
-          (index) => BarChartGroupData(
-            x: index,
-            barsSpace: isWeb ? 16 : 12,
-            barRods: [
-              BarChartRodData(
-                toY: _controller.getMonthlyRevenue(index),
-                color: kPrimary,
-                width: isWeb ? 24 : 18,
-                borderRadius: BorderRadius.circular(isWeb ? 8 : 6),
-              ),
-              BarChartRodData(
-                toY: _controller.getMonthlyExpenses(index),
-                color: kDanger,
-                width: isWeb ? 24 : 18,
-                borderRadius: BorderRadius.circular(isWeb ? 8 : 6),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDynamicLineChart(BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-
-    if (_controller.chartData.isEmpty) {
-      return Center(
-        child: Text(
-          'No chart data available',
-          style: TextStyle(fontSize: isWeb ? 14 : 13, color: kSubText),
-        ),
-      );
-    }
-    return LineChart(
-      LineChartData(
-        gridData: FlGridData(
-          show: true,
-          drawHorizontalLine: true,
-          getDrawingHorizontalLine: (value) =>
-              FlLine(color: kBorder, strokeWidth: 0.5),
-        ),
-        titlesData: FlTitlesData(
-          show: true,
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (value, meta) {
-                int index = value.toInt();
-                if (index >= 0 && index < _controller.chartData.length) {
-                  return Padding(
-                    padding: EdgeInsets.only(top: isWeb ? 16 : 12),
-                    child: Text(
-                      _controller.getMonthName(index),
-                      style: TextStyle(
-                        fontSize: isWeb ? 12 : 10,
-                        color: kSubText,
-                      ),
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-              reservedSize: isWeb ? 40 : 32,
-            ),
-          ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (value, meta) {
-                return Padding(
-                  padding: EdgeInsets.only(right: isWeb ? 24 : 20),
-                  child: Text(
-                    _formatCompactNumber(value, context),
-                    style: TextStyle(
-                      fontSize: isWeb ? 12 : 10,
-                      color: kSubText,
-                    ),
-                  ),
-                );
-              },
-              reservedSize: isWeb ? 60 : 50,
-            ),
-          ),
-          topTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          rightTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-        ),
-        borderData: FlBorderData(show: false),
-        lineBarsData: [
-          LineChartBarData(
-            spots: List.generate(
-              _controller.chartData.length,
-              (index) => FlSpot(
-                index.toDouble(),
-                _controller.getMonthlyRevenue(index),
-              ),
-            ),
-            isCurved: true,
-            color: kPrimary,
-            barWidth: isWeb ? 4 : 3,
-            dotData: const FlDotData(show: true),
-            belowBarData: BarAreaData(
-              show: true,
-              color: kPrimary.withOpacity(0.1),
-            ),
-          ),
-          LineChartBarData(
-            spots: List.generate(
-              _controller.chartData.length,
-              (index) => FlSpot(
-                index.toDouble(),
-                _controller.getMonthlyExpenses(index),
-              ),
-            ),
-            isCurved: true,
-            color: kDanger,
-            barWidth: isWeb ? 4 : 3,
-            dotData: const FlDotData(show: true),
-            belowBarData: BarAreaData(
-              show: true,
-              color: kDanger.withOpacity(0.1),
-            ),
-          ),
+          const SizedBox(height: 14),
+          Obx(() => _buildFinancialSummaryBars()),
         ],
       ),
     );
   }
 
-  Widget _buildDynamicPieChart(BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-
-    if (_controller.expenseCategories.isEmpty) {
-      return Center(
-        child: Text(
-          'No expense data available',
-          style: TextStyle(fontSize: isWeb ? 14 : 13, color: kSubText),
-        ),
-      );
-    }
-    final total = _controller.expenseCategories.fold(
-      0.0,
-      (sum, cat) => sum + (cat['amount'] ?? 0).toDouble(),
-    );
-
-    return PieChart(
-      PieChartData(
-        sections: _controller.expenseCategories.asMap().entries.map((entry) {
-          final category = entry.value;
-          final amount = (category['amount'] ?? 0).toDouble();
-          final percentage = total > 0
-              ? (amount / total * 100).toStringAsFixed(1)
-              : '0';
-          final color = _getCategoryColor(category['name'] ?? '');
-          return PieChartSectionData(
-            value: amount,
-            title: '${category['name']}\n$percentage%',
-            radius: isWeb ? 80 : 60,
-            titleStyle: TextStyle(
-              fontSize: isWeb ? 13 : 11,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-            color: color,
-          );
-        }).toList(),
-        sectionsSpace: 2,
-        centerSpaceRadius: isWeb ? 40 : 30,
-      ),
-    );
-  }
-
-  String _formatCompactNumber(double value, BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-    if (value >= 1000000) return '${(value / 1000000).toStringAsFixed(1)}M';
-    if (value >= 1000) return '${(value / 1000).toStringAsFixed(0)}K';
-    return value.toStringAsFixed(0);
-  }
-
-  Color _getCategoryColor(String category) {
-    switch (category) {
-      case 'Rent':
-        return kPrimary;
-      case 'Salary':
-        return kSuccess;
-      case 'Utilities':
-        return kWarning;
-      case 'Supplies':
-        return kDanger;
-      case 'Marketing':
-        return kPrimaryDark;
-      default:
-        return kPrimary;
-    }
-  }
-
-  Widget _buildLegend(BuildContext context, String label, Color color) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+  Widget _buildFinancialSummaryBars() {
+    return Column(
       children: [
-        Container(
-          width: isWeb ? 16 : 14,
-          height: isWeb ? 16 : 14,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(isWeb ? 4 : 3),
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(0.45),
-                blurRadius: 4,
-                offset: const Offset(0, 1),
-              ),
-            ],
-          ),
+        _buildSummaryBar(
+          'Total Sales',
+          _controller.totalSalesFormatted.value,
+          _kGreen,
+          Icons.trending_up_rounded,
         ),
-        SizedBox(width: isWeb ? 10 : 8),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: isWeb ? 14 : 13,
-            color: kSubText,
-            fontWeight: FontWeight.w600,
-          ),
+        const SizedBox(height: 10),
+        _buildSummaryBar(
+          'Total Purchases',
+          _controller.totalPurchasesFormatted.value,
+          _kOrange,
+          Icons.shopping_cart_rounded,
+        ),
+        const SizedBox(height: 10),
+        _buildSummaryBar(
+          'Total Expenses',
+          _controller.totalExpensesFormatted.value,
+          _kRed,
+          Icons.trending_down_rounded,
+        ),
+        const SizedBox(height: 10),
+        _buildSummaryBar(
+          'Net Profit',
+          _controller.netProfitFormatted.value,
+          _controller.netProfit.value >= 0 ? _kGreen : _kRed,
+          Icons.account_balance_wallet_rounded,
         ),
       ],
     );
   }
 
-  Widget _buildCashAndOutstanding(BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: isWeb ? 24 : 16),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(isWeb ? 24 : 20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
+  Widget _buildSummaryBar(String label, String value, Color color, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
             ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(isWeb ? 24 : 20),
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            child: Icon(icon, size: 14, color: color),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.all(isWeb ? 24 : 20),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [kPrimary.withOpacity(0.09), kCardBg],
-                      ),
-                      border: Border.all(color: kBorder.withOpacity(0.7)),
-                    ),
-                    child: Obx(
-                      () => Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            children: [
-                              Iconify(
-                                Mdi.piggy_bank_outline,
-                                size: isWeb ? 24 : 20,
-                                color: kPrimary,
-                              ),
-                              SizedBox(width: isWeb ? 12 : 8),
-                              Text(
-                                'Cash balance',
-                                style: TextStyle(
-                                  fontSize: isWeb ? 14 : 13,
-                                  color: kSubText,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: isWeb ? 16 : 12),
-                          Text(
-                            _controller.cashBalanceFormatted.value,
-                            style: TextStyle(
-                              fontSize: isWeb ? 22 : 18,
-                              fontWeight: FontWeight.w800,
-                              color: kText,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                          SizedBox(height: isWeb ? 12 : 8),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: isWeb ? 16 : 12,
-                              vertical: isWeb ? 8 : 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: kSuccess.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: kSuccess.withOpacity(0.25),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Iconify(
-                                  _controller.isCashPositive.value
-                                      ? Mdi.trending_up
-                                      : Mdi.trending_down,
-                                  size: isWeb ? 18 : 16,
-                                  color: _controller.isCashPositive.value
-                                      ? kSuccess
-                                      : kDanger,
-                                ),
-                                SizedBox(width: isWeb ? 6 : 4),
-                                Text(
-                                  '${_controller.cashChange.value.toStringAsFixed(1)}%',
-                                  style: TextStyle(
-                                    fontSize: isWeb ? 15 : 13,
-                                    color: _controller.isCashPositive.value
-                                        ? kSuccess
-                                        : kDanger,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                SizedBox(width: isWeb ? 6 : 4),
-                                Text(
-                                  'vs last month',
-                                  style: TextStyle(
-                                    fontSize: isWeb ? 13 : 12,
-                                    color: kSubText,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: _kTextSecondary,
                   ),
                 ),
-                Container(
-                  width: 1,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        kBorder.withOpacity(0),
-                        kBorder,
-                        kBorder.withOpacity(0),
-                      ],
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.all(isWeb ? 24 : 20),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topRight,
-                        end: Alignment.bottomLeft,
-                        colors: [kWarning.withOpacity(0.08), kCardBg],
-                      ),
-                      border: Border.all(color: kBorder.withOpacity(0.7)),
-                    ),
-                    child: Obx(
-                      () => Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Text(
-                                'Outstanding',
-                                style: TextStyle(
-                                  fontSize: isWeb ? 14 : 13,
-                                  color: kSubText,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              SizedBox(width: isWeb ? 12 : 8),
-                              Iconify(
-                                Mdi.receipt_outline,
-                                size: isWeb ? 24 : 20,
-                                color: kWarning,
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: isWeb ? 16 : 12),
-                          Text(
-                            _controller.outstandingFormatted.value,
-                            style: TextStyle(
-                              fontSize: isWeb ? 22 : 18,
-                              fontWeight: FontWeight.w800,
-                              color: kWarning,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                          SizedBox(height: isWeb ? 12 : 8),
-                          TextButton.icon(
-                            onPressed: () => setState(() => _currentTab = 2),
-                            style: TextButton.styleFrom(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: isWeb ? 12 : 8,
-                                vertical: isWeb ? 6 : 4,
-                              ),
-                              foregroundColor: kPrimary,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            icon: Iconify(
-                              Mdi.arrow_right,
-                              size: isWeb ? 20 : 18,
-                            ),
-                            label: Text(
-                              'View invoices',
-                              style: TextStyle(
-                                fontSize: isWeb ? 14 : 13,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: _kTextPrimary,
                   ),
                 ),
               ],
             ),
           ),
-        ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCashAndOutstanding(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _kCardBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _kCardBorder),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Cash & Outstanding',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: _kTextPrimary,
+              letterSpacing: -0.2,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Obx(() => Column(
+            children: [
+              _buildCashCard(
+                'Bank Balance',
+                _controller.totalBankBalanceFormatted.value,
+                _kBlue,
+                Icons.account_balance_wallet_rounded,
+              ),
+              const SizedBox(height: 10),
+              _buildCashCard(
+                'Cash Balance',
+                _controller.totalCashBalanceFormatted.value,
+                _kGreen,
+                Icons.payments_rounded,
+              ),
+              const SizedBox(height: 10),
+              _buildCashCard(
+                'Outstanding',
+                _controller.outstandingFormatted.value,
+                _kOrange,
+                Icons.pending_actions_rounded,
+              ),
+            ],
+          )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCashCard(String label, String value, Color color, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 14, color: color),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: _kTextSecondary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: _kTextPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildRecentTransactions(BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
-
     return Obx(() {
       if (_controller.recentTransactions.isEmpty) {
         return const SizedBox.shrink();
       }
       final recent = _controller.recentTransactions.take(4).toList();
+      final isWeb = ResponsiveUtils.isWeb(context);
+      
       return Container(
-        margin: EdgeInsets.symmetric(horizontal: isWeb ? 24 : 16),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: kCardBg,
-          borderRadius: BorderRadius.circular(isWeb ? 24 : 20),
-          border: Border.all(color: kBorder.withOpacity(0.85)),
+          color: _kCardBg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _kCardBorder),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.04),
-              blurRadius: 14,
-              offset: const Offset(0, 6),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                isWeb ? 24 : 20,
-                isWeb ? 20 : 16,
-                isWeb ? 20 : 16,
-                0,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(isWeb ? 16 : 12),
-                    decoration: BoxDecoration(
-                      color: kPrimary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(isWeb ? 16 : 12),
-                    ),
-                    child: Iconify(
-                      Mdi.receipt,
-                      color: kPrimary,
-                      size: isWeb ? 28 : 24,
-                    ),
-                  ),
-                  SizedBox(width: isWeb ? 20 : 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Recent activity',
-                          style: TextStyle(
-                            fontSize: isWeb ? 18 : 16,
-                            fontWeight: FontWeight.w800,
-                            color: kText,
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-                        Text(
-                          'Latest cash movements',
-                          style: TextStyle(
-                            fontSize: isWeb ? 14 : 13,
-                            color: kSubText,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () => setState(() => _currentTab = 1),
-                    child: Text(
-                      'See all',
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Recent Activity',
                       style: TextStyle(
-                        fontSize: isWeb ? 14 : 13,
-                        color: kPrimary,
+                        fontSize: 15,
                         fontWeight: FontWeight.w700,
+                        color: _kTextPrimary,
+                        letterSpacing: -0.2,
                       ),
                     ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Latest transactions',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: _kTextSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+                TextButton(
+                  onPressed: () => setState(() => _currentTab = 1),
+                  child: const Text(
+                    'See all',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _kBlue,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            SizedBox(height: isWeb ? 16 : 12),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: isWeb ? 20 : 16),
-              child: Column(
-                children: recent.asMap().entries.map((e) {
-                  final transaction = e.value;
-                  final isLast = e.key == recent.length - 1;
-                  final date = transaction['date'] is DateTime
-                      ? transaction['date']
-                      : DateTime.parse(transaction['date']);
-                  final type = transaction['type'];
-                  final amount = (transaction['amount'] ?? 0).toDouble();
-                  final title = transaction['title'] ?? '';
-                  final iconName = transaction['icon'] ?? 'circle';
-                  final amountColor = type == 'income' ? kSuccess : kDanger;
+            const SizedBox(height: 14),
+            Column(
+              children: recent.asMap().entries.map((e) {
+                final transaction = e.value;
+                final isLast = e.key == recent.length - 1;
+                final date = transaction['date'] is DateTime
+                    ? transaction['date']
+                    : DateTime.parse(transaction['date']);
+                final type = transaction['type'];
+                final amount = (transaction['amount'] ?? 0).toDouble();
+                final title = transaction['title'] ?? '';
+                final iconName = transaction['icon'] ?? 'circle';
+                final amountColor = type == 'income' ? kSuccess : kDanger;
 
-                  return Column(
-                    children: [
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () => setState(() => _currentTab = 1),
-                          borderRadius: BorderRadius.circular(isWeb ? 16 : 12),
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: isWeb ? 12 : 8,
-                              vertical: isWeb ? 12 : 10,
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: isWeb ? 60 : 48,
-                                  height: isWeb ? 60 : 48,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [
-                                        amountColor.withOpacity(0.18),
-                                        amountColor.withOpacity(0.06),
-                                      ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(
-                                      isWeb ? 20 : 16,
-                                    ),
-                                    border: Border.all(
-                                      color: amountColor.withOpacity(0.2),
-                                    ),
-                                  ),
-                                  child: Iconify(
-                                    _getTransactionIcon(iconName),
-                                    color: amountColor,
-                                    size: isWeb ? 28 : 24,
-                                  ),
-                                ),
-                                SizedBox(width: isWeb ? 16 : 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        title,
-                                        style: TextStyle(
-                                          fontSize: isWeb ? 16 : 15,
-                                          fontWeight: FontWeight.w700,
-                                          color: kText,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      SizedBox(height: isWeb ? 4 : 2),
-                                      Text(
-                                        DateFormat('dd MMM yyyy').format(date),
-                                        style: TextStyle(
-                                          fontSize: isWeb ? 14 : 13,
-                                          color: kSubText,
-                                        ),
-                                      ),
+                return Column(
+                  children: [
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => setState(() => _currentTab = 1),
+                        borderRadius: BorderRadius.circular(isWeb ? 16 : 12),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isWeb ? 12 : 8,
+                            vertical: isWeb ? 12 : 10,
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: isWeb ? 60 : 48,
+                                height: isWeb ? 60 : 48,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      amountColor.withOpacity(0.18),
+                                      amountColor.withOpacity(0.06),
                                     ],
                                   ),
+                                  borderRadius: BorderRadius.circular(
+                                    isWeb ? 20 : 16,
+                                  ),
+                                  border: Border.all(
+                                    color: amountColor.withOpacity(0.2),
+                                  ),
                                 ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                child: Iconify(
+                                  _getTransactionIcon(iconName),
+                                  color: amountColor,
+                                  size: isWeb ? 28 : 24,
+                                ),
+                              ),
+                              SizedBox(width: isWeb ? 16 : 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      '${type == 'income' ? '+' : '-'} ${CurrencyUtils.format(amount)}',
+                                      title,
                                       style: TextStyle(
                                         fontSize: isWeb ? 16 : 15,
-                                        fontWeight: FontWeight.w800,
-                                        color: amountColor,
-                                        letterSpacing: -0.2,
+                                        fontWeight: FontWeight.w700,
+                                        color: kText,
                                       ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                     SizedBox(height: isWeb ? 4 : 2),
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: isWeb ? 12 : 8,
-                                        vertical: isWeb ? 4 : 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: amountColor.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Text(
-                                        type == 'income' ? 'Income' : 'Expense',
-                                        style: TextStyle(
-                                          fontSize: isWeb ? 13 : 12,
-                                          color: amountColor,
-                                          fontWeight: FontWeight.w700,
-                                        ),
+                                    Text(
+                                      DateFormat('dd MMM yyyy').format(date),
+                                      style: TextStyle(
+                                        fontSize: isWeb ? 14 : 13,
+                                        color: kSubText,
                                       ),
                                     ),
                                   ],
                                 ),
-                              ],
-                            ),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    '${type == 'income' ? '+' : '-'} ${CurrencyUtils.format(amount)}',
+                                    style: TextStyle(
+                                      fontSize: isWeb ? 16 : 15,
+                                      fontWeight: FontWeight.w800,
+                                      color: amountColor,
+                                      letterSpacing: -0.2,
+                                    ),
+                                  ),
+                                  SizedBox(height: isWeb ? 4 : 2),
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: isWeb ? 12 : 8,
+                                      vertical: isWeb ? 4 : 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: amountColor.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      type == 'income' ? 'Income' : 'Expense',
+                                      style: TextStyle(
+                                        fontSize: isWeb ? 13 : 12,
+                                        color: amountColor,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                      if (!isLast)
-                        Padding(
-                          padding: EdgeInsets.only(left: isWeb ? 80 : 64),
-                          child: Divider(
-                            height: 1,
-                            thickness: 1,
-                            color: kBorder.withOpacity(0.7),
-                          ),
+                    ),
+                    if (!isLast)
+                      Padding(
+                        padding: EdgeInsets.only(left: isWeb ? 80 : 64),
+                        child: Divider(
+                          height: 1,
+                          thickness: 1,
+                          color: kBorder.withOpacity(0.7),
                         ),
-                    ],
-                  );
-                }).toList(),
-              ),
+                      ),
+                  ],
+                );
+              }).toList(),
             ),
             SizedBox(height: isWeb ? 12 : 8),
           ],
@@ -1806,63 +1057,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildQuickActions(BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-
     return Obx(() {
       if (_controller.quickActions.isEmpty) return const SizedBox.shrink();
       return Container(
-        margin: EdgeInsets.symmetric(horizontal: isWeb ? 24 : 16),
-        padding: EdgeInsets.all(isWeb ? 24 : 20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [kCardBg, kPrimary.withOpacity(0.04)],
-          ),
-          borderRadius: BorderRadius.circular(isWeb ? 24 : 20),
-          border: Border.all(color: kBorder.withOpacity(0.9)),
+          color: _kCardBg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _kCardBorder),
           boxShadow: [
             BoxShadow(
-              color: kPrimary.withOpacity(0.06),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Text(
-                  'Shortcuts',
-                  style: TextStyle(
-                    fontSize: isWeb ? 18 : 16,
-                    fontWeight: FontWeight.w800,
-                    color: kText,
-                    letterSpacing: -0.3,
-                  ),
-                ),
-                SizedBox(width: isWeb ? 12 : 8),
-                Expanded(
-                  child: Container(height: 1, color: kBorder.withOpacity(0.8)),
-                ),
-              ],
+            const Text(
+              'Quick Actions',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: _kTextPrimary,
+                letterSpacing: -0.2,
+              ),
             ),
-            SizedBox(height: isWeb ? 8 : 6),
-            Text(
-              'Common tasks',
-              style: TextStyle(fontSize: isWeb ? 14 : 13, color: kSubText),
-            ),
-            SizedBox(height: isWeb ? 20 : 16),
-            Row(
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
               children: _controller.quickActions.map((action) {
                 final label = action['label'] ?? '';
                 final iconName = action['icon'] ?? 'circle';
                 final colorHex = action['color'] ?? '#3498DB';
                 final color = _controller.getColorFromHex(colorHex);
                 return _buildQuickActionButton(
-                  context,
                   label,
                   _getQuickActionIcon(iconName),
                   color,
@@ -1878,14 +1110,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         setState(() => _currentTab = 2);
                         break;
                       case 'Customer':
-                        Get.to(CustomersScreen());
+                        Get.to(() => const CustomersScreen());
                         break;
                       default:
-                        AppSnackbar.success(
-                          kPrimary,
-                          label,
-                          '$label module coming soon',
-                        );
+                        Get.snackbar('Coming Soon', '$label module coming soon');
                     }
                   },
                 );
@@ -1913,74 +1141,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildQuickActionButton(
-    BuildContext context,
     String label,
     String icon,
     Color color,
     VoidCallback onTap,
   ) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-
-    return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(isWeb ? 24 : 20),
-          child: Ink(
-            decoration: BoxDecoration(
-              color: kCardBg,
-              borderRadius: BorderRadius.circular(isWeb ? 24 : 20),
-              border: Border.all(color: color.withOpacity(0.35)),
-              boxShadow: [
-                BoxShadow(
-                  color: color.withOpacity(0.12),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: 80,
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color.withOpacity(0.2)),
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              ],
-            ),
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                vertical: isWeb ? 20 : 16,
-                horizontal: isWeb ? 8 : 6,
+                child: Iconify(icon, color: color, size: 20),
               ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(isWeb ? 16 : 12),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [
-                          color.withOpacity(0.2),
-                          color.withOpacity(0.08),
-                        ],
-                      ),
-                    ),
-                    child: Iconify(icon, color: color, size: isWeb ? 32 : 28),
-                  ),
-                  SizedBox(height: isWeb ? 12 : 8),
-                  Text(
-                    label,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: isWeb ? 14 : 13,
-                      fontWeight: FontWeight.w800,
-                      color: kText,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+              const SizedBox(height: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: _kTextPrimary,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
+            ],
           ),
         ),
       ),
     );
   }
 
+  // ✅ FIXED: Bottom Navigation with proper menu handling
   Widget _buildBottomNav(BuildContext context) {
     final isWeb = ResponsiveUtils.isWeb(context);
 
@@ -2092,253 +1300,125 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // ✅ FIXED: Drawer with proper navigation
   Widget _buildDrawer(BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-
     return Drawer(
-      width: isWeb ? 320 : 280,
+      width: 272,
+      backgroundColor: Colors.white,
       child: Column(
         children: [
-          _buildEnhancedDrawerHeader(context),
+          _DrawerHeader(onBack: () => _navigateToDashboardSelection(context)),
           Expanded(
             child: ListView(
-              padding: EdgeInsets.zero,
-              addAutomaticKeepAlives: false,
+              padding: const EdgeInsets.only(top: 8, bottom: 8),
               children: [
-                // Navigation Label
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'NAVIGATION',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey[500],
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                  ),
-                ),
-                _buildExpandableSection(
-                  context,
-                  'LedgerPro Core',
-                  Mdi.account_circle,
-                  [
-                    'Chart of Accounts',
-                    'Journal Entries',
-                    'General Ledger',
-                    'Trial Balance',
-                    'Bank Accounts',
-                    'Income',
-                    'Expense',
+                _SectionLabel('CORE'),
+                _NavSection(
+                  title: 'LedgerPro Core',
+                  icon: Mdi.account_circle,
+                  items: const [
+                    ('Chart of Accounts', Mdi.chart_tree, 'chart_of_accounts'),
+                    ('Journal Entries', Mdi.book_open_page_variant, 'journal_entries'),
+                    ('General Ledger', Mdi.book_open_blank_variant, 'general_ledger'),
+                    ('Trial Balance', Mdi.scale_balance, 'trial_balance'),
+                    ('Bank Accounts', Mdi.bank, 'bank_accounts'),
+                    ('Income', Mdi.trending_up, 'income'),
+                    ('Expense', Mdi.trending_down, 'expense'),
                   ],
                 ),
-                _buildExpandableSection(
-                  context,
-                  'Receivables & Payables',
-                  Mdi.swap_horizontal,
-                  [
-                    'Accounts Receivable',
-                    'Accounts Payable',
-                    'Customers',
-                    'bills',
-                    'Payments Received',
-                    'Payments Made',
-                    'Credit Notes',
+                const SizedBox(height: 4),
+                _SectionLabel('RECEIVABLES & PAYABLES'),
+                _NavSection(
+                  title: 'Receivables & Payables',
+                  icon: Mdi.swap_horizontal,
+                  items: const [
+                    ('Accounts Receivable', Mdi.cash_plus, 'accounts_receivable'),
+                    ('Accounts Payable', Mdi.cash_minus, 'accounts_payable'),
+                    ('Customers', Mdi.account_group, 'customers'),
+                    ('Bills', Mdi.file_document_outline, 'bills'),
+                    ('Payments Received', Mdi.credit_card_outline, 'payments_received'),
+                    ('Payments Made', Mdi.cash_check, 'payments_made'),
+                    ('Credit Notes', Mdi.file_undo_outline, 'credit_notes'),
                   ],
                 ),
-                _buildExpandableSection(
-                  context,
-                  'Assets & Liabilities',
-                  Mdi.business,
-                  ['Fixed Assets', 'Loans & Borrowings', 'Capital / Equity'],
-                ),
-                _buildExpandableSection(
-                  context,
-                  'Financial Reports',
-                  Mdi.chart_line,
-                  [
-                    'Profit & Loss Statement',
-                    'Balance Sheet',
-                    'Cash Flow Statement',
-                    'Aged Receivables',
+                const SizedBox(height: 4),
+                _SectionLabel('ASSETS & LIABILITIES'),
+                _NavSection(
+                  title: 'Assets & Liabilities',
+                  icon: Mdi.business,
+                  items: const [
+                    ('Fixed Assets', Mdi.office_building_outline, 'fixed_assets'),
+                    ('Loans & Borrowings', Mdi.hand_coin_outline, 'loans'),
+                    ('Capital / Equity', Mdi.chart_donut, 'capital_equity'),
                   ],
                 ),
-                Divider(height: 1, thickness: 1, color: kBorder),
-                _buildExpandableSection(context, 'Settings', Mdi.cog, [
-                  'Currency',
-                ]),
-                _buildExpandableSection(context, 'My Account', Mdi.account, [
-                  'My Profile',
-                  'Change Password',
-                ]),
-                _buildExpandableSection(
-                  context,
-                  'Help & Support',
-                  Mdi.help_circle,
-                  ['User Guide', 'Contact Support', 'Report an Issue'],
+                const SizedBox(height: 4),
+                _SectionLabel('FINANCIAL REPORTS'),
+                _NavSection(
+                  title: 'Financial Reports',
+                  icon: Mdi.chart_line,
+                  items: const [
+                    ('Profit & Loss', Mdi.chart_line, 'profit_loss'),
+                    ('Balance Sheet', Mdi.clipboard_list_outline, 'balance_sheet'),
+                    ('Cash Flow Statement', Mdi.cash, 'cash_flow'),
+                    ('Aged Receivables', Mdi.account_clock, 'aged_receivables'),
+                  ],
                 ),
-                _buildExpandableSection(context, 'Feedback', Mdi.feedback, [
-                  'Feedback',
-                ]),
-                _buildExpandableSection(context, 'Subscription', Mdi.crown, [
-                  'subscription',
-                ]),
-                _buildExpandableSection(context, 'About', Mdi.information, [
-                  'About App',
-                  'Terms of Service',
-                  'Privacy Policy',
-                ]),
-                Divider(height: 1, thickness: 1, color: kBorder),
-                _buildLogoutButton(context),
-                SizedBox(height: isWeb ? 20 : 16),
-                Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: isWeb ? 16 : 12),
-                    child: Text(
-                      'Version 1.0.0',
-                      style: TextStyle(
-                        fontSize: isWeb ? 13 : 12,
-                        color: kSubText,
-                      ),
-                    ),
-                  ),
+                const SizedBox(height: 4),
+                _SectionLabel('SETTINGS'),
+                _NavSection(
+                  title: 'Settings',
+                  icon: Mdi.cog,
+                  items: const [
+                    ('Currency', Mdi.currency_usd, 'currency'),
+                  ],
+                ),
+                _NavSection(
+                  title: 'My Account',
+                  icon: Mdi.account,
+                  items: const [
+                    ('My Profile', Mdi.account_circle_outline, '__profile'),
+                    ('Change Password', Mdi.lock_reset, '__changepassword'),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                _SectionLabel('SUPPORT'),
+                _NavSection(
+                  title: 'Subscription',
+                  icon: Mdi.crown,
+                  items: const [
+                    ('Subscription Plans', Mdi.crown, 'subscription'),
+                  ],
+                ),
+                _NavSection(
+                  title: 'Help & Support',
+                  icon: Mdi.help_circle,
+                  items: const [
+                    ('User Guide', Mdi.book_information_variant, '__userguide'),
+                    ('Contact Support', Mdi.headset, '__contact'),
+                    ('Report an Issue', Mdi.bug_outline, '__reportissue'),
+                  ],
+                ),
+                _NavSection(
+                  title: 'Feedback',
+                  icon: Mdi.feedback,
+                  items: const [
+                    ('Feedback', Mdi.feedback, 'feedback'),
+                  ],
+                ),
+                _NavSection(
+                  title: 'About',
+                  icon: Mdi.information,
+                  items: const [
+                    ('About App', Mdi.information_outline, 'about_app'),
+                    ('Terms of Service', Mdi.file_sign, 'terms'),
+                    ('Privacy Policy', Mdi.shield_lock_outline, 'privacy'),
+                  ],
                 ),
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEnhancedDrawerHeader(BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [kPrimary, kPrimaryDark],
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Back Button - same style as warehouse sidebar
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              _HoverableIconButton(
-                onTap: () => _navigateToDashboardSelection(context),
-                icon: Icons.arrow_back_rounded,
-                size: 18,
-                bgColor: Colors.white.withOpacity(0.15),
-                hoverColor: Colors.white.withOpacity(0.25),
-                iconColor: Colors.white,
-                hoverIconColor: Colors.white,
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Company Info
-          Row(
-            children: [
-              CircleAvatar(
-                radius: isWeb ? 32 : 28,
-                backgroundColor: Colors.white,
-                child: Iconify(
-                  Mdi.business,
-                  size: isWeb ? 32 : 28,
-                  color: kPrimary,
-                ),
-              ),
-              SizedBox(width: isWeb ? 20 : 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Obx(
-                      () => Text(
-                        _controller.companyName.value.isEmpty
-                            ? 'Company'
-                            : _controller.companyName.value,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: isWeb ? 16 : 15,
-                          fontWeight: FontWeight.w800,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Obx(
-                      () => Text(
-                        _controller.userEmail.value.isEmpty
-                            ? 'Your Business Name'
-                            : _controller.userEmail.value,
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: isWeb ? 14 : 13,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: isWeb ? 16 : 12),
-
-          // Plan Status
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: isWeb ? 16 : 12,
-              vertical: isWeb ? 10 : 8,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(isWeb ? 12 : 10),
-            ),
-            child: Row(
-              children: [
-                Iconify(
-                  Mdi.shield_account,
-                  size: isWeb ? 20 : 18,
-                  color: Colors.white70,
-                ),
-                SizedBox(width: isWeb ? 12 : 8),
-                Text(
-                  'Plan',
-                  style: TextStyle(
-                    fontSize: isWeb ? 14 : 13,
-                    color: Colors.white70,
-                  ),
-                ),
-                const Spacer(),
-                Obx(
-                  () => Text(
-                    _subscriptionController.hasActiveSubscription.value
-                        ? 'Premium Plan'
-                        : _subscriptionController.isTrialActive.value
-                        ? 'Trial Active'
-                        : 'Expired',
-                    style: TextStyle(
-                      fontSize: isWeb ? 14 : 13,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          _DrawerFooter(onLogout: () => _showLogoutDialog()),
         ],
       ),
     );
@@ -2346,183 +1426,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void _navigateToDashboardSelection(BuildContext context) {
     Get.offAllNamed('/dashboard');
-  }
-
-  Widget _buildLogoutButton(BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => _showLogoutDialog(),
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: isWeb ? 24 : 20,
-            vertical: isWeb ? 16 : 14,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: isWeb ? 40 : 32,
-                height: isWeb ? 40 : 32,
-                decoration: BoxDecoration(
-                  color: kDanger.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(isWeb ? 12 : 10),
-                ),
-                child: Iconify(
-                  Mdi.logout,
-                  size: isWeb ? 22 : 20,
-                  color: kDanger,
-                ),
-              ),
-              SizedBox(width: isWeb ? 20 : 16),
-              Expanded(
-                child: Text(
-                  'Logout',
-                  style: TextStyle(
-                    fontSize: isWeb ? 16 : 15,
-                    fontWeight: FontWeight.w700,
-                    color: kDanger,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showProfileDialog() {
-    Get.bottomSheet(
-      Container(
-        padding: EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: kCardBg,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Profile',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: kText,
-                  ),
-                ),
-                IconButton(
-                  icon: Iconify(Mdi.close, size: 22),
-                  onPressed: () => Get.back(),
-                ),
-              ],
-            ),
-            Divider(color: kBorder),
-            SizedBox(height: 16),
-            Center(
-              child: CircleAvatar(
-                radius: 40,
-                backgroundColor: kPrimary.withOpacity(0.1),
-                child: Iconify(Mdi.account, size: 48, color: kPrimary),
-              ),
-            ),
-            SizedBox(height: 12),
-            Text(
-              'Ahmed Khan',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: kText,
-              ),
-            ),
-            Text(
-              'ahmed@zolatech.com',
-              style: TextStyle(fontSize: 14, color: kSubText),
-            ),
-            SizedBox(height: 8),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              decoration: BoxDecoration(
-                color: kSuccess.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                'Admin',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: kSuccess,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                Get.back();
-                _showEditProfileDialog();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kPrimary,
-                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-              ),
-              child: Text(
-                'Edit Profile',
-                style: TextStyle(fontSize: 14, color: Colors.white),
-              ),
-            ),
-            SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showEditProfileDialog() {
-    Get.dialog(
-      AlertDialog(
-        title: Text(
-          'Edit Profile',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const TextField(
-              decoration: InputDecoration(
-                labelText: 'Name',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            SizedBox(height: 16),
-            const TextField(
-              decoration: InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              Get.back();
-              AppSnackbar.success(
-                kSuccess,
-                'Success',
-                'Profile updated successfully',
-              );
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: kPrimary),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showLogoutDialog() {
@@ -2542,11 +1445,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             onPressed: () {
               SharedPreferences.getInstance().then((prefs) => prefs.clear());
               Get.offAll(() => const LoginScreen());
-              AppSnackbar.success(
-                kSuccess,
-                'Success',
-                'Logged out successfully',
-              );
             },
             style: ElevatedButton.styleFrom(backgroundColor: kDanger),
             child: const Text('Logout'),
@@ -2555,24 +1453,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
-  Widget _buildExpandableSection(
-    BuildContext context,
-    String title,
-    String icon,
-    List<String> items,
-  ) {
-    return ExpandableSection(
-      context: context,
-      title: title,
-      iconName: icon,
-      items: items,
-    );
-  }
 }
 
 // ============================================================
-// ExpandableSection — Corrected Version
+// ✅ FIXED: ExpandableSection with proper navigation
 // ============================================================
 class ExpandableSection extends StatefulWidget {
   final BuildContext context;
@@ -2685,8 +1569,10 @@ class _ExpandableSectionState extends State<ExpandableSection> {
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
-          Get.back();
-          _navigateToScreen(item);
+          Navigator.pop(context);
+          Future.delayed(const Duration(milliseconds: 100), () {
+            _navigateToScreen(item);
+          });
         },
         child: Container(
           padding: EdgeInsets.symmetric(
@@ -2782,11 +1668,10 @@ class _ExpandableSectionState extends State<ExpandableSection> {
         Get.to(() => const AccountsPayableScreen());
         break;
       case 'Customers':
-        Get.to(() => const CustomersScreen());
+        Get.to(() => const WarehouseCustomerScreen());
         break;
       case 'bills':
         Get.to(() => const BillsScreen());
-      
         break;
       case 'Payments Received':
         Get.to(() => const PaymentsReceivedScreen());
@@ -2822,7 +1707,7 @@ class _ExpandableSectionState extends State<ExpandableSection> {
         Get.to(() => const FeedbackScreen());
         break;
       default:
-        AppSnackbar.success(kPrimary, item, '$item module coming soon');
+        Get.snackbar('Coming Soon', '$item module coming soon');
     }
   }
 
@@ -2860,7 +1745,6 @@ class _ExpandableSectionState extends State<ExpandableSection> {
         return Mdi.account_clock;
       case 'Customers':
         return Mdi.account_group;
-    
       case 'Payments Received':
         return Mdi.credit_card_outline;
       case 'Payments Made':
@@ -2899,57 +1783,716 @@ class _ExpandableSectionState extends State<ExpandableSection> {
   }
 }
 
-class _HoverableIconButton extends StatefulWidget {
-  final VoidCallback onTap;
-  final IconData icon;
-  final double size;
-  final Color bgColor;
-  final Color hoverColor;
-  final Color iconColor;
-  final Color hoverIconColor;
+class _DrawerHeader extends StatelessWidget {
+  final VoidCallback onBack;
 
-  const _HoverableIconButton({
-    required this.onTap,
-    required this.icon,
-    required this.size,
-    required this.bgColor,
-    required this.hoverColor,
-    required this.iconColor,
-    required this.hoverIconColor,
-  });
-
-  @override
-  State<_HoverableIconButton> createState() => _HoverableIconButtonState();
-}
-
-class _HoverableIconButtonState extends State<_HoverableIconButton> {
-  bool _isHovered = false;
+  const _DrawerHeader({required this.onBack});
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: _isHovered ? widget.hoverColor : widget.bgColor,
-            borderRadius: BorderRadius.circular(8),
+    final controller = Get.find<DashboardController>();
+    final subscriptionController = Get.find<SubscriptionController>();
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(color: kPrimary),
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 16,
+        left: 16,
+        right: 16,
+        bottom: 16,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Back button
+          GestureDetector(
+            onTap: onBack,
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.arrow_back_rounded, size: 16, color: Colors.black87),
+            ),
           ),
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 150),
-            child: Icon(
-              widget.icon,
-              key: ValueKey(widget.icon),
-              size: widget.size,
-              color: _isHovered ? widget.hoverIconColor : widget.iconColor,
+          const SizedBox(height: 14),
+          // Company avatar + name
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Center(
+                  child: Icon(Icons.account_balance_rounded, color: Colors.black87, size: 22),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Obx(
+                      () => Text(
+                        controller.companyName.value.isEmpty
+                            ? 'Company'
+                            : controller.companyName.value,
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.3,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(height: 1),
+                    Text(
+                      'Accounting Dashboard',
+                      style: TextStyle(
+                        color: Colors.black.withOpacity(0.55),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Plan badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Iconify(Mdi.shield_account, size: 14, color: Colors.black54),
+                const SizedBox(width: 6),
+                Text(
+                  'Current Plan',
+                  style: TextStyle(fontSize: 11, color: Colors.black54),
+                ),
+                const Spacer(),
+                Obx(
+                  () => Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: subscriptionController.hasActiveSubscription.value
+                          ? Colors.green.shade600
+                          : Colors.orange.shade600,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      subscriptionController.hasActiveSubscription.value
+                          ? 'Premium'
+                          : subscriptionController.isTrialActive.value
+                              ? 'Trial'
+                              : 'Free',
+                      style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _KpiData {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color accent;
+  final List<double> sparkData;
+  final String trend;
+  final bool trendUp;
+
+  const _KpiData({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.accent,
+    required this.sparkData,
+    required this.trend,
+    required this.trendUp,
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// KPI Card
+// ══════════════════════════════════════════════════════════════════
+
+class _KpiCard extends StatelessWidget {
+  final _KpiData data;
+
+  const _KpiCard({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 13, 14, 10),
+      decoration: BoxDecoration(
+        color: _kCardBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _kCardBorder),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(7),
+                decoration: BoxDecoration(
+                  color: data.accent.withOpacity(0.10),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Icon(data.icon, size: 16, color: data.accent),
+              ),
+              _TrendBadge(trend: data.trend, up: data.trendUp),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            data.value,
+            style: const TextStyle(
+              fontSize: 19,
+              fontWeight: FontWeight.w800,
+              color: _kTextPrimary,
+              letterSpacing: -0.4,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            data.label,
+            style: const TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+              color: _kTextSecondary,
+              letterSpacing: 0.5,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 8),
+          ClipRect(
+            child: SizedBox(
+              height: 32,
+              child: LineChart(
+                LineChartData(
+                  gridData: const FlGridData(show: false),
+                  titlesData: const FlTitlesData(show: false),
+                  borderData: FlBorderData(show: false),
+                  lineTouchData: const LineTouchData(enabled: false),
+                  clipData: const FlClipData.all(),
+                  minX: 0,
+                  maxX: (data.sparkData.length - 1).toDouble(),
+                  minY: data.sparkData.isEmpty ? 0 : data.sparkData.reduce((a, b) => a < b ? a : b).toDouble() * 0.85,
+                  maxY: data.sparkData.isEmpty ? 1 : data.sparkData.reduce((a, b) => a > b ? a : b).toDouble() * 1.15,
+                  lineBarsData: [
+                    LineChartBarData(
+                      spots: data.sparkData.isEmpty
+                          ? [const FlSpot(0, 0)]
+                          : data.sparkData
+                              .asMap()
+                              .entries
+                              .map((e) => FlSpot(e.key.toDouble(), e.value))
+                              .toList(),
+                      isCurved: true,
+                      color: data.accent,
+                      barWidth: 2,
+                      isStrokeCapRound: true,
+                      dotData: const FlDotData(show: false),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        color: data.accent.withOpacity(0.15),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+class _TrendBadge extends StatelessWidget {
+  final String trend;
+  final bool up;
+
+  const _TrendBadge({required this.trend, required this.up});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: up ? _kGreen.withOpacity(0.10) : _kRed.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            up ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+            size: 10,
+            color: up ? _kGreen : _kRed,
+          ),
+          const SizedBox(width: 2),
+          Text(
+            trend,
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+              color: up ? _kGreen : _kRed,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionPadding extends StatelessWidget {
+  final Widget child;
+
+  const _SectionPadding({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: child,
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  const _SectionLabel(this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 16, 6),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: Colors.grey.shade400,
+          letterSpacing: 1.0,
+        ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Nav Section
+// ══════════════════════════════════════════════════════════════════
+
+class _NavSection extends StatefulWidget {
+  final String title;
+  final String icon;
+  final List<(String, String, String)> items;
+
+  const _NavSection({
+    required this.title,
+    required this.icon,
+    required this.items,
+  });
+
+  @override
+  State<_NavSection> createState() => _NavSectionState();
+}
+
+class _NavSectionState extends State<_NavSection> {
+  bool _expanded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded = false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        InkWell(
+          onTap: () => setState(() => _expanded = !_expanded),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              children: [
+                Iconify(widget.icon, size: 18, color: Colors.grey.shade500),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    widget.title,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                Icon(
+                  _expanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                  size: 18,
+                  color: Colors.grey.shade400,
+                ),
+              ],
             ),
           ),
         ),
+        AnimatedCrossFade(
+          duration: const Duration(milliseconds: 200),
+          crossFadeState: _expanded ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+          firstChild: Column(
+            children: widget.items.map((item) {
+              return _NavItem(
+                label: item.$1,
+                icon: item.$2,
+                routeKey: item.$3,
+              );
+            }).toList(),
+          ),
+          secondChild: const SizedBox.shrink(),
+        ),
+      ],
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Nav Item
+// ══════════════════════════════════════════════════════════════════
+
+class _NavItem extends StatelessWidget {
+  final String label;
+  final String icon;
+  final String routeKey;
+
+  const _NavItem({
+    required this.label,
+    required this.icon,
+    required this.routeKey,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => _navigate(context, routeKey, label),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 1),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 2,
+              height: 14,
+              margin: const EdgeInsets.only(right: 12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Iconify(icon, size: 16, color: Colors.grey.shade500),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                label,
+                style:  TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey.shade700,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _navigate(BuildContext context, String routeKey, String label) {
+    Navigator.pop(context);
+    if (routeKey.startsWith('__')) {
+      switch (routeKey) {
+        case '__profile':
+          Get.to(() => const ProfileScreen());
+          break;
+        case '__changepassword':
+          Get.to(() => const ChangePasswordScreen());
+          break;
+        case '__userguide':
+          Get.to(() => const UserGuideScreen());
+          break;
+        case '__contact':
+          Get.to(() => const ContactScreen());
+          break;
+        case '__reportissue':
+          Get.to(() => const ReportIssueScreen());
+          break;
+        default:
+          Get.snackbar('Coming Soon', '$label coming soon');
+      }
+    } else {
+      switch (routeKey) {
+        case 'chart_of_accounts':
+          Get.to(() => const ChartOfAccountsScreen());
+          break;
+        case 'journal_entries':
+          Get.to(() => const JournalEntriesScreen());
+          break;
+        case 'general_ledger':
+          Get.to(() => const GeneralLedgerScreen());
+          break;
+        case 'trial_balance':
+          Get.to(() => const TrialBalanceScreen());
+          break;
+        case 'bank_accounts':
+          Get.to(() => const BankAccountsScreen());
+          break;
+        case 'income':
+          Get.to(() => const IncomeScreen());
+          break;
+        case 'expense':
+          Get.to(() => const ExpenseScreen());
+          break;
+        case 'accounts_receivable':
+          Get.to(() => const AccountsReceivableScreen());
+          break;
+        case 'accounts_payable':
+          Get.to(() => const AccountsPayableScreen());
+          break;
+        case 'customers':
+          Get.to(() => const WarehouseCustomerScreen());
+          break;
+        case 'bills':
+          Get.to(() => const BillsScreen());
+          break;
+        case 'payments_received':
+          Get.to(() => const PaymentsReceivedScreen());
+          break;
+        case 'payments_made':
+          Get.to(() => const PaymentsMadeScreen());
+          break;
+        case 'credit_notes':
+          Get.to(() => const CreditNotesScreen());
+          break;
+        case 'fixed_assets':
+          Get.to(() => const FixedAssetsScreen());
+          break;
+        case 'loans':
+          Get.to(() => const LoansBorrowingsScreen());
+          break;
+        case 'capital_equity':
+          Get.to(() => const CapitalEquityScreen());
+          break;
+        case 'profit_loss':
+          Get.to(() => const ProfitLossStatementScreen());
+          break;
+        case 'balance_sheet':
+          Get.to(() => const BalanceSheetScreen());
+          break;
+        case 'cash_flow':
+          Get.to(() => const CashFlowStatementScreen());
+          break;
+        case 'aged_receivables':
+          Get.to(() => const AgedReceivablesScreen());
+          break;
+        case 'currency':
+          Get.to(() => const CurrencyScreen());
+          break;
+        case 'subscription':
+          Get.to(() => const SelectPlanScreen());
+          break;
+        case 'feedback':
+          Get.to(() => const FeedbackScreen());
+          break;
+        case 'about_app':
+          Get.to(() => const AboutAppScreen());
+          break;
+        case 'terms':
+          Get.to(() => const TermsOfServiceScreen());
+          break;
+        case 'privacy':
+          Get.to(() => const PrivacyPolicyScreen());
+          break;
+        default:
+          Get.snackbar('Coming Soon', '$label coming soon');
+      }
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Drawer Footer
+// ══════════════════════════════════════════════════════════════════
+
+class _DrawerFooter extends StatelessWidget {
+  final VoidCallback onLogout;
+
+  const _DrawerFooter({required this.onLogout});
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = Get.find<DashboardController>();
+    final subscriptionController = Get.find<SubscriptionController>();
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey.shade100, width: 1)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // User card
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.grey.shade100),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [kPrimary, kPrimaryDark]),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Center(
+                    child: Icon(Icons.person_rounded, color: Colors.white, size: 17),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Obx(
+                        () => Text(
+                          controller.companyName.value.isEmpty
+                              ? 'Company'
+                              : controller.companyName.value,
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Colors.black87),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Obx(
+                        () => Text(
+                          subscriptionController.hasActiveSubscription.value
+                              ? 'Premium Account'
+                              : subscriptionController.isTrialActive.value
+                                  ? 'Trial Account'
+                                  : 'Free Account',
+                          style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.10),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(width: 5, height: 5, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
+                      const SizedBox(width: 4),
+                      const Text('Active', style: TextStyle(fontSize: 9, color: Colors.green, fontWeight: FontWeight.w700)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Logout button
+          InkWell(
+            onTap: onLogout,
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.red.withOpacity(0.12)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Iconify(Mdi.logout, color: Colors.red.shade400, size: 16),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Sign Out',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.red.shade400),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ProfileScreen placeholder - Add this if not exists
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Profile'),
+        backgroundColor: kPrimary,
+      ),
+      body: const Center(
+        child: Text('Profile Screen'),
       ),
     );
   }

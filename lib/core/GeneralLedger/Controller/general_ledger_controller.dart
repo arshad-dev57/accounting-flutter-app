@@ -118,19 +118,75 @@ class GeneralLedgerController extends GetxController {
 
       if (response.success) {
         final data = response.data;
-        accountSummaries.value = (data['data'] as List)
-            .map((e) => AccountSummary.fromJson(e))
-            .toList();
+        print('📊 API Response structure: ${data.runtimeType}');
+        print('📊 Full response keys: ${data.keys}');
+        print('📊 Data field: ${data['data']}');
+        print('📊 Data field type: ${data['data'].runtimeType}');
+        
+        // Handle data field - could be List or Map
+        final dataList = data['data'];
+        if (dataList is List) {
+          print('✅ Data is a List with ${dataList.length} items');
+          accountSummaries.value = dataList
+              .map((e) => AccountSummary.fromJson(e))
+              .toList();
 
-        accountsForDropdown.value = (data['data'] as List)
-            .map(
-              (e) => {
-                'accountId': e['accountId'],
-                'accountName': e['accountName'],
-                'accountCode': e['accountCode'],
-              },
-            )
-            .toList();
+          accountsForDropdown.value = dataList
+              .map(
+                (e) => {
+                  'accountId': e['accountId'],
+                  'accountName': e['accountName'],
+                  'accountCode': e['accountCode'],
+                },
+              )
+              .toList();
+          print('✅ Parsed ${accountSummaries.length} account summaries');
+        } else if (dataList is Map) {
+          print('⚠️ Data is a Map, looking for nested list...');
+          // Handle nested structure: {count, data: [...], summary}
+          final nestedList = dataList['data'];
+          if (nestedList is List) {
+            print('✅ Found nested list in data.data with ${nestedList.length} items');
+            accountSummaries.value = nestedList
+                .map((e) => AccountSummary.fromJson(e))
+                .toList();
+            accountsForDropdown.value = nestedList
+                .map(
+                  (e) => {
+                    'accountId': e['accountId'],
+                    'accountName': e['accountName'],
+                    'accountCode': e['accountCode'],
+                  },
+                )
+                .toList();
+          } else {
+            // Try other common keys
+            final altList = dataList['entries'] ?? dataList['items'] ?? dataList['accounts'];
+            if (altList is List) {
+              print('✅ Found nested list with ${altList.length} items');
+              accountSummaries.value = altList
+                  .map((e) => AccountSummary.fromJson(e))
+                  .toList();
+              accountsForDropdown.value = altList
+                  .map(
+                    (e) => {
+                      'accountId': e['accountId'],
+                      'accountName': e['accountName'],
+                      'accountCode': e['accountCode'],
+                    },
+                  )
+                  .toList();
+            } else {
+              print('❌ No nested list found in Map');
+              accountSummaries.value = [];
+              accountsForDropdown.value = [];
+            }
+          }
+        } else {
+          print('⚠️ API returned non-List data for accounts: ${dataList.runtimeType}');
+          accountSummaries.value = [];
+          accountsForDropdown.value = [];
+        }
 
         // ─── Update summary totals from API ──────────────────────
         if (data['summary'] != null) {
@@ -221,9 +277,46 @@ class GeneralLedgerController extends GetxController {
 
       if (response.success) {
         final data = response.data;
-        final entries = (data['data'] as List)
-            .map((e) => LedgerEntry.fromJson(e))
-            .toList();
+        print('📊 Ledger API Response structure: ${data.runtimeType}');
+        print('📊 Full response keys: ${data.keys}');
+        print('📊 Data field: ${data['data']}');
+        print('📊 Data field type: ${data['data'].runtimeType}');
+        
+        // Handle data field - could be List or Map
+        final dataList = data['data'];
+        List<LedgerEntry> entries = [];
+        
+        if (dataList is List) {
+          print('✅ Data is a List with ${dataList.length} items');
+          entries = dataList
+              .map((e) => LedgerEntry.fromJson(e))
+              .toList();
+          print('✅ Parsed ${entries.length} ledger entries');
+        } else if (dataList is Map) {
+          print('⚠️ Data is a Map, looking for nested list...');
+          // Handle nested structure: {count, data: [...], summary}
+          final nestedList = dataList['data'];
+          if (nestedList is List) {
+            print('✅ Found nested list in data.data with ${nestedList.length} items');
+            entries = nestedList
+                .map((e) => LedgerEntry.fromJson(e))
+                .toList();
+          } else {
+            // Try other common keys
+            final altList = dataList['entries'] ?? dataList['items'] ?? dataList['transactions'];
+            if (altList is List) {
+              print('✅ Found nested list with ${altList.length} items');
+              entries = altList
+                  .map((e) => LedgerEntry.fromJson(e))
+                  .toList();
+            } else {
+              print('❌ No nested list found in Map');
+            }
+          }
+        } else {
+          print('⚠️ API returned non-List data for ledger entries: ${dataList.runtimeType}');
+          print('📋 Response data structure: $data');
+        }
 
         // Update pagination info
         if (data['pagination'] != null) {

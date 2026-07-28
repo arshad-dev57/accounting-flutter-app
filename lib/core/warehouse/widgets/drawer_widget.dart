@@ -1,10 +1,25 @@
+// lib/core/warehouse/widgets/drawer_widget.dart
+
+import 'package:LedgerPro_app/Utils/colors.dart';
 import 'package:LedgerPro_app/Utils/toast_utils.dart';
+import 'package:LedgerPro_app/core/About/about_app_screen.dart';
+import 'package:LedgerPro_app/core/About/privacypolicy_screen.dart';
+import 'package:LedgerPro_app/core/About/termsofservice_screen.dart';
+import 'package:LedgerPro_app/core/Contact/Screens/Contact_Screen.dart';
+import 'package:LedgerPro_app/core/Feedback/feedback_screen.dart';
+import 'package:LedgerPro_app/core/ReportIsuue/Report_issue_screen.dart';
+import 'package:LedgerPro_app/core/UserGuide/screen/user_guide_screen.dart';
+import 'package:LedgerPro_app/core/changepassword/screen/change_password_screen.dart';
+import 'package:LedgerPro_app/core/companyprofile/screen/company_profile_screen.dart';
 import 'package:LedgerPro_app/core/login/screen/login_screen.dart';
+import 'package:LedgerPro_app/core/plans/views/Subscription_plans.dart';
+import 'package:LedgerPro_app/core/settings/screens/currency_screen.dart';
 import 'package:LedgerPro_app/core/warehouse/dashboard/warehouse_dashboard_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:iconify_flutter/icons/mdi.dart';
 
 class WarehouseDrawer extends StatelessWidget {
   const WarehouseDrawer({super.key});
@@ -13,319 +28,385 @@ class WarehouseDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetBuilder<WarehouseDashboardController>(
       builder: (controller) {
+        final currentRoute = controller.currentRoute.value;
+
         return Drawer(
+          width: 272,
+          backgroundColor: Colors.white,
           child: Column(
             children: [
-              // Header with Back Button
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(color: kPrimary),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Back Button - same as sidebar
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        _HoverableIconButton(
-                          onTap: () => _navigateToDashboardSelection(context),
-                          icon: Icons.arrow_back_rounded,
-                          size: 18,
-                          bgColor: Colors.white.withOpacity(0.15),
-                          hoverColor: Colors.white.withOpacity(0.25),
-                          iconColor: Colors.white,
-                          hoverIconColor: Colors.white,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Logo and Title
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.warehouse,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              'LedgerPro',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              'Warehouse',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              // Navigation Label
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'NAVIGATION',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[500],
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ),
-              ),
-
-              // Menu Items
+              _WarehouseDrawerHeader(),
               Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  itemCount: controller.menuItems.length,
-                  itemBuilder: (context, index) {
-                    final item = controller.menuItems[index];
-                    final isSelected = controller.selectedIndex.value == index;
-
-                    return _HoverableMenuItem(
-                      icon: item['icon'],
-                      title: item['title'],
-                      isSelected: isSelected,
-                      onTap: () {
-                        Navigator.pop(context);
-                        controller.navigateTo(index);
-                      },
-                    );
-                  },
-                ),
-              ),
-
-              const Divider(height: 1, thickness: 1),
-
-              // Bottom Section
-              Container(
-                padding: const EdgeInsets.all(12),
-                child: Column(
+                child: ListView(
+                  padding: const EdgeInsets.only(top: 8, bottom: 8),
                   children: [
-                    // User Info
-                    _HoverableUserCard(
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: kPrimary,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: const Center(
-                              child: Text(
-                                'B',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
-                                Text(
-                                  'brostech',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                                Text(
-                                  'Premium',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 6,
-                                  height: 6,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.green,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                const Text(
-                                  'Premium',
-                                  style: TextStyle(
-                                    fontSize: 8,
-                                    color: Colors.green,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                    _SectionLabel('MAIN'),
+                    _NavSection(
+                      title: 'Warehouse Core',
+                      icon: Mdi.warehouse,
+                      currentRoute: currentRoute,
+                      items: const [
+                        ('Dashboard', Mdi.view_dashboard, '/warehouse/dashboard'),
+                        ('Products', Mdi.package_variant_closed, '/warehouse/products'),
+                        ('Categories', Mdi.category, '/warehouse/categories'),
+                        ('Suppliers', Mdi.account_tie, '/warehouse/suppliers'),
+                        ('Customers', Mdi.account_group, '/warehouse/customers'),
+                        ('Invoices', Mdi.receipt, '/warehouse/invoices'),
+                        ('Stock Movement', Mdi.arrow_left_right, '/warehouse/stock'),
+                        ('Inventory Valuation', Mdi.cash_clock, '/warehouse/inventory'),
+                      ],
                     ),
-
+                    _NavSection(
+                      title: 'Reports',
+                      icon: Mdi.chart_bar,
+                      currentRoute: currentRoute,
+                      items: const [
+                        ('Stock Summary', Mdi.chart_bar, '/warehouse/reports/stock-summary'),
+                        ('Low Stock Report', Mdi.alert, '/warehouse/reports/low-stock'),
+                        ('Expiry Report', Mdi.calendar_clock, '/warehouse/reports/expiry'),
+                        ('All Reports', Mdi.chart_line, '/warehouse/reports'),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    _SectionLabel('ACCOUNT'),
+                    _NavSection(
+                      title: 'Settings',
+                      icon: Mdi.cog,
+                      currentRoute: currentRoute,
+                      items: const [
+                        ('Currency', Mdi.currency_usd, '__currency'),
+                      ],
+                    ),
+                    _NavSection(
+                      title: 'My Account',
+                      icon: Mdi.account,
+                      currentRoute: currentRoute,
+                      items: const [
+                        ('My Profile', Mdi.account_circle_outline, '__profile'),
+                        ('Change Password', Mdi.lock_reset, '__changepassword'),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    _SectionLabel('SUPPORT'),
+                    _NavSection(
+                      title: 'Help & Support',
+                      icon: Mdi.help_circle,
+                      currentRoute: currentRoute,
+                      items: const [
+                        ('User Guide', Mdi.book_information_variant, '__userguide'),
+                        ('Contact Support', Mdi.headset, '__contact'),
+                        ('Report an Issue', Mdi.bug_outline, '__reportissue'),
+                      ],
+                    ),
+                    _NavSection(
+                      title: 'Feedback',
+                      icon: Mdi.feedback,
+                      currentRoute: currentRoute,
+                      items: const [
+                        ('Feedback', Mdi.feedback, '__feedback'),
+                      ],
+                    ),
+                    _NavSection(
+                      title: 'Subscription',
+                      icon: Mdi.crown,
+                      currentRoute: currentRoute,
+                      items: const [
+                        ('Subscription Plans', Mdi.crown, '__subscription'),
+                      ],
+                    ),
+                    _NavSection(
+                      title: 'About',
+                      icon: Mdi.information,
+                      currentRoute: currentRoute,
+                      items: const [
+                        ('About App', Mdi.information_outline, '__about'),
+                        ('Terms of Service', Mdi.file_sign, '__terms'),
+                        ('Privacy Policy', Mdi.shield_lock_outline, '__privacy'),
+                      ],
+                    ),
                     const SizedBox(height: 8),
-
-                    // Logout
-                    _HoverableMenuItem(
-                      icon: Icons.logout,
-                      title: 'Logout',
-                      isSelected: false,
-                      iconColor: Colors.grey[600]!,
-                      hoverIconColor: Colors.red,
-                      textColor: Colors.grey,
-                      hoverTextColor: Colors.red,
-                      onTap: () => _showLogoutDialog(context),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Divider(color: Colors.grey.shade100, height: 1),
                     ),
+                    const SizedBox(height: 8),
+                    _BackToDashboard(),
                   ],
                 ),
               ),
-
-              const SizedBox(height: 8),
+              _WarehouseDrawerFooter(),
             ],
           ),
         );
       },
     );
   }
+}
 
-  // ─── Navigate to Dashboard Selection ─────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+// Warehouse-specific Header
+// ══════════════════════════════════════════════════════════════════
 
-  void _navigateToDashboardSelection(BuildContext context) {
-    Get.offAllNamed('/dashboard');
+class _WarehouseDrawerHeader extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(color: kPrimary),
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 16,
+        left: 16,
+        right: 16,
+        bottom: 16,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Back button
+          GestureDetector(
+            onTap: () => Get.offAllNamed('/dashboard'),
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.arrow_back_rounded, size: 16, color: Colors.black87),
+            ),
+          ),
+          const SizedBox(height: 14),
+          // Module avatar + name
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Center(
+                  child: Icon(Icons.warehouse_rounded, color: Colors.black87, size: 22),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'LedgerPro',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 1),
+                    Text(
+                      'Warehouse Module',
+                      style: TextStyle(
+                        color: Colors.black.withOpacity(0.55),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Plan badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Iconify(Mdi.shield_account, size: 14, color: Colors.black54),
+                const SizedBox(width: 6),
+                Text(
+                  'Current Plan',
+                  style: TextStyle(fontSize: 11, color: Colors.black54),
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade600,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Premium',
+                    style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
+}
 
-  // ─── Show Logout Confirmation Dialog ──────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+// Warehouse-specific Footer
+// ══════════════════════════════════════════════════════════════════
+
+class _WarehouseDrawerFooter extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey.shade100, width: 1)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // User card
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.grey.shade100),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: [kPrimary, kPrimaryDark]),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Center(
+                    child: Text('U', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14)),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'User',
+                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Colors.black87),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        'Premium Account',
+                        style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.10),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(width: 5, height: 5, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
+                      const SizedBox(width: 4),
+                      const Text('Active', style: TextStyle(fontSize: 9, color: Colors.green, fontWeight: FontWeight.w700)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Logout button
+          InkWell(
+            onTap: () => _showLogoutDialog(context),
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.red.withOpacity(0.12)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Iconify(Mdi.logout, color: Colors.red.shade400, size: 16),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Sign Out',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.red.shade400),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _showLogoutDialog(BuildContext context) {
     Get.dialog(
       Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Container(
-          width: 340,
+          width: 320,
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.logout_rounded,
-                  color: Colors.red,
-                  size: 28,
-                ),
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(color: Colors.red.withOpacity(0.08), shape: BoxShape.circle),
+                child: const Icon(Icons.logout_rounded, color: Colors.red, size: 26),
               ),
-              const SizedBox(height: 16),
-              const Text(
-                'Sign Out',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
+              const SizedBox(height: 14),
+              const Text('Sign Out', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Colors.black87)),
+              const SizedBox(height: 6),
+              Text(
                 'Are you sure you want to sign out?',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Colors.grey),
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 22),
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => Get.back(),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.grey[700],
-                        side: BorderSide(color: Colors.grey[300]!),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+                        foregroundColor: Colors.grey.shade700,
+                        side: BorderSide(color: Colors.grey.shade200),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
-                      child: const Text(
-                        'Cancel',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      child: const Text('Cancel', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () => _logout(context),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
                         elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
-                      child: const Text(
-                        'Sign Out',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      child: const Text('Sign Out', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                     ),
                   ),
                 ],
@@ -338,8 +419,6 @@ class WarehouseDrawer extends StatelessWidget {
     );
   }
 
-  // ─── Logout Method ─────────────────────────────────────────────────
-
   void _logout(BuildContext context) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -348,200 +427,250 @@ class WarehouseDrawer extends StatelessWidget {
       Get.offAll(() => const LoginScreen());
       AppSnackbar.success(kSuccess, 'Success', 'Logged out successfully');
     } catch (e) {
-      print('Logout error: $e');
       Get.offAll(() => const LoginScreen());
     }
   }
 }
 
-// ─── Hoverable Icon Button ─────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════
+// Shared sub-widgets (used by both drawers)
+// ══════════════════════════════════════════════════════════════════
 
-class _HoverableIconButton extends StatefulWidget {
-  final VoidCallback onTap;
-  final IconData icon;
-  final double size;
-  final Color bgColor;
-  final Color hoverColor;
-  final Color iconColor;
-  final Color hoverIconColor;
-
-  const _HoverableIconButton({
-    required this.onTap,
-    required this.icon,
-    required this.size,
-    required this.bgColor,
-    required this.hoverColor,
-    required this.iconColor,
-    required this.hoverIconColor,
-  });
-
-  @override
-  State<_HoverableIconButton> createState() => _HoverableIconButtonState();
-}
-
-class _HoverableIconButtonState extends State<_HoverableIconButton> {
-  bool _isHovered = false;
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  const _SectionLabel(this.label);
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: _isHovered ? widget.hoverColor : widget.bgColor,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 150),
-            child: Icon(
-              widget.icon,
-              key: ValueKey(widget.icon),
-              size: widget.size,
-              color: _isHovered ? widget.hoverIconColor : widget.iconColor,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 16, 6),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: Colors.grey.shade400,
+          letterSpacing: 1.0,
+        ),
+      ),
+    );
+  }
+}
+
+class _NavSection extends StatefulWidget {
+  final String title;
+  final String icon;
+  final String currentRoute;
+  final List<(String, String, String)> items;
+
+  const _NavSection({
+    required this.title,
+    required this.icon,
+    required this.currentRoute,
+    required this.items,
+  });
+
+  @override
+  State<_NavSection> createState() => _NavSectionState();
+}
+
+class _NavSectionState extends State<_NavSection> {
+  bool _expanded = false;
+
+  bool get _hasActiveChild => widget.items.any((i) => _isActive(i.$3));
+
+  bool _isActive(String routeKey) {
+    if (routeKey.startsWith('__')) return false;
+    return widget.currentRoute.toLowerCase().contains(routeKey.toLowerCase());
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _expanded = _hasActiveChild;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        InkWell(
+          onTap: () => setState(() => _expanded = !_expanded),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              children: [
+                Iconify(
+                  widget.icon,
+                  size: 18,
+                  color: _hasActiveChild ? kPrimary : Colors.grey.shade500,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    widget.title,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: _hasActiveChild ? FontWeight.w700 : FontWeight.w600,
+                      color: _hasActiveChild ? Colors.black : Colors.black87,
+                    ),
+                  ),
+                ),
+                Icon(
+                  _expanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                  size: 18,
+                  color: Colors.grey.shade400,
+                ),
+              ],
             ),
           ),
         ),
-      ),
+        AnimatedCrossFade(
+          duration: const Duration(milliseconds: 200),
+          crossFadeState: _expanded ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+          firstChild: Column(
+            children: widget.items.map((item) {
+              return _NavItem(
+                label: item.$1,
+                icon: item.$2,
+                isActive: _isActive(item.$3),
+                onTap: () {
+                  Navigator.pop(context);
+                  _navigate(item.$3, item.$1);
+                },
+              );
+            }).toList(),
+          ),
+          secondChild: const SizedBox.shrink(),
+        ),
+      ],
     );
+  }
+
+  void _navigate(String routeKey, String label) {
+    if (!routeKey.startsWith('__')) {
+      Get.toNamed(routeKey);
+      return;
+    }
+    switch (routeKey) {
+      case '__currency':
+        Get.to(() => const CurrencyScreen()); break;
+      case '__profile':
+        Get.to(() => const ProfileScreen()); break;
+      case '__changepassword':
+        Get.to(() => const ChangePasswordScreen()); break;
+      case '__userguide':
+        Get.to(() => const UserGuideScreen()); break;
+      case '__contact':
+        Get.to(() => const ContactScreen()); break;
+      case '__reportissue':
+        Get.to(() => const ReportIssueScreen()); break;
+      case '__feedback':
+        Get.to(() => const FeedbackScreen()); break;
+      case '__subscription':
+        Get.to(() => const SelectPlanScreen()); break;
+      case '__about':
+        Get.to(() => const AboutAppScreen()); break;
+      case '__terms':
+        Get.to(() => const TermsOfServiceScreen()); break;
+      case '__privacy':
+        Get.to(() => const PrivacyPolicyScreen()); break;
+      default:
+        Get.snackbar('Coming Soon', '$label coming soon');
+    }
   }
 }
 
-// ─── Hoverable Menu Item ──────────────────────────────────────────────────
-
-class _HoverableMenuItem extends StatefulWidget {
-  final IconData icon;
-  final String title;
-  final bool isSelected;
+class _NavItem extends StatelessWidget {
+  final String label;
+  final String icon;
+  final bool isActive;
   final VoidCallback onTap;
-  final Color? iconColor;
-  final Color? hoverIconColor;
-  final Color? textColor;
-  final Color? hoverTextColor;
 
-  const _HoverableMenuItem({
+  const _NavItem({
+    required this.label,
     required this.icon,
-    required this.title,
-    required this.isSelected,
+    required this.isActive,
     required this.onTap,
-    this.iconColor,
-    this.hoverIconColor,
-    this.textColor,
-    this.hoverTextColor,
   });
 
   @override
-  State<_HoverableMenuItem> createState() => _HoverableMenuItemState();
-}
-
-class _HoverableMenuItemState extends State<_HoverableMenuItem> {
-  bool _isHovered = false;
-
-  @override
   Widget build(BuildContext context) {
-    final bool isSelected = widget.isSelected;
-    final Color defaultIconColor = isSelected ? kPrimary : Colors.grey[500]!;
-    final Color defaultTextColor = isSelected ? kPrimary : Colors.grey[700]!;
-    final Color defaultHoverIconColor = isSelected ? kPrimary : kPrimary;
-    final Color defaultHoverTextColor = isSelected ? kPrimary : kPrimary;
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? kPrimary.withOpacity(0.06)
-                : _isHovered
-                ? kPrimary.withOpacity(0.05)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Row(
-            children: [
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 150),
-                child: Icon(
-                  widget.icon,
-                  key: ValueKey(widget.icon),
-                  size: 18,
-                  color: _isHovered && !isSelected
-                      ? (widget.hoverIconColor ?? defaultHoverIconColor)
-                      : (widget.iconColor ?? defaultIconColor),
-                ),
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 1),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        decoration: BoxDecoration(
+          color: isActive ? kPrimary.withOpacity(0.10) : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 2,
+              height: 14,
+              margin: const EdgeInsets.only(right: 12),
+              decoration: BoxDecoration(
+                color: isActive ? kPrimary : Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(2),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: AnimatedDefaultTextStyle(
-                  duration: const Duration(milliseconds: 150),
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: isSelected
-                        ? FontWeight.w600
-                        : _isHovered
-                        ? FontWeight.w600
-                        : FontWeight.w500,
-                    color: _isHovered && !isSelected
-                        ? (widget.hoverTextColor ?? defaultHoverTextColor)
-                        : (widget.textColor ?? defaultTextColor),
-                  ),
-                  child: Text(widget.title),
+            ),
+            Iconify(icon, size: 16, color: isActive ? kPrimary : Colors.grey.shade500),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                  color: isActive ? kPrimary : Colors.grey.shade700,
                 ),
+                overflow: TextOverflow.ellipsis,
               ),
-              if (isSelected)
-                Container(
-                  width: 3,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    color: kPrimary,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-            ],
-          ),
+            ),
+            if (isActive)
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(color: kPrimary, shape: BoxShape.circle),
+              ),
+          ],
         ),
       ),
     );
   }
 }
 
-// ─── Hoverable User Card ─────────────────────────────────────────────────
-
-class _HoverableUserCard extends StatefulWidget {
-  final Widget child;
-
-  const _HoverableUserCard({required this.child});
-
-  @override
-  State<_HoverableUserCard> createState() => _HoverableUserCardState();
-}
-
-class _HoverableUserCardState extends State<_HoverableUserCard> {
-  bool _isHovered = false;
-
+class _BackToDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          color: _isHovered ? Colors.grey[100] : Colors.grey[50],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: InkWell(
+        onTap: () {
+          Navigator.pop(context);
+          Get.offAllNamed('/dashboard');
+        },
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.grey.shade100),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.arrow_back_rounded, size: 16, color: Colors.grey.shade500),
+              const SizedBox(width: 10),
+              Text(
+                'Back to Dashboard',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey.shade600),
+              ),
+            ],
+          ),
         ),
-        child: widget.child,
       ),
     );
   }

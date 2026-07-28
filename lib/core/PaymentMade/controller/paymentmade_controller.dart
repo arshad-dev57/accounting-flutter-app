@@ -1,5 +1,5 @@
 // core/paymentsMade/controller/payment_made_controller.dart
-import 'dart:async';
+// COMPLETE WITH LAZY LOADING & PAGINATION (NO WEB)
 
 import 'package:LedgerPro_app/Services/api_client.dart';
 import 'package:LedgerPro_app/Utils/currency_utils.dart';
@@ -17,11 +17,21 @@ class PaymentMadeController extends GetxController {
   var bankAccounts = <BankAccount>[].obs;
   var unpaidBills = <BillForPayment>[].obs;
   
-  var isLoading = false.obs;
+  var isLoading = true.obs;
+  var isLoadingMore = false.obs;
   var isRecording = false.obs;
   var selectedFilter = 'All'.obs;
   var selectedDateRange = Rxn<DateTimeRange>();
   var searchQuery = ''.obs;
+  
+  // ✅ Pagination variables
+  var currentPage = 1.obs;
+  var totalPages = 1.obs;
+  var totalItems = 0.obs;
+  var hasNextPage = false.obs;
+  var hasPrevPage = false.obs;
+  var itemsPerPage = 20.obs;
+  var serverSupportsPagination = false.obs;
   
   // Multi-bill selection
   var selectedBillIds = <String>[].obs;
@@ -46,22 +56,21 @@ class PaymentMadeController extends GetxController {
     'Today', 
     'This Week', 
     'This Month', 
-    'Custom Range'
   ];
   
+  // ✅ Search & Scroll Controllers
   final TextEditingController searchController = TextEditingController();
-  final ApiClient _api = Get.find<ApiClient>();
+  final ScrollController scrollController = ScrollController();
   
-  // Debounce for search
-  Timer? _debounceTimer;
+  final ApiClient _api = Get.find<ApiClient>();
   
   @override
   void onInit() {
     super.onInit();
     searchController.addListener(_onSearchChanged);
-    loadPayments();
     loadSuppliers();
     loadBankAccounts();
+    loadPayments(resetPage: true);
     loadSummary();
   }
   
@@ -69,78 +78,95 @@ class PaymentMadeController extends GetxController {
   void onClose() {
     searchController.removeListener(_onSearchChanged);
     searchController.dispose();
-    _debounceTimer?.cancel();
+    scrollController.dispose();
     super.onClose();
   }
   
   void _onSearchChanged() {
-    _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-      searchQuery.value = searchController.text;
-      _applySearchFilter();
-    });
-  }
-  
-  void _applySearchFilter() {
-    if (searchQuery.value.isEmpty) {
-      payments.value = allPayments.value;
-    } else {
-      final searchLower = searchQuery.value.toLowerCase();
-      final results = allPayments.where((payment) {
-        return payment.paymentNumber.toLowerCase().contains(searchLower) ||
-               payment.supplierName.toLowerCase().contains(searchLower) ||
-               payment.billNumber.toLowerCase().contains(searchLower) ||
-               payment.paymentMethod.toLowerCase().contains(searchLower) ||
-               payment.reference.toLowerCase().contains(searchLower);
-      }).toList();
-      payments.value = results;
-    }
-    _updateSummaryForFiltered(payments.value);
-  }
-  
-  void _updateSummaryForFiltered(List<PaymentMade> filteredPayments) {
-    totalPaid.value = filteredPayments.fold(0.0, (sum, p) => sum + p.amount);
-    
-    final now = DateTime.now();
-    final todayStart = DateTime(now.year, now.month, now.day);
-    final thisWeekStart = now.subtract(Duration(days: now.weekday - 1));
-    final thisMonthStart = DateTime(now.year, now.month, 1);
-    
-    todayTotal.value = filteredPayments
-        .where((p) => p.paymentDate.isAfter(todayStart.subtract(const Duration(days: 1))))
-        .fold(0.0, (sum, p) => sum + p.amount);
-        
-    thisWeekTotal.value = filteredPayments
-        .where((p) => p.paymentDate.isAfter(thisWeekStart.subtract(const Duration(days: 1))))
-        .fold(0.0, (sum, p) => sum + p.amount);
-        
-    thisMonthTotal.value = filteredPayments
-        .where((p) => p.paymentDate.isAfter(thisMonthStart.subtract(const Duration(days: 1))))
-        .fold(0.0, (sum, p) => sum + p.amount);
+    searchQuery.value = searchController.text;
+    loadPayments(resetPage: true);
   }
   
   String formatAmount(double amount) {
     return CurrencyUtils.format(amount);
   }
   
-  // ─── LOAD PAYMENTS ──────────────────────────────────────────────────
-  Future<void> loadPayments() async {
+  // ─── LOAD PAYMENTS WITH PAGINATION ──────────────────────────────
+  Future<void> loadPayments({bool resetPage = true}) async {
     try {
-      isLoading.value = true;
+      if (resetPage) {
+        currentPage.value = 1;
+        isLoading.value = true;
+      } else {
+        isLoadingMore.value = true;
+      }
       
       Map<String, dynamic> params = {};
+      
+      if (serverSupportsPagination.value) {
+        params['page'] = currentPage.value;
+        params['limit'] = itemsPerPage.value;
+      }
+      
       if (selectedDateRange.value != null) {
         params['startDate'] = DateFormat('yyyy-MM-dd').format(selectedDateRange.value!.start);
         params['endDate'] = DateFormat('yyyy-MM-dd').format(selectedDateRange.value!.end);
       }
       
-      final response = await _api.get('/api/payments-made', queryParameters: params.isNotEmpty ? params : null);
+      if (searchQuery.value.isNotEmpty) {
+        params['search'] = searchQuery.value;
+      }
+      
+      final response = await _api.get(
+        '/api/payments-made',
+        queryParameters: params.isNotEmpty ? params : null,
+      );
       
       if (response.success) {
-        List<dynamic> paymentsData = response.data['data'] ?? [];
-        final newPayments = paymentsData.map((json) => PaymentMade.fromJson(json)).toList();
-        allPayments.value = newPayments;
-        _applySearchFilter();
+        final data = response.data;
+        if (data['success'] == true) {
+          List<dynamic> paymentsData = data['data'] ?? [];
+          final newPayments = paymentsData.map((json) => PaymentMade.fromJson(json)).toList();
+          
+          if (resetPage) {
+            allPayments.value = newPayments;
+            payments.value = newPayments;
+          } else {
+            allPayments.addAll(newPayments);
+            payments.addAll(newPayments);
+          }
+          
+          // Parse pagination info
+          if (data['pagination'] != null) {
+            final pagination = data['pagination'];
+            totalPages.value = pagination['pages'] ?? pagination['totalPages'] ?? 1;
+            totalItems.value = pagination['total'] ?? pagination['totalItems'] ?? newPayments.length;
+            hasNextPage.value = pagination['hasNext'] ?? pagination['nextPage'] != null ?? false;
+            hasPrevPage.value = pagination['hasPrev'] ?? pagination['prevPage'] != null ?? false;
+            serverSupportsPagination.value = true;
+          } else if (data['total'] != null) {
+            totalPages.value = data['pages'] ?? 1;
+            totalItems.value = data['total'];
+            hasNextPage.value = data['hasNext'] ?? false;
+            hasPrevPage.value = data['hasPrev'] ?? false;
+            serverSupportsPagination.value = true;
+          } else if (data['totalCount'] != null) {
+            totalItems.value = data['totalCount'];
+            totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
+            hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+            hasPrevPage.value = currentPage.value > 1;
+            serverSupportsPagination.value = false;
+          } else {
+            totalItems.value = payments.length;
+            totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
+            hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+            hasPrevPage.value = currentPage.value > 1;
+            serverSupportsPagination.value = false;
+          }
+          
+          _updateSummaryForFiltered(payments.value);
+          payments.refresh();
+        }
       } else {
         _showError('Failed to load payments');
       }
@@ -148,6 +174,15 @@ class PaymentMadeController extends GetxController {
       _showError('Error loading payments: $e');
     } finally {
       isLoading.value = false;
+      isLoadingMore.value = false;
+    }
+  }
+  
+  // ─── LOAD MORE DATA (LAZY LOADING) ──────────────────────────────
+  Future<void> loadMoreData() async {
+    if (hasNextPage.value && !isLoadingMore.value && !isLoading.value) {
+      currentPage.value++;
+      await loadPayments(resetPage: false);
     }
   }
   
@@ -156,8 +191,11 @@ class PaymentMadeController extends GetxController {
     try {
       final response = await _api.get('/api/warehouse/supplier');
       if (response.success) {
-        List<dynamic> suppliersData = response.data['data'] ?? [];
-        suppliers.value = suppliersData.map((json) => SupplierForPayment.fromJson(json)).toList();
+        final data = response.data;
+        if (data['success'] == true) {
+          List<dynamic> suppliersData = data['data'] ?? [];
+          suppliers.value = suppliersData.map((json) => SupplierForPayment.fromJson(json)).toList();
+        }
       }
     } catch (e) {
       print('Error loading suppliers: $e');
@@ -220,17 +258,23 @@ class PaymentMadeController extends GetxController {
       final response = await _api.get('/api/payments-made/bills/unpaid/$supplierId');
       
       if (response.success) {
-        List<dynamic> billsData = response.data['data'] ?? [];
-        if (billsData.isEmpty) {
-          AppSnackbar.info('Info', 'No unpaid bills found for this supplier');
-          currentBills.value = [];
+        final data = response.data;
+        if (data['success'] == true) {
+          List<dynamic> billsData = data['data'] ?? [];
+          if (billsData.isEmpty) {
+            AppSnackbar.info('Info', 'No unpaid bills found for this supplier');
+            currentBills.value = [];
+            return [];
+          }
+          final bills = billsData.map((json) => BillForPayment.fromJson(json)).toList();
+          currentBills.value = bills;
+          return bills;
+        } else {
+          _showError(data['message'] ?? 'Failed to load bills');
           return [];
         }
-        final bills = billsData.map((json) => BillForPayment.fromJson(json)).toList();
-        currentBills.value = bills;
-        return bills;
       } else {
-        _showError(response.message.isNotEmpty ? response.message : 'Failed to load bills');
+        _showError('Failed to load bills');
         return [];
       }
     } catch (e) {
@@ -260,7 +304,7 @@ class PaymentMadeController extends GetxController {
     totalSelectedAmount.value = 0;
   }
   
-  // ─── RECORD PAYMENT ──────────────────────────────────────────────────
+  // ─── RECORD PAYMENT WITH LOADING DIALOG ──────────────────────────
   Future<void> recordPayment({
     required String supplierId,
     required List<String> billIds,
@@ -286,6 +330,49 @@ class PaymentMadeController extends GetxController {
       return;
     }
     
+    // Show loading dialog
+    Get.dialog(
+      Center(
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: kDanger,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Recording payment...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kText,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Please wait',
+                  style: TextStyle(fontSize: 12, color: kSubText),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+    
     try {
       isRecording.value = true;
       
@@ -305,10 +392,18 @@ class PaymentMadeController extends GetxController {
       
       final response = await _api.post('/api/payments-made', body: paymentData);
       
+      // Close loading dialog
+      Get.back();
+      
       if (response.success) {
-        AppSnackbar.success(kSuccess, 'Success', 'Payment recorded successfully\nJournal entry created');
+        AppSnackbar.success(
+          kSuccess,
+          'Success ✅',
+          'Payment recorded successfully!',
+          duration: const Duration(seconds: 3),
+        );
         clearBillSelections();
-        await loadPayments();
+        await loadPayments(resetPage: true);
         await loadSummary();
         if (supplierId.isNotEmpty) {
           await getUnpaidBills(supplierId);
@@ -317,42 +412,145 @@ class PaymentMadeController extends GetxController {
         _showError(response.message.isNotEmpty ? response.message : 'Failed to record payment');
       }
     } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
       _showError('Error recording payment: $e');
     } finally {
       isRecording.value = false;
     }
   }
   
-  // ─── DELETE PAYMENT ──────────────────────────────────────────────────
+  // ─── DELETE PAYMENT WITH LOADING DIALOG ──────────────────────────
   Future<void> deletePayment(String paymentId) async {
+    // Show loading dialog
+    Get.dialog(
+      Center(
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: Colors.red,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Deleting payment...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kText,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Please wait',
+                  style: TextStyle(fontSize: 12, color: kSubText),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+    
     try {
       final response = await _api.delete('/api/payments-made/$paymentId');
       
+      // Close loading dialog
+      Get.back();
+      
       if (response.success) {
-        AppSnackbar.success(kSuccess, 'Success', 'Payment deleted and journal entry reversed');
-        await loadPayments();
+        AppSnackbar.success(
+          kSuccess,
+          'Success',
+          'Payment deleted and journal entry reversed',
+        );
+        await loadPayments(resetPage: true);
         await loadSummary();
       } else {
         _showError(response.message.isNotEmpty ? response.message : 'Failed to delete payment');
       }
     } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
       _showError('Error deleting payment: $e');
     }
   }
   
-  // ─── CLEAR CHEQUE PAYMENT ──────────────────────────────────────────
+  // ─── CLEAR CHEQUE PAYMENT WITH LOADING DIALOG ────────────────────
   Future<void> clearChequePayment(String paymentId) async {
+    // Show loading dialog
+    Get.dialog(
+      Center(
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: kSuccess,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Clearing cheque...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kText,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Please wait',
+                  style: TextStyle(fontSize: 12, color: kSubText),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+    
     try {
       final response = await _api.post('/api/payments-made/$paymentId/clear');
       
+      // Close loading dialog
+      Get.back();
+      
       if (response.success) {
-        AppSnackbar.success(kSuccess, 'Success', 'Cheque payment cleared successfully');
-        await loadPayments();
+        AppSnackbar.success(
+          kSuccess,
+          'Success',
+          'Cheque payment cleared successfully',
+        );
+        await loadPayments(resetPage: true);
         await loadSummary();
       } else {
         _showError(response.message.isNotEmpty ? response.message : 'Failed to clear cheque');
       }
     } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
       _showError('Error clearing cheque: $e');
     }
   }
@@ -365,8 +563,31 @@ class PaymentMadeController extends GetxController {
       selectDateRange();
     } else {
       selectedDateRange.value = null;
-      loadPayments();
+      _applyDateFilter(filter);
+      loadPayments(resetPage: true);
       loadSummary();
+    }
+  }
+  
+  void _applyDateFilter(String filter) {
+    final now = DateTime.now();
+    DateTime start;
+    
+    switch (filter) {
+      case 'Today':
+        start = DateTime(now.year, now.month, now.day);
+        selectedDateRange.value = DateTimeRange(start: start, end: now);
+        break;
+      case 'This Week':
+        start = now.subtract(Duration(days: now.weekday - 1));
+        selectedDateRange.value = DateTimeRange(start: start, end: now);
+        break;
+      case 'This Month':
+        start = DateTime(now.year, now.month, 1);
+        selectedDateRange.value = DateTimeRange(start: start, end: now);
+        break;
+      default:
+        selectedDateRange.value = null;
     }
   }
   
@@ -382,7 +603,7 @@ class PaymentMadeController extends GetxController {
     if (picked != null) {
       selectedDateRange.value = picked;
       selectedFilter.value = 'Custom Range';
-      loadPayments();
+      loadPayments(resetPage: true);
       loadSummary();
     }
   }
@@ -390,8 +611,164 @@ class PaymentMadeController extends GetxController {
   void clearDateRange() {
     selectedDateRange.value = null;
     selectedFilter.value = 'All';
-    loadPayments();
+    loadPayments(resetPage: true);
     loadSummary();
+  }
+  
+  // ─── SEARCH ──────────────────────────────────────────────────────────
+  void searchPayments(String query) {
+    searchQuery.value = query;
+    loadPayments(resetPage: true);
+  }
+  
+  void _updateSummaryForFiltered(List<PaymentMade> filteredPayments) {
+    totalPaid.value = filteredPayments.fold(0.0, (sum, p) => sum + p.amount);
+    
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final thisWeekStart = now.subtract(Duration(days: now.weekday - 1));
+    final thisMonthStart = DateTime(now.year, now.month, 1);
+    
+    todayTotal.value = filteredPayments
+        .where((p) => p.paymentDate.isAfter(todayStart.subtract(const Duration(days: 1))))
+        .fold(0.0, (sum, p) => sum + p.amount);
+        
+    thisWeekTotal.value = filteredPayments
+        .where((p) => p.paymentDate.isAfter(thisWeekStart.subtract(const Duration(days: 1))))
+        .fold(0.0, (sum, p) => sum + p.amount);
+        
+    thisMonthTotal.value = filteredPayments
+        .where((p) => p.paymentDate.isAfter(thisMonthStart.subtract(const Duration(days: 1))))
+        .fold(0.0, (sum, p) => sum + p.amount);
+  }
+  
+  // ─── EXPORT ──────────────────────────────────────────────────────────
+  void exportPayments() {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Text(
+                  'Export Payments',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: kText,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 18, color: Colors.black),
+                  onPressed: () => Get.back(),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${payments.length} payments will be exported',
+              style: TextStyle(fontSize: 12, color: kSubText),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: _exportOptionCard(
+                    icon: Icons.picture_as_pdf_outlined,
+                    label: 'PDF',
+                    subtitle: 'Formatted report',
+                    color: const Color(0xFFE53935),
+                    bgColor: const Color(0xFFFFEBEE),
+                    onTap: () {
+                      Get.back();
+                      // TODO: Implement PDF export
+                      AppSnackbar.info('Export', 'PDF export coming soon');
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _exportOptionCard(
+                    icon: Icons.table_chart_outlined,
+                    label: 'Excel',
+                    subtitle: 'Spreadsheet',
+                    color: const Color(0xFF2E7D32),
+                    bgColor: const Color(0xFFE8F5E9),
+                    onTap: () {
+                      Get.back();
+                      // TODO: Implement Excel export
+                      AppSnackbar.info('Export', 'Excel export coming soon');
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      backgroundColor: kCardBg,
+    );
+  }
+  
+  Widget _exportOptionCard({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required Color color,
+    required Color bgColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: Colors.white, size: 22),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 10,
+                color: color.withOpacity(0.7),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
   
   // ─── HELPER METHODS ──────────────────────────────────────────────────
@@ -406,10 +783,6 @@ class PaymentMadeController extends GetxController {
   void viewBill(PaymentMade payment) {
     // Navigate to bill details
     Get.toNamed('/bill-details', arguments: payment.billId);
-  }
-  
-  void exportPayments() {
-    AppSnackbar.info('Export', 'Exporting payments...');
   }
 }
 

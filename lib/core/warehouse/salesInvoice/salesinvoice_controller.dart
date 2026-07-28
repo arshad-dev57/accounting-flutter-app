@@ -1,11 +1,18 @@
 // lib/core/warehouse/sales_invoice/controller/sales_invoice_controller.dart
 
+import 'dart:io';
 import 'package:LedgerPro_app/Services/api_client.dart';
 import 'package:LedgerPro_app/Utils/currency_controller.dart';
 import 'package:LedgerPro_app/core/warehouse/salesInvoice/sales_invoice_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_file/open_file.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SalesInvoiceController extends GetxController {
   final ApiClient _api = Get.find<ApiClient>();
@@ -807,6 +814,529 @@ class SalesInvoiceController extends GetxController {
   String formatCurrency(double amount) {
     final currency = Get.find<CurrencyController>();
     return currency.formatAmount(amount);
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // PDF GENERATION & SHARING
+  // ═══════════════════════════════════════════════════════════════
+
+  Future<void> generateAndDownloadPdf(SalesInvoiceModel invoice) async {
+    print('🟣 [SalesInvoiceController] generateAndDownloadPdf called for: ${invoice.invoiceNumber}');
+    
+    try {
+      isSubmitting.value = true;
+      Get.dialog(
+        const Center(
+          child: CircularProgressIndicator(),
+        ),
+        barrierDismissible: false,
+      );
+
+      final pdf = pw.Document();
+      
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(24),
+          header: (ctx) => _buildPdfHeader(invoice),
+          footer: (ctx) => _buildPdfFooter(ctx),
+          build: (ctx) => [_buildInvoiceContent(invoice)],
+        ),
+      );
+
+      final dir = await getTemporaryDirectory();
+      final fileName = 'invoice_${invoice.invoiceNumber}_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsBytes(await pdf.save());
+
+      if (Get.isDialogOpen ?? false) Get.back();
+      isSubmitting.value = false;
+
+      Get.snackbar('Success', 'PDF generated successfully');
+      await OpenFile.open(file.path);
+    } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
+      isSubmitting.value = false;
+      print('❌ [SalesInvoiceController] PDF generation error: $e');
+      Get.snackbar('Error', 'Failed to generate PDF: $e');
+    }
+  }
+
+  Future<void> shareInvoice(SalesInvoiceModel invoice) async {
+    print('🟣 [SalesInvoiceController] shareInvoice called for: ${invoice.invoiceNumber}');
+    
+    try {
+      isSubmitting.value = true;
+      Get.dialog(
+        const Center(
+          child: CircularProgressIndicator(),
+        ),
+        barrierDismissible: false,
+      );
+
+      final pdf = pw.Document();
+      
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(24),
+          header: (ctx) => _buildPdfHeader(invoice),
+          footer: (ctx) => _buildPdfFooter(ctx),
+          build: (ctx) => [_buildInvoiceContent(invoice)],
+        ),
+      );
+
+      final dir = await getTemporaryDirectory();
+      final fileName = 'invoice_${invoice.invoiceNumber}_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsBytes(await pdf.save());
+
+      if (Get.isDialogOpen ?? false) Get.back();
+      isSubmitting.value = false;
+
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        subject: 'Invoice ${invoice.invoiceNumber}',
+        text: 'Please find attached invoice ${invoice.invoiceNumber} for ${invoice.customerName}',
+      );
+    } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
+      isSubmitting.value = false;
+      print('❌ [SalesInvoiceController] Share error: $e');
+      Get.snackbar('Error', 'Failed to share invoice: $e');
+    }
+  }
+
+  Future<void> shareViaWhatsApp(SalesInvoiceModel invoice) async {
+    print('🟣 [SalesInvoiceController] shareViaWhatsApp called for: ${invoice.invoiceNumber}');
+    
+    try {
+      isSubmitting.value = true;
+      Get.dialog(
+        const Center(
+          child: CircularProgressIndicator(),
+        ),
+        barrierDismissible: false,
+      );
+
+      final pdf = pw.Document();
+      
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(24),
+          header: (ctx) => _buildPdfHeader(invoice),
+          footer: (ctx) => _buildPdfFooter(ctx),
+          build: (ctx) => [_buildInvoiceContent(invoice)],
+        ),
+      );
+
+      final dir = await getTemporaryDirectory();
+      final fileName = 'invoice_${invoice.invoiceNumber}_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsBytes(await pdf.save());
+
+      if (Get.isDialogOpen ?? false) Get.back();
+      isSubmitting.value = false;
+
+      // WhatsApp sharing
+      final message = 'Invoice ${invoice.invoiceNumber} for ${invoice.customerName}. Amount: ${formatCurrency(invoice.grandTotal)}';
+      final whatsappUrl = 'https://wa.me/?text=${Uri.encodeComponent(message)}';
+      
+      if (await canLaunchUrl(Uri.parse(whatsappUrl))) {
+        await launchUrl(Uri.parse(whatsappUrl), mode: LaunchMode.externalApplication);
+        
+        // Also share the file after opening WhatsApp
+        await Share.shareXFiles(
+          [XFile(file.path)],
+          subject: 'Invoice ${invoice.invoiceNumber}',
+          text: message,
+        );
+      } else {
+        Get.snackbar('Error', 'WhatsApp not installed');
+      }
+    } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
+      isSubmitting.value = false;
+      print('❌ [SalesInvoiceController] WhatsApp share error: $e');
+      Get.snackbar('Error', 'Failed to share via WhatsApp: $e');
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // PDF BUILDING METHODS
+  // ═══════════════════════════════════════════════════════════════
+
+  pw.Widget _buildPdfHeader(SalesInvoiceModel invoice) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.only(bottom: 12),
+      decoration: const pw.BoxDecoration(
+        border: pw.Border(
+          bottom: pw.BorderSide(color: PdfColors.grey300, width: 1),
+        ),
+      ),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(
+                'INVOICE',
+                style: pw.TextStyle(
+                  fontSize: 24,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.indigo800,
+                ),
+              ),
+              pw.Text(
+                'Generated: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now())}',
+                style: pw.TextStyle(fontSize: 9, color: PdfColors.grey600),
+              ),
+            ],
+          ),
+          pw.Container(
+            padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: pw.BoxDecoration(
+              color: PdfColors.indigo800,
+              borderRadius: pw.BorderRadius.circular(6),
+            ),
+            child: pw.Text(
+              'LedgerPro',
+              style: pw.TextStyle(
+                color: PdfColors.white,
+                fontWeight: pw.FontWeight.bold,
+                fontSize: 10,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _buildPdfFooter(pw.Context context) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.only(top: 12),
+      decoration: const pw.BoxDecoration(
+        border: pw.Border(
+          top: pw.BorderSide(color: PdfColors.grey300, width: 1),
+        ),
+      ),
+      child: pw.Column(
+        children: [
+          pw.Text(
+            'Thank you for your business!',
+            style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+          ),
+          pw.SizedBox(height: 4),
+          pw.Text(
+            'Page ${context.pageNumber} of ${context.pagesCount}',
+            style: pw.TextStyle(fontSize: 8, color: PdfColors.grey400),
+          ),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _buildInvoiceContent(SalesInvoiceModel invoice) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        // Invoice Info
+        pw.Row(
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          children: [
+            pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  'Invoice Number:',
+                  style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+                ),
+                pw.Text(
+                  invoice.invoiceNumber,
+                  style: pw.TextStyle(
+                    fontSize: 12,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.end,
+              children: [
+                pw.Text(
+                  'Date:',
+                  style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+                ),
+                pw.Text(
+                  DateFormat('dd MMM yyyy').format(invoice.invoiceDate),
+                  style: pw.TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+          ],
+        ),
+        pw.SizedBox(height: 8),
+        pw.Row(
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          children: [
+            pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  'Due Date:',
+                  style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+                ),
+                pw.Text(
+                  DateFormat('dd MMM yyyy').format(invoice.dueDate),
+                  style: pw.TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+            pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.end,
+              children: [
+                pw.Text(
+                  'Status:',
+                  style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+                ),
+                pw.Text(
+                  invoice.invoiceStatus,
+                  style: pw.TextStyle(
+                    fontSize: 12,
+                    fontWeight: pw.FontWeight.bold,
+                    color: _getPdfStatusColor(invoice.invoiceStatus),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        pw.SizedBox(height: 16),
+        // Customer Info
+        pw.Text(
+          'Bill To:',
+          style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
+        ),
+        pw.Text(invoice.customerName, style: pw.TextStyle(fontSize: 11)),
+        if (invoice.customerEmail != null && invoice.customerEmail!.isNotEmpty)
+          pw.Text(invoice.customerEmail!, style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+        pw.SizedBox(height: 16),
+        // Items Table
+        pw.Container(
+          padding: const pw.EdgeInsets.symmetric(vertical: 8),
+          decoration: const pw.BoxDecoration(
+            border: pw.Border(
+              bottom: pw.BorderSide(color: PdfColors.grey300, width: 1),
+            ),
+          ),
+          child: pw.Row(
+            children: [
+              pw.Expanded(
+                flex: 4,
+                child: pw.Text(
+                  'Item',
+                  style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 1,
+                child: pw.Text(
+                  'Qty',
+                  style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+                  textAlign: pw.TextAlign.center,
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Price',
+                  style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+                  textAlign: pw.TextAlign.right,
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Total',
+                  style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+                  textAlign: pw.TextAlign.right,
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Invoice Items
+        ...invoice.items.map((item) {
+          return pw.Container(
+            padding: const pw.EdgeInsets.symmetric(vertical: 6),
+            decoration: const pw.BoxDecoration(
+              border: pw.Border(
+                bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.5),
+              ),
+            ),
+            child: pw.Row(
+              children: [
+                pw.Expanded(
+                  flex: 4,
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        item.productName,
+                        style: pw.TextStyle(fontSize: 10),
+                        maxLines: 2,
+                        overflow: pw.TextOverflow.clip,
+                      ),
+                      if (item.sku.isNotEmpty)
+                        pw.Text(
+                          'SKU: ${item.sku}',
+                          style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+                        ),
+                    ],
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 1,
+                  child: pw.Text(
+                    item.quantity.toString(),
+                    style: pw.TextStyle(fontSize: 10),
+                    textAlign: pw.TextAlign.center,
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Text(
+                    formatCurrency(item.unitPrice),
+                    style: pw.TextStyle(fontSize: 10),
+                    textAlign: pw.TextAlign.right,
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Text(
+                    formatCurrency(item.lineTotal),
+                    style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+                    textAlign: pw.TextAlign.right,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+        pw.SizedBox(height: 16),
+        // Summary
+        pw.Container(
+          padding: const pw.EdgeInsets.all(12),
+          decoration: pw.BoxDecoration(
+            color: PdfColors.grey100,
+            borderRadius: pw.BorderRadius.circular(8),
+          ),
+          child: pw.Column(
+            children: [
+              _summaryRow('Subtotal', formatCurrency(invoice.subtotal)),
+              pw.SizedBox(height: 4),
+              _summaryRow('Discount', '-${formatCurrency(invoice.discountTotal)}'),
+              pw.SizedBox(height: 4),
+              _summaryRow('Tax', formatCurrency(invoice.taxTotal)),
+              pw.SizedBox(height: 8),
+              pw.Container(
+                decoration: const pw.BoxDecoration(
+                  border: pw.Border(
+                    top: pw.BorderSide(color: PdfColors.grey400, width: 1),
+                  ),
+                ),
+                padding: const pw.EdgeInsets.only(top: 8),
+                child: _summaryRow(
+                  'Grand Total',
+                  formatCurrency(invoice.grandTotal),
+                  bold: true,
+                ),
+              ),
+            ],
+          ),
+        ),
+        pw.SizedBox(height: 16),
+        // Payment Status
+        pw.Container(
+          padding: const pw.EdgeInsets.all(12),
+          decoration: pw.BoxDecoration(
+            color: invoice.paymentStatus == 'Paid'
+                ? PdfColors.green50
+                : PdfColors.orange50,
+            borderRadius: pw.BorderRadius.circular(8),
+          ),
+          child: pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Text(
+                'Payment Status:',
+                style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
+              ),
+              pw.Text(
+                invoice.paymentStatus,
+                style: pw.TextStyle(
+                  fontSize: 11,
+                  fontWeight: pw.FontWeight.bold,
+                  color: invoice.paymentStatus == 'Paid'
+                      ? PdfColors.green700
+                      : PdfColors.orange700,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (invoice.paymentStatus != 'Paid' && invoice.outstanding > 0) ...[
+          pw.SizedBox(height: 8),
+          pw.Text(
+            'Outstanding: ${formatCurrency(invoice.outstanding)}',
+            style: pw.TextStyle(
+              fontSize: 10,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.red700,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  pw.Widget _summaryRow(String label, String value, {bool bold = false}) {
+    return pw.Row(
+      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+      children: [
+        pw.Text(
+          label,
+          style: pw.TextStyle(fontSize: 10),
+        ),
+        pw.Text(
+          value,
+          style: pw.TextStyle(
+            fontSize: 10,
+            fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
+          ),
+        ),
+      ],
+    );
+  }
+
+  PdfColor _getPdfStatusColor(String status) {
+    switch (status) {
+      case 'Draft':
+        return PdfColors.orange700;
+      case 'Posted':
+        return PdfColors.blue700;
+      case 'Partially Paid':
+        return PdfColors.purple700;
+      case 'Paid':
+        return PdfColors.green700;
+      case 'Cancelled':
+        return PdfColors.red700;
+      default:
+        return PdfColors.grey700;
+    }
   }
 }
 

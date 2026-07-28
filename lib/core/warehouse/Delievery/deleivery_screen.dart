@@ -2,8 +2,10 @@
 
 import 'package:LedgerPro_app/Utils/colors.dart';
 import 'package:LedgerPro_app/Utils/currency_controller.dart';
+import 'package:LedgerPro_app/Utils/responsive_utils.dart';
 import 'package:LedgerPro_app/core/warehouse/Delievery/deleivery_controller.dart';
 import 'package:LedgerPro_app/core/warehouse/Delievery/deleivery_model.dart';
+import 'package:LedgerPro_app/widgets/sales_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -16,9 +18,11 @@ class DeliveryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(DeliveryController());
+    final isMobile = ResponsiveUtils.isMobile(context);
 
     return Scaffold(
       backgroundColor: kBgLight,
+      drawer: isMobile ? const SalesDrawer(currentRoute: '/sales/delivery') : null,
       appBar: AppBar(
         title: const Text(
           'Deliveries',
@@ -30,10 +34,12 @@ class DeliveryScreen extends StatelessWidget {
         ),
         backgroundColor: kPrimary,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Get.back(),
-        ),
+        leading: 
+           
+             IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.black),
+                onPressed: () => Get.back(),
+              ),
         actions: [
           // Refresh Button
           IconButton(
@@ -292,10 +298,6 @@ class _SearchFieldState extends State<_SearchField> {
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════════════
-// CREATE DELIVERY WIZARD
-// ═══════════════════════════════════════════════════════════════
 
 class _CreateDeliveryWizard extends StatelessWidget {
   final DeliveryController controller;
@@ -696,9 +698,6 @@ class _CreateDeliveryWizard extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// DELIVERY DETAIL SHEET
-// ═══════════════════════════════════════════════════════════════
 
 class _DeliveryDetailSheet extends StatelessWidget {
   final DeliveryController controller;

@@ -6,6 +6,8 @@ import 'package:LedgerPro_app/Utils/toast_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:LedgerPro_app/Services/api_client.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:LedgerPro_app/Utils/signature_dialog.dart';
 
 class ProfileController extends GetxController {
   // Observable variables
@@ -103,6 +105,33 @@ class ProfileController extends GetxController {
     businessTypeController = TextEditingController();
   }
 
+  // ─── IMAGE PICKER METHODS ──────────────────────────────────────
+  Future<void> pickBusinessLogo() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      businessLogoController.text = image.path;
+      businessLogo.value = image.path;
+    }
+  }
+
+  Future<void> drawSignature(BuildContext context) async {
+    final String? path = await showSignatureDialog(context);
+    if (path != null) {
+      signatureController.text = path;
+      signature.value = path;
+    }
+  }
+
+  Future<void> pickSignatureFromGallery() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      signatureController.text = image.path;
+      signature.value = image.path;
+    }
+  }
+
   // ════════════════════════════════════════════════════════════════
   // LOAD PROFILE
   // ════════════════════════════════════════════════════════════════
@@ -135,7 +164,8 @@ class ProfileController extends GetxController {
           final businessDetails = profile['businessDetails'] ?? {};
           businessLogo.value = businessDetails['logo'] ?? '';
           fiscalYear.value = businessDetails['fiscalYear'] ?? '';
-          taxRegistrationNumber.value = businessDetails['taxRegistrationNumber'] ?? '';
+          taxRegistrationNumber.value =
+              businessDetails['taxRegistrationNumber'] ?? '';
           signature.value = businessDetails['signature'] ?? '';
           industry.value = businessDetails['industry'] ?? '';
           businessType.value = businessDetails['businessType'] ?? '';
@@ -169,7 +199,7 @@ class ProfileController extends GetxController {
       }
     } catch (e) {
       print('Error loading profile: $e');
-      _showError('error. Please check your connection.');
+      _showError('error. Server Down. Please try again later.');
     } finally {
       isLoading.value = false;
     }
@@ -183,30 +213,36 @@ class ProfileController extends GetxController {
       isSaving.value = true;
 
       // ─── BUILD REQUEST BODY ──────────────────────────────────────
-      final Map<String, dynamic> body = {
+      final Map<String, String> fields = {
         // Personal Info
         'firstName': firstNameController.text.trim(),
         'lastName': lastNameController.text.trim(),
         'email': emailController.text.trim(),
         'phone': phoneController.text.trim(),
         'country': countryController.text.trim(),
-        
+
         // Address & Contact
         'address': addressController.text.trim(),
         'contactNo': contactNoController.text.trim(),
         'websiteLink': websiteController.text.trim(),
         'organizationName': orgNameController.text.trim(),
-        
+
         // Business Details
-        'logo': businessLogoController.text.trim(),
         'fiscalYear': fiscalYearController.text.trim(),
         'taxRegistrationNumber': taxRegistrationController.text.trim(),
-        'signature': signatureController.text.trim(),
         'industry': industryController.text.trim(),
         'businessType': businessTypeController.text.trim(),
       };
 
-      final response = await _api.put('/api/profile', body: body);
+      final Map<String, String> filePaths = {};
+      if (businessLogoController.text.isNotEmpty && !businessLogoController.text.startsWith('http')) {
+        filePaths['logo'] = businessLogoController.text;
+      }
+      if (signatureController.text.isNotEmpty && !signatureController.text.startsWith('http')) {
+        filePaths['signature'] = signatureController.text;
+      }
+
+      final response = await _api.putMultipart('/api/profile', fields: fields, filePaths: filePaths);
 
       print('Update Profile Response Status: ${response.statusCode}');
 
@@ -244,7 +280,7 @@ class ProfileController extends GetxController {
       }
     } catch (e) {
       print('Error saving profile: $e');
-      _showError('error. Please check your connection.');
+      _showError('error. Server Down. Please try again later.');
     } finally {
       isSaving.value = false;
     }
@@ -257,20 +293,26 @@ class ProfileController extends GetxController {
     try {
       isSaving.value = true;
 
-      final Map<String, dynamic> body = {
-        'logo': businessLogoController.text.trim(),
+      final Map<String, String> fields = {
         'fiscalYear': fiscalYearController.text.trim(),
         'taxRegistrationNumber': taxRegistrationController.text.trim(),
-        'signature': signatureController.text.trim(),
         'industry': industryController.text.trim(),
         'businessType': businessTypeController.text.trim(),
       };
 
-      final response = await _api.put('/api/profile/business', body: body);
+      final Map<String, String> filePaths = {};
+      if (businessLogoController.text.isNotEmpty && !businessLogoController.text.startsWith('http')) {
+        filePaths['logo'] = businessLogoController.text;
+      }
+      if (signatureController.text.isNotEmpty && !signatureController.text.startsWith('http')) {
+        filePaths['signature'] = signatureController.text;
+      }
+
+      final response = await _api.putMultipart('/api/profile/business', fields: fields, filePaths: filePaths);
 
       if (response.success) {
         final data = response.data;
-        
+
         // Update observables
         businessLogo.value = businessLogoController.text.trim();
         fiscalYear.value = fiscalYearController.text.trim();
@@ -279,14 +321,16 @@ class ProfileController extends GetxController {
         industry.value = industryController.text.trim();
         businessType.value = businessTypeController.text.trim();
 
-        _showSuccess(data['message'] ?? 'Business details updated successfully!');
+        _showSuccess(
+          data['message'] ?? 'Business details updated successfully!',
+        );
         toggleEdit();
       } else {
         _showError(response.message ?? 'Failed to update business details.');
       }
     } catch (e) {
       print('Error saving business details: $e');
-      _showError('error. Please check your connection.');
+      _showError('error. Server Down. Please try again later.');
     } finally {
       isSaving.value = false;
     }

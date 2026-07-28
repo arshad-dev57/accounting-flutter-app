@@ -31,6 +31,12 @@ class WarehouseDashboardController extends GetxController {
   final RxDouble todayRevenue = 0.0.obs;
   final RxInt totalOrders = 0.obs;
 
+  // Period Filter
+  final RxString selectedPeriod =
+      'week'.obs; // today | week | month | year | custom
+  final Rx<DateTime?> customStartDate = Rx<DateTime?>(null);
+  final Rx<DateTime?> customEndDate = Rx<DateTime?>(null);
+
   // Chart Data
   final RxList<Map<String, dynamic>> stockMovementChart =
       <Map<String, dynamic>>[].obs;
@@ -45,77 +51,51 @@ class WarehouseDashboardController extends GetxController {
   // Menu Items with routes
   final List<Map<String, dynamic>> menuItems = [
     {
-      'icon': Icons.dashboard,
+      'icon': Icons.dashboard_rounded,
       'title': 'Dashboard',
       'route': '/warehouse/dashboard',
     },
     {
-      'icon': Icons.inventory,
+      'icon': Icons.inventory_2_rounded,
       'title': 'Products',
       'route': '/warehouse/products',
     },
     {
-      'icon': Icons.category,
+      'icon': Icons.category_rounded,
       'title': 'Categories',
       'route': '/warehouse/categories',
     },
     {
-      'icon': Icons.people,
+      'icon': Icons.people_rounded,
       'title': 'Suppliers',
       'route': '/warehouse/suppliers',
     },
     {
-      'icon': Icons.trending_up,
-      'title': 'Sales',
-      'route': '/warehouse/sales',
+      'icon': Icons.people_outline_rounded,
+      'title': 'Customers',
+      'route': '/sales/warehouse-customers',
     },
     {
-      'icon': Icons.shopping_cart,
-      'title': 'Orders',
-      'route': '/warehouse/orders',
-    },
-    {
-      'icon': Icons.receipt_long,
+      'icon': Icons.receipt_rounded,
       'title': 'Invoices',
       'route': '/warehouse/invoices',
     },
     {
-      'icon': Icons.replay,
-      'title': 'Refunds',
-      'route': '/warehouse/refunds',
-    },
-    {
-      'icon': Icons.assignment_return,
-      'title': 'Returns',
-      'route': '/warehouse/returns',
-    },
-    {
-      'icon': Icons.local_shipping,
-      'title': 'Purchases',
-      'route': '/warehouse/purchases',
-    },
-    {
-      'icon': Icons.warehouse,
+      'icon': Icons.local_shipping_rounded,
       'title': 'Stock Movement',
       'route': '/warehouse/stock',
     },
     {
-      'icon': Icons.inventory,
+      'icon': Icons.assessment_rounded,
       'title': 'Inventory Valuation',
       'route': '/warehouse/inventory',
     },
     {
-      'icon': Icons.receipt_long,
+      'icon': Icons.bar_chart_rounded,
       'title': 'Reports',
       'route': '/warehouse/reports',
     },
-    {
-      'icon': Icons.currency_exchange,
-      'title': 'Currency',
-      'route': '/warehouse/currency',
-    },
   ];
-
   @override
   void onInit() {
     super.onInit();
@@ -132,6 +112,34 @@ class WarehouseDashboardController extends GetxController {
 
   String getCurrencySymbol() {
     return Get.find<CurrencyController>().currencySymbol.value;
+  }
+
+  // ─── Period Filter ────────────────────────────────────────
+  Future<void> applyPeriodFilter(
+    String period, {
+    DateTime? start,
+    DateTime? end,
+  }) async {
+    selectedPeriod.value = period;
+    if (period == 'custom') {
+      customStartDate.value = start;
+      customEndDate.value = end;
+    } else {
+      customStartDate.value = null;
+      customEndDate.value = null;
+    }
+    await loadDashboardData();
+  }
+
+  Map<String, dynamic> get _periodQueryParams {
+    final params = <String, dynamic>{'period': selectedPeriod.value};
+    if (selectedPeriod.value == 'custom') {
+      if (customStartDate.value != null)
+        params['startDate'] = customStartDate.value!.toIso8601String();
+      if (customEndDate.value != null)
+        params['endDate'] = customEndDate.value!.toIso8601String();
+    }
+    return params;
   }
 
   // ─── Navigation ──────────────────────────────────────────────────
@@ -213,9 +221,8 @@ class WarehouseDashboardController extends GetxController {
       final response = await _apiClient.get(
         '/api/warehouse/dashboard/metrics',
         requiresAuth: true,
+        queryParameters: _periodQueryParams,
       );
-
-      print('📊 Metrics Response: ${response.statusCode}');
 
       if (response.success && response.data != null) {
         final data = response.data['data'] as Map<String, dynamic>;
@@ -230,10 +237,6 @@ class WarehouseDashboardController extends GetxController {
         todayStockOut.value = data['todayStockOut'] ?? 0;
         pendingOrders.value = data['pendingOrders'] ?? 0;
         todayRevenue.value = (data['todayRevenue'] ?? 0).toDouble();
-
-        print(
-          '✅ Metrics loaded: Products=${totalProducts.value}, Revenue=${todayRevenue.value}',
-        );
       } else {
         print('❌ Metrics API failed: ${response.message}');
       }
@@ -279,6 +282,7 @@ class WarehouseDashboardController extends GetxController {
       final response = await _apiClient.get(
         '/api/warehouse/dashboard/charts/stock-movement',
         requiresAuth: true,
+        queryParameters: _periodQueryParams,
       );
 
       if (response.success && response.data != null) {
@@ -291,7 +295,6 @@ class WarehouseDashboardController extends GetxController {
             'date': item['date'] ?? '',
           };
         }).toList();
-        print('✅ Stock movement chart loaded: ${stockMovementChart.length}');
       }
     } catch (e) {
       print('❌ Error fetching stock movement chart: $e');
@@ -377,6 +380,42 @@ class WarehouseDashboardController extends GetxController {
 
   String getCurrentDate() {
     final now = DateTime.now();
-    return '${now.day}/${now.month}/${now.year}';
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${now.day} ${months[now.month - 1]} ${now.year}';
+  }
+
+  String getPeriodLabel() {
+    switch (selectedPeriod.value) {
+      case 'today':
+        return 'Today';
+      case 'week':
+        return 'This Week';
+      case 'month':
+        return 'This Month';
+      case 'year':
+        return 'This Year';
+      case 'custom':
+        if (customStartDate.value != null && customEndDate.value != null) {
+          final s = customStartDate.value!;
+          final e = customEndDate.value!;
+          return '${s.day}/${s.month} - ${e.day}/${e.month}';
+        }
+        return 'Custom';
+      default:
+        return 'This Week';
+    }
   }
 }
