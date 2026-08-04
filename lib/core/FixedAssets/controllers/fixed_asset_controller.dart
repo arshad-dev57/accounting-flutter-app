@@ -248,49 +248,6 @@ class FixedAssetController extends GetxController {
     DateTime? warrantyExpiry,
     String? notes,
   }) async {
-    // Show loading dialog
-    Get.dialog(
-      Center(
-        child: Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                    color: kPrimary,
-                  ),
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'Creating asset...',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: kText,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  'Please wait',
-                  style: TextStyle(fontSize: 12, color: kSubText),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      barrierDismissible: false,
-    );
-
     try {
       isProcessing.value = true;
 
@@ -315,9 +272,6 @@ class FixedAssetController extends GetxController {
 
       final response = await _apiClient.post('/api/fixed-assets', body: assetData);
 
-      // Close loading dialog
-      Get.back();
-
       if (response.success && response.statusCode == 201) {
         final responseData = response.data;
         if (responseData['success'] == true) {
@@ -330,7 +284,7 @@ class FixedAssetController extends GetxController {
           await loadFixedAssets(resetPage: true);
           await loadSummary();
           // Close the form dialog
-          if (Get.isDialogOpen ?? false) Get.back();
+          Get.back();
         } else {
           _showError(responseData['message'] ?? 'Failed to add asset');
         }
@@ -338,7 +292,6 @@ class FixedAssetController extends GetxController {
         _showError(response.data['message'] ?? 'Failed to add asset');
       }
     } catch (e) {
-      if (Get.isDialogOpen ?? false) Get.back();
       print('Error creating fixed asset: $e');
       _showError('Error creating fixed asset');
     } finally {
@@ -360,49 +313,6 @@ class FixedAssetController extends GetxController {
     DateTime? warrantyExpiry,
     String? notes,
   }) async {
-    // Show loading dialog
-    Get.dialog(
-      Center(
-        child: Card(
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                    color: kPrimary,
-                  ),
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'Updating asset...',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: kText,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  'Please wait',
-                  style: TextStyle(fontSize: 12, color: kSubText),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      barrierDismissible: false,
-    );
-
     try {
       isProcessing.value = true;
 
@@ -427,9 +337,6 @@ class FixedAssetController extends GetxController {
 
       final response = await _apiClient.put('/api/fixed-assets/$id', body: assetData);
 
-      // Close loading dialog
-      Get.back();
-
       if (response.success && response.statusCode == 200) {
         final responseData = response.data;
         if (responseData['success'] == true) {
@@ -441,6 +348,8 @@ class FixedAssetController extends GetxController {
           );
           await loadFixedAssets(resetPage: true);
           await loadSummary();
+          // Close the form dialog
+          Get.back();
         } else {
           _showError(responseData['message'] ?? 'Failed to update asset');
         }
@@ -448,7 +357,6 @@ class FixedAssetController extends GetxController {
         _showError(response.data['message'] ?? 'Failed to update asset');
       }
     } catch (e) {
-      if (Get.isDialogOpen ?? false) Get.back();
       print('Error updating fixed asset: $e');
       _showError('Error updating fixed asset');
     } finally {

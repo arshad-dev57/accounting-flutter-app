@@ -364,7 +364,6 @@ class AccountsPayableController extends GetxController {
 
       final payload = {
         'supplierId': billData['supplierId'],
-        'billNumber': billData['billNumber'],
         'date': billData['date'],
         'dueDate': billData['dueDate'],
         'reference': billData['reference'] ?? '',

@@ -1,5 +1,6 @@
 // lib/core/warehouse/widgets/drawer_widget.dart
 
+import 'package:LedgerPro_app/Services/permission_service.dart';
 import 'package:LedgerPro_app/Utils/colors.dart';
 import 'package:LedgerPro_app/Utils/toast_utils.dart';
 import 'package:LedgerPro_app/core/About/about_app_screen.dart';
@@ -45,6 +46,17 @@ class WarehouseDrawer extends StatelessWidget {
                       title: 'Warehouse Core',
                       icon: Mdi.warehouse,
                       currentRoute: currentRoute,
+                      module: 'warehouse',
+                      permissions: const [
+                        'dashboard',
+                        'products',
+                        'categories',
+                        'suppliers',
+                        'customers',
+                        'invoices',
+                        'stock-movement',
+                        'inventory-valuation',
+                      ],
                       items: const [
                         ('Dashboard', Mdi.view_dashboard, '/warehouse/dashboard'),
                         ('Products', Mdi.package_variant_closed, '/warehouse/products'),
@@ -60,6 +72,13 @@ class WarehouseDrawer extends StatelessWidget {
                       title: 'Reports',
                       icon: Mdi.chart_bar,
                       currentRoute: currentRoute,
+                      module: 'warehouse',
+                      permissions: const [
+                        'stock-summary',
+                        'low-stock',
+                        'expiry',
+                        'reports',
+                      ],
                       items: const [
                         ('Stock Summary', Mdi.chart_bar, '/warehouse/reports/stock-summary'),
                         ('Low Stock Report', Mdi.alert, '/warehouse/reports/low-stock'),
@@ -424,6 +443,8 @@ class _WarehouseDrawerFooter extends StatelessWidget {
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
       Get.delete<WarehouseDashboardController>(force: true);
+      final permissionService = PermissionService.to;
+      await permissionService.clearUserData();
       Get.offAll(() => const LoginScreen());
       AppSnackbar.success(kSuccess, 'Success', 'Logged out successfully');
     } catch (e) {
@@ -462,12 +483,16 @@ class _NavSection extends StatefulWidget {
   final String icon;
   final String currentRoute;
   final List<(String, String, String)> items;
+  final String? module;
+  final List<String>? permissions;
 
   const _NavSection({
     required this.title,
     required this.icon,
     required this.currentRoute,
     required this.items,
+    this.module,
+    this.permissions,
   });
 
   @override
@@ -476,8 +501,29 @@ class _NavSection extends StatefulWidget {
 
 class _NavSectionState extends State<_NavSection> {
   bool _expanded = false;
+  final PermissionService _permissionService = PermissionService.to;
 
   bool get _hasActiveChild => widget.items.any((i) => _isActive(i.$3));
+
+  List<(String, String, String)> get _filteredItems {
+    if (widget.module == null || widget.permissions == null) {
+      return widget.items;
+    }
+
+    final isAdmin = _permissionService.isAdmin;
+    if (isAdmin) return widget.items;
+
+    final filtered = <(String, String, String)>[];
+    for (int i = 0; i < widget.items.length; i++) {
+      final item = widget.items[i];
+      final permission = widget.permissions![i];
+      
+      if (_permissionService.hasSubPageAccess(widget.module!, permission)) {
+        filtered.add(item);
+      }
+    }
+    return filtered;
+  }
 
   bool _isActive(String routeKey) {
     if (routeKey.startsWith('__')) return false;
@@ -529,7 +575,7 @@ class _NavSectionState extends State<_NavSection> {
           duration: const Duration(milliseconds: 200),
           crossFadeState: _expanded ? CrossFadeState.showFirst : CrossFadeState.showSecond,
           firstChild: Column(
-            children: widget.items.map((item) {
+            children: _filteredItems.map((item) {
               return _NavItem(
                 label: item.$1,
                 icon: item.$2,

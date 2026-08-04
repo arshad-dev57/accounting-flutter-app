@@ -225,7 +225,6 @@ class TrialBalanceController extends GetxController {
     fetchTrialBalance(resetPagination: true);
   }
 
-  // ─────────────────────── EXPORT FUNCTIONS ───────────────────────
 
   void exportToPdf() async {
     try {

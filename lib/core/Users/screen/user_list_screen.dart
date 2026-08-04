@@ -1,9 +1,8 @@
 import 'package:LedgerPro_app/Utils/colors.dart';
 import 'package:LedgerPro_app/core/Users/controller/user_management_controller.dart';
+import 'package:LedgerPro_app/core/Users/screen/enhanced_access_management_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:iconify_flutter/iconify_flutter.dart';
-import 'package:iconify_flutter/icons/mdi.dart';
 
 class UserListScreen extends StatefulWidget {
   const UserListScreen({super.key});
@@ -14,6 +13,10 @@ class UserListScreen extends StatefulWidget {
 
 class _UserListScreenState extends State<UserListScreen> {
   late final UserManagementController _controller;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  String _statusFilter = 'all';
+  String _roleFilter = 'all';
 
   @override
   void initState() {
@@ -24,416 +27,657 @@ class _UserListScreenState extends State<UserListScreen> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBg,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Users',
+      backgroundColor: const Color(0xFFF5F7FA),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(),
+            _buildStatsRow(),
+            _buildSearchBar(),
+            _buildFilterRow(),
+            Expanded(child: _buildUserList()),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Get.toNamed('/admin/users/add'),
+        backgroundColor: kPrimary,
+        icon: const Icon(Icons.person_add_rounded, color: Colors.white),
+        label: const Text(
+          'Add User',
           style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: Colors.black87,
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add, color: kPrimary),
-            onPressed: () => Get.toNamed('/admin/users/add'),
-          ),
-        ],
       ),
-      body: Column(
+    );
+  }
+
+  // ── HEADER ──────────────────────────────────────────────────────────────────
+  Widget _buildHeader() {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+      child: Row(
         children: [
-          _buildSearchBar(),
-          _buildFilterChips(),
-          Expanded(
-            child: Obx(() {
-              if (_controller.isLoading.value) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              if (_controller.hasError.value) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error_outline, size: 48, color: Colors.grey),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Error loading users',
-                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _controller.errorMessage.value,
-                        style: TextStyle(fontSize: 12, color: Colors.grey[400]),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _controller.refresh,
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                );
-              }
-
-              final users = _controller.filteredUsers;
-
-              if (users.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.group_outlined, size: 64, color: Colors.grey[300]),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No users found',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Add users to get started',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[400]),
-                      ),
-                    ],
-                  ),
-                );
-              }
-
-              return ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: users.length,
-                itemBuilder: (context, index) {
-                  return _UserCard(user: users[index]);
-                },
-              );
-            }),
+          GestureDetector(
+            onTap: () => Get.back(),
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F7FA),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.arrow_back_ios_rounded,
+                  size: 16, color: Colors.black87),
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Text(
+              'Team Members',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: Colors.black87,
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
+  // ── STATS ROW ────────────────────────────────────────────────────────────────
+  Widget _buildStatsRow() {
+    return GetX<UserManagementController>(
+      builder: (c) {
+        final total = c.users.length;
+        final active = c.users.where((u) => u.isActive).length;
+        final admins = c.users.where((u) => u.role == 'admin').length;
+        return Container(
+          color: Colors.white,
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+          child: Row(
+            children: [
+              _MiniStat(label: 'Total', value: '$total', color: kPrimary),
+              const SizedBox(width: 12),
+              _MiniStat(
+                  label: 'Active',
+                  value: '$active',
+                  color: const Color(0xFF27AE60)),
+              const SizedBox(width: 12),
+              _MiniStat(
+                  label: 'Admins',
+                  value: '$admins',
+                  color: const Color(0xFF8E44AD)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ── SEARCH BAR ───────────────────────────────────────────────────────────────
   Widget _buildSearchBar() {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
-      ),
-      child: TextField(
-        onChanged: _controller.setSearchQuery,
-        decoration: InputDecoration(
-          hintText: 'Search users...',
-          hintStyle: TextStyle(color: Colors.grey[400]),
-          prefixIcon: const Icon(Icons.search, color: Colors.grey),
-          suffixIcon: Obx(() {
-            if (_controller.searchQuery.value.isEmpty) {
-              return const SizedBox.shrink();
-            }
-            return IconButton(
-              icon: const Icon(Icons.clear, color: Colors.grey),
-              onPressed: () => _controller.setSearchQuery(''),
-            );
-          }),
-          filled: true,
-          fillColor: Colors.grey[50],
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide.none,
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Container(
+        height: 44,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF5F7FA),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: TextField(
+          controller: _searchController,
+          onChanged: (v) => setState(() => _searchQuery = v),
+          style: const TextStyle(fontSize: 14),
+          decoration: InputDecoration(
+            hintText: 'Search by name or email…',
+            hintStyle:
+                TextStyle(color: Colors.grey.shade400, fontSize: 14),
+            prefixIcon:
+                Icon(Icons.search_rounded, color: Colors.grey.shade400, size: 20),
+            suffixIcon: _searchQuery.isNotEmpty
+                ? GestureDetector(
+                    onTap: () {
+                      _searchController.clear();
+                      setState(() => _searchQuery = '');
+                    },
+                    child: Icon(Icons.close_rounded,
+                        color: Colors.grey.shade400, size: 18),
+                  )
+                : null,
+            border: InputBorder.none,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildFilterChips() {
+  // ── FILTER ROW ───────────────────────────────────────────────────────────────
+  Widget _buildFilterRow() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Obx(() {
-        return Row(
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
           children: [
-            _FilterChip(
-              label: 'All',
-              isSelected: _controller.statusFilter.value == 'all',
-              onTap: () => _controller.setStatusFilter('all'),
+            _Chip(
+                label: 'All',
+                selected: _statusFilter == 'all',
+                onTap: () => setState(() => _statusFilter = 'all')),
+            _Chip(
+                label: 'Active',
+                selected: _statusFilter == 'active',
+                onTap: () => setState(() => _statusFilter = 'active')),
+            _Chip(
+                label: 'Inactive',
+                selected: _statusFilter == 'inactive',
+                onTap: () => setState(() => _statusFilter = 'inactive')),
+            Container(
+              width: 1,
+              height: 20,
+              color: Colors.grey.shade200,
+              margin: const EdgeInsets.symmetric(horizontal: 8),
             ),
-            const SizedBox(width: 8),
-            _FilterChip(
-              label: 'Active',
-              isSelected: _controller.statusFilter.value == 'active',
-              onTap: () => _controller.setStatusFilter('active'),
-            ),
-            const SizedBox(width: 8),
-            _FilterChip(
-              label: 'Inactive',
-              isSelected: _controller.statusFilter.value == 'inactive',
-              onTap: () => _controller.setStatusFilter('inactive'),
+            GetX<UserManagementController>(
+              builder: (c) => Row(
+                children: [
+                  _Chip(
+                      label: 'All Roles',
+                      selected: _roleFilter == 'all',
+                      onTap: () => setState(() => _roleFilter = 'all')),
+                  ...c.roles.map(
+                    (r) => _Chip(
+                      label: r.name,
+                      selected:
+                          _roleFilter == r.name.toLowerCase(),
+                      onTap: () => setState(
+                          () => _roleFilter = r.name.toLowerCase()),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
-        );
-      }),
+        ),
+      ),
+    );
+  }
+
+  // ── USER LIST ────────────────────────────────────────────────────────────────
+  Widget _buildUserList() {
+    return Obx(() {
+      if (_controller.isLoading.value) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      if (_controller.hasError.value) {
+        return _buildError();
+      }
+
+      final users = _controller.users.where((u) {
+        if (_searchQuery.isNotEmpty) {
+          final q = _searchQuery.toLowerCase();
+          if (!u.fullName.toLowerCase().contains(q) &&
+              !u.email.toLowerCase().contains(q)) return false;
+        }
+        if (_statusFilter == 'active' && !u.isActive) return false;
+        if (_statusFilter == 'inactive' && u.isActive) return false;
+        if (_roleFilter != 'all' && u.role.toLowerCase() != _roleFilter)
+          return false;
+        return true;
+      }).toList();
+
+      if (users.isEmpty) return _buildEmpty();
+
+      return ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+        itemCount: users.length,
+        itemBuilder: (_, i) => _UserTile(
+          user: users[i],
+          onEdit: () => Get.toNamed('/admin/users/edit/${users[i].id}'),
+          onPermissions: () => Get.to(
+            () => EnhancedAccessManagementScreen(userId: users[i].id),
+          ),
+          onDelete: () => _confirmDelete(users[i]),
+        ),
+      );
+    });
+  }
+
+  // ── EMPTY / ERROR ─────────────────────────────────────────────────────────────
+  Widget _buildEmpty() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.group_off_rounded, size: 56, color: Colors.grey.shade300),
+          const SizedBox(height: 12),
+          Text('No users found',
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade500)),
+          const SizedBox(height: 6),
+          Text('Try a different filter or search',
+              style:
+                  TextStyle(fontSize: 13, color: Colors.grey.shade400)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildError() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline_rounded,
+              size: 48, color: Colors.red.shade300),
+          const SizedBox(height: 12),
+          Text(_controller.errorMessage.value,
+              style: TextStyle(color: Colors.grey.shade600),
+              textAlign: TextAlign.center),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: _controller.refresh,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Retry'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kPrimary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── DELETE CONFIRM ────────────────────────────────────────────────────────────
+  void _confirmDelete(User user) {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.delete_outline_rounded,
+                  color: Colors.red.shade400, size: 28),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Delete User?',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'This will permanently remove ${user.fullName} from the system.',
+              style:
+                  TextStyle(fontSize: 14, color: Colors.grey.shade600),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Get.back(),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: BorderSide(color: Colors.grey.shade300),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Cancel',
+                        style: TextStyle(color: Colors.black87)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      Get.back();
+                      final ok = await _controller.deleteUser(user.id);
+                      Get.snackbar(
+                        ok ? 'Done' : 'Error',
+                        ok ? 'User removed' : 'Could not delete user',
+                        snackPosition: SnackPosition.BOTTOM,
+                        backgroundColor:
+                            ok ? Colors.green : Colors.red,
+                        colorText: Colors.white,
+                        margin: const EdgeInsets.all(16),
+                        borderRadius: 12,
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Delete'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
     );
   }
 }
 
-class _UserCard extends StatelessWidget {
+// ── USER TILE ─────────────────────────────────────────────────────────────────
+class _UserTile extends StatelessWidget {
   final User user;
+  final VoidCallback onEdit;
+  final VoidCallback onPermissions;
+  final VoidCallback onDelete;
 
-  const _UserCard({required this.user});
+  const _UserTile({
+    required this.user,
+    required this.onEdit,
+    required this.onPermissions,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Row(
-        children: [
-          _buildAvatar(),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onEdit,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
               children: [
-                Row(
+                // Avatar
+                Stack(
                   children: [
-                    Text(
-                      user.fullName,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundColor: kPrimary.withOpacity(0.12),
+                      child: Text(
+                        user.fullName.isNotEmpty
+                            ? user.fullName[0].toUpperCase()
+                            : 'U',
+                        style: TextStyle(
+                          color: kPrimary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 18,
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    _buildStatusBadge(),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: user.isActive
+                              ? const Color(0xFF27AE60)
+                              : Colors.red,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                              color: Colors.white, width: 2),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  user.email,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Iconify(
-                      Mdi.shield_account,
-                      size: 14,
-                      color: Colors.grey[500],
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      user.role.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey[500],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    if (user.userRole != null) ...[
-                      const SizedBox(width: 8),
+                const SizedBox(width: 12),
+                // Info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        '•',
-                        style: TextStyle(color: Colors.grey[400]),
+                        user.fullName,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(height: 3),
                       Text(
-                        user.userRole!.name,
+                        user.email,
                         style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey[500],
+                          fontSize: 12,
+                          color: Colors.grey.shade500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.purple.withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          user.role.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.purple.shade600,
+                            letterSpacing: 0.5,
+                          ),
                         ),
                       ),
                     ],
+                  ),
+                ),
+                // Action buttons
+                Column(
+                  children: [
+                    _IconBtn(
+                      icon: Icons.shield_outlined,
+                      color: kPrimary,
+                      tooltip: 'Permissions',
+                      onTap: onPermissions,
+                    ),
+                    const SizedBox(height: 6),
+                    _IconBtn(
+                      icon: Icons.edit_outlined,
+                      color: Colors.orange,
+                      tooltip: 'Edit',
+                      onTap: onEdit,
+                    ),
+                    const SizedBox(height: 6),
+                    _IconBtn(
+                      icon: Icons.delete_outline_rounded,
+                      color: Colors.red,
+                      tooltip: 'Delete',
+                      onTap: onDelete,
+                    ),
                   ],
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert, color: Colors.grey[600]),
-            onSelected: (value) {
-              switch (value) {
-                case 'edit':
-                  Get.toNamed('/admin/users/edit/${user.id}');
-                  break;
-                case 'access':
-                  Get.toNamed('/admin/users/access/${user.id}');
-                  break;
-                case 'delete':
-                  _showDeleteDialog(context);
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'edit',
-                child: Row(
-                  children: [
-                    Icon(Icons.edit_outlined, size: 18),
-                    SizedBox(width: 8),
-                    Text('Edit'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'access',
-                child: Row(
-                  children: [
-                    Icon(Icons.lock_outline, size: 18),
-                    SizedBox(width: 8),
-                    Text('Manage Access'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete_outline, size: 18, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('Delete', style: TextStyle(color: Colors.red)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAvatar() {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: kPrimary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Center(
-        child: Text(
-          user.fullName.substring(0, 1).toUpperCase(),
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: kPrimary,
-          ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildStatusBadge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: user.isActive ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        user.isActive ? 'Active' : 'Inactive',
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          color: user.isActive ? Colors.green : Colors.red,
-        ),
-      ),
-    );
-  }
-
-  void _showDeleteDialog(BuildContext context) {
-    Get.dialog(
-      AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Delete User'),
-        content: Text('Are you sure you want to delete ${user.fullName}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Get.back();
-              final controller = Get.find<UserManagementController>();
-              final success = await controller.deleteUser(user.id);
-              if (success) {
-                Get.snackbar(
-                  'Success',
-                  'User deleted successfully',
-                  snackPosition: SnackPosition.BOTTOM,
-                );
-              } else {
-                Get.snackbar(
-                  'Error',
-                  'Failed to delete user',
-                  snackPosition: SnackPosition.BOTTOM,
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Delete'),
-          ),
-        ],
       ),
     );
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final bool isSelected;
+class _IconBtn extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String tooltip;
   final VoidCallback onTap;
 
-  const _FilterChip({
-    required this.label,
-    required this.isSelected,
+  const _IconBtn({
+    required this.icon,
+    required this.color,
+    required this.tooltip,
     required this.onTap,
   });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 16, color: color),
+        ),
+      ),
+    );
+  }
+}
+
+class _MiniStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+
+  const _MiniStat(
+      {required this.label, required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.07),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                  color: color, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: color.withOpacity(0.8),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _Chip(
+      {required this.label,
+      required this.selected,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        margin: const EdgeInsets.only(right: 8),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? kPrimary : Colors.grey[200],
-          borderRadius: BorderRadius.circular(16),
+          color: selected ? kPrimary : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? kPrimary : Colors.grey.shade300,
+          ),
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: isSelected ? Colors.white : Colors.grey[700],
+            fontWeight:
+                selected ? FontWeight.w600 : FontWeight.w400,
+            color: selected ? Colors.white : Colors.grey.shade600,
           ),
         ),
       ),

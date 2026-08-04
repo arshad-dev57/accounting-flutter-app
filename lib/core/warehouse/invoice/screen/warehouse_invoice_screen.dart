@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
-// ─────────────────────── WIDGETS ───────────────────────
 
 class WarehouseInvoiceListView extends StatelessWidget {
   final WarehouseInvoiceController controller;
@@ -26,7 +25,6 @@ class WarehouseInvoiceListView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Search Bar
         TextField(
           decoration: InputDecoration(
             hintText: 'Search invoices...',
@@ -332,7 +330,6 @@ class WarehouseInvoiceListView extends StatelessWidget {
   }
 }
 
-// ─────────────────────── MAIN SCREEN ───────────────────────
 
 class WarehouseInvoiceScreen extends StatefulWidget {
   const WarehouseInvoiceScreen({super.key});
@@ -408,7 +405,6 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
     );
   }
 
-  // ─────────────────────── PROFESSIONAL INVOICE DETAIL VIEW ───────────────────────
 
   Widget _buildDetailView(WarehouseInvoiceController controller) {
     final invoice = controller.selectedInvoice.value!;

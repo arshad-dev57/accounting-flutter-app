@@ -311,7 +311,6 @@ class InvoiceDraft {
   }
 }
 
-// ─────────────────────── CONTROLLER ───────────────────────
 
 class WarehouseInvoiceController extends GetxController {
   final ApiClient _api = Get.find<ApiClient>();
@@ -372,48 +371,64 @@ class WarehouseInvoiceController extends GetxController {
   }
 
   Future<void> fetchInvoices({bool resetPage = false}) async {
-    if (resetPage) currentPage.value = 1;
-    try {
-      isLoading.value = true;
-      final params = <String, String>{
-        'page': currentPage.value.toString(),
-        'limit': pageLimit.value.toString(),
-        'period': 'month',
-      };
-      if (statusFilter.value != 'all') params['status'] = statusFilter.value;
-      if (paymentFilter.value != 'all') params['paymentStatus'] = paymentFilter.value;
-      if (searchFilter.value.isNotEmpty) params['search'] = searchFilter.value;
+  if (resetPage) currentPage.value = 1;
+  
+  try {
+    isLoading.value = true;
+    final params = <String, String>{
+      'page': currentPage.value.toString(),
+      'limit': pageLimit.value.toString(),
+    };
+    if (statusFilter.value != 'all') params['status'] = statusFilter.value;
+    if (paymentFilter.value != 'all') params['paymentStatus'] = paymentFilter.value;
+    if (searchFilter.value.isNotEmpty) params['search'] = searchFilter.value;
 
-      final response = await _api.get('/api/warehouse/invoices', queryParameters: params, requiresAuth: true);
-      if (response.success && response.data != null) {
-        final list = response.data['data'] as List? ?? [];
-        invoices.value = list.map((e) => WarehouseInvoiceModel.fromJson(Map<String, dynamic>.from(e))).toList();
+    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    print('📤 REQUEST: /api/warehouse/invoices');
+    print('📤 PARAMS: $params');
+    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-        if (response.data['stats'] != null) {
-          stats.value = WarehouseInvoiceStats.fromJson(Map<String, dynamic>.from(response.data['stats']));
-        }
-        if (response.data['trend'] != null) {
-          trend.value = (response.data['trend'] as List)
-              .map((e) => TrendPoint.fromJson(Map<String, dynamic>.from(e)))
-              .toList();
-        }
+    final response = await _api.get('/api/warehouse/invoices', queryParameters: params, requiresAuth: true);
+    
+    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    print('📥 RESPONSE:');
+    print('📥 Success: ${response.success}');
+    print('📥 Status Code: ${response.statusCode}');
+    print('📥 Full Response Data:');
+    print(response.data);
+    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-        final pagination = response.data['pagination'] as Map<String, dynamic>?;
-        if (pagination != null) {
-          currentPage.value = (pagination['page'] as num?)?.toInt() ?? 1;
-          totalRecords.value = (pagination['total'] as num?)?.toInt() ?? 0;
-          totalPages.value = (pagination['pages'] as num?)?.toInt() ?? 1;
-          hasNext.value = pagination['hasNext'] == true;
-          hasPrev.value = pagination['hasPrev'] == true;
-        }
+    if (response.success && response.data != null) {
+      final list = response.data['data'] as List? ?? [];
+      invoices.value = list.map((e) => WarehouseInvoiceModel.fromJson(Map<String, dynamic>.from(e))).toList();
+
+      if (response.data['stats'] != null) {
+        stats.value = WarehouseInvoiceStats.fromJson(Map<String, dynamic>.from(response.data['stats']));
       }
-    } catch (e) {
-      Get.snackbar('Error', e.toString());
-    } finally {
-      isLoading.value = false;
-    }
-  }
+      if (response.data['trend'] != null) {
+        trend.value = (response.data['trend'] as List)
+            .map((e) => TrendPoint.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+      }
 
+      final pagination = response.data['pagination'] as Map<String, dynamic>?;
+      if (pagination != null) {
+        currentPage.value = (pagination['page'] as num?)?.toInt() ?? 1;
+        totalRecords.value = (pagination['total'] as num?)?.toInt() ?? 0;
+        totalPages.value = (pagination['pages'] as num?)?.toInt() ?? 1;
+        hasNext.value = pagination['hasNext'] == true;
+        hasPrev.value = pagination['hasPrev'] == true;
+      }
+    }
+  } catch (e) {
+    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    print('❌ ERROR: $e');
+    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    Get.snackbar('Error', e.toString());
+  } finally {
+    isLoading.value = false;
+  }
+}
   Future<void> refreshInvoices() => fetchInvoices(resetPage: true);
 
   void applyStatusFilter(String v) {

@@ -62,6 +62,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:LedgerPro_app/Services/api_client.dart';
 import 'package:LedgerPro_app/Services/notification_Service.dart';
+import 'package:LedgerPro_app/Services/permission_service.dart';
 import 'package:LedgerPro_app/core/FiscalYear/controller/fiscal_year_controller.dart';
 
 class ThemeController extends GetxController {
@@ -77,6 +78,7 @@ void main() {
   Get.put(ThemeController(), permanent: true);
   Get.put(CurrencyController(), permanent: true);
   Get.put(FiscalYearController(), permanent: true);
+  Get.put(PermissionService(), permanent: true);
 
   runApp(const MyApp());
 }
@@ -236,6 +238,13 @@ class MyApp extends StatelessWidget {
               page: () => const SuppliersScreen(),
               binding: BindingsBuilder(() {
                 Get.lazyPut(() => SupplierController());
+              }),
+            ),
+            GetPage(
+              name: '/warehouse/customers',
+              page: () => const WarehouseCustomerScreen(),
+              binding: BindingsBuilder(() {
+                Get.lazyPut(() => WarehouseCustomerController());
               }),
             ),
             GetPage(

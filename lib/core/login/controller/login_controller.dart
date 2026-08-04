@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
+import 'package:LedgerPro_app/Services/permission_service.dart';
 import 'package:LedgerPro_app/Utils/currency_controller.dart';
 import 'package:LedgerPro_app/Utils/colors.dart';
 import 'package:LedgerPro_app/Utils/toast_utils.dart';
@@ -255,6 +256,39 @@ class LoginController extends GetxController {
       if (data['user'] != null) {
         final userData = data['user'] as Map<String, dynamic>;
         await prefs.setString('user_data', json.encode(userData));
+
+        // ✅ Save user data in format expected by PermissionService
+        final permissionService = Get.find<PermissionService>();
+        final permissionsList = userData['permissions'] as List<dynamic>?;
+        final userPermissions = permissionsList?.map((p) {
+          if (p is Map<String, dynamic>) {
+            return UserPermission(
+              id: p['id']?.toString() ?? '',
+              page: p['page']?.toString() ?? '',
+              canView: p['canView'] ?? true,
+              canCreate: p['canCreate'] ?? false,
+              canEdit: p['canEdit'] ?? false,
+              canDelete: p['canDelete'] ?? false,
+            );
+          }
+          return UserPermission(
+            id: '',
+            page: p.toString(),
+            canView: true,
+          );
+        }).toList() ?? [];
+
+        final userDataForPermissions = UserData(
+          id: userData['_id']?.toString() ?? '',
+          firstName: userData['firstName']?.toString() ?? '',
+          lastName: userData['lastName']?.toString() ?? '',
+          email: userData['email']?.toString() ?? '',
+          role: userData['role']?.toString() ?? 'user',
+          permissions: userPermissions,
+        );
+        
+        await permissionService.saveUserData(userDataForPermissions);
+        print('✅ [LOGIN] User data saved for PermissionService');
 
         // ✅ Load currency from user data
         await _updateCurrencyFromUser(userData);

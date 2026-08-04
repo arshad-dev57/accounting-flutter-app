@@ -1,3 +1,4 @@
+import 'package:LedgerPro_app/Services/permission_service.dart';
 import 'package:LedgerPro_app/Utils/colors.dart';
 import 'package:LedgerPro_app/Utils/currency_controller.dart';
 import 'package:LedgerPro_app/Utils/currency_utils.dart';
@@ -1316,6 +1317,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _NavSection(
                   title: 'LedgerPro Core',
                   icon: Mdi.account_circle,
+                  module: 'accounting',
+                  permissions: const [
+                    'chart-of-accounts',
+                    'journal-entries',
+                    'general-ledger',
+                    'trial-balance',
+                    'bank-accounts',
+                    'income',
+                    'expenses',
+                  ],
                   items: const [
                     ('Chart of Accounts', Mdi.chart_tree, 'chart_of_accounts'),
                     ('Journal Entries', Mdi.book_open_page_variant, 'journal_entries'),
@@ -1331,6 +1342,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _NavSection(
                   title: 'Receivables & Payables',
                   icon: Mdi.swap_horizontal,
+                  module: 'accounting',
+                  permissions: const [
+                    'accounts-receivable',
+                    'accounts-payable',
+                    'customers',
+                    'bills',
+                    'payments-received',
+                    'payments-made',
+                    'credit-notes',
+                  ],
                   items: const [
                     ('Accounts Receivable', Mdi.cash_plus, 'accounts_receivable'),
                     ('Accounts Payable', Mdi.cash_minus, 'accounts_payable'),
@@ -1346,6 +1367,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _NavSection(
                   title: 'Assets & Liabilities',
                   icon: Mdi.business,
+                  module: 'accounting',
+                  permissions: const [
+                    'fixed-assets',
+                    'loans-borrowings',
+                    'capital-equity',
+                  ],
                   items: const [
                     ('Fixed Assets', Mdi.office_building_outline, 'fixed_assets'),
                     ('Loans & Borrowings', Mdi.hand_coin_outline, 'loans'),
@@ -1357,6 +1384,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _NavSection(
                   title: 'Financial Reports',
                   icon: Mdi.chart_line,
+                  module: 'accounting',
+                  permissions: const [
+                    'profit-loss',
+                    'balance-sheet',
+                    'cash-flow',
+                    'aged-receivables',
+                  ],
                   items: const [
                     ('Profit & Loss', Mdi.chart_line, 'profit_loss'),
                     ('Balance Sheet', Mdi.clipboard_list_outline, 'balance_sheet'),
@@ -1369,6 +1403,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _NavSection(
                   title: 'Settings',
                   icon: Mdi.cog,
+                  module: 'accounting',
+                  permissions: const [
+                    'currency',
+                  ],
                   items: const [
                     ('Currency', Mdi.currency_usd, 'currency'),
                   ],
@@ -1442,7 +1480,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         actions: [
           TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
+              final permissionService = PermissionService.to;
+              await permissionService.clearUserData();
               SharedPreferences.getInstance().then((prefs) => prefs.clear());
               Get.offAll(() => const LoginScreen());
             },
@@ -2122,11 +2162,15 @@ class _NavSection extends StatefulWidget {
   final String title;
   final String icon;
   final List<(String, String, String)> items;
+  final String? module;
+  final List<String>? permissions;
 
   const _NavSection({
     required this.title,
     required this.icon,
     required this.items,
+    this.module,
+    this.permissions,
   });
 
   @override
@@ -2135,6 +2179,27 @@ class _NavSection extends StatefulWidget {
 
 class _NavSectionState extends State<_NavSection> {
   bool _expanded = false;
+  final PermissionService _permissionService = PermissionService.to;
+
+  List<(String, String, String)> get _filteredItems {
+    if (widget.module == null || widget.permissions == null) {
+      return widget.items;
+    }
+
+    final isAdmin = _permissionService.isAdmin;
+    if (isAdmin) return widget.items;
+
+    final filtered = <(String, String, String)>[];
+    for (int i = 0; i < widget.items.length; i++) {
+      final item = widget.items[i];
+      final permission = widget.permissions![i];
+      
+      if (_permissionService.hasSubPageAccess(widget.module!, permission)) {
+        filtered.add(item);
+      }
+    }
+    return filtered;
+  }
 
   @override
   void initState() {
@@ -2144,6 +2209,13 @@ class _NavSectionState extends State<_NavSection> {
 
   @override
   Widget build(BuildContext context) {
+    final filteredItems = _filteredItems;
+    
+    // Hide entire section if no items are visible
+    if (filteredItems.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       children: [
         InkWell(
@@ -2177,7 +2249,7 @@ class _NavSectionState extends State<_NavSection> {
           duration: const Duration(milliseconds: 200),
           crossFadeState: _expanded ? CrossFadeState.showFirst : CrossFadeState.showSecond,
           firstChild: Column(
-            children: widget.items.map((item) {
+            children: filteredItems.map((item) {
               return _NavItem(
                 label: item.$1,
                 icon: item.$2,

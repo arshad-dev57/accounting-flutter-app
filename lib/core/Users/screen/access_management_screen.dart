@@ -9,15 +9,16 @@ class AccessManagementScreen extends StatefulWidget {
   const AccessManagementScreen({super.key, this.userId});
 
   @override
-  State<AccessManagementScreen> createState() => _AccessManagementScreenState();
+  State<AccessManagementScreen> createState() =>
+      _AccessManagementScreenState();
 }
 
-class _AccessManagementScreenState extends State<AccessManagementScreen> {
+class _AccessManagementScreenState
+    extends State<AccessManagementScreen> {
   late final UserManagementController _controller;
   User? _user;
   final Map<String, UserPermission> _permissions = {};
 
-  // Define available pages based on drawer navigation
   final List<_PageAccess> _availablePages = [
     // ========== WAREHOUSE MODULE ==========
     _PageAccess(
@@ -121,7 +122,6 @@ class _AccessManagementScreenState extends State<AccessManagementScreen> {
       route: '/sales/refunds',
       icon: Icons.money_off,
     ),
-    // ========== PURCHASE MODULE ==========
     _PageAccess(
       name: 'Purchase Dashboard',
       route: '/warehouse/purchase',
@@ -152,7 +152,6 @@ class _AccessManagementScreenState extends State<AccessManagementScreen> {
       route: '/purchase/purchase-return',
       icon: Icons.assignment_return,
     ),
-    // ========== ACCOUNTING MODULE ==========
     _PageAccess(
       name: 'Accounting Dashboard',
       route: '/accounting/dashboard',
@@ -183,13 +182,11 @@ class _AccessManagementScreenState extends State<AccessManagementScreen> {
       route: '/bank-accounts',
       icon: Icons.account_balance_wallet,
     ),
-    // ========== SETTINGS ==========
     _PageAccess(
       name: 'Currency Settings',
       route: '__currency',
       icon: Icons.attach_money,
     ),
-    // ========== MY ACCOUNT ==========
     _PageAccess(
       name: 'My Profile',
       route: '__profile',
@@ -200,7 +197,6 @@ class _AccessManagementScreenState extends State<AccessManagementScreen> {
       route: '__changepassword',
       icon: Icons.lock,
     ),
-    // ========== USER MANAGEMENT ==========
     _PageAccess(
       name: 'Users Management',
       route: '/admin/users',
@@ -218,16 +214,15 @@ class _AccessManagementScreenState extends State<AccessManagementScreen> {
   }
 
   void _loadUserData() {
-    if (widget.userId == null || widget.userId!.isEmpty) {
-      return;
-    }
-    _user = _controller.users.firstWhereOrNull((u) => u.id == widget.userId);
+    if (widget.userId == null || widget.userId!.isEmpty) return;
+
+    _user = _controller.users
+        .firstWhereOrNull((u) => u.id == widget.userId);
+
     if (_user != null) {
-      // Initialize permissions from user's existing permissions
       for (var perm in _user!.permissions) {
         _permissions[perm.page] = perm;
       }
-      // Initialize default permissions for pages without explicit permissions
       for (var page in _availablePages) {
         if (!_permissions.containsKey(page.route)) {
           _permissions[page.route] = UserPermission(
@@ -253,6 +248,7 @@ class _AccessManagementScreenState extends State<AccessManagementScreen> {
       );
       return;
     }
+
     final permissionsList = _permissions.values.toList();
     final success = await _controller.updateUserPermissions(
       userId: widget.userId!,
@@ -265,12 +261,16 @@ class _AccessManagementScreenState extends State<AccessManagementScreen> {
         'Success',
         'Access permissions updated successfully',
         snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
       );
     } else {
       Get.snackbar(
         'Error',
         'Failed to update permissions',
         snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
       );
     }
   }
@@ -324,7 +324,8 @@ class _AccessManagementScreenState extends State<AccessManagementScreen> {
           const SizedBox(height: 16),
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16),
               itemCount: _availablePages.length,
               itemBuilder: (context, index) {
                 final page = _availablePages[index];
@@ -351,7 +352,8 @@ class _AccessManagementScreenState extends State<AccessManagementScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
+        border:
+            Border(bottom: BorderSide(color: Colors.grey[200]!)),
       ),
       child: Row(
         children: [
@@ -420,6 +422,7 @@ class _AccessManagementScreenState extends State<AccessManagementScreen> {
   }
 }
 
+// ============== PERMISSION CARD ==============
 class _PermissionCard extends StatelessWidget {
   final _PageAccess page;
   final UserPermission permission;
@@ -554,7 +557,9 @@ class _PermissionToggle extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: value ? color.withOpacity(0.1) : Colors.grey[100],
+            color: value
+                ? color.withOpacity(0.1)
+                : Colors.grey[100],
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: value ? color : Colors.grey[300]!,
@@ -564,7 +569,9 @@ class _PermissionToggle extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                value ? Icons.check_circle : Icons.circle_outlined,
+                value
+                    ? Icons.check_circle
+                    : Icons.circle_outlined,
                 size: 16,
                 color: value ? color : Colors.grey[400],
               ),
@@ -606,10 +613,7 @@ class _LegendItem extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 11,
-            color: Colors.grey[600],
-          ),
+          style: TextStyle(fontSize: 11, color: Colors.grey[600]),
         ),
       ],
     );

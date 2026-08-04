@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
+import 'package:LedgerPro_app/Services/permission_service.dart';
 import 'package:LedgerPro_app/Utils/colors.dart';
 import 'package:LedgerPro_app/Utils/currency_controller.dart';
 import 'package:LedgerPro_app/Utils/toast_utils.dart';
@@ -148,6 +149,39 @@ class LoginOtpController extends GetxController {
       if (data['user'] != null) {
         final user = data['user'];
         await prefs.setString('user_data', json.encode(user));
+        
+        // ✅ Save user data in format expected by PermissionService
+        final permissionService = Get.find<PermissionService>();
+        final permissionsList = user['permissions'] as List<dynamic>?;
+        final userPermissions = permissionsList?.map((p) {
+          if (p is Map<String, dynamic>) {
+            return UserPermission(
+              id: p['id']?.toString() ?? '',
+              page: p['page']?.toString() ?? '',
+              canView: p['canView'] ?? true,
+              canCreate: p['canCreate'] ?? false,
+              canEdit: p['canEdit'] ?? false,
+              canDelete: p['canDelete'] ?? false,
+            );
+          }
+          return UserPermission(
+            id: '',
+            page: p.toString(),
+            canView: true,
+          );
+        }).toList() ?? [];
+
+        final userDataForPermissions = UserData(
+          id: user['_id']?.toString() ?? user['id']?.toString() ?? '',
+          firstName: user['firstName']?.toString() ?? '',
+          lastName: user['lastName']?.toString() ?? '',
+          email: user['email']?.toString() ?? '',
+          role: user['role']?.toString() ?? 'user',
+          permissions: userPermissions,
+        );
+        
+        await permissionService.saveUserData(userDataForPermissions);
+        print('✅ [OTP] User data saved for PermissionService');
         
         // Sync/load currency dynamically from database payload
         Get.find<CurrencyController>().updateFromUserData(user);

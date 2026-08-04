@@ -40,6 +40,7 @@ import 'package:LedgerPro_app/core/plans/controllers/subscription_controller.dar
 import 'package:LedgerPro_app/core/plans/views/Subscription_plans.dart';
 import 'package:LedgerPro_app/core/profitlossStatement/screens/profit_loss_statement_screen.dart';
 import 'package:LedgerPro_app/core/warehouse/invoice/screen/warehouse_invoice_screen.dart';
+import 'package:LedgerPro_app/core/warehouse/supplier/screen/supplier_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -55,8 +56,8 @@ const _kCardBg = Color(0xFFFFFFFF);
 const _kCardBorder = Color(0xFFE8EAF0);
 const _kTextPrimary = Color(0xFF1A1D2E);
 const _kTextSecondary = Color(0xFF8B90A7);
-const _kBlue = Color.fromARGB(255, 74, 173, 215);
-const _kBlueDark = Color.fromARGB(255, 74, 173, 215);
+const _kBlue = Color(0xFF014582);
+const _kBlueDark = Color(0xFF014582);
 const _kGreen = Color(0xFF2DC653);
 const _kOrange = Color(0xFFF4A228);
 const _kRed = Color(0xFFEF4444);
@@ -88,9 +89,6 @@ class _SidebarItem {
   });
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// MAIN SCREEN
-// ══════════════════════════════════════════════════════════════════════════════
 class WebDashboardScreen extends StatefulWidget {
   const WebDashboardScreen({super.key});
   @override
@@ -139,7 +137,7 @@ class _WebDashboardScreenState extends State<WebDashboardScreen> {
     if (screen is AccountsPayableScreen) return 'Accounts Payable';
     if (screen is CustomersScreen) return 'Customers';
     if (screen is BillsScreen) return 'Bills';
-    if (screen is VendorsScreen) return 'Vendors / Suppliers';
+    if (screen is SuppliersScreen) return 'Vendors / Suppliers';
     if (screen is PaymentsReceivedScreen) return 'Payments Received';
     if (screen is PaymentsMadeScreen) return 'Payments Made';
     if (screen is CreditNotesScreen) return 'Credit Notes';
@@ -542,7 +540,7 @@ class _WebSidebar extends StatelessWidget {
       case 'bills':
         return const BillsScreen();
       case 'vendors':
-        return const VendorsScreen();
+        return const SuppliersScreen();
       case 'payments_received':
         return const PaymentsReceivedScreen();
       case 'payments_made':

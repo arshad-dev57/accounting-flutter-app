@@ -1,24 +1,20 @@
 // lib/core/dashboard/widgets/profile_dropdown.dart
 
-import 'package:LedgerPro_app/Utils/colors.dart';
 import 'package:LedgerPro_app/core/companyprofile/controller/profile_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-// ─── Design Tokens ────────────────────────────────────────────────────────────
 const _kPageBg = Color(0xFFF5F6FA);
 const _kCardBg = Color(0xFFFFFFFF);
 const _kCardBorder = Color(0xFFE8EAF0);
 const _kTextPrimary = Color(0xFF1A1D2E);
 const _kTextSecondary = Color(0xFF8B90A7);
-const _kBlue = Color.fromARGB(255, 74, 173, 215);
-const _kBlueDark = Color.fromARGB(255, 74, 173, 215);
+const _kBlue = Color(0xFF014582);
+const _kBlueDark = Color(0xFF014582);
 const _kRed = Color(0xFFEF4444);
 
-// ─── Profile Dropdown ─────────────────────────────────────────────────────────
 
 class ProfileDropdown extends StatefulWidget {
   final ProfileController profileCtrl;
@@ -138,7 +134,6 @@ class _ProfileDropdownState extends State<ProfileDropdown>
   }
 }
 
-// ─── Dropdown Overlay ─────────────────────────────────────────────────────────
 
 class _DropdownOverlay extends StatelessWidget {
   final LayerLink layerLink;
@@ -192,7 +187,6 @@ class _DropdownOverlay extends StatelessWidget {
   }
 }
 
-// ─── Dropdown Card ────────────────────────────────────────────────────────────
 
 class _ProfileDropdownCard extends StatefulWidget {
   final ProfileController profileCtrl;
@@ -765,3 +759,4 @@ class _EditField {
     this.keyboard = TextInputType.text,
   });
 }
+

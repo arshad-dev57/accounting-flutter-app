@@ -1,5 +1,6 @@
 // lib/core/dashboard/screens/dashboard_selection_screen.dart
 
+import 'package:LedgerPro_app/Services/permission_service.dart';
 import 'package:LedgerPro_app/Utils/colors.dart';
 import 'package:LedgerPro_app/Utils/responsive_utils.dart';
 import 'package:LedgerPro_app/Utils/toast_utils.dart';
@@ -863,24 +864,26 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                 ),
               ),
             ),
-          _SidebarItemWidget(
-            icon: Icons.warehouse_outlined,
-            label: 'Warehouse',
-            index: 1,
-            selectedIndex: _selectedIndex,
-            collapsed: collapsed,
-            showArrow: true,
-            onTap: _navigateToWarehouse,
-          ),
-          _SidebarItemWidget(
-            icon: Icons.account_balance_outlined,
-            label: 'Accounting',
-            index: 2,
-            selectedIndex: _selectedIndex,
-            collapsed: collapsed,
-            showArrow: true,
-            onTap: _navigateToAccounting,
-          ),
+          if (PermissionService.to.hasModuleAccess('warehouse'))
+            _SidebarItemWidget(
+              icon: Icons.warehouse_outlined,
+              label: 'Warehouse',
+              index: 1,
+              selectedIndex: _selectedIndex,
+              collapsed: collapsed,
+              showArrow: true,
+              onTap: _navigateToWarehouse,
+            ),
+          if (PermissionService.to.hasModuleAccess('accounting'))
+            _SidebarItemWidget(
+              icon: Icons.account_balance_outlined,
+              label: 'Accounting',
+              index: 2,
+              selectedIndex: _selectedIndex,
+              collapsed: collapsed,
+              showArrow: true,
+              onTap: _navigateToAccounting,
+            ),
           const Spacer(),
           if (!collapsed)
             Padding(
@@ -919,7 +922,6 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
     );
   }
 
-  // ─── Mobile Drawer ────────────────────────────────────────────────────
 
   Widget _buildDrawer() {
     return Drawer(
@@ -937,6 +939,12 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                   title: 'Workspaces',
                   icon: Mdi.view_dashboard,
                   currentRoute: '',
+                  modules: const [
+                    'warehouse',
+                    'accounting',
+                    'sales',
+                    'purchases',
+                  ],
                   items: const [
                     ('Warehouse', Mdi.warehouse, '__warehouse'),
                     ('Accounting', Mdi.account_balance, '__accounting'),
@@ -950,6 +958,9 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                   title: 'Users',
                   icon: Mdi.account_group,
                   currentRoute: '',
+                  modules: const [
+                    'users',
+                  ],
                   items: const [
                     ('Users', Mdi.account_multiple, '__users'),
                   ],
@@ -2072,12 +2083,14 @@ class _NavSection extends StatefulWidget {
   final String icon;
   final String currentRoute;
   final List<(String, String, String)> items;
+  final List<String>? modules;
 
   const _NavSection({
     required this.title,
     required this.icon,
     required this.currentRoute,
     required this.items,
+    this.modules,
   });
 
   @override
@@ -2086,8 +2099,29 @@ class _NavSection extends StatefulWidget {
 
 class _NavSectionState extends State<_NavSection> {
   bool _expanded = false;
+  final PermissionService _permissionService = PermissionService.to;
 
   bool get _hasActiveChild => widget.items.any((i) => _isActive(i.$3));
+
+  List<(String, String, String)> get _filteredItems {
+    if (widget.modules == null) {
+      return widget.items;
+    }
+
+    final isAdmin = _permissionService.isAdmin;
+    if (isAdmin) return widget.items;
+
+    final filtered = <(String, String, String)>[];
+    for (int i = 0; i < widget.items.length; i++) {
+      final item = widget.items[i];
+      final module = widget.modules![i];
+      
+      if (_permissionService.hasModuleAccess(module)) {
+        filtered.add(item);
+      }
+    }
+    return filtered;
+  }
 
   bool _isActive(String routeKey) {
     if (routeKey.startsWith('__')) return false;
@@ -2135,7 +2169,7 @@ class _NavSectionState extends State<_NavSection> {
           duration: const Duration(milliseconds: 200),
           crossFadeState: _expanded ? CrossFadeState.showFirst : CrossFadeState.showSecond,
           firstChild: Column(
-            children: widget.items.map((item) {
+            children: _filteredItems.map((item) {
               return _NavItem(
                 label: item.$1,
                 icon: item.$2,

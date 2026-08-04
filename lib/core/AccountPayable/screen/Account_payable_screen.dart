@@ -5,6 +5,7 @@ import 'package:LedgerPro_app/Utils/colors.dart';
 import 'package:LedgerPro_app/Utils/toast_utils.dart';
 import 'package:LedgerPro_app/core/AccountPayable/controller/account_payable_controller.dart';
 import 'package:LedgerPro_app/core/Vendor&Supplier/screens/vendor_supplier_screen.dart';
+import 'package:LedgerPro_app/core/warehouse/supplier/screen/supplier_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -311,13 +312,17 @@ class AccountsPayableScreen extends StatelessWidget {
                   child: Icon(icon, size: 14, color: color),
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: kSubText,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.3,
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: kSubText,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.3,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -669,8 +674,6 @@ class AccountsPayableScreen extends StatelessWidget {
     DateTime selectedDate = DateTime.now();
     DateTime dueDate = DateTime.now().add(const Duration(days: 30));
     String supplierId = '';
-    String billNumber = await controller.getNextBillNumber();
-    final billNumberController = TextEditingController(text: billNumber);
     String reference = '';
     String description = '';
     double subtotal = 0;
@@ -783,21 +786,6 @@ class AccountsPayableScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildTextField(
-                              label: 'Bill Number *',
-                              hint: 'e.g., BILL-001',
-                              controller: billNumberController,
-                              onChanged: (v) => billNumber = v,
-                              validator: (v) {
-                                if (v?.isEmpty == true) return 'Required';
-                                // Check for duplicate bill number
-                                final isDuplicate = controller.bills.any((b) => b.billNumber == v);
-                                if (isDuplicate) return 'Bill number already exists';
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 16),
-
                             _buildDatePickerField(
                               'Bill Date',
                               selectedDate,
@@ -968,7 +956,6 @@ class AccountsPayableScreen extends StatelessWidget {
 
                                       Navigator.pop(context);
                                       await controller.createBill({
-                                        'billNumber': billNumber,
                                         'date': DateFormat('yyyy-MM-dd').format(selectedDate),
                                         'dueDate': DateFormat('yyyy-MM-dd').format(dueDate),
                                         'supplierId': supplierId,
@@ -1812,11 +1799,14 @@ Widget _buildSupplierDropdownField(
   BuildContext context,
   VoidCallback onRefresh,
 ) {
+  // Ensure selectedId is valid (exists in suppliers list)
+  final validSelectedId = suppliers.any((s) => s.id == selectedId) ? selectedId : null;
+  
   return Row(
     children: [
       Expanded(
         child: DropdownButtonFormField<String>(
-          value: selectedId,
+          value: validSelectedId,
           decoration: InputDecoration(
             labelText: 'Supplier *',
             border: OutlineInputBorder(
@@ -1864,7 +1854,7 @@ Widget _buildSupplierDropdownField(
           icon: const Icon(Icons.add, color: Colors.black, size: 20),
           onPressed: () async {
             Navigator.pop(context);
-            await Get.to(() => const VendorsScreen());
+            await Get.to(() =>  SuppliersScreen());
             onRefresh();
           },
           padding: EdgeInsets.zero,
