@@ -2432,10 +2432,6 @@ class _NavItem extends StatelessWidget {
   }
 }
 
-// ══════════════════════════════════════════════════════════════════
-// Drawer Footer
-// ══════════════════════════════════════════════════════════════════
-
 class _DrawerFooter extends StatelessWidget {
   final VoidCallback onLogout;
 
