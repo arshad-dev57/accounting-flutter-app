@@ -1,8 +1,8 @@
 // lib/core/warehouse/delivery/controller/delivery_controller.dart
 
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/Delievery/deleivery_model.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/Delievery/deleivery_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -35,7 +35,12 @@ class DeliveryController extends GetxController {
   final Rx<DateTime?> fromDate = Rx<DateTime?>(null);
   final Rx<DateTime?> toDate = Rx<DateTime?>(null);
 
-  final List<String> filters = ['all', 'Pending', 'Partially Delivered', 'Delivered'];
+  final List<String> filters = [
+    'all',
+    'Pending',
+    'Partially Delivered',
+    'Delivered',
+  ];
 
   // ─── STATS ────────────────────────────────────────────────────
   final Rx<DeliveryStats> stats = DeliveryStats(
@@ -46,7 +51,12 @@ class DeliveryController extends GetxController {
   ).obs;
 
   // ─── CONSTANTS ────────────────────────────────────────────────
-  static const statusOptions = ['all', 'Pending', 'Partially Delivered', 'Delivered'];
+  static const statusOptions = [
+    'all',
+    'Pending',
+    'Partially Delivered',
+    'Delivered',
+  ];
 
   // ─── WIZARD STATE ─────────────────────────────────────────────
   final RxInt wizardStep = 0.obs;
@@ -54,7 +64,7 @@ class DeliveryController extends GetxController {
   final RxBool isSearchingOrders = false.obs;
   final Rx<OrderForDelivery?> selectedOrder = Rx<OrderForDelivery?>(null);
   final RxList<DeliveryLineDraft> lineDrafts = <DeliveryLineDraft>[].obs;
-  
+
   final orderSearchController = TextEditingController();
   final deliveryDateController = TextEditingController();
   final deliveryPersonController = TextEditingController();
@@ -96,9 +106,11 @@ class DeliveryController extends GetxController {
 
   Future<void> fetchDeliveries({bool resetPage = false}) async {
     print('🔵 [DeliveryController] fetchDeliveries called');
-    print('🔵 [DeliveryController] Current Page: ${currentPage.value}, Limit: ${pageLimit.value}');
+    print(
+      '🔵 [DeliveryController] Current Page: ${currentPage.value}, Limit: ${pageLimit.value}',
+    );
     print('🔵 [DeliveryController] Reset Page: $resetPage');
-    
+
     if (resetPage) currentPage.value = 1;
     try {
       isLoading.value = true;
@@ -123,10 +135,15 @@ class DeliveryController extends GetxController {
         print('🔵 [DeliveryController] To date: ${params['toDate']}');
       }
 
-      final query = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
+      final query = params.entries
+          .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+          .join('&');
       print('🔵 [DeliveryController] API Request: GET /api/deliveries?$query');
 
-      final response = await _api.get('/api/deliveries?$query', requiresAuth: true);
+      final response = await _api.get(
+        '/api/deliveries?$query',
+        requiresAuth: true,
+      );
 
       print('🔵 [DeliveryController] Response Status: ${response.statusCode}');
       print('🔵 [DeliveryController] Response Success: ${response.success}');
@@ -134,7 +151,7 @@ class DeliveryController extends GetxController {
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         print('🔵 [DeliveryController] Data length: ${list.length}');
-        
+
         deliveries.value = list
             .map((e) => DeliveryModel.fromJson(Map<String, dynamic>.from(e)))
             .toList();
@@ -158,9 +175,13 @@ class DeliveryController extends GetxController {
           hasNext.value = pagination['hasNext'] == true;
           hasPrev.value = pagination['hasPrev'] == true;
           hasMore.value = pagination['hasNext'] == true;
-          
-          print('✅ [DeliveryController] Deliveries fetched successfully: ${deliveries.length} deliveries');
-          print('✅ [DeliveryController] Total records: ${totalRecords.value}, Total pages: ${totalPages.value}');
+
+          print(
+            '✅ [DeliveryController] Deliveries fetched successfully: ${deliveries.length} deliveries',
+          );
+          print(
+            '✅ [DeliveryController] Total records: ${totalRecords.value}, Total pages: ${totalPages.value}',
+          );
         }
       } else {
         print('❌ [DeliveryController] Failed to fetch deliveries');
@@ -173,7 +194,9 @@ class DeliveryController extends GetxController {
       Get.snackbar('Error', e.toString());
     } finally {
       isLoading.value = false;
-      print('🔵 [DeliveryController] fetchDeliveries completed, isLoading: ${isLoading.value}');
+      print(
+        '🔵 [DeliveryController] fetchDeliveries completed, isLoading: ${isLoading.value}',
+      );
     }
   }
 
@@ -183,25 +206,29 @@ class DeliveryController extends GetxController {
     print('🟣 [DeliveryController] applyLocalFilters called');
     print('🟣 [DeliveryController] Selected filter: ${selectedFilter.value}');
     print('🟣 [DeliveryController] Search filter: ${searchFilter.value}');
-    
+
     final list = deliveries.toList();
     final filtered = list.where((item) {
       // Status filter
-      if (selectedFilter.value != 'all' && item.deliveryStatus != selectedFilter.value) {
+      if (selectedFilter.value != 'all' &&
+          item.deliveryStatus != selectedFilter.value) {
         return false;
       }
       // Search filter
       if (searchFilter.value.isNotEmpty) {
         final query = searchFilter.value.toLowerCase();
-        final matches = item.deliveryNumber.toLowerCase().contains(query) ||
+        final matches =
+            item.deliveryNumber.toLowerCase().contains(query) ||
             item.customerName.toLowerCase().contains(query) ||
             item.salesOrderNumber.toLowerCase().contains(query);
         if (!matches) return false;
       }
       return true;
     }).toList();
-    
-    print('🟣 [DeliveryController] Filtered deliveries: ${filtered.length} out of ${list.length}');
+
+    print(
+      '🟣 [DeliveryController] Filtered deliveries: ${filtered.length} out of ${list.length}',
+    );
     filteredDeliveries.value = filtered;
   }
 
@@ -228,13 +255,17 @@ class DeliveryController extends GetxController {
 
   Future<void> fetchMoreDeliveries() async {
     print('🟡 [DeliveryController] fetchMoreDeliveries called');
-    print('🟡 [DeliveryController] hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}');
-    
+    print(
+      '🟡 [DeliveryController] hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}',
+    );
+
     if (!hasMore.value || isLoadingMore.value) {
-      print('🟡 [DeliveryController] Skipping load more - hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}');
+      print(
+        '🟡 [DeliveryController] Skipping load more - hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}',
+      );
       return;
     }
-    
+
     try {
       isLoadingMore.value = true;
       currentPage.value += 1;
@@ -247,18 +278,27 @@ class DeliveryController extends GetxController {
       if (searchFilter.value.isNotEmpty) params['search'] = searchFilter.value;
       if (statusFilter.value != 'all') params['status'] = statusFilter.value;
 
-      final query = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
-      print('🟡 [DeliveryController] API Request: GET /api/deliveries?$query (Page ${currentPage.value})');
+      final query = params.entries
+          .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+          .join('&');
+      print(
+        '🟡 [DeliveryController] API Request: GET /api/deliveries?$query (Page ${currentPage.value})',
+      );
 
-      final response = await _api.get('/api/deliveries?$query', requiresAuth: true);
+      final response = await _api.get(
+        '/api/deliveries?$query',
+        requiresAuth: true,
+      );
 
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         final newDeliveries = list
             .map((e) => DeliveryModel.fromJson(Map<String, dynamic>.from(e)))
             .toList();
-        
-        print('🟡 [DeliveryController] Loaded ${newDeliveries.length} more deliveries');
+
+        print(
+          '🟡 [DeliveryController] Loaded ${newDeliveries.length} more deliveries',
+        );
         deliveries.addAll(newDeliveries);
         applyLocalFilters();
 
@@ -268,7 +308,9 @@ class DeliveryController extends GetxController {
           totalRecords.value = (pagination['total'] as num?)?.toInt() ?? 0;
           totalPages.value = (pagination['pages'] as num?)?.toInt() ?? 1;
         }
-        print('🟡 [DeliveryController] Total deliveries now: ${deliveries.length}, hasMore: ${hasMore.value}');
+        print(
+          '🟡 [DeliveryController] Total deliveries now: ${deliveries.length}, hasMore: ${hasMore.value}',
+        );
       } else {
         print('❌ [DeliveryController] Failed to load more deliveries');
       }
@@ -295,7 +337,9 @@ class DeliveryController extends GetxController {
   void goToPage(int page) {
     print('🟣 [DeliveryController] goToPage called: $page');
     if (page < 1 || page > totalPages.value) {
-      print('🟣 [DeliveryController] Invalid page: $page, totalPages: ${totalPages.value}');
+      print(
+        '🟣 [DeliveryController] Invalid page: $page, totalPages: ${totalPages.value}',
+      );
       return;
     }
     currentPage.value = page;
@@ -310,18 +354,24 @@ class DeliveryController extends GetxController {
     print('🟢 [DeliveryController] openCreateWizard called');
     _resetWizard();
     showCreateWizard.value = true;
-    print('🟢 [DeliveryController] showCreateWizard: ${showCreateWizard.value}');
-    
+    print(
+      '🟢 [DeliveryController] showCreateWizard: ${showCreateWizard.value}',
+    );
+
     // Set default delivery date to tomorrow
     selectedDate.value = DateTime.now().add(const Duration(days: 1));
-    deliveryDateController.text = DateFormat('dd MMM yyyy').format(selectedDate.value!);
+    deliveryDateController.text = DateFormat(
+      'dd MMM yyyy',
+    ).format(selectedDate.value!);
   }
 
   void closeCreateWizard() {
     print('🟢 [DeliveryController] closeCreateWizard called');
     showCreateWizard.value = false;
     _resetWizard();
-    print('🟢 [DeliveryController] showCreateWizard: ${showCreateWizard.value}');
+    print(
+      '🟢 [DeliveryController] showCreateWizard: ${showCreateWizard.value}',
+    );
   }
 
   void _resetWizard() {
@@ -341,29 +391,33 @@ class DeliveryController extends GetxController {
 
   Future<void> searchOrders(String query) async {
     print('🔵 [DeliveryController] searchOrders called with: $query');
-    
+
     if (query.trim().length < 2) {
       print('🔵 [DeliveryController] Query too short, clearing results');
       orderSearchResults.clear();
       return;
     }
-    
+
     try {
       isSearchingOrders.value = true;
       final encoded = Uri.encodeComponent(query.trim());
-      print('🔵 [DeliveryController] API Request: GET /api/deliveries/available-orders?search=$encoded&limit=10');
-      
+      print(
+        '🔵 [DeliveryController] API Request: GET /api/deliveries/available-orders?search=$encoded&limit=10',
+      );
+
       final response = await _api.get(
         '/api/deliveries/available-orders?search=$encoded&limit=10',
         requiresAuth: true,
       );
-      
+
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         orderSearchResults.value = list
             .map((e) => OrderForDelivery.fromJson(Map<String, dynamic>.from(e)))
             .toList();
-        print('🔵 [DeliveryController] Found ${orderSearchResults.length} orders for query: $query');
+        print(
+          '🔵 [DeliveryController] Found ${orderSearchResults.length} orders for query: $query',
+        );
       } else {
         print('❌ [DeliveryController] No orders found for query: $query');
         orderSearchResults.clear();
@@ -379,8 +433,10 @@ class DeliveryController extends GetxController {
 
   void selectOrderForDelivery(OrderForDelivery order) {
     print('🔵 [DeliveryController] selectOrderForDelivery called');
-    print('🔵 [DeliveryController] Selected order: ${order.orderNumber} - ${order.customerName}');
-    
+    print(
+      '🔵 [DeliveryController] Selected order: ${order.orderNumber} - ${order.customerName}',
+    );
+
     selectedOrder.value = order;
     orderSearchResults.clear();
     orderSearchController.text = order.orderNumber;
@@ -394,18 +450,21 @@ class DeliveryController extends GetxController {
         unit: item.unit,
       );
     }).toList();
-    
-    print('🔵 [DeliveryController] Created ${lineDrafts.length} line drafts for order');
+
+    print(
+      '🔵 [DeliveryController] Created ${lineDrafts.length} line drafts for order',
+    );
   }
 
   void selectDeliveryDate(BuildContext context) async {
     final date = await showDatePicker(
       context: context,
-      initialDate: selectedDate.value ?? DateTime.now().add(const Duration(days: 1)),
+      initialDate:
+          selectedDate.value ?? DateTime.now().add(const Duration(days: 1)),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    
+
     if (date != null) {
       selectedDate.value = date;
       deliveryDateController.text = DateFormat('dd MMM yyyy').format(date);
@@ -419,14 +478,18 @@ class DeliveryController extends GetxController {
   }
 
   bool canGoToStep3() {
-    final canGo = lineDrafts.any((l) => l.selected.value && l.deliveryQuantity.value > 0);
+    final canGo = lineDrafts.any(
+      (l) => l.selected.value && l.deliveryQuantity.value > 0,
+    );
     print('🔵 [DeliveryController] canGoToStep3: $canGo');
     return canGo;
   }
 
   void nextStep() {
-    print('🟡 [DeliveryController] nextStep called, current step: ${wizardStep.value}');
-    
+    print(
+      '🟡 [DeliveryController] nextStep called, current step: ${wizardStep.value}',
+    );
+
     if (wizardStep.value == 0 && !canGoToStep2()) {
       print('❌ [DeliveryController] Cannot go to step 2 - no order selected');
       Get.snackbar('Validation', 'Select an order first');
@@ -444,7 +507,9 @@ class DeliveryController extends GetxController {
   }
 
   void previousStep() {
-    print('🟡 [DeliveryController] previousStep called, current step: ${wizardStep.value}');
+    print(
+      '🟡 [DeliveryController] previousStep called, current step: ${wizardStep.value}',
+    );
     if (wizardStep.value > 0) {
       wizardStep.value--;
       print('🟡 [DeliveryController] Step changed to: ${wizardStep.value}');
@@ -457,7 +522,7 @@ class DeliveryController extends GetxController {
 
   Future<bool> createDelivery() async {
     print('🔵 [DeliveryController] createDelivery called');
-    
+
     final order = selectedOrder.value;
     if (order == null) {
       print('❌ [DeliveryController] No order selected');
@@ -467,9 +532,9 @@ class DeliveryController extends GetxController {
     final selectedItems = lineDrafts
         .where((l) => l.selected.value && l.deliveryQuantity.value > 0)
         .toList();
-    
+
     print('🔵 [DeliveryController] Selected items: ${selectedItems.length}');
-    
+
     if (selectedItems.isEmpty) {
       print('❌ [DeliveryController] No items selected');
       Get.snackbar('Validation', 'Select at least one item to deliver');
@@ -488,24 +553,30 @@ class DeliveryController extends GetxController {
       final payload = {
         'salesOrderId': order.id,
         'deliveryDate': deliveryDate.toIso8601String().split('T').first,
-        'items': selectedItems.map((l) => {
-          'productId': l.productId,
-          'deliveredQuantity': l.deliveryQuantity.value,
-          'notes': null,
-        }).toList(),
-        'deliveryPerson': deliveryPersonController.text.trim().isEmpty 
-            ? null 
+        'items': selectedItems
+            .map(
+              (l) => {
+                'productId': l.productId,
+                'deliveredQuantity': l.deliveryQuantity.value,
+                'notes': null,
+              },
+            )
+            .toList(),
+        'deliveryPerson': deliveryPersonController.text.trim().isEmpty
+            ? null
             : deliveryPersonController.text.trim(),
-        'trackingNumber': trackingNumberController.text.trim().isEmpty 
-            ? null 
+        'trackingNumber': trackingNumberController.text.trim().isEmpty
+            ? null
             : trackingNumberController.text.trim(),
-        'notes': notesController.text.trim().isEmpty 
-            ? null 
+        'notes': notesController.text.trim().isEmpty
+            ? null
             : notesController.text.trim(),
       };
 
       print('🔵 [DeliveryController] Submitting delivery payload:');
-      print('🔵 [DeliveryController] ${payload.toString().substring(0, payload.toString().length > 500 ? 500 : payload.toString().length)}...');
+      print(
+        '🔵 [DeliveryController] ${payload.toString().substring(0, payload.toString().length > 500 ? 500 : payload.toString().length)}...',
+      );
 
       final response = await _api.post(
         '/api/deliveries',
@@ -523,8 +594,10 @@ class DeliveryController extends GetxController {
         await fetchDeliveries(resetPage: true);
         return true;
       }
-      
-      print('❌ [DeliveryController] Failed to create delivery: ${response.message}');
+
+      print(
+        '❌ [DeliveryController] Failed to create delivery: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to create delivery');
       return false;
     } catch (e) {
@@ -540,7 +613,7 @@ class DeliveryController extends GetxController {
 
   Future<bool> confirmDelivery(String id) async {
     print('🟣 [DeliveryController] confirmDelivery called for ID: $id');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.post(
@@ -558,8 +631,10 @@ class DeliveryController extends GetxController {
         await fetchDeliveries();
         return true;
       }
-      
-      print('❌ [DeliveryController] Failed to confirm delivery: ${response.message}');
+
+      print(
+        '❌ [DeliveryController] Failed to confirm delivery: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to confirm delivery');
       return false;
     } catch (e) {
@@ -573,7 +648,7 @@ class DeliveryController extends GetxController {
 
   Future<bool> deleteDelivery(String id) async {
     print('🔵 [DeliveryController] deleteDelivery called for ID: $id');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.delete(
@@ -590,8 +665,10 @@ class DeliveryController extends GetxController {
         await fetchDeliveries(resetPage: true);
         return true;
       }
-      
-      print('❌ [DeliveryController] Failed to delete delivery: ${response.message}');
+
+      print(
+        '❌ [DeliveryController] Failed to delete delivery: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to delete delivery');
       return false;
     } catch (e) {
@@ -606,7 +683,9 @@ class DeliveryController extends GetxController {
   // ─── SELECT DELIVERY ──────────────────────────────────────────
 
   void selectDelivery(DeliveryModel item) {
-    print('🔵 [DeliveryController] selectDelivery called for: ${item.deliveryNumber}');
+    print(
+      '🔵 [DeliveryController] selectDelivery called for: ${item.deliveryNumber}',
+    );
     selectedDelivery.value = item;
   }
 
@@ -656,8 +735,8 @@ class DeliveryLineDraft {
     required this.orderQuantity,
     required this.remainingQuantity,
     this.unit = 'Pcs',
-  })  : selected = false.obs,
-        deliveryQuantity = remainingQuantity > 0 ? remainingQuantity.obs : 0.obs;
+  }) : selected = false.obs,
+       deliveryQuantity = remainingQuantity > 0 ? remainingQuantity.obs : 0.obs;
 
   // Max delivery quantity cannot exceed remaining quantity
   void updateDeliveryQuantity(int value) {

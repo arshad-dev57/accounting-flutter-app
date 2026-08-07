@@ -1,6 +1,6 @@
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/core/Users/controller/user_management_controller.dart';
-import 'package:LedgerPro_app/core/Users/screen/enhanced_access_management_screen.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/Users/controller/user_management_controller.dart';
+import 'package:BisonsTechs_app/core/Users/screen/enhanced_access_management_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -53,10 +53,7 @@ class _UserListScreenState extends State<UserListScreen> {
         icon: const Icon(Icons.person_add_rounded, color: Colors.white),
         label: const Text(
           'Add User',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
       ),
     );
@@ -78,8 +75,11 @@ class _UserListScreenState extends State<UserListScreen> {
                 color: const Color(0xFFF5F7FA),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.arrow_back_ios_rounded,
-                  size: 16, color: Colors.black87),
+              child: const Icon(
+                Icons.arrow_back_ios_rounded,
+                size: 16,
+                color: Colors.black87,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -113,14 +113,16 @@ class _UserListScreenState extends State<UserListScreen> {
               _MiniStat(label: 'Total', value: '$total', color: kPrimary),
               const SizedBox(width: 12),
               _MiniStat(
-                  label: 'Active',
-                  value: '$active',
-                  color: const Color(0xFF27AE60)),
+                label: 'Active',
+                value: '$active',
+                color: const Color(0xFF27AE60),
+              ),
               const SizedBox(width: 12),
               _MiniStat(
-                  label: 'Admins',
-                  value: '$admins',
-                  color: const Color(0xFF8E44AD)),
+                label: 'Admins',
+                value: '$admins',
+                color: const Color(0xFF8E44AD),
+              ),
             ],
           ),
         );
@@ -146,23 +148,30 @@ class _UserListScreenState extends State<UserListScreen> {
           style: const TextStyle(fontSize: 14),
           decoration: InputDecoration(
             hintText: 'Search by name or email…',
-            hintStyle:
-                TextStyle(color: Colors.grey.shade400, fontSize: 14),
-            prefixIcon:
-                Icon(Icons.search_rounded, color: Colors.grey.shade400, size: 20),
+            hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+            prefixIcon: Icon(
+              Icons.search_rounded,
+              color: Colors.grey.shade400,
+              size: 20,
+            ),
             suffixIcon: _searchQuery.isNotEmpty
                 ? GestureDetector(
                     onTap: () {
                       _searchController.clear();
                       setState(() => _searchQuery = '');
                     },
-                    child: Icon(Icons.close_rounded,
-                        color: Colors.grey.shade400, size: 18),
+                    child: Icon(
+                      Icons.close_rounded,
+                      color: Colors.grey.shade400,
+                      size: 18,
+                    ),
                   )
                 : null,
             border: InputBorder.none,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 12,
+            ),
           ),
         ),
       ),
@@ -179,17 +188,20 @@ class _UserListScreenState extends State<UserListScreen> {
         child: Row(
           children: [
             _Chip(
-                label: 'All',
-                selected: _statusFilter == 'all',
-                onTap: () => setState(() => _statusFilter = 'all')),
+              label: 'All',
+              selected: _statusFilter == 'all',
+              onTap: () => setState(() => _statusFilter = 'all'),
+            ),
             _Chip(
-                label: 'Active',
-                selected: _statusFilter == 'active',
-                onTap: () => setState(() => _statusFilter = 'active')),
+              label: 'Active',
+              selected: _statusFilter == 'active',
+              onTap: () => setState(() => _statusFilter = 'active'),
+            ),
             _Chip(
-                label: 'Inactive',
-                selected: _statusFilter == 'inactive',
-                onTap: () => setState(() => _statusFilter = 'inactive')),
+              label: 'Inactive',
+              selected: _statusFilter == 'inactive',
+              onTap: () => setState(() => _statusFilter = 'inactive'),
+            ),
             Container(
               width: 1,
               height: 20,
@@ -200,16 +212,16 @@ class _UserListScreenState extends State<UserListScreen> {
               builder: (c) => Row(
                 children: [
                   _Chip(
-                      label: 'All Roles',
-                      selected: _roleFilter == 'all',
-                      onTap: () => setState(() => _roleFilter = 'all')),
+                    label: 'All Roles',
+                    selected: _roleFilter == 'all',
+                    onTap: () => setState(() => _roleFilter = 'all'),
+                  ),
                   ...c.roles.map(
                     (r) => _Chip(
                       label: r.name,
-                      selected:
-                          _roleFilter == r.name.toLowerCase(),
-                      onTap: () => setState(
-                          () => _roleFilter = r.name.toLowerCase()),
+                      selected: _roleFilter == r.name.toLowerCase(),
+                      onTap: () =>
+                          setState(() => _roleFilter = r.name.toLowerCase()),
                     ),
                   ),
                 ],
@@ -235,7 +247,8 @@ class _UserListScreenState extends State<UserListScreen> {
         if (_searchQuery.isNotEmpty) {
           final q = _searchQuery.toLowerCase();
           if (!u.fullName.toLowerCase().contains(q) &&
-              !u.email.toLowerCase().contains(q)) return false;
+              !u.email.toLowerCase().contains(q))
+            return false;
         }
         if (_statusFilter == 'active' && !u.isActive) return false;
         if (_statusFilter == 'inactive' && u.isActive) return false;
@@ -252,9 +265,8 @@ class _UserListScreenState extends State<UserListScreen> {
         itemBuilder: (_, i) => _UserTile(
           user: users[i],
           onEdit: () => Get.toNamed('/admin/users/edit/${users[i].id}'),
-          onPermissions: () => Get.to(
-            () => EnhancedAccessManagementScreen(userId: users[i].id),
-          ),
+          onPermissions: () =>
+              Get.to(() => EnhancedAccessManagementScreen(userId: users[i].id)),
           onDelete: () => _confirmDelete(users[i]),
         ),
       );
@@ -269,15 +281,19 @@ class _UserListScreenState extends State<UserListScreen> {
         children: [
           Icon(Icons.group_off_rounded, size: 56, color: Colors.grey.shade300),
           const SizedBox(height: 12),
-          Text('No users found',
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey.shade500)),
+          Text(
+            'No users found',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade500,
+            ),
+          ),
           const SizedBox(height: 6),
-          Text('Try a different filter or search',
-              style:
-                  TextStyle(fontSize: 13, color: Colors.grey.shade400)),
+          Text(
+            'Try a different filter or search',
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
+          ),
         ],
       ),
     );
@@ -288,12 +304,17 @@ class _UserListScreenState extends State<UserListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline_rounded,
-              size: 48, color: Colors.red.shade300),
+          Icon(
+            Icons.error_outline_rounded,
+            size: 48,
+            color: Colors.red.shade300,
+          ),
           const SizedBox(height: 12),
-          Text(_controller.errorMessage.value,
-              style: TextStyle(color: Colors.grey.shade600),
-              textAlign: TextAlign.center),
+          Text(
+            _controller.errorMessage.value,
+            style: TextStyle(color: Colors.grey.shade600),
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: _controller.refresh,
@@ -303,7 +324,8 @@ class _UserListScreenState extends State<UserListScreen> {
               backgroundColor: kPrimary,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           ),
         ],
@@ -339,8 +361,11 @@ class _UserListScreenState extends State<UserListScreen> {
                 color: Colors.red.shade50,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.delete_outline_rounded,
-                  color: Colors.red.shade400, size: 28),
+              child: Icon(
+                Icons.delete_outline_rounded,
+                color: Colors.red.shade400,
+                size: 28,
+              ),
             ),
             const SizedBox(height: 16),
             const Text(
@@ -350,8 +375,7 @@ class _UserListScreenState extends State<UserListScreen> {
             const SizedBox(height: 8),
             Text(
               'This will permanently remove ${user.fullName} from the system.',
-              style:
-                  TextStyle(fontSize: 14, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -364,10 +388,13 @@ class _UserListScreenState extends State<UserListScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       side: BorderSide(color: Colors.grey.shade300),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    child: const Text('Cancel',
-                        style: TextStyle(color: Colors.black87)),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(color: Colors.black87),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -380,8 +407,7 @@ class _UserListScreenState extends State<UserListScreen> {
                         ok ? 'Done' : 'Error',
                         ok ? 'User removed' : 'Could not delete user',
                         snackPosition: SnackPosition.BOTTOM,
-                        backgroundColor:
-                            ok ? Colors.green : Colors.red,
+                        backgroundColor: ok ? Colors.green : Colors.red,
                         colorText: Colors.white,
                         margin: const EdgeInsets.all(16),
                         borderRadius: 12,
@@ -390,10 +416,10 @@ class _UserListScreenState extends State<UserListScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
-                      padding:
-                          const EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: const Text('Delete'),
                   ),
@@ -475,8 +501,7 @@ class _UserTile extends StatelessWidget {
                               ? const Color(0xFF27AE60)
                               : Colors.red,
                           shape: BoxShape.circle,
-                          border: Border.all(
-                              color: Colors.white, width: 2),
+                          border: Border.all(color: Colors.white, width: 2),
                         ),
                       ),
                     ),
@@ -511,7 +536,9 @@ class _UserTile extends StatelessWidget {
                       const SizedBox(height: 6),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.purple.withOpacity(0.08),
                           borderRadius: BorderRadius.circular(6),
@@ -601,15 +628,17 @@ class _MiniStat extends StatelessWidget {
   final String value;
   final Color color;
 
-  const _MiniStat(
-      {required this.label, required this.value, required this.color});
+  const _MiniStat({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: color.withOpacity(0.07),
           borderRadius: BorderRadius.circular(10),
@@ -619,8 +648,7 @@ class _MiniStat extends StatelessWidget {
             Container(
               width: 6,
               height: 6,
-              decoration: BoxDecoration(
-                  color: color, shape: BoxShape.circle),
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
             const SizedBox(width: 8),
             Text(
@@ -634,10 +662,7 @@ class _MiniStat extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 11,
-                color: color.withOpacity(0.8),
-              ),
+              style: TextStyle(fontSize: 11, color: color.withOpacity(0.8)),
             ),
           ],
         ),
@@ -651,10 +676,11 @@ class _Chip extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  const _Chip(
-      {required this.label,
-      required this.selected,
-      required this.onTap});
+  const _Chip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -662,21 +688,17 @@ class _Chip extends StatelessWidget {
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(right: 8),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
           color: selected ? kPrimary : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected ? kPrimary : Colors.grey.shade300,
-          ),
+          border: Border.all(color: selected ? kPrimary : Colors.grey.shade300),
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: 12,
-            fontWeight:
-                selected ? FontWeight.w600 : FontWeight.w400,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
             color: selected ? Colors.white : Colors.grey.shade600,
           ),
         ),

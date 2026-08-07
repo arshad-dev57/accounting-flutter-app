@@ -1,10 +1,9 @@
 // screens/balance_sheet_screen.dart - COMPLETE PROFESSIONAL MOBILE DESIGN
 
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/FiscalYear/controller/fiscal_year_controller.dart';
-import 'package:LedgerPro_app/core/balancesheet/controller/balance_sheet_controller.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/balancesheet/controller/balance_sheet_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -15,8 +14,10 @@ class BalanceSheetScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final fiscalYearController = Get.isRegistered<FiscalYearController>()
+        ? Get.find<FiscalYearController>()
+        : Get.put(FiscalYearController());
     final controller = Get.put(BalanceSheetController());
-    final fiscalYearController = Get.put(FiscalYearController());
 
     return Scaffold(
       backgroundColor: kBgLight,
@@ -43,7 +44,10 @@ class BalanceSheetScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildFiscalYearSelector(fiscalYearController, controller),
+                      _buildFiscalYearSelector(
+                        fiscalYearController,
+                        controller,
+                      ),
                       const SizedBox(height: 10),
                       _buildDateHeader(controller),
                       const SizedBox(height: 10),
@@ -64,7 +68,8 @@ class BalanceSheetScreen extends StatelessWidget {
                         title: 'Liabilities',
                         icon: Icons.money_off_outlined,
                         color: kDanger,
-                        dataEntries: controller.liabilitiesData.entries.toList(),
+                        dataEntries: controller.liabilitiesData.entries
+                            .toList(),
                         totalLabel: 'Total Liabilities',
                         totalValue: controller.totalLiabilities.value,
                       ),
@@ -204,13 +209,13 @@ class BalanceSheetScreen extends StatelessWidget {
                     () => DropdownButton<String>(
                       value: controller.selectedPeriod.value,
                       icon: const Icon(Icons.arrow_drop_down, size: 20),
-                      style: const TextStyle(fontSize: 12, color: Colors.black87),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black87,
+                      ),
                       underline: const SizedBox.shrink(),
                       items: controller.periodOptions.map((p) {
-                        return DropdownMenuItem(
-                          value: p,
-                          child: Text(p),
-                        );
+                        return DropdownMenuItem(value: p, child: Text(p));
                       }).toList(),
                       onChanged: (v) {
                         if (v != null) controller.changePeriod(v);
@@ -256,10 +261,7 @@ class BalanceSheetScreen extends StatelessWidget {
             icon: const Icon(Icons.arrow_drop_down, size: 20),
             padding: EdgeInsets.zero,
             isExpanded: true,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.black87,
-            ),
+            style: const TextStyle(fontSize: 12, color: Colors.black87),
             items: fiscalYearController.fiscalYears.map((year) {
               return DropdownMenuItem(
                 value: year.id,
@@ -272,10 +274,7 @@ class BalanceSheetScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        year.name,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      child: Text(year.name, overflow: TextOverflow.ellipsis),
                     ),
                   ],
                 ),
@@ -286,7 +285,6 @@ class BalanceSheetScreen extends StatelessWidget {
                 final selectedYear = fiscalYearController.fiscalYears
                     .firstWhere((y) => y.id == value);
                 fiscalYearController.selectFiscalYear(selectedYear);
-                controller.loadBalanceSheet();
               }
             },
           ),
@@ -305,11 +303,7 @@ class BalanceSheetScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
         child: Row(
           children: [
-            Icon(
-              Icons.calendar_today,
-              size: 14,
-              color: kSubText,
-            ),
+            Icon(Icons.calendar_today, size: 14, color: kSubText),
             const SizedBox(width: 8),
             Text(
               'As of ${DateFormat('dd MMM yyyy').format(controller.asOfDate.value)}',
@@ -362,7 +356,9 @@ class BalanceSheetScreen extends StatelessWidget {
             const SizedBox(width: 8),
             _buildProfessionalCard(
               title: 'Liabilities',
-              amount: controller.formatAmount(controller.totalLiabilities.value),
+              amount: controller.formatAmount(
+                controller.totalLiabilities.value,
+              ),
               color: kDanger,
               icon: Icons.money_off,
               bgColor: kDanger.withOpacity(0.08),
@@ -390,7 +386,6 @@ class BalanceSheetScreen extends StatelessWidget {
     required IconData icon,
     required Color bgColor,
     required Color borderColor,
-    bool isNumber = false,
   }) {
     return Expanded(
       child: Container(
@@ -514,13 +509,7 @@ class BalanceSheetScreen extends StatelessWidget {
               ),
             ),
             const Spacer(),
-            Text(
-              'No entries',
-              style: TextStyle(
-                fontSize: 12,
-                color: kSubText,
-              ),
-            ),
+            Text('No entries', style: TextStyle(fontSize: 12, color: kSubText)),
           ],
         ),
       );
@@ -593,9 +582,7 @@ class BalanceSheetScreen extends StatelessWidget {
                 bottomRight: Radius.circular(14),
               ),
               border: Border(
-                top: BorderSide(
-                  color: Colors.grey.withOpacity(0.12),
-                ),
+                top: BorderSide(color: Colors.grey.withOpacity(0.12)),
               ),
             ),
             child: Row(
@@ -652,33 +639,32 @@ class BalanceSheetScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
-        ...items.entries.map((e) => Padding(
-          padding: const EdgeInsets.only(left: 12, bottom: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                flex: 3,
-                child: Text(
-                  e.key,
+        ...items.entries.map(
+          (e) => Padding(
+            padding: const EdgeInsets.only(left: 12, bottom: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    e.key,
+                    style: TextStyle(fontSize: 12, color: kText),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Text(
+                  _formatAmount(e.value),
                   style: TextStyle(
                     fontSize: 12,
-                    color: kText,
+                    fontWeight: FontWeight.w500,
+                    color: e.value < 0 ? kDanger : kText,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              Text(
-                _formatAmount(e.value),
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: e.value < 0 ? kDanger : kText,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        )),
+        ),
       ],
     );
   }
@@ -691,7 +677,8 @@ class BalanceSheetScreen extends StatelessWidget {
     return Obx(() {
       final isBalanced = controller.isBalanced.value;
       final diff = controller.balanceDifference.value;
-      final totalLE = controller.totalLiabilities.value + controller.equity.value;
+      final totalLE =
+          controller.totalLiabilities.value + controller.equity.value;
       final color = isBalanced ? kSuccess : kDanger;
 
       return Container(
@@ -699,10 +686,7 @@ class BalanceSheetScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: color.withOpacity(0.05),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 1.5,
-          ),
+          border: Border.all(color: color.withOpacity(0.3), width: 1.5),
         ),
         child: Column(
           children: [
@@ -710,11 +694,7 @@ class BalanceSheetScreen extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.calculate_outlined,
-                  size: 16,
-                  color: color,
-                ),
+                Icon(Icons.calculate_outlined, size: 16, color: color),
                 const SizedBox(width: 6),
                 Text(
                   'Accounting Equation',
@@ -739,11 +719,7 @@ class BalanceSheetScreen extends StatelessWidget {
               margin: const EdgeInsets.symmetric(vertical: 8),
               child: Row(
                 children: [
-                  Expanded(
-                    child: Divider(
-                      color: Colors.grey.withOpacity(0.3),
-                    ),
-                  ),
+                  Expanded(child: Divider(color: Colors.grey.withOpacity(0.3))),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: Text(
@@ -755,11 +731,7 @@ class BalanceSheetScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Expanded(
-                    child: Divider(
-                      color: Colors.grey.withOpacity(0.3),
-                    ),
-                  ),
+                  Expanded(child: Divider(color: Colors.grey.withOpacity(0.3))),
                 ],
               ),
             ),
@@ -795,10 +767,7 @@ class BalanceSheetScreen extends StatelessWidget {
               kSuccess,
             ),
 
-            Divider(
-              color: Colors.grey.withOpacity(0.2),
-              height: 16,
-            ),
+            Divider(color: Colors.grey.withOpacity(0.2), height: 16),
 
             // L + E Total
             _buildEquationRow(
@@ -822,9 +791,7 @@ class BalanceSheetScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    isBalanced
-                        ? Icons.check_circle
-                        : Icons.warning_amber,
+                    isBalanced ? Icons.check_circle : Icons.warning_amber,
                     size: 16,
                     color: color,
                   ),
@@ -888,18 +855,11 @@ class BalanceSheetScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: kDanger,
-            ),
+            Icon(Icons.error_outline, size: 64, color: kDanger),
             const SizedBox(height: 16),
             Text(
               controller.errorMessage.value,
-              style: TextStyle(
-                fontSize: 16,
-                color: kSubText,
-              ),
+              style: TextStyle(fontSize: 16, color: kSubText),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),

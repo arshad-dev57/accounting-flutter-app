@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:LedgerPro_app/config/apiconfig.dart';
+import 'package:BisonsTechs_app/config/apiconfig.dart';
 
 class SubscriptionService {
   final String baseUrl = Apiconfig().baseUrl;
@@ -84,10 +84,7 @@ class SubscriptionService {
         };
       }
     } catch (e) {
-      return {
-        'success': false,
-        'message': 'Network error: ${e.toString()}',
-      };
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
     }
   }
 
@@ -105,7 +102,9 @@ class SubscriptionService {
     try {
       final headers = await _getHeaders();
 
-      print('[SubscriptionService] Subscribing to plan: $plan (amount: $amount)');
+      print(
+        '[SubscriptionService] Subscribing to plan: $plan (amount: $amount)',
+      );
 
       final response = await http.post(
         Uri.parse('$baseUrl/api/subscription/subscribe'),
@@ -119,7 +118,9 @@ class SubscriptionService {
         }),
       );
 
-      print('[SubscriptionService] Response ${response.statusCode}: ${response.body}');
+      print(
+        '[SubscriptionService] Response ${response.statusCode}: ${response.body}',
+      );
 
       final data = json.decode(response.body) as Map<String, dynamic>;
 
@@ -137,10 +138,7 @@ class SubscriptionService {
       }
     } catch (e) {
       print('[SubscriptionService] Error: $e');
-      return {
-        'success': false,
-        'message': 'Network error: ${e.toString()}',
-      };
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
     }
   }
 
@@ -170,10 +168,7 @@ class SubscriptionService {
         };
       }
     } catch (e) {
-      return {
-        'success': false,
-        'message': 'Network error: ${e.toString()}',
-      };
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
     }
   }
 
@@ -207,11 +202,7 @@ class SubscriptionService {
       );
       return json.decode(response.body) as Map<String, dynamic>;
     } catch (e) {
-      return {
-        'success': false,
-        'hasAccess': false,
-        'message': e.toString(),
-      };
+      return {'success': false, 'hasAccess': false, 'message': e.toString()};
     }
   }
 

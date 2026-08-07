@@ -1,10 +1,10 @@
 // screens/aged_receivables_screen.dart - COMPLETE PROFESSIONAL MOBILE DESIGN
 
 import 'dart:convert';
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/config/apiconfig.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/config/apiconfig.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
@@ -66,13 +66,17 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
         final body = json.decode(response.body);
         if (body['success'] == true) {
           final list = body['data']['customers'] as List? ?? [];
-          final summary = body['data']['summary'] as Map<String, dynamic>? ?? {};
+          final summary =
+              body['data']['summary'] as Map<String, dynamic>? ?? {};
 
           setState(() {
             _customers = list.map((c) {
               final invoices = (c['invoices'] as List? ?? []).map((inv) {
                 return AgedInvoice(
-                  id: inv['invoiceNumber']?.toString() ?? inv['id']?.toString() ?? '',
+                  id:
+                      inv['invoiceNumber']?.toString() ??
+                      inv['id']?.toString() ??
+                      '',
                   date: DateTime.parse(inv['invoiceDate'].toString()),
                   dueDate: DateTime.parse(inv['dueDate'].toString()),
                   amount: (inv['amount'] as num).toDouble(),
@@ -101,7 +105,8 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
             total31to60 = (summary['days31to60'] as num?)?.toDouble() ?? 0;
             total61to90 = (summary['days61to90'] as num?)?.toDouble() ?? 0;
             totalOver90 = (summary['days90plus'] as num?)?.toDouble() ?? 0;
-            totalOutstanding = (summary['totalOutstanding'] as num?)?.toDouble() ?? 0;
+            totalOutstanding =
+                (summary['totalOutstanding'] as num?)?.toDouble() ?? 0;
           });
           return;
         }
@@ -179,9 +184,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                         _buildSummaryCards(),
                         _buildFilterBar(),
                         const SizedBox(height: 8),
-                        Expanded(
-                          child: _buildCustomerList(context),
-                        ),
+                        Expanded(child: _buildCustomerList(context)),
                       ],
                     ),
                   ),
@@ -203,7 +206,11 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
           onPressed: _exportToExcel,
           backgroundColor: kPrimary,
           elevation: 0,
-          child: const Icon(Icons.download_outlined, color: Colors.black, size: 24),
+          child: const Icon(
+            Icons.download_outlined,
+            color: Colors.black,
+            size: 24,
+          ),
         ),
       ),
     );
@@ -489,12 +496,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                   style: const TextStyle(fontSize: 12, color: Colors.black87),
                   dropdownColor: kCardBg,
                   items: _filterOptions
-                      .map(
-                        (f) => DropdownMenuItem(
-                          value: f,
-                          child: Text(f),
-                        ),
-                      )
+                      .map((f) => DropdownMenuItem(value: f, child: Text(f)))
                       .toList(),
                   onChanged: (v) => setState(() => _selectedFilter = v!),
                 ),
@@ -517,11 +519,8 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                 style: const TextStyle(fontSize: 12, color: Colors.black87),
                 decoration: InputDecoration(
                   hintText: 'Search...',
-                  hintStyle: TextStyle(
-                    fontSize: 12,
-                    color: kSubText,
-                  ),
-                  prefixIcon:  Icon(Icons.search, size: 18, color: kSubText),
+                  hintStyle: TextStyle(fontSize: 12, color: kSubText),
+                  prefixIcon: Icon(Icons.search, size: 18, color: kSubText),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 8),
                 ),
@@ -758,11 +757,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () => _viewInvoices(customer),
-                        icon: Icon(
-                          Icons.receipt,
-                          size: 14,
-                          color: kSubText,
-                        ),
+                        icon: Icon(Icons.receipt, size: 14, color: kSubText),
                         label: Text(
                           'Invoices',
                           style: TextStyle(
@@ -1065,12 +1060,30 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                         ),
                         child: Column(
                           children: [
-                            _detailRow('Current', _formatAmount(customer.current)),
-                            _detailRow('1-30 Days', _formatAmount(customer.days1to30)),
-                            _detailRow('31-60 Days', _formatAmount(customer.days31to60)),
-                            _detailRow('61-90 Days', _formatAmount(customer.days61to90)),
-                            _detailRow('90+ Days', _formatAmount(customer.daysOver90)),
-                            Divider(height: 16, color: Colors.grey.withOpacity(0.15)),
+                            _detailRow(
+                              'Current',
+                              _formatAmount(customer.current),
+                            ),
+                            _detailRow(
+                              '1-30 Days',
+                              _formatAmount(customer.days1to30),
+                            ),
+                            _detailRow(
+                              '31-60 Days',
+                              _formatAmount(customer.days31to60),
+                            ),
+                            _detailRow(
+                              '61-90 Days',
+                              _formatAmount(customer.days61to90),
+                            ),
+                            _detailRow(
+                              '90+ Days',
+                              _formatAmount(customer.daysOver90),
+                            ),
+                            Divider(
+                              height: 16,
+                              color: Colors.grey.withOpacity(0.15),
+                            ),
                             _detailRow(
                               'Total Outstanding',
                               _formatAmount(customer.totalOutstanding),
@@ -1216,7 +1229,12 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
     );
   }
 
-  Widget _detailRow(String label, String value, {bool isBold = false, Color? valueColor}) {
+  Widget _detailRow(
+    String label,
+    String value, {
+    bool isBold = false,
+    Color? valueColor,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -1249,8 +1267,8 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
     final statusColor = daysOverdue <= 0
         ? kSuccess
         : daysOverdue <= 30
-            ? kWarning
-            : kDanger;
+        ? kWarning
+        : kDanger;
     final isPaid = outstanding <= 0;
 
     return Container(
@@ -1260,7 +1278,9 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
         color: kBgLight,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: isPaid ? kSuccess.withOpacity(0.2) : statusColor.withOpacity(0.2),
+          color: isPaid
+              ? kSuccess.withOpacity(0.2)
+              : statusColor.withOpacity(0.2),
         ),
       ),
       child: Row(
@@ -1279,10 +1299,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                 ),
                 Text(
                   'Due: ${DateFormat('dd MMM yyyy').format(invoice.dueDate)}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: kSubText,
-                  ),
+                  style: TextStyle(fontSize: 11, color: kSubText),
                 ),
               ],
             ),
@@ -1359,12 +1376,14 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
     }
     if (_searchController.text.isNotEmpty) {
       final q = _searchController.text.toLowerCase();
-      filtered = filtered.where(
-        (c) =>
-            c.name.toLowerCase().contains(q) ||
-            c.email.toLowerCase().contains(q) ||
-            c.phone.contains(q),
-      ).toList();
+      filtered = filtered
+          .where(
+            (c) =>
+                c.name.toLowerCase().contains(q) ||
+                c.email.toLowerCase().contains(q) ||
+                c.phone.contains(q),
+          )
+          .toList();
     }
     return filtered;
   }
@@ -1378,7 +1397,10 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
   }
 
   void _recordPayment(AgedCustomer customer) {
-    AppSnackbar.info('Record Payment', 'Recording payment from ${customer.name}');
+    AppSnackbar.info(
+      'Record Payment',
+      'Recording payment from ${customer.name}',
+    );
   }
 
   Future<void> _selectAsAtDate() async {

@@ -1,7 +1,7 @@
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/returns/controller/sales_return_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/returns/model/return_model.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/returns/controller/sales_return_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/returns/model/return_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -59,7 +59,11 @@ class ReturnListView extends StatelessWidget {
       children: [
         Text(
           'Returns (${controller.totalRecords.value})',
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.black87),
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: Colors.black87,
+          ),
         ),
         const SizedBox(height: 8),
         Row(
@@ -74,15 +78,24 @@ class ReturnListView extends StatelessWidget {
             if (compact)
               ElevatedButton(
                 onPressed: onCreate,
-                style: ElevatedButton.styleFrom(backgroundColor: kPrimary, elevation: 0),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kPrimary,
+                  elevation: 0,
+                ),
                 child: const Icon(Icons.add, color: Colors.black),
               )
             else
               ElevatedButton.icon(
                 onPressed: onCreate,
                 icon: const Icon(Icons.add, size: 18, color: Colors.black),
-                label: const Text('Create Return', style: TextStyle(color: Colors.black)),
-                style: ElevatedButton.styleFrom(backgroundColor: kPrimary, elevation: 0),
+                label: const Text(
+                  'Create Return',
+                  style: TextStyle(color: Colors.black),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kPrimary,
+                  elevation: 0,
+                ),
               ),
           ],
         ),
@@ -119,8 +132,12 @@ class ReturnListView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label, style: TextStyle(fontSize: 11, color: kSubText)),
-          Text(count, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-          if (amount != null) Text(amount, style: TextStyle(fontSize: 11, color: kSubText)),
+          Text(
+            count,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+          ),
+          if (amount != null)
+            Text(amount, style: TextStyle(fontSize: 11, color: kSubText)),
         ],
       ),
     );
@@ -160,9 +177,18 @@ class ReturnListView extends StatelessWidget {
             width: fieldWidth,
             child: DropdownButtonFormField<String>(
               value: controller.statusFilter.value,
-              decoration: const InputDecoration(labelText: 'Status', isDense: true, border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                labelText: 'Status',
+                isDense: true,
+                border: OutlineInputBorder(),
+              ),
               items: SalesReturnController.statusOptions
-                  .map((s) => DropdownMenuItem(value: s, child: Text(s == 'all' ? 'All Status' : s)))
+                  .map(
+                    (s) => DropdownMenuItem(
+                      value: s,
+                      child: Text(s == 'all' ? 'All Status' : s),
+                    ),
+                  )
                   .toList(),
               onChanged: (v) {
                 controller.statusFilter.value = v ?? 'all';
@@ -174,9 +200,18 @@ class ReturnListView extends StatelessWidget {
             width: fieldWidth,
             child: DropdownButtonFormField<String>(
               value: controller.typeFilter.value,
-              decoration: const InputDecoration(labelText: 'Type', isDense: true, border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                labelText: 'Type',
+                isDense: true,
+                border: OutlineInputBorder(),
+              ),
               items: SalesReturnController.typeOptions
-                  .map((t) => DropdownMenuItem(value: t, child: Text(t == 'all' ? 'All Types' : t)))
+                  .map(
+                    (t) => DropdownMenuItem(
+                      value: t,
+                      child: Text(t == 'all' ? 'All Types' : t),
+                    ),
+                  )
                   .toList(),
               onChanged: (v) {
                 controller.typeFilter.value = v ?? 'all';
@@ -191,7 +226,9 @@ class ReturnListView extends StatelessWidget {
 
   Widget _buildList(BuildContext context) {
     if (controller.isLoading.value) {
-      return Center(child: LoadingAnimationWidget.discreteCircle(color: kPrimary, size: 36));
+      return Center(
+        child: LoadingAnimationWidget.discreteCircle(color: kPrimary, size: 36),
+      );
     }
     if (controller.returns.isEmpty) {
       return const Center(child: Text('No returns found'));
@@ -205,7 +242,8 @@ class ReturnListView extends StatelessWidget {
       ),
       child: ListView.separated(
         itemCount: controller.returns.length,
-        separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
+        separatorBuilder: (_, __) =>
+            Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
         itemBuilder: (context, index) {
           final item = controller.returns[index];
           final color = _statusColor(item.returnStatus);
@@ -223,21 +261,41 @@ class ReturnListView extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(item.returnNumber,
-                                style: TextStyle(fontWeight: FontWeight.w700, color: kPrimary, fontSize: 13)),
-                            Text(item.customerName, style: const TextStyle(fontWeight: FontWeight.w600)),
-                            Text('Order: ${item.orderNumber}', style: TextStyle(fontSize: 12, color: kSubText)),
+                            Text(
+                              item.returnNumber,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: kPrimary,
+                                fontSize: 13,
+                              ),
+                            ),
+                            Text(
+                              item.customerName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              'Order: ${item.orderNumber}',
+                              style: TextStyle(fontSize: 12, color: kSubText),
+                            ),
                           ],
                         ),
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text(_format(item.totalRefund), style: const TextStyle(fontWeight: FontWeight.w800)),
+                          Text(
+                            _format(item.totalRefund),
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
                           IconButton(
                             visualDensity: VisualDensity.compact,
                             padding: EdgeInsets.zero,
-                            icon: const Icon(Icons.visibility_outlined, size: 20),
+                            icon: const Icon(
+                              Icons.visibility_outlined,
+                              size: 20,
+                            ),
                             onPressed: () => onView(item),
                           ),
                         ],
@@ -250,8 +308,16 @@ class ReturnListView extends StatelessWidget {
                     runSpacing: 6,
                     children: [
                       _badge(item.returnStatus, color.withOpacity(0.12), color),
-                      _badge(item.returnType, Colors.purple.shade50, Colors.purple.shade800),
-                      _badge('${item.totalReturnQty} items', Colors.blue.shade50, Colors.blue.shade800),
+                      _badge(
+                        item.returnType,
+                        Colors.purple.shade50,
+                        Colors.purple.shade800,
+                      ),
+                      _badge(
+                        '${item.totalReturnQty} items',
+                        Colors.blue.shade50,
+                        Colors.blue.shade800,
+                      ),
                       Text(
                         DateFormat('dd MMM yyyy').format(item.returnDate),
                         style: TextStyle(fontSize: 11, color: kSubText),
@@ -270,8 +336,14 @@ class ReturnListView extends StatelessWidget {
   Widget _badge(String text, Color bg, Color fg) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(6)),
-      child: Text(text, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: fg)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: fg),
+      ),
     );
   }
 
@@ -282,18 +354,22 @@ class ReturnListView extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Page ${controller.currentPage.value} of ${controller.totalPages.value}'),
+          Text(
+            'Page ${controller.currentPage.value} of ${controller.totalPages.value}',
+          ),
           Row(
             children: [
               IconButton(
                 onPressed: controller.hasPrev.value
-                    ? () => controller.goToPage(controller.currentPage.value - 1)
+                    ? () =>
+                          controller.goToPage(controller.currentPage.value - 1)
                     : null,
                 icon: const Icon(Icons.chevron_left),
               ),
               IconButton(
                 onPressed: controller.hasNext.value
-                    ? () => controller.goToPage(controller.currentPage.value + 1)
+                    ? () =>
+                          controller.goToPage(controller.currentPage.value + 1)
                     : null,
                 icon: const Icon(Icons.chevron_right),
               ),

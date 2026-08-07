@@ -1,9 +1,9 @@
 // core/FiscalYear/screen/fiscal_year_list_screen.dart
 
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/FiscalYear/controller/fiscal_year_controller.dart';
-import 'package:LedgerPro_app/core/FiscalYear/models/fiscal_year_model.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/models/fiscal_year_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -19,7 +19,10 @@ class FiscalYearListScreen extends StatelessWidget {
     return _buildMobileLayout(context, controller);
   }
 
-  Widget _buildMobileLayout(BuildContext context, FiscalYearController controller) {
+  Widget _buildMobileLayout(
+    BuildContext context,
+    FiscalYearController controller,
+  ) {
     return Scaffold(
       backgroundColor: kBg,
       appBar: _buildAppBar(context, controller),
@@ -38,11 +41,7 @@ class FiscalYearListScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.calendar_today_outlined,
-                  size: 80,
-                  color: kSubText,
-                ),
+                Icon(Icons.calendar_today_outlined, size: 80, color: kSubText),
                 SizedBox(height: 2.h),
                 Text(
                   'No Fiscal Years Found',
@@ -55,14 +54,12 @@ class FiscalYearListScreen extends StatelessWidget {
                 SizedBox(height: 1.h),
                 Text(
                   'Create your first fiscal year to get started',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: kSubText,
-                  ),
+                  style: TextStyle(fontSize: 12.sp, color: kSubText),
                 ),
                 SizedBox(height: 3.h),
                 ElevatedButton.icon(
-                  onPressed: () => _showAddFiscalYearDialog(controller, context),
+                  onPressed: () =>
+                      _showAddFiscalYearDialog(controller, context),
                   icon: const Icon(Icons.add),
                   label: const Text('Create Fiscal Year'),
                   style: ElevatedButton.styleFrom(
@@ -132,15 +129,11 @@ class FiscalYearListScreen extends StatelessWidget {
     return Card(
       margin: EdgeInsets.only(bottom: 1.5.h),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          border: isSelected
-              ? Border.all(color: kPrimary, width: 2)
-              : null,
+          border: isSelected ? Border.all(color: kPrimary, width: 2) : null,
         ),
         child: Padding(
           padding: EdgeInsets.all(3.w),
@@ -189,46 +182,28 @@ class FiscalYearListScreen extends StatelessWidget {
                     ),
                   ),
                   if (isSelected)
-                    Icon(
-                      Icons.check_circle,
-                      color: kPrimary,
-                      size: 20,
-                    ),
+                    Icon(Icons.check_circle, color: kPrimary, size: 20),
                 ],
               ),
               SizedBox(height: 1.5.h),
               Row(
                 children: [
-                  Icon(
-                    Icons.calendar_today,
-                    size: 14,
-                    color: kSubText,
-                  ),
+                  Icon(Icons.calendar_today, size: 14, color: kSubText),
                   SizedBox(width: 1.w),
                   Text(
                     '${formatter.format(fiscalYear.startDate)} - ${formatter.format(fiscalYear.endDate)}',
-                    style: TextStyle(
-                      fontSize: 11.sp,
-                      color: kSubText,
-                    ),
+                    style: TextStyle(fontSize: 11.sp, color: kSubText),
                   ),
                 ],
               ),
               SizedBox(height: 1.h),
               Row(
                 children: [
-                  Icon(
-                    Icons.access_time,
-                    size: 14,
-                    color: kSubText,
-                  ),
+                  Icon(Icons.access_time, size: 14, color: kSubText),
                   SizedBox(width: 1.w),
                   Text(
                     'Created: ${formatter.format(fiscalYear.createdAt)}',
-                    style: TextStyle(
-                      fontSize: 11.sp,
-                      color: kSubText,
-                    ),
+                    style: TextStyle(fontSize: 11.sp, color: kSubText),
                   ),
                 ],
               ),
@@ -248,9 +223,7 @@ class FiscalYearListScreen extends StatelessWidget {
                       },
                       icon: const Icon(Icons.check, size: 16),
                       label: const Text('Select'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: kPrimary,
-                      ),
+                      style: TextButton.styleFrom(foregroundColor: kPrimary),
                     ),
                   if (fiscalYear.isOpen)
                     TextButton.icon(
@@ -261,18 +234,15 @@ class FiscalYearListScreen extends StatelessWidget {
                       ),
                       icon: const Icon(Icons.lock, size: 16),
                       label: const Text('Close'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: kWarning,
-                      ),
+                      style: TextButton.styleFrom(foregroundColor: kWarning),
                     ),
                   if (fiscalYear.isClosed)
                     TextButton.icon(
-                      onPressed: () => controller.reopenFiscalYear(fiscalYear.id),
+                      onPressed: () =>
+                          controller.reopenFiscalYear(fiscalYear.id),
                       icon: const Icon(Icons.lock_open, size: 16),
                       label: const Text('Reopen'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: kSuccess,
-                      ),
+                      style: TextButton.styleFrom(foregroundColor: kSuccess),
                     ),
                   IconButton(
                     onPressed: () => _showEditFiscalYearDialog(
@@ -313,9 +283,7 @@ class FiscalYearListScreen extends StatelessWidget {
 
     Get.dialog(
       AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Create Fiscal Year'),
         content: SingleChildScrollView(
           child: Column(
@@ -348,8 +316,9 @@ class FiscalYearListScreen extends StatelessWidget {
                   );
                   if (picked != null) {
                     startDate = picked;
-                    startDateController.text =
-                        DateFormat('dd MMM yyyy').format(picked);
+                    startDateController.text = DateFormat(
+                      'dd MMM yyyy',
+                    ).format(picked);
                   }
                 },
               ),
@@ -372,8 +341,9 @@ class FiscalYearListScreen extends StatelessWidget {
                   );
                   if (picked != null) {
                     endDate = picked;
-                    endDateController.text =
-                        DateFormat('dd MMM yyyy').format(picked);
+                    endDateController.text = DateFormat(
+                      'dd MMM yyyy',
+                    ).format(picked);
                   }
                 },
               ),
@@ -381,20 +351,13 @@ class FiscalYearListScreen extends StatelessWidget {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
               if (nameController.text.isEmpty ||
                   startDate == null ||
                   endDate == null) {
-                AppSnackbar.error(
-                  kDanger,
-                  'Error',
-                  'Please fill all fields',
-                );
+                AppSnackbar.error(kDanger, 'Error', 'Please fill all fields');
                 return;
               }
 
@@ -407,13 +370,15 @@ class FiscalYearListScreen extends StatelessWidget {
                 return;
               }
 
-              controller.createFiscalYear(
-                name: nameController.text,
-                startDate: startDate!,
-                endDate: endDate!,
-              ).then((success) {
-                if (success) Get.back();
-              });
+              controller
+                  .createFiscalYear(
+                    name: nameController.text,
+                    startDate: startDate!,
+                    endDate: endDate!,
+                  )
+                  .then((success) {
+                    if (success) Get.back();
+                  });
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: kPrimary,
@@ -443,9 +408,7 @@ class FiscalYearListScreen extends StatelessWidget {
 
     Get.dialog(
       AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Edit Fiscal Year'),
         content: SingleChildScrollView(
           child: Column(
@@ -476,8 +439,9 @@ class FiscalYearListScreen extends StatelessWidget {
                   );
                   if (picked != null) {
                     startDate = picked;
-                    startDateController.text =
-                        DateFormat('dd MMM yyyy').format(picked);
+                    startDateController.text = DateFormat(
+                      'dd MMM yyyy',
+                    ).format(picked);
                   }
                 },
               ),
@@ -499,8 +463,9 @@ class FiscalYearListScreen extends StatelessWidget {
                   );
                   if (picked != null) {
                     endDate = picked;
-                    endDateController.text =
-                        DateFormat('dd MMM yyyy').format(picked);
+                    endDateController.text = DateFormat(
+                      'dd MMM yyyy',
+                    ).format(picked);
                   }
                 },
               ),
@@ -508,18 +473,11 @@ class FiscalYearListScreen extends StatelessWidget {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
               if (nameController.text.isEmpty) {
-                AppSnackbar.error(
-                  kDanger,
-                  'Error',
-                  'Please enter a name',
-                );
+                AppSnackbar.error(kDanger, 'Error', 'Please enter a name');
                 return;
               }
 
@@ -532,14 +490,16 @@ class FiscalYearListScreen extends StatelessWidget {
                 return;
               }
 
-              controller.updateFiscalYear(
-                id: fiscalYear.id,
-                name: nameController.text,
-                startDate: startDate,
-                endDate: endDate,
-              ).then((success) {
-                if (success) Get.back();
-              });
+              controller
+                  .updateFiscalYear(
+                    id: fiscalYear.id,
+                    name: nameController.text,
+                    startDate: startDate,
+                    endDate: endDate,
+                  )
+                  .then((success) {
+                    if (success) Get.back();
+                  });
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: kPrimary,
@@ -559,9 +519,7 @@ class FiscalYearListScreen extends StatelessWidget {
   ) {
     Get.dialog(
       AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
             Icon(Icons.warning_amber_rounded, color: kWarning),
@@ -575,10 +533,7 @@ class FiscalYearListScreen extends StatelessWidget {
           'in this fiscal year.',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
               controller.closeFiscalYear(fiscalYear.id).then((success) {
@@ -603,9 +558,7 @@ class FiscalYearListScreen extends StatelessWidget {
   ) {
     Get.dialog(
       AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
             Icon(Icons.delete_forever, color: kDanger),
@@ -618,10 +571,7 @@ class FiscalYearListScreen extends StatelessWidget {
           'This action cannot be undone.',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
               controller.deleteFiscalYear(fiscalYear.id).then((success) {

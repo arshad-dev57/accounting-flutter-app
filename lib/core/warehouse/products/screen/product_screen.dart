@@ -1,11 +1,11 @@
 // core/warehouse/products/screen/products_screen.dart
 
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/core/warehouse/category/category_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/products/controller/product_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/products/screen/product_qr_scan_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/supplier/screen/supplier_screen.dart';
-import 'package:LedgerPro_app/core/warehousesettings/warehouse_settings_screen.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/warehouse/category/category_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/products/controller/product_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/products/screen/product_qr_scan_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/supplier/screen/supplier_screen.dart';
+import 'package:BisonsTechs_app/core/warehousesettings/warehouse_settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -51,7 +51,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     controller = Get.isRegistered<ProductsController>()
         ? Get.find<ProductsController>()
         : Get.put(ProductsController());
-    
+
     // Initialize QR controller if not registered
     if (!Get.isRegistered<ProductsController>()) {
       Get.put(ProductsController());
@@ -84,24 +84,32 @@ class _ProductsScreenState extends State<ProductsScreen> {
     );
 
     if (result != null && result.isNotEmpty) {
-      final scannedBarcode = result['text']?.toString() ?? 
-                              result['id']?.toString() ?? 
-                              result['url']?.toString() ?? 
-                              result['barcode']?.toString() ?? 
-                              result['code']?.toString() ?? 
-                              result['rawValue']?.toString();
-      
+      final scannedBarcode =
+          result['text']?.toString() ??
+          result['id']?.toString() ??
+          result['url']?.toString() ??
+          result['barcode']?.toString() ??
+          result['code']?.toString() ??
+          result['rawValue']?.toString();
+
       if (scannedBarcode != null && scannedBarcode.isNotEmpty) {
         // Search for product by barcode
-        final existingProduct = await controller.checkBarcodeExists(scannedBarcode);
-        
+        final existingProduct = await controller.checkBarcodeExists(
+          scannedBarcode,
+        );
+
         if (existingProduct != null) {
           // Show product name in search bar instead of barcode
-          final productName = existingProduct['name'] ?? existingProduct['sku'] ?? scannedBarcode;
+          final productName =
+              existingProduct['name'] ??
+              existingProduct['sku'] ??
+              scannedBarcode;
           _searchCtrl.text = productName;
-          controller.searchProducts(scannedBarcode); // Still search by barcode to get exact match
+          controller.searchProducts(
+            scannedBarcode,
+          ); // Still search by barcode to get exact match
           setState(() {});
-          
+
           Get.snackbar(
             'Product Found',
             'Found: ${existingProduct['name']}',
@@ -114,7 +122,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
           _searchCtrl.text = scannedBarcode;
           controller.searchProducts(scannedBarcode);
           setState(() {});
-          
+
           Get.snackbar(
             'Product Not Found',
             'No product found with barcode: $scannedBarcode',
@@ -407,7 +415,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
   ) {
     final stock = product['currentStock'] ?? 0;
     final stockColor = controller.getStockColor(stock);
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -564,7 +572,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
                             '-',
                       ),
                       _detailRow('Tax Rate', '${product['taxRate'] ?? 0}%'),
-                      if ((product['barcodeNumber'] ?? '').toString().isNotEmpty)
+                      if ((product['barcodeNumber'] ?? '')
+                          .toString()
+                          .isNotEmpty)
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -884,7 +894,7 @@ class _AddProductPageState extends State<_AddProductPage> {
     _shippingClasses = List<Map<String, dynamic>>.from(_c.shippingClasses);
 
     final p = widget.editingProduct;
-    
+
     // Helper function to safely convert any value to string
     String safeToString(dynamic value) {
       if (value == null) return '';
@@ -893,40 +903,64 @@ class _AddProductPageState extends State<_AddProductPage> {
     }
 
     _nameCtrl = TextEditingController(text: safeToString(p?['name']));
-    _skuCtrl = TextEditingController(text: safeToString(p?['sku'] ?? _c.generateSku()));
-    _barcodeCtrl = TextEditingController(text: safeToString(p?['barcodeNumber']));
+    _skuCtrl = TextEditingController(
+      text: safeToString(p?['sku'] ?? _c.generateSku()),
+    );
+    _barcodeCtrl = TextEditingController(
+      text: safeToString(p?['barcodeNumber']),
+    );
     _descCtrl = TextEditingController(text: safeToString(p?['description']));
     _tagsCtrl = TextEditingController(text: safeToString(p?['tags']));
     _selectedProductType = p?['productType'];
 
     _costCtrl = TextEditingController(text: safeToString(p?['costPrice']));
     _sellCtrl = TextEditingController(text: safeToString(p?['sellingPrice']));
-    _landingCostCtrl = TextEditingController(text: safeToString(p?['landingCost']));
-    _taxRateCtrl = TextEditingController(text: safeToString(p?['taxRate'] ?? '0'));
+    _landingCostCtrl = TextEditingController(
+      text: safeToString(p?['landingCost']),
+    );
+    _taxRateCtrl = TextEditingController(
+      text: safeToString(p?['taxRate'] ?? '0'),
+    );
     _stockCtrl = TextEditingController(text: safeToString(p?['currentStock']));
-    _minStockCtrl = TextEditingController(text: safeToString(p?['minimumStock'] ?? '5'));
-    _maxStockCtrl = TextEditingController(text: safeToString(p?['maximumStock'] ?? '100'));
-    _reorderPointCtrl = TextEditingController(text: safeToString(p?['reorderPoint']));
-    _leadTimeCtrl = TextEditingController(text: safeToString(p?['leadTime']));
-    _selectedStockUnit = p?['stockUnit'];
+    _minStockCtrl = TextEditingController(
+      text: safeToString(p?['minimumStock'] ?? '5'),
+    );
+    _maxStockCtrl = TextEditingController(
+      text: safeToString(p?['maximumStock'] ?? '100'),
+    );
+    _reorderPointCtrl = TextEditingController(
+      text: safeToString(p?['reorderPoint']),
+    );
+    _leadTimeCtrl = TextEditingController(
+      text: safeToString(p?['leadTimeDays']),
+    );
+    _selectedStockUnit = p?['stockUnitName'];
     _selectedTaxType = p?['taxType'];
 
     _selectedCategoryId = p?['categoryId'];
     _selectedSupplierId = p?['supplierId'];
-    _brandCtrl = TextEditingController(text: safeToString(p?['brandName'] ?? p?['brand']));
+    _brandCtrl = TextEditingController(
+      text: safeToString(p?['brandName'] ?? p?['brand']),
+    );
     _modelCtrl = TextEditingController(text: safeToString(p?['modelNumber']));
-    _supplierSkuCtrl = TextEditingController(text: safeToString(p?['supplierSku']));
+    _supplierSkuCtrl = TextEditingController(
+      text: safeToString(p?['supplierSku']),
+    );
     if (_selectedCategoryId != null) {
       _subCategories = _c.getSubCategories(_selectedCategoryId);
     }
 
     _selectedRackLocation = p?['rackLocationName'] ?? p?['location'];
-    _selectedZone = p?['zone'];
-    _selectedStorageCondition = p?['storageCondition'];
+    _selectedZone = p?['zoneName'];
+    _selectedStorageCondition = p?['storageConditionName'];
     _palletCtrl = TextEditingController(text: safeToString(p?['palletNumber']));
     _shelfCtrl = TextEditingController(text: safeToString(p?['shelfNumber']));
-    _tempMinCtrl = TextEditingController(text: safeToString(p?['tempMin']));
-    _tempMaxCtrl = TextEditingController(text: safeToString(p?['tempMax']));
+    _tempMinCtrl = TextEditingController(
+      text: safeToString(p?['temperatureMin']),
+    );
+    _tempMaxCtrl = TextEditingController(
+      text: safeToString(p?['temperatureMax']),
+    );
 
     _weightCtrl = TextEditingController(text: safeToString(p?['weight']));
     _lengthCtrl = TextEditingController(text: safeToString(p?['length']));
@@ -946,33 +980,50 @@ class _AddProductPageState extends State<_AddProductPage> {
     _isBulkManaged = p?['isBulkManaged'] ?? false;
     _hasIndividualTracking = p?['hasIndividualTracking'] ?? false;
     _bulkUnit = p?['bulkUnit'] ?? 'Bale';
-    _batchNumberCtrl = TextEditingController(text: safeToString(p?['batchNumber']));
-    _shelfLifeCtrl = TextEditingController(text: safeToString(p?['shelfLife']));
-    _defaultBatchQtyCtrl = TextEditingController(text: safeToString(p?['defaultBatchQuantity']));
+    _batchNumberCtrl = TextEditingController(
+      text: safeToString(p?['batchNumber']),
+    );
+    _shelfLifeCtrl = TextEditingController(
+      text: safeToString(p?['shelfLifeDays']),
+    );
+    _defaultBatchQtyCtrl = TextEditingController(
+      text: safeToString(p?['defaultQuantityPerBatch']),
+    );
     if (p?['expiryDate'] != null)
       _expiryDate = DateTime.tryParse(p!['expiryDate']);
     if (p?['manufacturingDate'] != null)
       _manufacturingDate = DateTime.tryParse(p!['manufacturingDate']);
 
     _hsCodeCtrl = TextEditingController(text: safeToString(p?['hsCode']));
-    _stackingLimitCtrl = TextEditingController(text: safeToString(p?['stackingLimit']));
+    _stackingLimitCtrl = TextEditingController(
+      text: safeToString(p?['stackingLimit']),
+    );
     _unNumberCtrl = TextEditingController(text: safeToString(p?['unNumber']));
-    _handlingCtrl = TextEditingController(text: safeToString(p?['handlingInstructions']));
-    _warrantyPeriodCtrl = TextEditingController(text: safeToString(p?['warrantyPeriod']));
-    _returnDaysCtrl = TextEditingController(text: safeToString(p?['returnDays'] ?? '7'));
-    _freightClassCtrl = TextEditingController(text: safeToString(p?['freightClass']));
+    _handlingCtrl = TextEditingController(
+      text: safeToString(p?['handlingInstructions']),
+    );
+    _warrantyPeriodCtrl = TextEditingController(
+      text: safeToString(p?['warrantyPeriod']),
+    );
+    _returnDaysCtrl = TextEditingController(
+      text: safeToString(p?['returnDays'] ?? '7'),
+    );
+    _freightClassCtrl = TextEditingController(
+      text: safeToString(p?['freightClass']),
+    );
     _selectedShippingClass = p?['shippingClass'];
     _dangerousGoods = p?['dangerousGoods'] ?? false;
     _isReturnable = p?['isReturnable'] ?? true;
     _warrantyUnit = p?['warrantyUnit'] ?? 'Months';
-    _countryOfOrigin = p?['countryOfOrigin'] ?? 'Pakistan';
+    _countryOfOrigin = p?['countryOfOriginName'] ?? 'Pakistan';
+    _currency = p?['currencyCode'] ?? 'PKR';
     _notesCtrl = TextEditingController(text: safeToString(p?['notes']));
-    
+
     // Load barcode if exists
     if (p?['barcodeNumber'] != null) {
       _generatedBarcodeData = safeToString(p?['barcodeNumber']);
     }
-    
+
     // Load barcode format if exists
     if (p?['barcodeFormat'] != null) {
       _selectedBarcodeFormat = safeToString(p?['barcodeFormat']);
@@ -1031,7 +1082,7 @@ class _AddProductPageState extends State<_AddProductPage> {
   Future<void> _refreshDropdownData() async {
     // Fetch fresh data from API using public method
     await _c.refreshDropdownData();
-    
+
     // Update local lists with fresh data
     setState(() {
       _productTypes = List<Map<String, dynamic>>.from(_c.productTypes);
@@ -1041,12 +1092,14 @@ class _AddProductPageState extends State<_AddProductPage> {
       _suppliers = List<Map<String, dynamic>>.from(_c.suppliers);
       _rackLocations = List<Map<String, dynamic>>.from(_c.rackLocations);
       _zones = List<Map<String, dynamic>>.from(_c.zones);
-      _storageConditions = List<Map<String, dynamic>>.from(_c.storageConditions);
+      _storageConditions = List<Map<String, dynamic>>.from(
+        _c.storageConditions,
+      );
       _weightUnits = List<Map<String, dynamic>>.from(_c.weightUnits);
       _dimensionUnits = List<Map<String, dynamic>>.from(_c.dimensionUnits);
       _sizes = List<Map<String, dynamic>>.from(_c.sizes);
       _shippingClasses = List<Map<String, dynamic>>.from(_c.shippingClasses);
-      
+
       // Refresh sub-categories if a category is selected
       if (_selectedCategoryId != null) {
         _subCategories = _c.getSubCategories(_selectedCategoryId);
@@ -1404,10 +1457,7 @@ class _AddProductPageState extends State<_AddProductPage> {
               const SizedBox(height: 20),
               const Text(
                 'Barcode Options',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
               ListTile(
@@ -1443,17 +1493,18 @@ class _AddProductPageState extends State<_AddProductPage> {
 
     if (result != null && result.isNotEmpty) {
       // Get the scanned barcode value from various possible keys
-      final scannedBarcode = result['text']?.toString() ?? 
-                              result['id']?.toString() ?? 
-                              result['url']?.toString() ?? 
-                              result['barcode']?.toString() ?? 
-                              result['code']?.toString() ?? 
-                              result['rawValue']?.toString();
-      
+      final scannedBarcode =
+          result['text']?.toString() ??
+          result['id']?.toString() ??
+          result['url']?.toString() ??
+          result['barcode']?.toString() ??
+          result['code']?.toString() ??
+          result['rawValue']?.toString();
+
       if (scannedBarcode != null && scannedBarcode.isNotEmpty) {
         // Check if barcode exists in database for this user
         final existingProduct = await _c.checkBarcodeExists(scannedBarcode);
-        
+
         if (existingProduct != null) {
           // Product already exists for this user
           Get.snackbar(
@@ -1467,7 +1518,7 @@ class _AddProductPageState extends State<_AddProductPage> {
           Navigator.pop(context);
           return;
         }
-        
+
         // Barcode doesn't exist, populate form with scanned data
         setState(() {
           if (result['name'] != null) {
@@ -1482,7 +1533,7 @@ class _AddProductPageState extends State<_AddProductPage> {
           if (result['price'] != null) {
             _sellCtrl.text = result['price'].toString();
           }
-          
+
           // Set the scanned barcode as the generated barcode
           _generatedBarcodeData = scannedBarcode;
         });
@@ -1568,8 +1619,11 @@ class _AddProductPageState extends State<_AddProductPage> {
     }
 
     // Generate barcode based on format
-    final barcodeData = _convertToBarcodeFormat(_skuCtrl.text.trim(), _selectedBarcodeFormat!);
-    
+    final barcodeData = _convertToBarcodeFormat(
+      _skuCtrl.text.trim(),
+      _selectedBarcodeFormat!,
+    );
+
     // Set the generated barcode to display in form
     setState(() {
       _generatedBarcodeData = barcodeData;
@@ -1596,7 +1650,10 @@ class _AddProductPageState extends State<_AddProductPage> {
         return _generateNumericBarcode(sku, 12);
       case 'Code-39':
         // Use SKU directly (uppercase for Code-39 compatibility)
-        return sku.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9\-\.\ \$\/\+\%]'), '');
+        return sku.toUpperCase().replaceAll(
+          RegExp(r'[^A-Z0-9\-\.\ \$\/\+\%]'),
+          '',
+        );
       case 'Code-128':
       default:
         // Use SKU directly (Code-128 supports all ASCII)
@@ -1607,9 +1664,9 @@ class _AddProductPageState extends State<_AddProductPage> {
   String _generateNumericBarcode(String sku, int requiredLength) {
     // Extract numbers from SKU or generate hash-based number
     final numbers = sku.replaceAll(RegExp(r'[^0-9]'), '');
-    
+
     String baseNumber;
-    
+
     if (numbers.length >= requiredLength - 1) {
       // Use first (requiredLength - 1) digits (last digit is checksum)
       baseNumber = numbers.substring(0, requiredLength - 1);
@@ -1624,7 +1681,7 @@ class _AddProductPageState extends State<_AddProductPage> {
       final padding = '0' * ((requiredLength - 1) - hashString.length);
       baseNumber = hashString + padding;
     }
-    
+
     // Calculate and append checksum
     final checksum = _calculateChecksum(baseNumber, requiredLength);
     return baseNumber + checksum;
@@ -1632,7 +1689,7 @@ class _AddProductPageState extends State<_AddProductPage> {
 
   String _calculateChecksum(String data, int totalLength) {
     int sum = 0;
-    
+
     if (totalLength == 13 || totalLength == 8) {
       // EAN checksum calculation
       for (int i = 0; i < data.length; i++) {
@@ -1656,7 +1713,7 @@ class _AddProductPageState extends State<_AddProductPage> {
       final checksum = (10 - (sum % 10)) % 10;
       return checksum.toString();
     }
-    
+
     return '0';
   }
 
@@ -1669,7 +1726,9 @@ class _AddProductPageState extends State<_AddProductPage> {
       case 'UPC-A':
         return data.length == 12 && RegExp(r'^[0-9]+$').hasMatch(data);
       case 'Code-39':
-        return RegExp(r'^[A-Z0-9\-\.\ \$\/\+\%]+$').hasMatch(data.toUpperCase());
+        return RegExp(
+          r'^[A-Z0-9\-\.\ \$\/\+\%]+$',
+        ).hasMatch(data.toUpperCase());
       case 'Code-128':
       default:
         return data.isNotEmpty;
@@ -1697,13 +1756,13 @@ class _AddProductPageState extends State<_AddProductPage> {
         break;
     }
 
-    final svgString = barcode.toSvg(_generatedBarcodeData!, width: 200, height: 80);
-    
-    return SvgPicture.string(
-      svgString,
+    final svgString = barcode.toSvg(
+      _generatedBarcodeData!,
       width: 200,
       height: 80,
     );
+
+    return SvgPicture.string(svgString, width: 200, height: 80);
   }
 
   Widget _datePicker({
@@ -1819,7 +1878,8 @@ class _AddProductPageState extends State<_AddProductPage> {
                 controller: _skuCtrl,
                 decoration: _dec(hint: 'SKU-001', icon: Icons.qr_code_2),
                 style: const TextStyle(fontSize: 13, color: Colors.black),
-                validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? 'Required' : null,
               ),
             ),
             const SizedBox(width: 8),
@@ -1859,11 +1919,17 @@ class _AddProductPageState extends State<_AddProductPage> {
                     Icon(Icons.barcode_reader, size: 18, color: kSubText),
                     const SizedBox(width: 10),
                     Text(
-                      _generatedBarcodeData != null ? 'Barcode Generated' : 'Select Barcode Option',
+                      _generatedBarcodeData != null
+                          ? 'Barcode Generated'
+                          : 'Select Barcode Option',
                       style: TextStyle(
                         fontSize: 13,
-                        color: _generatedBarcodeData != null ? kPrimary : kSubText.withOpacity(0.6),
-                        fontWeight: _generatedBarcodeData != null ? FontWeight.w600 : FontWeight.normal,
+                        color: _generatedBarcodeData != null
+                            ? kPrimary
+                            : kSubText.withOpacity(0.6),
+                        fontWeight: _generatedBarcodeData != null
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                       ),
                     ),
                   ],
@@ -1904,10 +1970,7 @@ class _AddProductPageState extends State<_AddProductPage> {
                         const SizedBox(height: 4),
                         Text(
                           'Format: $_selectedBarcodeFormat',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: kSubText,
-                          ),
+                          style: TextStyle(fontSize: 11, color: kSubText),
                         ),
                       ],
                     ),
@@ -1924,9 +1987,7 @@ class _AddProductPageState extends State<_AddProductPage> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Center(
-                    child: _buildBarcodeWidget(),
-                  ),
+                  child: Center(child: _buildBarcodeWidget()),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -1972,8 +2033,8 @@ class _AddProductPageState extends State<_AddProductPage> {
           style: const TextStyle(fontSize: 13, color: Colors.black),
         ),
       ),
+
       // QR Generation Button
-     
     ],
   );
 
@@ -2151,11 +2212,7 @@ class _AddProductPageState extends State<_AddProductPage> {
                 color: kPrimary,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(
-                Icons.add,
-                color: Colors.white,
-                size: 20,
-              ),
+              child: const Icon(Icons.add, color: Colors.white, size: 20),
             ),
           ),
         ],
@@ -2190,11 +2247,7 @@ class _AddProductPageState extends State<_AddProductPage> {
                 color: kPrimary,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(
-                Icons.add,
-                color: Colors.white,
-                size: 20,
-              ),
+              child: const Icon(Icons.add, color: Colors.white, size: 20),
             ),
           ),
         ],
@@ -2245,11 +2298,7 @@ class _AddProductPageState extends State<_AddProductPage> {
                 color: kPrimary,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(
-                Icons.add,
-                color: Colors.white,
-                size: 20,
-              ),
+              child: const Icon(Icons.add, color: Colors.white, size: 20),
             ),
           ),
         ],
@@ -2769,20 +2818,20 @@ class _AddProductPageState extends State<_AddProductPage> {
       'costPrice': _costCtrl.text.trim(),
       'sellingPrice': _sellCtrl.text.trim(),
       'landingCost': _landingCostCtrl.text.trim(),
-      'currency': _currency,
+      'currencyCode': _currency,
       'taxRate': _taxRateCtrl.text.trim(),
       'currentStock': _stockCtrl.text.trim(),
       'minimumStock': _minStockCtrl.text.trim(),
       'maximumStock': _maxStockCtrl.text.trim(),
       'reorderPoint': _reorderPointCtrl.text.trim(),
-      'leadTime': _leadTimeCtrl.text.trim(),
+      'leadTimeDays': _leadTimeCtrl.text.trim(),
       'brandName': _brandCtrl.text.trim(),
       'modelNumber': _modelCtrl.text.trim(),
       'supplierSku': _supplierSkuCtrl.text.trim(),
       'palletNumber': _palletCtrl.text.trim(),
       'shelfNumber': _shelfCtrl.text.trim(),
-      'tempMin': _tempMinCtrl.text.trim(),
-      'tempMax': _tempMaxCtrl.text.trim(),
+      'temperatureMin': _tempMinCtrl.text.trim(),
+      'temperatureMax': _tempMaxCtrl.text.trim(),
       'weight': _weightCtrl.text.trim(),
       'length': _lengthCtrl.text.trim(),
       'width': _widthCtrl.text.trim(),
@@ -2798,10 +2847,10 @@ class _AddProductPageState extends State<_AddProductPage> {
       'hasIndividualTracking': _hasIndividualTracking,
       'bulkUnit': _bulkUnit,
       'batchNumber': _batchNumberCtrl.text.trim(),
-      'shelfLife': _shelfLifeCtrl.text.trim(),
-      'defaultBatchQuantity': _defaultBatchQtyCtrl.text.trim(),
+      'shelfLifeDays': _shelfLifeCtrl.text.trim(),
+      'defaultQuantityPerBatch': _defaultBatchQtyCtrl.text.trim(),
       'hsCode': _hsCodeCtrl.text.trim(),
-      'countryOfOrigin': _countryOfOrigin,
+      'countryOfOriginName': _countryOfOrigin,
       'freightClass': _freightClassCtrl.text.trim(),
       'stackingLimit': _stackingLimitCtrl.text.trim(),
       'dangerousGoods': _dangerousGoods,
@@ -2813,18 +2862,19 @@ class _AddProductPageState extends State<_AddProductPage> {
       'returnDays': _returnDaysCtrl.text.trim(),
       'notes': _notesCtrl.text.trim(),
       if (_generatedBarcodeData != null) 'barcodeNumber': _generatedBarcodeData,
-      if (_selectedBarcodeFormat != null) 'barcodeFormat': _selectedBarcodeFormat,
+      if (_selectedBarcodeFormat != null)
+        'barcodeFormat': _selectedBarcodeFormat,
       if (_selectedProductType != null) 'productType': _selectedProductType,
       if (_selectedTaxType != null) 'taxType': _selectedTaxType,
-      if (_selectedStockUnit != null) 'stockUnit': _selectedStockUnit,
+      if (_selectedStockUnit != null) 'stockUnitName': _selectedStockUnit,
       if (_selectedSupplierId != null) 'supplierId': _selectedSupplierId,
       if (_selectedSubCategoryId != null)
         'subCategoryId': _selectedSubCategoryId,
       if (_selectedRackLocation != null)
         'rackLocationName': _selectedRackLocation,
-      if (_selectedZone != null) 'zone': _selectedZone,
+      if (_selectedZone != null) 'zoneName': _selectedZone,
       if (_selectedStorageCondition != null)
-        'storageCondition': _selectedStorageCondition,
+        'storageConditionName': _selectedStorageCondition,
       if (_selectedWeightUnit != null) 'weightUnitName': _selectedWeightUnit,
       if (_selectedDimensionUnit != null)
         'dimensionUnit': _selectedDimensionUnit,

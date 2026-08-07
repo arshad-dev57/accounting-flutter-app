@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:signature/signature.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
 
 class SignatureDialog extends StatefulWidget {
   const SignatureDialog({Key? key}) : super(key: key);
@@ -43,7 +43,8 @@ class _SignatureDialogState extends State<SignatureDialog> {
       if (data != null) {
         final Directory tempDir = await getTemporaryDirectory();
         final String tempPath = tempDir.path;
-        final String fileName = 'signature_${DateTime.now().millisecondsSinceEpoch}.png';
+        final String fileName =
+            'signature_${DateTime.now().millisecondsSinceEpoch}.png';
         final File file = File('$tempPath/$fileName');
         await file.writeAsBytes(data);
         Get.back(result: file.path);
@@ -102,7 +103,10 @@ class _SignatureDialogState extends State<SignatureDialog> {
                 TextButton.icon(
                   onPressed: () => _signatureController.clear(),
                   icon: const Icon(Icons.clear, color: Colors.red),
-                  label: const Text('Clear', style: TextStyle(color: Colors.red)),
+                  label: const Text(
+                    'Clear',
+                    style: TextStyle(color: Colors.red),
+                  ),
                 ),
                 ElevatedButton.icon(
                   onPressed: _saveSignature,

@@ -1,8 +1,8 @@
 // lib/core/changepassword/screen/change_password_screen.dart
 
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/responsive_utils.dart';
-import 'package:LedgerPro_app/core/changepassword/controller/change_password_controller.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
+import 'package:BisonsTechs_app/core/changepassword/controller/change_password_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -107,7 +107,7 @@ class ChangePasswordScreen extends StatelessWidget {
                           ),
                           const SizedBox(width: 12),
                           const Text(
-                            'LedgerPro',
+                            'BisonsTechs',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 22,

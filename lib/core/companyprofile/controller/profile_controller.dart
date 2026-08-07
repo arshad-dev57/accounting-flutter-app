@@ -1,13 +1,13 @@
 // lib/core/companyprofile/controller/profile_controller.dart - WITH BUSINESS DETAILS
 
 import 'dart:convert';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:LedgerPro_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:LedgerPro_app/Utils/signature_dialog.dart';
+import 'package:BisonsTechs_app/Utils/signature_dialog.dart';
 
 class ProfileController extends GetxController {
   // Observable variables
@@ -235,14 +235,20 @@ class ProfileController extends GetxController {
       };
 
       final Map<String, String> filePaths = {};
-      if (businessLogoController.text.isNotEmpty && !businessLogoController.text.startsWith('http')) {
+      if (businessLogoController.text.isNotEmpty &&
+          !businessLogoController.text.startsWith('http')) {
         filePaths['logo'] = businessLogoController.text;
       }
-      if (signatureController.text.isNotEmpty && !signatureController.text.startsWith('http')) {
+      if (signatureController.text.isNotEmpty &&
+          !signatureController.text.startsWith('http')) {
         filePaths['signature'] = signatureController.text;
       }
 
-      final response = await _api.putMultipart('/api/profile', fields: fields, filePaths: filePaths);
+      final response = await _api.putMultipart(
+        '/api/profile',
+        fields: fields,
+        filePaths: filePaths,
+      );
 
       print('Update Profile Response Status: ${response.statusCode}');
 
@@ -301,14 +307,20 @@ class ProfileController extends GetxController {
       };
 
       final Map<String, String> filePaths = {};
-      if (businessLogoController.text.isNotEmpty && !businessLogoController.text.startsWith('http')) {
+      if (businessLogoController.text.isNotEmpty &&
+          !businessLogoController.text.startsWith('http')) {
         filePaths['logo'] = businessLogoController.text;
       }
-      if (signatureController.text.isNotEmpty && !signatureController.text.startsWith('http')) {
+      if (signatureController.text.isNotEmpty &&
+          !signatureController.text.startsWith('http')) {
         filePaths['signature'] = signatureController.text;
       }
 
-      final response = await _api.putMultipart('/api/profile/business', fields: fields, filePaths: filePaths);
+      final response = await _api.putMultipart(
+        '/api/profile/business',
+        fields: fields,
+        filePaths: filePaths,
+      );
 
       if (response.success) {
         final data = response.data;

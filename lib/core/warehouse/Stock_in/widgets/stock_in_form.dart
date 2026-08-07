@@ -1,6 +1,6 @@
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/core/warehouse/Stock_in/controller/stock_in_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/Stock_in/widgets/stock_product_search.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/warehouse/Stock_in/controller/stock_in_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/Stock_in/widgets/stock_product_search.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -8,7 +8,11 @@ class StockInForm extends StatefulWidget {
   final StockController controller;
   final VoidCallback onSuccess;
 
-  const StockInForm({super.key, required this.controller, required this.onSuccess});
+  const StockInForm({
+    super.key,
+    required this.controller,
+    required this.onSuccess,
+  });
 
   @override
   State<StockInForm> createState() => _StockInFormState();
@@ -64,7 +68,8 @@ class _StockInFormState extends State<StockInForm> {
 
   Future<void> _submit() async {
     setState(() => _error = null);
-    if (_selectedProduct == null || (_selectedProduct!['id']?.toString().isEmpty ?? true)) {
+    if (_selectedProduct == null ||
+        (_selectedProduct!['id']?.toString().isEmpty ?? true)) {
       setState(() => _error = 'Please select a product');
       return;
     }
@@ -97,7 +102,9 @@ class _StockInFormState extends State<StockInForm> {
           ? int.parse(_boxCountCtrl.text)
           : int.parse(_quantityCtrl.text),
       boxCount: _stockType == 'box' ? int.parse(_boxCountCtrl.text) : null,
-      piecesPerBox: _stockType == 'box' ? int.parse(_piecesPerBoxCtrl.text) : null,
+      piecesPerBox: _stockType == 'box'
+          ? int.parse(_piecesPerBoxCtrl.text)
+          : null,
       supplierId: _supplierId,
       supplierName: supplier?['name']?.toString() ?? 'Walk-in',
       reference: _referenceCtrl.text.trim(),
@@ -132,11 +139,21 @@ class _StockInFormState extends State<StockInForm> {
         children: [
           Row(
             children: [
-              Icon(Icons.local_shipping, color: Colors.green.shade600, size: 20),
+              Icon(
+                Icons.local_shipping,
+                color: Colors.green.shade600,
+                size: 20,
+              ),
               const SizedBox(width: 8),
-              const Text('Stock In', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+              const Text(
+                'Stock In',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+              ),
               const SizedBox(width: 8),
-              Text('Receive inventory', style: TextStyle(fontSize: 11, color: kSubText)),
+              Text(
+                'Receive inventory',
+                style: TextStyle(fontSize: 11, color: kSubText),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -149,19 +166,37 @@ class _StockInFormState extends State<StockInForm> {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.red.shade200),
               ),
-              child: Text(_error!, style: TextStyle(color: Colors.red.shade700, fontSize: 13)),
+              child: Text(
+                _error!,
+                style: TextStyle(color: Colors.red.shade700, fontSize: 13),
+              ),
             ),
           StockProductSearch(
             controller: widget.controller,
             selectedProduct: _selectedProduct,
-            onSelected: (p) => setState(() => _selectedProduct = p.isEmpty ? null : p),
+            onSelected: (p) =>
+                setState(() => _selectedProduct = p.isEmpty ? null : p),
           ),
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(child: _typeCard('Bulk Quantity', 'bulk', Icons.bar_chart, 'Simple quantity')),
+              Expanded(
+                child: _typeCard(
+                  'Bulk Quantity',
+                  'bulk',
+                  Icons.bar_chart,
+                  'Simple quantity',
+                ),
+              ),
               const SizedBox(width: 8),
-              Expanded(child: _typeCard('Box / Case', 'box', Icons.inventory_2_outlined, 'Box tracking')),
+              Expanded(
+                child: _typeCard(
+                  'Box / Case',
+                  'box',
+                  Icons.inventory_2_outlined,
+                  'Box tracking',
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -183,7 +218,11 @@ class _StockInFormState extends State<StockInForm> {
                   child: TextField(
                     controller: _boxCountCtrl,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Number of Boxes *', border: OutlineInputBorder(), isDense: true),
+                    decoration: const InputDecoration(
+                      labelText: 'Number of Boxes *',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
                     onChanged: (_) => setState(() {}),
                   ),
                 ),
@@ -192,7 +231,11 @@ class _StockInFormState extends State<StockInForm> {
                   child: TextField(
                     controller: _piecesPerBoxCtrl,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Pieces per Box *', border: OutlineInputBorder(), isDense: true),
+                    decoration: const InputDecoration(
+                      labelText: 'Pieces per Box *',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
                     onChanged: (_) => setState(() {}),
                   ),
                 ),
@@ -224,51 +267,81 @@ class _StockInFormState extends State<StockInForm> {
               suffixIcon: _loadingSuppliers
                   ? const Padding(
                       padding: EdgeInsets.all(12),
-                      child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                      child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
                     )
                   : null,
             ),
             items: [
-              const DropdownMenuItem(value: null, child: Text('Select supplier...')),
-              ..._suppliers.map((s) => DropdownMenuItem(
-                    value: s['id']?.toString(),
-                    child: Text(
-                      '${s['name']}${(s['companyName']?.toString().isNotEmpty ?? false) ? ' (${s['companyName']})' : ''}',
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  )),
+              const DropdownMenuItem(
+                value: null,
+                child: Text('Select supplier...'),
+              ),
+              ..._suppliers.map(
+                (s) => DropdownMenuItem(
+                  value: s['id']?.toString(),
+                  child: Text(
+                    '${s['name']}${(s['companyName']?.toString().isNotEmpty ?? false) ? ' (${s['companyName']})' : ''}',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
             ],
             onChanged: (v) => setState(() => _supplierId = v),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _referenceCtrl,
-            decoration: const InputDecoration(labelText: 'Reference #', hintText: 'PO # or Invoice #', border: OutlineInputBorder(), isDense: true),
+            decoration: const InputDecoration(
+              labelText: 'Reference #',
+              hintText: 'PO # or Invoice #',
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _notesCtrl,
-            decoration: const InputDecoration(labelText: 'Notes', border: OutlineInputBorder(), isDense: true),
+            decoration: const InputDecoration(
+              labelText: 'Notes',
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
           ),
           const SizedBox(height: 16),
-          Obx(() => ElevatedButton(
-                onPressed: widget.controller.isSubmitting.value ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green.shade600,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                child: widget.controller.isSubmitting.value
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.trending_up, size: 18),
-                          SizedBox(width: 8),
-                          Text('Confirm Stock In', style: TextStyle(fontWeight: FontWeight.w700)),
-                        ],
+          Obx(
+            () => ElevatedButton(
+              onPressed: widget.controller.isSubmitting.value ? null : _submit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green.shade600,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              child: widget.controller.isSubmitting.value
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
                       ),
-              )),
+                    )
+                  : const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.trending_up, size: 18),
+                        SizedBox(width: 8),
+                        Text(
+                          'Confirm Stock In',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
         ],
       ),
     );
@@ -283,7 +356,10 @@ class _StockInFormState extends State<StockInForm> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: selected ? kPrimary : Colors.grey.shade300, width: selected ? 2 : 1),
+          border: Border.all(
+            color: selected ? kPrimary : Colors.grey.shade300,
+            width: selected ? 2 : 1,
+          ),
           color: selected ? kPrimary.withOpacity(0.05) : Colors.transparent,
         ),
         child: Column(
@@ -294,7 +370,14 @@ class _StockInFormState extends State<StockInForm> {
                 Icon(icon, size: 16, color: selected ? kPrimary : kSubText),
                 const SizedBox(width: 6),
                 Expanded(
-                  child: Text(title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: selected ? kPrimary : Colors.black87)),
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: selected ? kPrimary : Colors.black87,
+                    ),
+                  ),
                 ),
               ],
             ),

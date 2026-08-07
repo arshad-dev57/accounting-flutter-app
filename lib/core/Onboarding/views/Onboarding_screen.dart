@@ -1,6 +1,5 @@
-
-import 'package:LedgerPro_app/core/Register/Views/register_screen.dart';
-import 'package:LedgerPro_app/core/login/screen/login_screen.dart';
+import 'package:BisonsTechs_app/core/Register/Views/register_screen.dart';
+import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:get/route_manager.dart';
@@ -80,10 +79,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF1AB4F5),
-                  Color(0xFF0FA3E0),
-                ],
+                colors: [Color(0xFF1AB4F5), Color(0xFF0FA3E0)],
               ),
             ),
           ),

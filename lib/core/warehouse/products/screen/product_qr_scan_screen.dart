@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:LedgerPro_app/core/warehouse/products/controller/product_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/products/controller/product_controller.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -48,9 +48,11 @@ class _ProductQRScanScreenState extends State<ProductQRScanScreen> {
             onPressed: () {
               controller.toggleFlash();
             },
-            icon: Obx(() => Icon(
-              controller.isFlashOn.value ? Icons.flash_on : Icons.flash_off,
-            )),
+            icon: Obx(
+              () => Icon(
+                controller.isFlashOn.value ? Icons.flash_on : Icons.flash_off,
+              ),
+            ),
           ),
           IconButton(
             onPressed: () {

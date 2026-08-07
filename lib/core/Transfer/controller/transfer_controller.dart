@@ -1,6 +1,6 @@
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -170,12 +170,12 @@ class BankAccountForTransfer {
 
   factory BankAccountForTransfer.fromJson(Map<String, dynamic> json) {
     return BankAccountForTransfer(
-      id: json['_id'],
-      name: json['accountName'],
-      number: json['accountNumber'],
+      id: (json['id'] ?? json['_id']).toString(),
+      name: json['accountName']?.toString() ?? '',
+      number: json['accountNumber']?.toString() ?? '',
       balance: (json['currentBalance'] ?? 0).toDouble(),
-      currency: json['currency'] ?? '\$',
-      color: json['color'] ?? '#1AB4F5',
+      currency: json['currency']?.toString() ?? '\$',
+      color: json['color']?.toString() ?? '#1AB4F5',
     );
   }
 }

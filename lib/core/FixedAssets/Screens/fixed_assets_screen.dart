@@ -1,10 +1,10 @@
 // screens/fixed_assets_screen.dart - COMPLETE PROFESSIONAL MOBILE DESIGN
 
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/FixedAssets/controllers/fixed_asset_controller.dart';
-import 'package:LedgerPro_app/core/FixedAssets/models/fixed_asset_model.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/FixedAssets/controllers/fixed_asset_controller.dart';
+import 'package:BisonsTechs_app/core/FixedAssets/models/fixed_asset_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -38,9 +38,7 @@ class FixedAssetsScreen extends StatelessWidget {
                   children: [
                     _buildSummaryCards(controller),
                     const SizedBox(height: 8),
-                    Expanded(
-                      child: _buildListView(controller, context),
-                    ),
+                    Expanded(child: _buildListView(controller, context)),
                   ],
                 ),
               );
@@ -73,7 +71,10 @@ class FixedAssetsScreen extends StatelessWidget {
   // TOP HEADER
   // ═══════════════════════════════════════════════════════════════
 
-  Widget _buildTopHeader(BuildContext context, FixedAssetController controller) {
+  Widget _buildTopHeader(
+    BuildContext context,
+    FixedAssetController controller,
+  ) {
     return Container(
       color: kPrimary,
       child: SafeArea(
@@ -176,7 +177,10 @@ class FixedAssetsScreen extends StatelessWidget {
                       ),
                       child: TextField(
                         onChanged: (value) => controller.searchAssets(value),
-                        style: const TextStyle(fontSize: 13, color: Colors.black87),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black87,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Search assets...',
                           hintStyle: TextStyle(
@@ -189,7 +193,9 @@ class FixedAssetsScreen extends StatelessWidget {
                             color: Colors.grey.shade400,
                           ),
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                          ),
                         ),
                       ),
                     ),
@@ -214,11 +220,23 @@ class FixedAssetsScreen extends StatelessWidget {
                         () => DropdownButton<String>(
                           value: controller.selectedFilter.value,
                           icon: const Icon(Icons.arrow_drop_down, size: 20),
-                          style: const TextStyle(fontSize: 12, color: Colors.black87),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black87,
+                          ),
                           underline: const SizedBox.shrink(),
-                          items: ['All', 'Active', 'Fully Depreciated', 'Disposed'].map((f) {
-                            return DropdownMenuItem(value: f, child: Text(f));
-                          }).toList(),
+                          items:
+                              [
+                                'All',
+                                'Active',
+                                'Fully Depreciated',
+                                'Disposed',
+                              ].map((f) {
+                                return DropdownMenuItem(
+                                  value: f,
+                                  child: Text(f),
+                                );
+                              }).toList(),
                           onChanged: (v) {
                             if (v != null) controller.applyFilter(v);
                           },
@@ -266,7 +284,9 @@ class FixedAssetsScreen extends StatelessWidget {
             const SizedBox(width: 8),
             _buildProfessionalCard(
               title: 'NBV',
-              amount: controller.formatAmount(controller.totalNetBookValue.value),
+              amount: controller.formatAmount(
+                controller.totalNetBookValue.value,
+              ),
               color: kSuccess,
               icon: Icons.account_balance_outlined,
               bgColor: kSuccess.withOpacity(0.08),
@@ -389,7 +409,10 @@ class FixedAssetsScreen extends StatelessWidget {
                 onPressed: () => controller.showAddAssetDialog(),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimary,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 10,
+                  ),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -460,8 +483,8 @@ class FixedAssetsScreen extends StatelessWidget {
     final statusColor = asset.status == 'Active'
         ? kSuccess
         : asset.status == 'Fully Depreciated'
-            ? kWarning
-            : kDanger;
+        ? kWarning
+        : kDanger;
     final categoryColor = controller.getAssetCategoryColor(asset.category);
     final depreciationPercent = asset.purchaseCost > 0
         ? (asset.accumulatedDepreciation / asset.purchaseCost).clamp(0.0, 1.0)
@@ -473,10 +496,7 @@ class FixedAssetsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: statusColor.withOpacity(0.2),
-          width: 1.5,
-        ),
+        border: Border.all(color: statusColor.withOpacity(0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -560,7 +580,9 @@ class FixedAssetsScreen extends StatelessWidget {
                             children: [
                               _statusBadge(asset.status, statusColor),
                               _badge(
-                                DateFormat('dd MMM yy').format(asset.purchaseDate),
+                                DateFormat(
+                                  'dd MMM yy',
+                                ).format(asset.purchaseDate),
                                 kSubText,
                               ),
                             ],
@@ -614,7 +636,9 @@ class FixedAssetsScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
-                            color: depreciationPercent > 0.9 ? kDanger : kSubText,
+                            color: depreciationPercent > 0.9
+                                ? kDanger
+                                : kSubText,
                           ),
                         ),
                       ],
@@ -630,8 +654,8 @@ class FixedAssetsScreen extends StatelessWidget {
                           depreciationPercent > 0.9
                               ? kDanger
                               : depreciationPercent > 0.7
-                                  ? kWarning
-                                  : kSuccess,
+                              ? kWarning
+                              : kSuccess,
                         ),
                       ),
                     ),
@@ -671,7 +695,8 @@ class FixedAssetsScreen extends StatelessWidget {
                       const SizedBox(width: 10),
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () => controller.showEditAssetDialog(asset),
+                          onPressed: () =>
+                              controller.showEditAssetDialog(asset),
                           icon: const Icon(
                             Icons.edit,
                             size: 14,
@@ -697,7 +722,8 @@ class FixedAssetsScreen extends StatelessWidget {
                       const SizedBox(width: 10),
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () => controller.showDisposeAssetDialog(asset),
+                          onPressed: () =>
+                              controller.showDisposeAssetDialog(asset),
                           icon: const Icon(
                             Icons.delete_outline,
                             size: 14,
@@ -750,10 +776,7 @@ class FixedAssetsScreen extends StatelessWidget {
           Container(
             width: 5,
             height: 5,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 4),
           Text(

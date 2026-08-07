@@ -1,16 +1,11 @@
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'dart:convert';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/plans/views/Subscription_plans.dart';
-import 'package:LedgerPro_app/core/BankAccounts/controllers/bankaccount_controller.dart';
-import 'package:LedgerPro_app/core/Invoice/controller/invoice_controller.dart';
-import 'package:LedgerPro_app/core/purchaseInvoice/purchase_invoice_controller.dart';
-import 'package:LedgerPro_app/core/Expense/controller/expense_controller.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:LedgerPro_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sizer/sizer.dart';
 
@@ -18,6 +13,7 @@ class DashboardController extends GetxController {
   var isLoading = true.obs;
   var hasError = false.obs;
   var errorMessage = ''.obs;
+
   var totalRevenue = 0.0.obs;
   var totalRevenueFormatted = ''.obs;
   var revenueChange = 0.0.obs;
@@ -32,6 +28,10 @@ class DashboardController extends GetxController {
   var outstandingFormatted = ''.obs;
   var outstandingChange = 0.0.obs;
   var outstandingCount = 0.obs;
+
+  var payables = 0.0.obs;
+  var payablesFormatted = ''.obs;
+  var payablesCount = 0.obs;
 
   var cashBalance = 0.0.obs;
   var cashBalanceFormatted = ''.obs;
@@ -52,7 +52,6 @@ class DashboardController extends GetxController {
   var currentScreen = Rx<Widget?>(null);
 
   void navigateTo(Widget screen, {String route = 'dashboard'}) {
-    print('🖱️ Navigating to: $route');
     currentScreen.value = screen;
     currentRoute.value = route;
   }
@@ -66,9 +65,14 @@ class DashboardController extends GetxController {
   var recentTransactions = <Map<String, dynamic>>[].obs;
   var quickActions = <Map<String, dynamic>>[].obs;
 
-  // Additional financial data
+  var revenueIncomeModule = 0.0.obs;
+  var revenueInvoiceTotal = 0.0.obs;
+  var revenueCreditNotes = 0.0.obs;
+
   var totalSales = 0.0.obs;
   var totalSalesFormatted = ''.obs;
+  var salesChange = 0.0.obs;
+  var isSalesPositive = true.obs;
   var salesCount = 0.obs;
 
   var totalPurchases = 0.0.obs;
@@ -88,6 +92,8 @@ class DashboardController extends GetxController {
   var netProfit = 0.0.obs;
   var netProfitFormatted = ''.obs;
   var profitMargin = 0.0.obs;
+  var profitChange = 0.0.obs;
+  var isProfitPositive = true.obs;
 
   var salesOrdersCount = 0.obs;
   var purchaseOrdersCount = 0.obs;
@@ -108,24 +114,16 @@ class DashboardController extends GetxController {
   ];
 
   final ApiClient _api = Get.find<ApiClient>();
-  late final BankAccountController _bankAccountController;
-  late final InvoiceController _invoiceController;
-  late final PurchaseInvoiceController _purchaseInvoiceController;
-  late final ExpenseController _expenseController;
 
-  // Time period for data filtering
   var selectedTimePeriod = 'This Month'.obs;
+  final Rx<DateTime?> customStartDate = Rx<DateTime?>(null);
+  final Rx<DateTime?> customEndDate = Rx<DateTime?>(null);
 
   @override
   void onInit() {
     super.onInit();
-    _bankAccountController = Get.put(BankAccountController());
-    _invoiceController = Get.put(InvoiceController());
-    _purchaseInvoiceController = Get.put(PurchaseInvoiceController());
-    _expenseController = Get.put(ExpenseController());
-    loadDashboardData();
     loadUserData();
-    loadFinancialData();
+    loadDashboardData();
   }
 
   Future<void> loadUserData() async {
@@ -133,8 +131,6 @@ class DashboardController extends GetxController {
       final prefs = await SharedPreferences.getInstance();
       companyName.value = prefs.getString('company_name') ?? '';
       userEmail.value = prefs.getString('user_email') ?? '';
-      print("Company Name: ${companyName.value}");
-      print("User Email: ${userEmail.value}");
       if (companyName.value.isEmpty && userEmail.value.isNotEmpty) {
         companyName.value = userEmail.value.split('@')[0];
       }
@@ -142,36 +138,33 @@ class DashboardController extends GetxController {
         companyName.value = 'User';
       }
     } catch (e) {
-      print('❌ Error loading user data: $e');
       companyName.value = 'User';
       userEmail.value = '';
     }
   }
 
-  Future<void> loadDashboardData({String? timePeriod}) async {
+  Future<void> loadDashboardData({
+    String? timePeriod,
+    DateTime? customStart,
+    DateTime? customEnd,
+  }) async {
     try {
       isLoading.value = true;
       hasError.value = false;
 
-      // Update selected time period
       if (timePeriod != null && timePeriod.isNotEmpty) {
         selectedTimePeriod.value = timePeriod;
-        print('🔄 Time period changed to: ${selectedTimePeriod.value}');
       }
 
-      // Get date range based on selected period
-      final dateRange = _getDateRangeForPeriod(selectedTimePeriod.value);
-      print(
-        '📅 Date range: ${dateRange['startDate']} to ${dateRange['endDate']}',
-      );
+      if (selectedTimePeriod.value == 'Custom') {
+        if (customStart != null) customStartDate.value = customStart;
+        if (customEnd != null) customEndDate.value = customEnd;
+      } else if (timePeriod != null) {
+        customStartDate.value = null;
+        customEndDate.value = null;
+      }
 
-      // Load all data with the date range
-      await Future.wait([
-        loadSummary(dateRange),
-        loadChartData(dateRange),
-        loadExpenseCategories(dateRange),
-        loadRecentTransactions(),
-      ]);
+      await loadOverview();
     } catch (e) {
       hasError.value = true;
       errorMessage.value = 'Failed to load dashboard data: $e';
@@ -181,53 +174,57 @@ class DashboardController extends GetxController {
     }
   }
 
-  // Helper method to calculate date range based on selected period
   Map<String, String> _getDateRangeForPeriod(String period) {
     final now = DateTime.now();
     DateTime startDate;
-    DateTime endDate = now;
+    DateTime endDate = DateTime(now.year, now.month, now.day, 23, 59, 59);
 
     switch (period) {
       case 'Today':
         startDate = DateTime(now.year, now.month, now.day);
-        endDate = DateTime(now.year, now.month, now.day, 23, 59, 59);
         break;
 
       case 'Last Week':
-        startDate = now.subtract(const Duration(days: 7));
+        startDate = DateTime(
+          now.year,
+          now.month,
+          now.day,
+        ).subtract(const Duration(days: 6));
         break;
 
       case 'This Month':
         startDate = DateTime(now.year, now.month, 1);
+        endDate = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
         break;
 
       case 'Last Month':
         final lastMonth = now.month == 1 ? 12 : now.month - 1;
         final lastMonthYear = now.month == 1 ? now.year - 1 : now.year;
         startDate = DateTime(lastMonthYear, lastMonth, 1);
-        endDate = DateTime(
-          lastMonthYear,
-          lastMonth,
-          DateTime(lastMonthYear, lastMonth + 1, 0).day,
-        );
+        endDate = DateTime(lastMonthYear, lastMonth + 1, 0, 23, 59, 59);
         break;
 
       case 'This Quarter':
         final quarterMonth = ((now.month - 1) ~/ 3) * 3 + 1;
         startDate = DateTime(now.year, quarterMonth, 1);
+        endDate = DateTime(now.year, quarterMonth + 3, 0, 23, 59, 59);
         break;
 
       case 'This Year':
         startDate = DateTime(now.year, 1, 1);
+        endDate = DateTime(now.year, 12, 31, 23, 59, 59);
         break;
 
       case 'Custom':
-        // For custom, you can implement a date picker
-        startDate = DateTime(now.year, 1, 1);
+        startDate = customStartDate.value ?? DateTime(now.year, now.month, 1);
+        final end =
+            customEndDate.value ?? DateTime(now.year, now.month, now.day);
+        endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
         break;
 
       default:
         startDate = DateTime(now.year, now.month, 1);
+        endDate = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
     }
 
     return {
@@ -236,348 +233,228 @@ class DashboardController extends GetxController {
     };
   }
 
-  Future<void> loadSummary(Map<String, String> dateRange) async {
-    try {
-      Map<String, dynamic> params = {
-        'startDate': dateRange['startDate'] ?? '',
-        'endDate': dateRange['endDate'] ?? '',
-        'timePeriod': selectedTimePeriod.value,
-      };
+  String get periodLabel {
+    if (selectedTimePeriod.value == 'Custom' &&
+        customStartDate.value != null &&
+        customEndDate.value != null) {
+      final s = customStartDate.value!;
+      final e = customEndDate.value!;
+      return '${DateFormat('dd MMM').format(s)} – ${DateFormat('dd MMM').format(e)}';
+    }
+    return selectedTimePeriod.value;
+  }
 
-      print('📊 Loading summary with params: $params');
+  double _asDouble(dynamic v) {
+    if (v == null) return 0.0;
+    if (v is num) return v.toDouble();
+    return double.tryParse(v.toString()) ?? 0.0;
+  }
 
-      final response = await _api.get(
-        '/api/dashboard/summary',
-        queryParameters: params,
-      );
+  int _asInt(dynamic v) {
+    if (v == null) return 0;
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    return int.tryParse(v.toString()) ?? 0;
+  }
 
-      if (response.statusCode == 403) {
-        try {
-          final data = response.data;
-          final message =
-              data['message']?.toString() ??
-              'Subscription required. Please subscribe to access this feature.';
+  /// Single API: KPIs + charts + categories + recent txns for the selected period.
+  Future<void> loadOverview() async {
+    final params = <String, String>{
+      'timePeriod': selectedTimePeriod.value,
+      'limit': '10',
+    };
 
-          hasError.value = true;
-          errorMessage.value = message;
+    // Only Custom needs client dates — named periods are resolved on the backend.
+    if (selectedTimePeriod.value == 'Custom') {
+      final dateRange = _getDateRangeForPeriod('Custom');
+      params['startDate'] = dateRange['startDate'] ?? '';
+      params['endDate'] = dateRange['endDate'] ?? '';
+    }
 
-          return;
-        } catch (e) {
-          hasError.value = true;
-          errorMessage.value =
-              'Subscription required. Please subscribe to continue using the app.';
-          return;
-        }
-      }
+    print(
+      '🔵 [Dashboard] overview period=${selectedTimePeriod.value} '
+      'params=$params',
+    );
 
-      if (response.success) {
-        final data = response.data;
+    final response = await _api.get(
+      '/api/dashboard/overview',
+      queryParameters: params,
+    );
 
-        // Safely extract data with null checks
-        final dataObj = data['data'] ?? {};
-        final kpi = dataObj['kpi'] ?? {};
-
-        // Total Revenue
-        final totalRevenueData = kpi['totalRevenue'] ?? {};
-        totalRevenue.value = (totalRevenueData['amount'] ?? 0).toDouble();
-        totalRevenueFormatted.value = formatAmount(totalRevenue.value);
-        revenueChange.value = (totalRevenueData['change'] ?? 0).toDouble();
-        isRevenuePositive.value = totalRevenueData['isPositive'] ?? true;
-
-        // Total Expenses
-        final totalExpensesData = kpi['totalExpenses'] ?? {};
-        totalExpenses.value = (totalExpensesData['amount'] ?? 0).toDouble();
-        totalExpensesFormatted.value = formatAmount(totalExpenses.value);
-        expenseChange.value = (totalExpensesData['change'] ?? 0).toDouble();
-        isExpensePositive.value = totalExpensesData['isPositive'] ?? false;
-
-        // Outstanding
-        final outstandingData = kpi['outstanding'] ?? {};
-        outstanding.value = (outstandingData['amount'] ?? 0).toDouble();
-        outstandingFormatted.value = formatAmount(outstanding.value);
-        outstandingChange.value = (outstandingData['change'] ?? 0).toDouble();
-        outstandingCount.value = outstandingData['count'] ?? 0;
-
-        // Cash Balance
-        final cashBalanceData = kpi['cashBalance'] ?? {};
-        cashBalance.value = (cashBalanceData['amount'] ?? 0).toDouble();
-        cashBalanceFormatted.value = formatAmount(cashBalance.value);
-        cashChange.value = (cashBalanceData['change'] ?? 0).toDouble();
-        isCashPositive.value = cashBalanceData['isPositive'] ?? true;
-
-        // Weekly Data
-        final weeklyData = dataObj['weeklyData'] ?? {};
-        weeklyRevenue.value = (weeklyData['revenue'] ?? 0).toDouble();
-        weeklyExpenses.value = (weeklyData['expenses'] ?? 0).toDouble();
-        weeklyProfit.value = (weeklyData['profit'] ?? 0).toDouble();
-
-        // Daily Data
-        final dailyData = dataObj['dailyData'] ?? {};
-        dailyRevenue.value = (dailyData['revenue'] ?? 0).toDouble();
-        dailyExpenses.value = (dailyData['expenses'] ?? 0).toDouble();
-        dailyProfit.value = (dailyData['profit'] ?? 0).toDouble();
-
-        print('✅ Summary loaded successfully for ${selectedTimePeriod.value}');
-        print('📊 Revenue: $totalRevenueFormatted');
-        print('📊 Expenses: $totalExpensesFormatted');
-      } else {
-        hasError.value = true;
-        errorMessage.value = response.message.isNotEmpty
-            ? response.message
-            : 'Server error: ${response.statusCode}';
-        _showError(errorMessage.value);
-      }
-    } catch (e) {
+    if (response.statusCode == 403) {
+      final data = response.data;
+      final message = data is Map
+          ? (data['message']?.toString() ??
+                'Subscription required. Please subscribe to access this feature.')
+          : 'Subscription required. Please subscribe to access this feature.';
       hasError.value = true;
-      errorMessage.value = 'error: $e';
+      errorMessage.value = message;
+      return;
+    }
+
+    if (!response.success) {
+      hasError.value = true;
+      errorMessage.value = response.message.isNotEmpty
+          ? response.message
+          : 'Server error: ${response.statusCode}';
       _showError(errorMessage.value);
-      rethrow;
+      return;
     }
+
+    final root = response.data;
+    final dataObj = (root is Map ? root['data'] : null) ?? {};
+    if (dataObj is! Map) {
+      hasError.value = true;
+      errorMessage.value = 'Invalid dashboard response';
+      return;
+    }
+
+    _applyKpi(dataObj);
+    _applyCharts(dataObj);
+    _applyExpenseCategories(dataObj);
+    _applyRecentTransactions(dataObj);
   }
 
-  Future<void> loadChartData(Map<String, String> dateRange) async {
-    try {
-      Map<String, dynamic> chartParams = {
-        'startDate': dateRange['startDate'] ?? '',
-        'endDate': dateRange['endDate'] ?? '',
-        'timePeriod': selectedTimePeriod.value,
-      };
+  void _applyKpi(Map dataObj) {
+    final kpi = dataObj['kpi'] ?? {};
 
-      print('📈 Loading chart data with params: $chartParams');
+    final totalRevenueData = kpi['totalRevenue'] ?? {};
+    totalRevenue.value = _asDouble(totalRevenueData['amount']);
+    totalRevenueFormatted.value = formatAmount(totalRevenue.value);
+    revenueChange.value = _asDouble(totalRevenueData['change']);
+    isRevenuePositive.value = totalRevenueData['isPositive'] ?? true;
 
-      final response = await _api.get(
-        '/api/dashboard/chart-data',
-        queryParameters: chartParams,
+    final revenueSources = totalRevenueData['sources'] ?? {};
+    if (revenueSources is Map) {
+      revenueIncomeModule.value = _asDouble(revenueSources['incomeModule']);
+      revenueInvoiceTotal.value = _asDouble(revenueSources['salesModule']);
+      revenueCreditNotes.value = _asDouble(revenueSources['creditNotes']);
+    } else {
+      final breakdown = dataObj['breakdown'] ?? {};
+      revenueIncomeModule.value = _asDouble(breakdown['otherIncome']);
+      revenueInvoiceTotal.value = _asDouble(breakdown['salesRevenue']);
+      revenueCreditNotes.value = _asDouble(breakdown['creditNotes']);
+    }
+
+    final totalSalesData = kpi['totalSales'] ?? {};
+    totalSales.value = _asDouble(
+      totalSalesData['amount'] ?? revenueInvoiceTotal.value,
+    );
+    totalSalesFormatted.value = formatAmount(totalSales.value);
+    salesChange.value = _asDouble(totalSalesData['change']);
+    isSalesPositive.value = totalSalesData['isPositive'] ?? true;
+    salesCount.value = _asInt(totalSalesData['count']);
+
+    final totalPurchasesData = kpi['totalPurchases'] ?? {};
+    totalPurchases.value = _asDouble(totalPurchasesData['amount']);
+    totalPurchasesFormatted.value = formatAmount(totalPurchases.value);
+
+    final totalExpensesData = kpi['totalExpenses'] ?? {};
+    totalExpenses.value = _asDouble(totalExpensesData['amount']);
+    totalExpensesFormatted.value = formatAmount(totalExpenses.value);
+    expenseChange.value = _asDouble(totalExpensesData['change']);
+    isExpensePositive.value = totalExpensesData['isPositive'] ?? false;
+
+    final netProfitData = kpi['netProfit'] ?? {};
+    if (netProfitData is Map && netProfitData.isNotEmpty) {
+      netProfit.value = _asDouble(netProfitData['amount']);
+      profitMargin.value = _asDouble(netProfitData['margin']);
+      profitChange.value = _asDouble(netProfitData['change']);
+      isProfitPositive.value =
+          netProfitData['isPositive'] ?? (netProfit.value >= 0);
+    } else {
+      netProfit.value =
+          totalRevenue.value - totalPurchases.value - totalExpenses.value;
+      profitMargin.value = totalRevenue.value > 0
+          ? (netProfit.value / totalRevenue.value) * 100
+          : 0.0;
+      profitChange.value = 0.0;
+      isProfitPositive.value = netProfit.value >= 0;
+    }
+    netProfitFormatted.value = formatAmount(netProfit.value);
+
+    final grossProfitData = kpi['grossProfit'] ?? {};
+    if (grossProfitData is Map && grossProfitData.isNotEmpty) {
+      grossProfit.value = _asDouble(grossProfitData['amount']);
+    } else {
+      grossProfit.value = totalSales.value - totalPurchases.value;
+    }
+    grossProfitFormatted.value = formatAmount(grossProfit.value);
+
+    final outstandingData =
+        kpi['accountsReceivable'] ?? kpi['outstanding'] ?? {};
+    outstanding.value = _asDouble(outstandingData['amount']);
+    outstandingFormatted.value = formatAmount(outstanding.value);
+    outstandingChange.value = _asDouble(outstandingData['change']);
+    outstandingCount.value = _asInt(outstandingData['count']);
+
+    final payablesData = kpi['accountsPayable'] ?? {};
+    payables.value = _asDouble(payablesData['amount']);
+    payablesFormatted.value = formatAmount(payables.value);
+    payablesCount.value = _asInt(payablesData['count']);
+
+    final bankData = kpi['bankBalance'] ?? kpi['cashBalance'] ?? {};
+    totalBankBalance.value = _asDouble(bankData['amount']);
+    totalBankBalanceFormatted.value = formatAmount(totalBankBalance.value);
+    bankAccountsCount.value = _asInt(
+      bankData['accountsCount'] ??
+          (dataObj['breakdown'] is Map
+              ? dataObj['breakdown']['bankAccountsCount']
+              : 0),
+    );
+    cashBalance.value = totalBankBalance.value;
+    cashBalanceFormatted.value = totalBankBalanceFormatted.value;
+    cashChange.value = _asDouble(bankData['change']);
+    isCashPositive.value = bankData['isPositive'] ?? true;
+
+    final cashOnly = _asDouble(
+      (kpi['cashBalance'] is Map) ? (kpi['cashBalance']['cashOnly']) : null,
+    );
+    totalCashBalance.value = cashOnly;
+    totalCashBalanceFormatted.value = formatAmount(totalCashBalance.value);
+
+    final weeklyData = dataObj['weeklyData'] ?? {};
+    weeklyRevenue.value = _asDouble(weeklyData['revenue']);
+    weeklyExpenses.value = _asDouble(weeklyData['expenses']);
+    weeklyProfit.value = _asDouble(weeklyData['profit']);
+
+    final dailyData = dataObj['dailyData'] ?? {};
+    dailyRevenue.value = _asDouble(dailyData['revenue']);
+    dailyExpenses.value = _asDouble(dailyData['expenses']);
+    dailyProfit.value = _asDouble(dailyData['profit']);
+  }
+
+  void _applyCharts(Map dataObj) {
+    final dataList = dataObj['chartData'];
+    if (dataList is List) {
+      chartData.value = List<Map<String, dynamic>>.from(
+        dataList.map((e) => Map<String, dynamic>.from(e as Map)),
       );
-
-      if (response.success) {
-        final data = response.data;
-        final dataList = data['data'] ?? [];
-        chartData.value = List<Map<String, dynamic>>.from(dataList);
-        print('✅ Chart data loaded: ${chartData.length} entries');
-      } else {
-        chartData.clear();
-      }
-    } catch (e) {
+    } else {
       chartData.clear();
-      print('❌ Error loading chart data: $e');
     }
   }
 
-  Future<void> loadExpenseCategories(Map<String, String> dateRange) async {
-    try {
-      Map<String, dynamic> expenseParams = {
-        'startDate': dateRange['startDate'] ?? '',
-        'endDate': dateRange['endDate'] ?? '',
-        'timePeriod': selectedTimePeriod.value,
-      };
-
-      final response = await _api.get(
-        '/api/dashboard/expense-categories',
-        queryParameters: expenseParams,
+  void _applyExpenseCategories(Map dataObj) {
+    final dataList = dataObj['expenseCategories'];
+    if (dataList is List) {
+      expenseCategories.value = List<Map<String, dynamic>>.from(
+        dataList.map((e) => Map<String, dynamic>.from(e as Map)),
       );
-
-      if (response.statusCode == 403) {
-        expenseCategories.clear();
-        return;
-      }
-
-      if (response.success) {
-        final data = response.data;
-        final dataList = data['data'] ?? [];
-        expenseCategories.value = List<Map<String, dynamic>>.from(dataList);
-        print(
-          '✅ Expense categories loaded: ${expenseCategories.length} categories',
-        );
-      } else {
-        expenseCategories.clear();
-      }
-    } catch (e) {
+    } else {
       expenseCategories.clear();
-      print('❌ Error loading expense categories: $e');
     }
   }
 
-  Future<void> loadRecentTransactions() async {
-    try {
-      // Also filter recent transactions by date range
-      final dateRange = _getDateRangeForPeriod(selectedTimePeriod.value);
-
-      final response = await _api.get(
-        '/api/dashboard/recent-transactions',
-        queryParameters: {
-          'limit': '10',
-          'startDate': dateRange['startDate'] ?? '',
-          'endDate': dateRange['endDate'] ?? '',
-        },
+  void _applyRecentTransactions(Map dataObj) {
+    final dataList = dataObj['recentTransactions'];
+    if (dataList is List) {
+      recentTransactions.value = List<Map<String, dynamic>>.from(
+        dataList.map((e) => Map<String, dynamic>.from(e as Map)),
       );
-
-      if (response.statusCode == 403) {
-        recentTransactions.clear();
-        return;
-      }
-
-      if (response.success) {
-        final data = response.data;
-        final dataList = data['data'] ?? [];
-        recentTransactions.value = List<Map<String, dynamic>>.from(dataList);
-        print(
-          '✅ Recent transactions loaded: ${recentTransactions.length} transactions',
-        );
-      } else {
-        recentTransactions.clear();
-      }
-    } catch (e) {
+    } else {
       recentTransactions.clear();
-      print('❌ Error loading recent transactions: $e');
     }
-  }
-
-  // Load comprehensive financial data from all controllers
-  Future<void> loadFinancialData() async {
-    try {
-      // Load bank accounts data
-      try {
-        await _bankAccountController.fetchBankAccounts();
-        totalBankBalance.value = _bankAccountController.totalBalance.value;
-        totalBankBalanceFormatted.value = CurrencyUtils.format(
-          totalBankBalance.value,
-        );
-        bankAccountsCount.value = _bankAccountController.bankAccounts.length;
-
-        // Separate cash and bank accounts
-        final cashAccounts = _bankAccountController.bankAccounts
-            .where((acc) => acc.accountType.toLowerCase().contains('cash'))
-            .toList();
-
-        totalCashBalance.value = cashAccounts.fold(
-          0.0,
-          (sum, acc) => sum + acc.currentBalance,
-        );
-        totalCashBalanceFormatted.value = CurrencyUtils.format(
-          totalCashBalance.value,
-        );
-        cashAccountsCount.value = cashAccounts.length;
-      } catch (e) {
-        print('❌ Error loading bank accounts: $e');
-        totalBankBalance.value = 0.0;
-        totalBankBalanceFormatted.value = CurrencyUtils.format(0.0);
-        bankAccountsCount.value = 0;
-        totalCashBalance.value = 0.0;
-        totalCashBalanceFormatted.value = CurrencyUtils.format(0.0);
-        cashAccountsCount.value = 0;
-      }
-
-      // Load sales/invoice data with null safety
-      try {
-        await _invoiceController.fetchInvoices();
-        totalSales.value = _invoiceController.totalAmount.value;
-        totalSalesFormatted.value = CurrencyUtils.format(totalSales.value);
-        salesCount.value = _invoiceController.invoices.length;
-
-        // Update revenue from sales
-        totalRevenue.value = totalSales.value;
-        totalRevenueFormatted.value = totalSalesFormatted.value;
-      } catch (e) {
-        print('❌ Error loading invoices: $e');
-        totalSales.value = 0.0;
-        totalSalesFormatted.value = CurrencyUtils.format(0.0);
-        salesCount.value = 0;
-        totalRevenue.value = 0.0;
-        totalRevenueFormatted.value = CurrencyUtils.format(0.0);
-      }
-
-      // Load purchase invoice data with null safety
-      try {
-        await _purchaseInvoiceController.fetchInvoices();
-        totalPurchases.value = _purchaseInvoiceController
-            .stats
-            .value
-            .monthAmount
-            .toDouble();
-        totalPurchasesFormatted.value = CurrencyUtils.format(
-          totalPurchases.value,
-        );
-        purchaseCount.value = _purchaseInvoiceController.invoices.length;
-      } catch (e) {
-        print('❌ Error loading purchase invoices: $e');
-        totalPurchases.value = 0.0;
-        totalPurchasesFormatted.value = CurrencyUtils.format(0.0);
-        purchaseCount.value = 0;
-      }
-
-      // Load expense data with null safety
-      try {
-        await _expenseController.loadExpenses();
-        totalExpenses.value = _expenseController.totalExpense.value;
-        totalExpensesFormatted.value = CurrencyUtils.format(
-          totalExpenses.value,
-        );
-      } catch (e) {
-        print('❌ Error loading expenses: $e');
-        totalExpenses.value = 0.0;
-        totalExpensesFormatted.value = CurrencyUtils.format(0.0);
-      }
-
-      // Calculate profit metrics with null safety
-      try {
-        grossProfit.value = totalSales.value - totalPurchases.value;
-        grossProfitFormatted.value = CurrencyUtils.format(grossProfit.value);
-
-        netProfit.value = grossProfit.value - totalExpenses.value;
-        netProfitFormatted.value = CurrencyUtils.format(netProfit.value);
-
-        if (totalSales.value > 0) {
-          profitMargin.value = (netProfit.value / totalSales.value) * 100;
-        } else {
-          profitMargin.value = 0.0;
-        }
-      } catch (e) {
-        print('❌ Error calculating profit metrics: $e');
-        grossProfit.value = 0.0;
-        grossProfitFormatted.value = CurrencyUtils.format(0.0);
-        netProfit.value = 0.0;
-        netProfitFormatted.value = CurrencyUtils.format(0.0);
-        profitMargin.value = 0.0;
-      }
-
-      print('✅ Financial data loaded successfully');
-      print('💰 Total Sales: $totalSalesFormatted');
-      print('💰 Total Purchases: $totalPurchasesFormatted');
-      print('💰 Total Expenses: $totalExpensesFormatted');
-      print('💰 Gross Profit: $grossProfitFormatted');
-      print('💰 Net Profit: $netProfitFormatted');
-      print('💰 Bank Balance: $totalBankBalanceFormatted');
-      print('💰 Cash Balance: $totalCashBalanceFormatted');
-    } catch (e) {
-      print('❌ Error loading financial data: $e');
-      // Set all values to 0 on complete failure
-      _resetFinancialData();
-    }
-  }
-
-  void _resetFinancialData() {
-    totalSales.value = 0.0;
-    totalSalesFormatted.value = CurrencyUtils.format(0.0);
-    salesCount.value = 0;
-    totalPurchases.value = 0.0;
-    totalPurchasesFormatted.value = CurrencyUtils.format(0.0);
-    purchaseCount.value = 0;
-    totalExpenses.value = 0.0;
-    totalExpensesFormatted.value = CurrencyUtils.format(0.0);
-    totalBankBalance.value = 0.0;
-    totalBankBalanceFormatted.value = CurrencyUtils.format(0.0);
-    bankAccountsCount.value = 0;
-    totalCashBalance.value = 0.0;
-    totalCashBalanceFormatted.value = CurrencyUtils.format(0.0);
-    cashAccountsCount.value = 0;
-    grossProfit.value = 0.0;
-    grossProfitFormatted.value = CurrencyUtils.format(0.0);
-    netProfit.value = 0.0;
-    netProfitFormatted.value = CurrencyUtils.format(0.0);
-    profitMargin.value = 0.0;
-    totalRevenue.value = 0.0;
-    totalRevenueFormatted.value = CurrencyUtils.format(0.0);
   }
 
   void _showSubscriptionRequiredDialog(String message) {
@@ -615,23 +492,16 @@ class DashboardController extends GetxController {
     );
   }
 
-  void _redirectToLogin() {
-    Future.delayed(const Duration(seconds: 2), () {
-      Get.offAllNamed('/login');
-    });
-  }
-
-  // Helper Methods
   double getMonthlyRevenue(int monthIndex) {
     if (monthIndex < chartData.length) {
-      return (chartData[monthIndex]['revenue'] ?? 0).toDouble();
+      return _asDouble(chartData[monthIndex]['revenue']);
     }
     return 0;
   }
 
   double getMonthlyExpenses(int monthIndex) {
     if (monthIndex < chartData.length) {
-      return (chartData[monthIndex]['expenses'] ?? 0).toDouble();
+      return _asDouble(chartData[monthIndex]['expenses']);
     }
     return 0;
   }
@@ -665,6 +535,12 @@ class DashboardController extends GetxController {
         return Icons.receipt_long;
       case 'person_add':
         return Icons.person_add;
+      case 'trending_up':
+        return Icons.trending_up;
+      case 'trending_down':
+        return Icons.trending_down;
+      case 'receipt':
+        return Icons.receipt;
       default:
         return Icons.circle;
     }
@@ -679,6 +555,13 @@ class DashboardController extends GetxController {
   }
 
   String formatAmount(double amount) => CurrencyUtils.format(amount);
+
+  String formatTrend(double change, {bool invertSense = false}) {
+    final abs = change.abs().toStringAsFixed(1);
+    if (change > 0) return '+$abs%';
+    if (change < 0) return '−$abs%';
+    return '0%';
+  }
 
   void refreshData() {
     loadDashboardData();

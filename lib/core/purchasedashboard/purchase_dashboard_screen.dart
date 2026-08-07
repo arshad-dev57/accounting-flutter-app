@@ -1,82 +1,165 @@
 // lib/core/purchasedashboard/purchase_dashboard_screen.dart
+//
+// Redesigned to exactly match DashboardScreen's white theme, palette, and
+// component patterns from dashboard_screen.dart
 
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/core/Notifications/screens/notification_screen.dart';
-import 'package:LedgerPro_app/core/purchasedashboard/purchase_controller.dart';
-import 'package:LedgerPro_app/core/purchasedashboard/purchase_dashboard_model.dart';
-import 'package:LedgerPro_app/core/purchasedashboard/purchase_drawer.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/core/Notifications/screens/notification_screen.dart';
+import 'package:BisonsTechs_app/core/purchasedashboard/purchase_controller.dart';
+import 'package:BisonsTechs_app/core/purchasedashboard/purchase_dashboard_model.dart';
+import 'package:BisonsTechs_app/core/purchasedashboard/purchase_drawer.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:shimmer/shimmer.dart';
 
-const _kPageBg        = Color(0xFFF3F5FA);
-const _kCardBg        = Color(0xFFFFFFFF);
-const _kCardBorder    = Color(0xFFE9EBF2);
-const _kTextPrimary   = Color(0xFF14162B);
-const _kTextSecondary = Color(0xFF8A8FA6);
-const _kBlue          = Color(0xFF4361EE);
-const _kGreen         = Color(0xFF2DC653);
-const _kOrange        = Color(0xFFF4A228);
-const _kRed           = Color(0xFFEF4444);
-const _kPurple        = Color(0xFF9B59B6);
-const _kTeal          = Color(0xFF00B4D8);
+// ─── White theme palette (identical to DashboardScreen) ───────────────────
+const _kPageBg = Color(0xFFF5F6FA);
+const _kCardBg = Color(0xFFFFFFFF);
+const _kCardBorder = Color(0xFFEEEFF4);
+const _kTextPrimary = Color(0xFF1A1D2E);
+const _kTextSub = Color(0xFF8A8FA8);
+const _kTextMuted = Color(0xFFB0B4C8);
+const _kAppBarBg = Color(0xFFF7F9FC);
+const _kChipBg = Color(0xFFF0F2F8);
+
+// Semantic colours — same as DashboardScreen
+const _kPrimaryBg = Color(0xFFE6EEF5);
+const _kGreen = Color(0xFF22A869);
+const _kGreenBg = Color(0xFFEAF7F1);
+const _kOrange = Color(0xFFF59E0B);
+const _kOrangeBg = Color(0xFFFFF8E7);
+const _kRed = Color(0xFFEF4444);
+const _kRedBg = Color(0xFFFEF2F2);
+const _kPurple = Color(0xFF7C3AED);
+const _kPurpleBg = Color(0xFFF5F0FF);
+const _kTeal = Color(0xFF0891B2);
+const _kTealBg = Color(0xFFECFAFF);
+
+// Hero card — same gradient tint as DashboardScreen hero
+const _kHeroBg = Color(0xFFE6EEF5);
+const _kHeroBgEnd = Color(0xFFD6E4F0);
+const _kHeroBorder = Color(0xFFB8CFE0);
+const _kHeroIcon = Color(0xFFC5D8E8);
 
 class PurchaseDashboardScreen extends StatefulWidget {
   const PurchaseDashboardScreen({super.key});
 
   @override
-  State<PurchaseDashboardScreen> createState() => _PurchaseDashboardScreenState();
+  State<PurchaseDashboardScreen> createState() =>
+      _PurchaseDashboardScreenState();
 }
 
 class _PurchaseDashboardScreenState extends State<PurchaseDashboardScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  late final PurchaseController controller;
+  late final PurchaseController _controller;
+
+  String _selectedTimePeriod = 'This Month';
+  final List<String> _timePeriods = [
+    'Today',
+    'Last Week',
+    'This Month',
+    'Last Month',
+    'This Quarter',
+    'This Year',
+  ];
 
   @override
   void initState() {
     super.initState();
-    controller = Get.put(PurchaseController());
+    _controller = Get.put(PurchaseController());
   }
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    final isTablet = !isMobile;
+
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: _kPageBg,
-      drawer: const PurchaseDrawer(currentRoute: '/warehouse/purchase'),
-      appBar: _buildAppBar(),
-      body: SafeArea(child: _buildBody()),
+      appBar: _buildAppBar(isMobile),
+      drawer: PurchaseDrawer(currentRoute: '/warehouse/purchase'),
+      body: Obx(() {
+        if (_controller.isLoading.value &&
+            _controller.dashboard.value == null) {
+          return _buildShimmer();
+        }
+        return RefreshIndicator(
+          color: kPrimary,
+          backgroundColor: _kCardBg,
+          onRefresh: _controller.refreshDashboard,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeroCard(),
+                const SizedBox(height: 14),
+                _buildPeriodChips(),
+                const SizedBox(height: 16),
+                _buildKpiGrid(isTablet),
+                const SizedBox(height: 16),
+                _buildFinancialOverview(),
+                const SizedBox(height: 16),
+                _buildSpendTrendCard(),
+                const SizedBox(height: 16),
+                _buildOrderStatusCard(),
+                const SizedBox(height: 16),
+                _buildPurchaseHealth(),
+                const SizedBox(height: 16),
+                _buildRecentActivity(),
+                const SizedBox(height: 16),
+                _buildQuickActions(),
+              ],
+            ),
+          ),
+        );
+      }),
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  // ─── AppBar (identical structure to DashboardScreen) ─────────────────────
+  PreferredSizeWidget _buildAppBar(bool isMobile) {
     return AppBar(
-      backgroundColor: _kCardBg,
+      backgroundColor: _kAppBarBg,
       elevation: 0,
       scrolledUnderElevation: 0,
-      centerTitle: false,
+      surfaceTintColor: Colors.transparent,
       bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(1),
-        child: Container(height: 1, color: _kCardBorder),
+        preferredSize: const Size.fromHeight(0.5),
+        child: Container(height: 0.5, color: _kCardBorder),
       ),
-      leading: IconButton(
-        icon: const Icon(Icons.menu_rounded, color: _kTextPrimary),
-        onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-      ),
+      leading: isMobile
+          ? Builder(
+              builder: (ctx) => IconButton(
+                icon: const Icon(
+                  Icons.menu_rounded,
+                  color: _kTextPrimary,
+                  size: 22,
+                ),
+                onPressed: () => Scaffold.of(ctx).openDrawer(),
+              ),
+            )
+          : null,
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 28,
-            height: 28,
+            width: 30,
+            height: 30,
             decoration: BoxDecoration(
               color: kPrimary,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.shopping_bag_outlined, size: 15, color: Colors.black),
+            child: const Icon(
+              Icons.shopping_bag_outlined,
+              size: 16,
+              color: Colors.white,
+            ),
           ),
           const SizedBox(width: 8),
           const Text(
@@ -84,87 +167,115 @@ class _PurchaseDashboardScreenState extends State<PurchaseDashboardScreen> {
             style: TextStyle(
               color: _kTextPrimary,
               fontSize: 16,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.2,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.3,
             ),
           ),
         ],
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.notifications_none_rounded, color: _kTextSecondary),
-          onPressed: () {
-            Get.to(() => NotificationScreen());
-          },
+          icon: const Icon(
+            Icons.notifications_none_rounded,
+            color: _kTextSub,
+            size: 22,
+          ),
+          onPressed: () => Get.to(() => const NotificationScreen()),
         ),
         const SizedBox(width: 4),
       ],
     );
   }
 
-  // ─── Body ──────────────────────────────────────────────────────────────────
-  Widget _buildBody() {
-    return Obx(() {
-      if (controller.isLoading.value && controller.dashboard.value == null) {
-        return Center(
-          child: LoadingAnimationWidget.discreteCircle(color: kPrimary, size: 40),
-        );
-      }
-
-      final isTablet = MediaQuery.of(context).size.width >= 600;
-
-      return RefreshIndicator(
-        color: kPrimary,
-        backgroundColor: _kCardBg,
-        onRefresh: controller.refreshDashboard,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildGreetingHeader(),
-              const SizedBox(height: 14),
-              _buildPeriodFilter(),
-              const SizedBox(height: 18),
-              _buildKpiGrid(isTablet),
-              const SizedBox(height: 18),
-              _PurchaseSpendChart(controller: controller),
-              const SizedBox(height: 14),
-              _PurchaseOrderStatusChart(controller: controller),
-              const SizedBox(height: 14),
-              _buildBottomSection(isTablet),
-            ],
-          ),
+  // ─── Shimmer (identical pattern to DashboardScreen) ──────────────────────
+  Widget _buildShimmer() {
+    return Shimmer.fromColors(
+      baseColor: const Color(0xFFEEEFF4),
+      highlightColor: const Color(0xFFF8F9FC),
+      period: const Duration(milliseconds: 1200),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+        physics: const NeverScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _shimmerBox(height: 180, radius: 18),
+            const SizedBox(height: 14),
+            Row(
+              children: List.generate(
+                4,
+                (i) => Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: _shimmerBox(
+                    height: 34,
+                    width: 80 + (i * 10).toDouble(),
+                    radius: 20,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: 4,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: 1.55,
+              ),
+              itemBuilder: (_, __) => _shimmerBox(radius: 14),
+            ),
+            const SizedBox(height: 16),
+            _shimmerBox(height: 200, radius: 16),
+            const SizedBox(height: 16),
+            _shimmerBox(height: 220, radius: 16),
+            const SizedBox(height: 16),
+            _shimmerBox(height: 100, radius: 16),
+          ],
         ),
-      );
-    });
+      ),
+    );
   }
 
-  // ─── Greeting Header ───────────────────────────────────────────────────────
-  Widget _buildGreetingHeader() {
-    return Obx(() {
-      final data = controller.dashboard.value;
-      final fmt  = Get.find<CurrencyController>().formatAmount;
+  Widget _shimmerBox({double? height, double? width, double radius = 8}) {
+    return Container(
+      height: height,
+      width: width,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(radius),
+      ),
+    );
+  }
 
-      final totalOrders = data?.orders.total ?? 0;
-      final totalSpend  = data?.invoices.totalSpend ?? 0.0;
+  // ─── Hero Card (same structure as DashboardScreen hero) ──────────────────
+  Widget _buildHeroCard() {
+    return Obx(() {
+      final data = _controller.dashboard.value;
+      final fmt = Get.find<CurrencyController>().formatAmount;
+
+      final totalSpend = data?.invoices.totalSpend ?? 0.0;
       final outstanding = data?.invoices.outstanding ?? 0.0;
+      final paidAmount = data?.invoices.paidAmount ?? 0.0;
+      final totalOrders = data?.orders.total ?? 0;
 
       return Container(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF1A237E), Color(0xFF3949AB), Color(0xFF5C6BC0)],
+            colors: [_kHeroBg, _kHeroBgEnd],
           ),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: _kHeroBorder),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF3949AB).withValues(alpha: 0.35),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+              color: kPrimary.withOpacity(0.10),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
@@ -172,64 +283,135 @@ class _PurchaseDashboardScreenState extends State<PurchaseDashboardScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.shopping_bag_outlined, size: 18, color: Colors.white),
-                ),
-                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Purchase Overview',
-                        style: TextStyle(
-                          fontSize: 16,
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: _kPrimaryBg,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.shopping_bag_outlined,
+                              size: 14,
+                              color: kPrimary,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Total Spend · $_selectedTimePeriod',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: _kTextSub,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        fmt(totalSpend),
+                        style: const TextStyle(
+                          fontSize: 26,
                           fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: -0.3,
+                          color: _kTextPrimary,
+                          letterSpacing: -0.5,
                         ),
                       ),
+                      const SizedBox(height: 4),
                       Text(
-                        DateFormat('EEE, MMM d, yyyy').format(DateTime.now()),
-                        style: TextStyle(
+                        '${fmt(paidAmount)} paid · ${fmt(outstanding)} outstanding',
+                        style: const TextStyle(
                           fontSize: 11,
-                          color: Colors.white.withValues(alpha: 0.65),
+                          color: _kTextSub,
                           fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _kPrimaryBg,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.receipt_long_outlined,
+                              size: 10,
+                              color: kPrimary,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              '$totalOrders purchase order${totalOrders == 1 ? '' : 's'}',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: kPrimary,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
                 GestureDetector(
-                  onTap: controller.refreshDashboard,
+                  onTap: _controller.refreshDashboard,
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
+                      color: _kHeroIcon,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                      border: Border.all(color: _kHeroBorder),
                     ),
-                    child: const Icon(Icons.refresh_rounded, size: 17, color: Colors.white),
+                    child: const Icon(
+                      Icons.refresh_rounded,
+                      size: 16,
+                      color: _kTextSub,
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            Container(height: 1, color: Colors.white.withValues(alpha: 0.15)),
+            Container(height: 0.5, color: _kCardBorder),
             const SizedBox(height: 14),
             Row(
               children: [
-                _headerStat('Orders', '$totalOrders', Icons.receipt_long_outlined, _kGreen),
-                _headerDivider(),
-                _headerStat('Total Spend', fmt(totalSpend), Icons.payments_outlined, const Color(0xFFEF9A9A)),
-                _headerDivider(),
-                _headerStat('Outstanding', fmt(outstanding), Icons.schedule_rounded, _kOrange),
+                _heroStat(
+                  'Orders',
+                  '$totalOrders',
+                  Icons.receipt_long_outlined,
+                  kPrimary,
+                  _kPrimaryBg,
+                ),
+                _heroDivider(),
+                _heroStat(
+                  'Paid',
+                  fmt(paidAmount),
+                  Icons.check_circle_outline_rounded,
+                  _kGreen,
+                  _kGreenBg,
+                ),
+                _heroDivider(),
+                _heroStat(
+                  'Outstanding',
+                  fmt(outstanding),
+                  Icons.schedule_rounded,
+                  _kOrange,
+                  _kOrangeBg,
+                ),
               ],
             ),
           ],
@@ -238,38 +420,41 @@ class _PurchaseDashboardScreenState extends State<PurchaseDashboardScreen> {
     });
   }
 
-  Widget _headerStat(String label, String value, IconData icon, Color color) {
+  Widget _heroStat(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+    Color bg,
+  ) {
     return Expanded(
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 12, color: color),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: color,
-                    letterSpacing: -0.5,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 14, color: color),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: _kTextPrimary,
+              letterSpacing: -0.2,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 9,
-              color: Colors.white.withValues(alpha: 0.55),
-              fontWeight: FontWeight.w500,
-            ),
+            style: const TextStyle(fontSize: 9, color: _kTextMuted),
             textAlign: TextAlign.center,
           ),
         ],
@@ -277,188 +462,109 @@ class _PurchaseDashboardScreenState extends State<PurchaseDashboardScreen> {
     );
   }
 
-  Widget _headerDivider() => Container(
-        width: 1,
-        height: 36,
-        color: Colors.white.withValues(alpha: 0.15),
-      );
+  Widget _heroDivider() =>
+      Container(width: 0.5, height: 44, color: _kCardBorder);
 
-  // ─── Period Filter ──────────────────────────────────────────────────────────
-  Widget _buildPeriodFilter() {
-    const periods = [
-      ('today', 'Today'),
-      ('week',  'This Week'),
-      ('month', 'This Month'),
-      ('year',  'This Year'),
-    ];
-
-    return Obx(() {
-      return SingleChildScrollView(
+  // ─── Period Chips (identical to DashboardScreen) ──────────────────────────
+  Widget _buildPeriodChips() {
+    return SizedBox(
+      height: 34,
+      child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            ...periods.map((p) {
-              final isSelected = controller.period.value == p.$1;
-              return GestureDetector(
-                onTap: () => controller.setPeriod(p.$1),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.only(right: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFF3949AB) : _kCardBg,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isSelected ? const Color(0xFF3949AB) : _kCardBorder,
-                      width: 1.5,
-                    ),
-                    boxShadow: isSelected
-                        ? [BoxShadow(color: const Color(0xFF3949AB).withValues(alpha: 0.25), blurRadius: 8, offset: const Offset(0, 3))]
-                        : [],
-                  ),
-                  child: Text(
-                    p.$2,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected ? Colors.white : _kTextSecondary,
-                    ),
-                  ),
-                ),
-              );
-            }),
-            // Custom range picker
-            GestureDetector(
-              onTap: _pickCustomDateRange,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: controller.period.value == 'custom' ? const Color(0xFF3949AB) : _kCardBg,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: controller.period.value == 'custom' ? const Color(0xFF3949AB) : _kCardBorder,
-                    width: 1.5,
-                  ),
-                  boxShadow: controller.period.value == 'custom'
-                      ? [BoxShadow(color: const Color(0xFF3949AB).withValues(alpha: 0.25), blurRadius: 8, offset: const Offset(0, 3))]
-                      : [],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.date_range_rounded,
-                      size: 13,
-                      color: controller.period.value == 'custom' ? Colors.white : _kTextSecondary,
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      controller.period.value == 'custom'
-                          ? controller.getPeriodLabel()
-                          : 'Custom',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: controller.period.value == 'custom' ? Colors.white : _kTextSecondary,
-                      ),
-                    ),
-                  ],
+        itemCount: _timePeriods.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (_, i) {
+          final period = _timePeriods[i];
+          final isActive = period == _selectedTimePeriod;
+          return GestureDetector(
+            onTap: () {
+              setState(() => _selectedTimePeriod = period);
+              _controller.setPeriod(_mapPeriod(period));
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                color: isActive ? kPrimary : _kChipBg,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                period,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isActive ? Colors.white : _kTextSub,
                 ),
               ),
             ),
-          ],
-        ),
-      );
-    });
-  }
-
-  Future<void> _pickCustomDateRange() async {
-    final now = DateTime.now();
-    final picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(now.year - 2),
-      lastDate: now,
-      initialDateRange: DateTimeRange(
-        start: controller.customStart.value ?? now.subtract(const Duration(days: 30)),
-        end:   controller.customEnd.value   ?? now,
-      ),
-      builder: (ctx, child) => Theme(
-        data: ThemeData.light().copyWith(
-          colorScheme: const ColorScheme.light(
-            primary: Color(0xFF3949AB),
-            onPrimary: Colors.white,
-            surface: Colors.white,
-          ),
-        ),
-        child: child!,
+          );
+        },
       ),
     );
-    if (picked != null) {
-      controller.setPeriod('custom', start: picked.start, end: picked.end);
+  }
+
+  String _mapPeriod(String label) {
+    switch (label) {
+      case 'Today':
+        return 'today';
+      case 'Last Week':
+        return 'week';
+      case 'This Month':
+        return 'month';
+      case 'Last Month':
+        return 'last_month';
+      case 'This Quarter':
+        return 'quarter';
+      case 'This Year':
+        return 'year';
+      default:
+        return 'month';
     }
   }
 
-  // ─── KPI Grid ──────────────────────────────────────────────────────────────
+  // ─── KPI Grid (same card style as DashboardScreen _KpiCard) ──────────────
   Widget _buildKpiGrid(bool isTablet) {
     return Obx(() {
-      final data = controller.dashboard.value;
-      final fmt  = Get.find<CurrencyController>().formatAmount;
+      final data = _controller.dashboard.value;
+      final fmt = Get.find<CurrencyController>().formatAmount;
 
       final kpis = [
-        _KpiData(
-          label: 'TOTAL ORDERS',
-          value: '${data?.orders.total ?? 0}',
-          icon:  Icons.receipt_long_outlined,
-          accent: _kBlue,
-          sparkData: const [10, 14, 12, 18, 16, 22, 28],
-          trend: '+12%',
-          trendUp: true,
-        ),
-        _KpiData(
-          label: 'TOTAL SPEND',
+        _KpiItem(
+          label: 'Total Spend',
           value: fmt(data?.invoices.totalSpend ?? 0),
-          icon:  Icons.payments_outlined,
-          accent: _kPurple,
-          sparkData: const [40, 55, 48, 60, 58, 72, 80],
-          trend: '+8.3%',
+          icon: Icons.payments_outlined,
+          iconBg: _kPrimaryBg,
+          iconColor: kPrimary,
+          trend: '${data?.orders.total ?? 0} orders',
           trendUp: true,
         ),
-        _KpiData(
-          label: 'AMOUNT PAID',
+        _KpiItem(
+          label: 'Amount Paid',
           value: fmt(data?.invoices.paidAmount ?? 0),
-          icon:  Icons.check_circle_outline_rounded,
-          accent: _kGreen,
-          sparkData: const [20, 30, 28, 38, 35, 45, 50],
-          trend: '+5.2%',
+          icon: Icons.check_circle_outline_rounded,
+          iconBg: _kGreenBg,
+          iconColor: _kGreen,
+          trend: 'Settled',
           trendUp: true,
         ),
-        _KpiData(
-          label: 'OUTSTANDING',
+        _KpiItem(
+          label: 'Outstanding',
           value: fmt(data?.invoices.outstanding ?? 0),
-          icon:  Icons.schedule_rounded,
-          accent: _kOrange,
-          sparkData: const [15, 20, 18, 25, 22, 28, 18],
-          trend: '-10%',
-          trendUp: false,
+          icon: Icons.schedule_rounded,
+          iconBg: _kOrangeBg,
+          iconColor: _kOrange,
+          trend: (data?.invoices.outstanding ?? 0) > 0 ? 'Pending' : 'Clear',
+          trendUp: (data?.invoices.outstanding ?? 0) <= 0,
         ),
-        _KpiData(
-          label: 'APPROVED',
-          value: '${data?.orders.approved ?? 0}',
-          icon:  Icons.thumb_up_outlined,
-          accent: _kTeal,
-          sparkData: const [5, 8, 6, 10, 9, 12, 14],
-          trend: '+7%',
-          trendUp: true,
-        ),
-        _KpiData(
-          label: 'RETURNS',
+        _KpiItem(
+          label: 'Returns',
           value: '${data?.returns.total ?? 0}',
-          icon:  Icons.assignment_return_outlined,
-          accent: _kRed,
-          sparkData: const [3, 2, 4, 1, 3, 2, 1],
-          trend: '-5%',
-          trendUp: false,
+          icon: Icons.assignment_return_outlined,
+          iconBg: _kRedBg,
+          iconColor: _kRed,
+          trend: (data?.returns.total ?? 0) > 0 ? 'Active' : 'None',
+          trendUp: (data?.returns.total ?? 0) == 0,
         ),
       ];
 
@@ -467,189 +573,190 @@ class _PurchaseDashboardScreenState extends State<PurchaseDashboardScreen> {
         physics: const NeverScrollableScrollPhysics(),
         itemCount: kpis.length,
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: isTablet ? 3 : 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: isTablet ? 1.15 : 0.95,
+          crossAxisCount: isTablet ? 4 : 2,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          childAspectRatio: isTablet ? 1.2 : 1.55,
         ),
-        itemBuilder: (_, i) => _KpiCard(data: kpis[i]),
+        itemBuilder: (_, i) => _KpiCard(item: kpis[i]),
       );
     });
   }
 
-  // ─── Bottom Section ─────────────────────────────────────────────────────────
-  Widget _buildBottomSection(bool isTablet) {
-    if (isTablet) {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(flex: 2, child: _PurchaseHealthPanel(controller: controller)),
-          const SizedBox(width: 12),
-          Expanded(flex: 3, child: _RecentActivitiesPanel(controller: controller)),
-        ],
+  // ─── Financial Overview bars (same as DashboardScreen _buildFinancialOverview)
+  Widget _buildFinancialOverview() {
+    return Obx(() {
+      final data = _controller.dashboard.value;
+      final fmt = Get.find<CurrencyController>().formatAmount;
+
+      final totalSpend = data?.invoices.totalSpend ?? 0.0;
+      final paidAmount = data?.invoices.paidAmount ?? 0.0;
+      final outstanding = data?.invoices.outstanding ?? 0.0;
+      final returnsVal = (data?.returns.total ?? 0).toDouble();
+      final approved = (data?.orders.approved ?? 0).toDouble();
+      final totalOrders = (data?.orders.total ?? 0).toDouble();
+
+      final maxVal = [
+        totalSpend,
+        paidAmount,
+        outstanding,
+        returnsVal,
+        approved,
+        totalOrders,
+      ].fold<double>(0, (a, b) => b > a ? b : a);
+
+      final bars = [
+        _BarItem(
+          'Total Spend',
+          fmt(totalSpend),
+          totalSpend,
+          kPrimary,
+          _kPrimaryBg,
+          'Purchase invoices total',
+        ),
+        _BarItem(
+          'Amount Paid',
+          fmt(paidAmount),
+          paidAmount,
+          _kGreen,
+          _kGreenBg,
+          'Settled invoices',
+        ),
+        _BarItem(
+          'Outstanding',
+          fmt(outstanding),
+          outstanding,
+          _kOrange,
+          _kOrangeBg,
+          'Unpaid invoices',
+        ),
+        _BarItem(
+          'Total Orders',
+          '$totalOrders',
+          totalOrders,
+          _kPurple,
+          _kPurpleBg,
+          'All purchase orders',
+        ),
+        _BarItem(
+          'Approved',
+          '$approved',
+          approved,
+          _kTeal,
+          _kTealBg,
+          'Approved orders',
+        ),
+        _BarItem(
+          'Returns',
+          '$returnsVal',
+          returnsVal,
+          _kRed,
+          _kRedBg,
+          'Returned orders',
+        ),
+      ];
+
+      return _SectionCard(
+        title: 'Purchase overview',
+        trailing: Text(
+          _selectedTimePeriod,
+          style: const TextStyle(fontSize: 12, color: _kTextSub),
+        ),
+        child: Column(children: bars.map((b) => _buildBar(b, maxVal)).toList()),
       );
-    }
-    return Column(
-      children: [
-        _PurchaseHealthPanel(controller: controller),
-        const SizedBox(height: 12),
-        _RecentActivitiesPanel(controller: controller),
-      ],
-    );
+    });
   }
-}
 
-// ════════════════════════════════════════════════════════════════════════════
-// KPI DATA & CARD
-// ════════════════════════════════════════════════════════════════════════════
+  Widget _buildBar(_BarItem item, double maxVal) {
+    final fraction = (maxVal > 0 && item.rawValue > 0)
+        ? (item.rawValue / maxVal).clamp(0.0, 1.0)
+        : 0.0;
 
-class _KpiData {
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color accent;
-  final List<double> sparkData;
-  final String trend;
-  final bool trendUp;
-  const _KpiData({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.accent,
-    required this.sparkData,
-    required this.trend,
-    required this.trendUp,
-  });
-}
-
-class _KpiCard extends StatelessWidget {
-  final _KpiData data;
-  const _KpiCard({required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 13, 14, 10),
-      decoration: BoxDecoration(
-        color: _kCardBg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _kCardBorder),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 3))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  color: data.accent.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(9),
-                ),
-                child: Icon(data.icon, size: 16, color: data.accent),
-              ),
-              _TrendBadge(trend: data.trend, up: data.trendUp),
-            ],
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: item.bgColor,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            alignment: Alignment.center,
+            child: Icon(Icons.circle, size: 8, color: item.color),
           ),
-          const SizedBox(height: 10),
-          Text(
-            data.value,
-            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: _kTextPrimary, letterSpacing: -0.4),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            data.label,
-            style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: _kTextSecondary, letterSpacing: 0.5),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 8),
-          ClipRect(
-            child: SizedBox(
-              height: 32,
-              child: LineChart(
-                LineChartData(
-                  gridData: const FlGridData(show: false),
-                  titlesData: const FlTitlesData(show: false),
-                  borderData: FlBorderData(show: false),
-                  lineTouchData: const LineTouchData(enabled: false),
-                  clipData: const FlClipData.all(),
-                  minX: 0,
-                  maxX: (data.sparkData.length - 1).toDouble(),
-                  minY: data.sparkData.reduce((a, b) => a < b ? a : b) * 0.85,
-                  maxY: data.sparkData.reduce((a, b) => a > b ? a : b) * 1.15,
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: data.sparkData.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value)).toList(),
-                      isCurved: true,
-                      color: data.accent,
-                      barWidth: 2,
-                      isStrokeCapRound: true,
-                      dotData: const FlDotData(show: false),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [data.accent.withValues(alpha: 0.20), data.accent.withValues(alpha: 0.0)],
-                        ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.label,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: _kTextSub,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          if (item.source.isNotEmpty) ...[
+                            const SizedBox(height: 1),
+                            Text(
+                              item.source,
+                              style: const TextStyle(
+                                fontSize: 9,
+                                color: _kTextMuted,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    Text(
+                      item.value,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _kTextPrimary,
                       ),
                     ),
                   ],
                 ),
-              ),
+                const SizedBox(height: 5),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: fraction,
+                    minHeight: 5,
+                    backgroundColor: _kCardBorder,
+                    valueColor: AlwaysStoppedAnimation<Color>(item.color),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
   }
-}
 
-class _TrendBadge extends StatelessWidget {
-  final String trend;
-  final bool up;
-  const _TrendBadge({required this.trend, required this.up});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = up ? _kGreen : _kRed;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.10), borderRadius: BorderRadius.circular(20)),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(up ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded, size: 9, color: color),
-          const SizedBox(width: 2),
-          Text(trend, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: color)),
-        ],
-      ),
-    );
-  }
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// SPEND TREND CHART  (mirrors StockTrendChart)
-// ════════════════════════════════════════════════════════════════════════════
-
-class _PurchaseSpendChart extends StatelessWidget {
-  final PurchaseController controller;
-  const _PurchaseSpendChart({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
+  // ─── Spend Trend Chart (wrapped in SectionCard matching dashboard style) ──
+  Widget _buildSpendTrendCard() {
     return Obx(() {
-      final trend = controller.spendTrend;
+      final trend = _controller.spendTrend;
 
       final List<double> invoiceData = [];
-      final List<double> orderData   = [];
-      final List<String> labels      = [];
+      final List<double> orderData = [];
+      final List<String> labels = [];
 
       if (trend.isNotEmpty) {
         for (final p in trend) {
@@ -658,18 +765,28 @@ class _PurchaseSpendChart extends StatelessWidget {
           labels.add(p.label.isNotEmpty ? p.label : p.date.split('-').last);
         }
       } else {
-        invoiceData.addAll([0.0, 0, 0, 0, 0, 0, 0]);
-        orderData.addAll([0.0, 0, 0, 0, 0, 0, 0]);
+        invoiceData.addAll([0, 0, 0, 0, 0, 0, 0]);
+        orderData.addAll([0, 0, 0, 0, 0, 0, 0]);
         labels.addAll(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']);
       }
 
-      return _ChartCard(
-        title: 'Spend Trend',
-        subtitle: controller.getPeriodLabel(),
-        legend: const [
-          _LegendDot(color: _kPurple, label: 'Invoiced'),
-          _LegendDot(color: _kBlue,   label: 'Ordered'),
-        ],
+      final maxA = invoiceData.isEmpty
+          ? 0.0
+          : invoiceData.reduce((a, b) => a > b ? a : b);
+      final maxB = orderData.isEmpty
+          ? 0.0
+          : orderData.reduce((a, b) => a > b ? a : b);
+      final maxY = (maxA > maxB ? maxA : maxB) * 1.2;
+
+      return _SectionCard(
+        title: 'Spend trend',
+        trailing: Row(
+          children: [
+            _legendDot(_kPurple, 'Invoiced'),
+            const SizedBox(width: 12),
+            _legendDot(kPrimary, 'Ordered'),
+          ],
+        ),
         child: SizedBox(
           height: 190,
           child: LineChart(
@@ -677,18 +794,22 @@ class _PurchaseSpendChart extends StatelessWidget {
               gridData: FlGridData(
                 show: true,
                 drawVerticalLine: false,
-                horizontalInterval: 20,
-                getDrawingHorizontalLine: (_) => FlLine(color: _kCardBorder, strokeWidth: 1),
+                getDrawingHorizontalLine: (_) =>
+                    const FlLine(color: _kCardBorder, strokeWidth: 1),
               ),
               titlesData: FlTitlesData(
                 leftTitles: AxisTitles(
                   sideTitles: SideTitles(
                     showTitles: true,
                     reservedSize: 40,
-                    interval: 20,
                     getTitlesWidget: (v, _) {
-                      final lbl = v >= 1000 ? '${(v / 1000).toStringAsFixed(0)}k' : v.toInt().toString();
-                      return Text(lbl, style: const TextStyle(fontSize: 9, color: _kTextSecondary));
+                      final lbl = v >= 1000
+                          ? '${(v / 1000).toStringAsFixed(0)}k'
+                          : v.toInt().toString();
+                      return Text(
+                        lbl,
+                        style: const TextStyle(fontSize: 9, color: _kTextSub),
+                      );
                     },
                   ),
                 ),
@@ -696,38 +817,37 @@ class _PurchaseSpendChart extends StatelessWidget {
                   sideTitles: SideTitles(
                     showTitles: true,
                     reservedSize: 22,
-                    interval: labels.length > 6 ? (labels.length / 4).ceilToDouble() : 1,
+                    interval: labels.length > 6
+                        ? (labels.length / 4).ceilToDouble()
+                        : 1,
                     getTitlesWidget: (v, _) {
                       final i = v.toInt();
                       if (i < 0 || i >= labels.length) return const SizedBox();
                       return Padding(
                         padding: const EdgeInsets.only(top: 4),
-                        child: Text(labels[i], style: const TextStyle(fontSize: 9, color: _kTextSecondary)),
+                        child: Text(
+                          labels[i],
+                          style: const TextStyle(fontSize: 9, color: _kTextSub),
+                        ),
                       );
                     },
                   ),
                 ),
-                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                topTitles:   const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              ),
-              borderData: FlBorderData(show: false),
-              lineTouchData: LineTouchData(
-                touchTooltipData: LineTouchTooltipData(
-                  getTooltipColor: (_) => _kTextPrimary,
-                  tooltipBorder: const BorderSide(color: _kCardBorder),
-                  getTooltipItems: (spots) => spots.map((s) => LineTooltipItem(
-                    s.y.toStringAsFixed(0),
-                    TextStyle(color: s.barIndex == 0 ? _kPurple : _kBlue, fontSize: 11, fontWeight: FontWeight.w700),
-                  )).toList(),
+                rightTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                topTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
                 ),
               ),
+              borderData: FlBorderData(show: false),
               minX: 0,
               maxX: (labels.length - 1).toDouble(),
               minY: 0,
-              maxY: _maxY(invoiceData, orderData),
+              maxY: maxY > 0 ? maxY : 100,
               lineBarsData: [
                 _buildLine(invoiceData, _kPurple),
-                _buildLine(orderData,   _kBlue),
+                _buildLine(orderData, kPrimary),
               ],
             ),
           ),
@@ -736,52 +856,61 @@ class _PurchaseSpendChart extends StatelessWidget {
     });
   }
 
-  LineChartBarData _buildLine(List<double> data, Color color) => LineChartBarData(
-    spots: data.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value)).toList(),
-    isCurved: true,
-    color: color,
-    barWidth: 2.5,
-    isStrokeCapRound: true,
-    dotData: FlDotData(
-      show: true,
-      getDotPainter: (_, __, ___, ____) => FlDotCirclePainter(radius: 3, color: color, strokeWidth: 0),
-    ),
-    belowBarData: BarAreaData(
-      show: true,
-      gradient: LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [color.withValues(alpha: 0.15), color.withValues(alpha: 0.0)],
-      ),
-    ),
-  );
+  LineChartBarData _buildLine(List<double> data, Color color) =>
+      LineChartBarData(
+        spots: data
+            .asMap()
+            .entries
+            .map((e) => FlSpot(e.key.toDouble(), e.value))
+            .toList(),
+        isCurved: true,
+        color: color,
+        barWidth: 2.5,
+        isStrokeCapRound: true,
+        dotData: FlDotData(
+          show: true,
+          getDotPainter: (_, __, ___, ____) =>
+              FlDotCirclePainter(radius: 3, color: color, strokeWidth: 0),
+        ),
+        belowBarData: BarAreaData(
+          show: true,
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [color.withOpacity(0.15), color.withOpacity(0.0)],
+          ),
+        ),
+      );
 
-  double _maxY(List<double> a, List<double> b) {
-    final maxA = a.isEmpty ? 0.0 : a.reduce((x, y) => x > y ? x : y);
-    final maxB = b.isEmpty ? 0.0 : b.reduce((x, y) => x > y ? x : y);
-    final m    = maxA > maxB ? maxA : maxB;
-    return m > 0 ? m * 1.2 : 100;
+  Widget _legendDot(Color color, String label) {
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 4),
+        Text(label, style: const TextStyle(fontSize: 10, color: _kTextSub)),
+      ],
+    );
   }
-}
 
-// ════════════════════════════════════════════════════════════════════════════
-// ORDER STATUS PIE CHART  (mirrors CategoryDistributionChart)
-// ════════════════════════════════════════════════════════════════════════════
-
-class _PurchaseOrderStatusChart extends StatelessWidget {
-  final PurchaseController controller;
-  const _PurchaseOrderStatusChart({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
+  // ─── Order Status Pie Chart ───────────────────────────────────────────────
+  Widget _buildOrderStatusCard() {
     return Obx(() {
-      final statuses = controller.orderStatuses.where((s) => s.count > 0).toList();
+      final statuses = _controller.orderStatuses
+          .where((s) => s.count > 0)
+          .toList();
 
-      return _ChartCard(
-        title: 'Orders by Status',
-        subtitle: 'Purchase order breakdown',
+      return _SectionCard(
+        title: 'Orders by status',
+        trailing: Text(
+          '${statuses.fold(0, (s, e) => s + e.count)} total',
+          style: const TextStyle(fontSize: 12, color: _kTextSub),
+        ),
         child: SizedBox(
-          height: 190,
+          height: 180,
           child: statuses.isNotEmpty
               ? Row(
                   children: [
@@ -790,20 +919,28 @@ class _PurchaseOrderStatusChart extends StatelessWidget {
                       child: PieChart(
                         PieChartData(
                           sectionsSpace: 2,
-                          centerSpaceRadius: 40,
+                          centerSpaceRadius: 38,
                           sections: statuses.asMap().entries.map((entry) {
                             Color color;
                             try {
-                              color = Color(int.parse(entry.value.color.replaceAll('#', '0xFF')));
+                              color = Color(
+                                int.parse(
+                                  entry.value.color.replaceAll('#', '0xFF'),
+                                ),
+                              );
                             } catch (_) {
-                              color = _kBlue;
+                              color = kPrimary;
                             }
                             return PieChartSectionData(
                               color: color,
                               value: entry.value.count.toDouble(),
                               title: '${entry.value.count}',
-                              radius: 35,
-                              titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                              radius: 34,
+                              titleStyle: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             );
                           }).toList(),
                         ),
@@ -817,23 +954,45 @@ class _PurchaseOrderStatusChart extends StatelessWidget {
                         children: statuses.take(6).map((s) {
                           Color color;
                           try {
-                            color = Color(int.parse(s.color.replaceAll('#', '0xFF')));
+                            color = Color(
+                              int.parse(s.color.replaceAll('#', '0xFF')),
+                            );
                           } catch (_) {
-                            color = _kBlue;
+                            color = kPrimary;
                           }
                           final name = s.status.isNotEmpty
-                              ? s.status[0].toUpperCase() + s.status.substring(1)
+                              ? s.status[0].toUpperCase() +
+                                    s.status.substring(1)
                               : 'Unknown';
                           return Padding(
-                            padding: const EdgeInsets.only(bottom: 6),
+                            padding: const EdgeInsets.only(bottom: 8),
                             child: Row(
                               children: [
-                                Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-                                const SizedBox(width: 6),
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
                                     name,
-                                    style: const TextStyle(fontSize: 11, color: _kTextSecondary, overflow: TextOverflow.ellipsis),
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: _kTextSub,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Text(
+                                  '${s.count}',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: _kTextPrimary,
                                   ),
                                 ),
                               ],
@@ -848,9 +1007,16 @@ class _PurchaseOrderStatusChart extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.pie_chart_outline, size: 32, color: _kTextSecondary.withValues(alpha: 0.4)),
+                      const Icon(
+                        Icons.pie_chart_outline,
+                        size: 32,
+                        color: _kTextMuted,
+                      ),
                       const SizedBox(height: 8),
-                      const Text('No order data available', style: TextStyle(fontSize: 12, color: _kTextSecondary)),
+                      const Text(
+                        'No order data available',
+                        style: TextStyle(fontSize: 12, color: _kTextSub),
+                      ),
                     ],
                   ),
                 ),
@@ -858,303 +1024,391 @@ class _PurchaseOrderStatusChart extends StatelessWidget {
       );
     });
   }
-}
 
-// ════════════════════════════════════════════════════════════════════════════
-// PURCHASE HEALTH PANEL  (mirrors StockHealthPanel)
-// ════════════════════════════════════════════════════════════════════════════
-
-class _PurchaseHealthPanel extends StatelessWidget {
-  final PurchaseController controller;
-  const _PurchaseHealthPanel({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
+  // ─── Purchase Health (bar rows, same style as _buildKpiSources) ──────────
+  Widget _buildPurchaseHealth() {
     return Obx(() {
-      final data = controller.dashboard.value;
-      final fmt  = Get.find<CurrencyController>().formatAmount;
+      final data = _controller.dashboard.value;
 
       final items = [
-        _HealthItem('Approved Orders', data?.orders.approved ?? 0, Icons.thumb_up_outlined,           _kGreen),
-        _HealthItem('Draft Orders',    data?.orders.draft    ?? 0, Icons.edit_outlined,                _kBlue),
-        _HealthItem('Sent Orders',     data?.orders.sent     ?? 0, Icons.send_outlined,                _kTeal),
-        _HealthItem('Returns',         data?.returns.total   ?? 0, Icons.assignment_return_outlined,   _kOrange),
-        _HealthItem('Cancelled',       data?.orders.cancelled ?? 0, Icons.cancel_outlined,             _kRed),
+        (
+          'Approved Orders',
+          data?.orders.approved ?? 0,
+          Icons.thumb_up_outlined,
+          _kGreen,
+          _kGreenBg,
+        ),
+        (
+          'Draft Orders',
+          data?.orders.draft ?? 0,
+          Icons.edit_outlined,
+          kPrimary,
+          _kPrimaryBg,
+        ),
+        (
+          'Sent Orders',
+          data?.orders.sent ?? 0,
+          Icons.send_outlined,
+          _kTeal,
+          _kTealBg,
+        ),
+        (
+          'Returns',
+          data?.returns.total ?? 0,
+          Icons.assignment_return_outlined,
+          _kOrange,
+          _kOrangeBg,
+        ),
+        (
+          'Cancelled',
+          data?.orders.cancelled ?? 0,
+          Icons.cancel_outlined,
+          _kRed,
+          _kRedBg,
+        ),
       ];
 
-      final total = items.fold<int>(0, (s, i) => s + i.count);
+      final total = items.fold<int>(0, (s, i) => s + i.$2);
 
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: _kCardBg,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: _kCardBorder),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 3))],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Expanded(child: _SectionTitle('Purchase Health', subtitle: 'Order status summary')),
-                if (total > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: _kBlue.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: _kBlue.withValues(alpha: 0.25)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.info_outline_rounded, size: 10, color: _kBlue),
-                        const SizedBox(width: 3),
-                        Text('$total orders', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: _kBlue)),
-                      ],
-                    ),
+      return _SectionCard(
+        title: 'Purchase health',
+        trailing: total > 0
+            ? Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: _kPrimaryBg,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '$total orders',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: kPrimary,
                   ),
-              ],
-            ),
-            const SizedBox(height: 14),
+                ),
+              )
+            : null,
+        child: Column(
+          children: [
             if (total > 0) ...[
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: Row(
-                  children: items.where((i) => i.count > 0).map((item) {
-                    return Expanded(flex: item.count, child: Container(height: 6, color: item.color));
-                  }).toList(),
+                  children: items
+                      .where((i) => i.$2 > 0)
+                      .map(
+                        (item) => Expanded(
+                          flex: item.$2,
+                          child: Container(height: 5, color: item.$4),
+                        ),
+                      )
+                      .toList(),
                 ),
               ),
               const SizedBox(height: 14),
             ],
-            ...items.map((item) => _HealthRow(item: item)),
+            ...items.asMap().entries.map((e) {
+              final isLast = e.key == items.length - 1;
+              final item = e.value;
+              final hasCount = item.$2 > 0;
+              return Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: hasCount ? item.$5 : _kCardBorder,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            item.$3,
+                            size: 14,
+                            color: hasCount ? item.$4 : _kTextMuted,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            item.$1,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: hasCount
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                              color: hasCount ? _kTextPrimary : _kTextSub,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: hasCount ? item.$5 : _kCardBorder,
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            '${item.$2}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: hasCount ? item.$4 : _kTextMuted,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (!isLast)
+                    const Divider(
+                      height: 1,
+                      thickness: 0.5,
+                      color: _kCardBorder,
+                    ),
+                ],
+              );
+            }),
           ],
         ),
       );
     });
   }
-}
 
-class _HealthItem {
-  final String label;
-  final int count;
-  final IconData icon;
-  final Color color;
-  const _HealthItem(this.label, this.count, this.icon, this.color);
-}
-
-class _HealthRow extends StatelessWidget {
-  final _HealthItem item;
-  const _HealthRow({required this.item});
-
-  @override
-  Widget build(BuildContext context) {
-    final isAlert = item.count > 0;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        gradient: isAlert
-            ? LinearGradient(
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-                colors: [item.color.withValues(alpha: 0.08), item.color.withValues(alpha: 0.02)],
-              )
-            : null,
-        color: isAlert ? null : const Color(0xFFF8F9FC),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: isAlert ? item.color.withValues(alpha: 0.25) : _kCardBorder),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              color: isAlert ? item.color.withValues(alpha: 0.12) : _kCardBorder,
-              borderRadius: BorderRadius.circular(7),
-            ),
-            child: Icon(item.icon, size: 13, color: isAlert ? item.color : _kTextSecondary),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              item.label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isAlert ? FontWeight.w600 : FontWeight.w400,
-                color: isAlert ? _kTextPrimary : _kTextSecondary,
-              ),
-            ),
-          ),
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: isAlert ? item.color.withValues(alpha: 0.15) : _kCardBorder,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                '${item.count}',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: isAlert ? item.color : _kTextSecondary),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// RECENT ACTIVITIES PANEL  (mirrors RecentActivitiesPanel)
-// ════════════════════════════════════════════════════════════════════════════
-
-class _RecentActivitiesPanel extends StatelessWidget {
-  final PurchaseController controller;
-  const _RecentActivitiesPanel({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
+  // ─── Recent Activity (same transaction tile style as DashboardScreen) ─────
+  Widget _buildRecentActivity() {
     return Obx(() {
-      final shown = controller.activities.length > 6
-          ? controller.activities.sublist(0, 6)
-          : controller.activities.toList();
+      final shown = _controller.activities.length > 5
+          ? _controller.activities.sublist(0, 5)
+          : _controller.activities.toList();
 
-      return Container(
-        decoration: BoxDecoration(
-          color: _kCardBg,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: _kCardBorder),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 3))],
-        ),
+      if (shown.isEmpty) return const SizedBox.shrink();
+
+      return _SectionCard(
+        title: 'Recent activity',
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 14, 16, 0),
-              child: _SectionTitle('Recent Activity', subtitle: 'Latest purchase events'),
-            ),
-            const SizedBox(height: 10),
-            if (shown.isEmpty)
-              Padding(
-                padding: const EdgeInsets.all(28),
-                child: Center(
-                  child: Column(
+          children: shown.asMap().entries.map((e) {
+            final activity = e.value;
+            final isLast = e.key == shown.length - 1;
+
+            Color color;
+            IconData icon;
+            switch (activity.type) {
+              case 'invoice':
+                color = _kPurple;
+                icon = Icons.description_outlined;
+                break;
+              case 'return':
+                color = _kOrange;
+                icon = Icons.assignment_return_outlined;
+                break;
+              case 'payment':
+                color = _kGreen;
+                icon = Icons.payments_outlined;
+                break;
+              default:
+                color = kPrimary;
+                icon = Icons.receipt_long_outlined;
+            }
+
+            final date = DateTime.tryParse(activity.createdAt);
+            final diff = date != null
+                ? DateTime.now().difference(date)
+                : Duration.zero;
+            String timeAgo;
+            if (date == null) {
+              timeAgo = '';
+            } else if (diff.inDays > 7) {
+              timeAgo = '${date.day}/${date.month}';
+            } else if (diff.inDays > 0) {
+              timeAgo = '${diff.inDays}d ago';
+            } else if (diff.inHours > 0) {
+              timeAgo = '${diff.inHours}h ago';
+            } else if (diff.inMinutes > 0) {
+              timeAgo = '${diff.inMinutes}m ago';
+            } else {
+              timeAgo = 'Just now';
+            }
+
+            final bg = activity.type == 'invoice'
+                ? _kPurpleBg
+                : activity.type == 'return'
+                ? _kOrangeBg
+                : activity.type == 'payment'
+                ? _kGreenBg
+                : _kPrimaryBg;
+
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Row(
                     children: [
-                      Icon(Icons.inbox_outlined, size: 34, color: _kTextSecondary.withValues(alpha: 0.35)),
-                      const SizedBox(height: 8),
-                      const Text('No recent activity', style: TextStyle(fontSize: 12, color: _kTextSecondary)),
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: bg,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(icon, size: 18, color: color),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              activity.action,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: _kTextPrimary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            if (activity.details.isNotEmpty) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                activity.details,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: _kTextMuted,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            timeAgo,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: _kTextMuted,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: bg,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              activity.type[0].toUpperCase() +
+                                  activity.type.substring(1),
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: color,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
-              )
-            else
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: shown.length,
-                separatorBuilder: (_, __) => const Divider(height: 1, color: _kCardBorder, indent: 16, endIndent: 16),
-                itemBuilder: (_, i) => _ActivityTile(activity: shown[i]),
-              ),
-            const SizedBox(height: 6),
-          ],
+                if (!isLast)
+                  const Divider(height: 1, thickness: 0.5, color: _kCardBorder),
+              ],
+            );
+          }).toList(),
         ),
       );
     });
   }
-}
 
-class _ActivityTile extends StatelessWidget {
-  final PurchaseActivity activity;
-  const _ActivityTile({required this.activity});
+  // ─── Quick Actions (same 4-icon row as DashboardScreen) ──────────────────
+  Widget _buildQuickActions() {
+    final actions = [
+      _QuickAction(
+        'New Order',
+        Icons.add_circle_outline_rounded,
+        kPrimary,
+        _kPrimaryBg,
+        () => Get.snackbar('Purchase', 'New order coming soon'),
+      ),
+      _QuickAction(
+        'Receive',
+        Icons.inventory_2_outlined,
+        _kGreen,
+        _kGreenBg,
+        () => Get.snackbar('Purchase', 'Receive goods coming soon'),
+      ),
+      _QuickAction(
+        'Invoice',
+        Icons.receipt_long_outlined,
+        _kPurple,
+        _kPurpleBg,
+        () => Get.snackbar('Purchase', 'Invoices coming soon'),
+      ),
+      _QuickAction(
+        'Return',
+        Icons.assignment_return_outlined,
+        _kOrange,
+        _kOrangeBg,
+        () => Get.snackbar('Purchase', 'Returns coming soon'),
+      ),
+    ];
 
-  static const _typeColors = {
-    'order':   _kBlue,
-    'invoice': _kPurple,
-    'return':  _kOrange,
-  };
-  static const _typeIcons = {
-    'order':   Icons.receipt_long_outlined,
-    'invoice': Icons.description_outlined,
-    'return':  Icons.assignment_return_outlined,
-  };
-
-  String _timeAgo(String raw) {
-    final date = DateTime.tryParse(raw);
-    if (date == null) return '';
-    final diff = DateTime.now().difference(date);
-    if (diff.inDays > 7)     return '${date.day}/${date.month}';
-    if (diff.inDays > 0)     return '${diff.inDays}d ago';
-    if (diff.inHours > 0)    return '${diff.inHours}h ago';
-    if (diff.inMinutes > 0)  return '${diff.inMinutes}m ago';
-    return 'Just now';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final color = _typeColors[activity.type] ?? _kBlue;
-    final icon  = _typeIcons[activity.type]  ?? Icons.receipt_long_outlined;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+    return _SectionCard(
+      title: 'Quick actions',
       child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [color.withValues(alpha: 0.6), color],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(9),
-            ),
-            child: Center(child: Icon(icon, size: 15, color: Colors.white)),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  activity.action,
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _kTextPrimary),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (activity.details.isNotEmpty)
-                  Text(
-                    activity.details,
-                    style: const TextStyle(fontSize: 10, color: _kTextSecondary),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+        children: actions.map((a) {
+          return Expanded(
+            child: GestureDetector(
+              onTap: a.onTap,
+              child: Column(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: a.bg,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(a.icon, size: 22, color: a.color),
                   ),
-              ],
+                  const SizedBox(height: 6),
+                  Text(
+                    a.label,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: _kTextPrimary,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Text(_timeAgo(activity.createdAt), style: const TextStyle(fontSize: 10, color: _kTextSecondary)),
-        ],
+          );
+        }).toList(),
       ),
     );
   }
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// SHARED WIDGETS  (identical structure to warehouse dashboard)
-// ════════════════════════════════════════════════════════════════════════════
-
-class _ChartCard extends StatelessWidget {
+// ─── Section Card wrapper (identical to DashboardScreen) ──────────────────
+class _SectionCard extends StatelessWidget {
   final String title;
-  final String? subtitle;
+  final Widget? trailing;
   final Widget child;
-  final List<_LegendDot>? legend;
 
-  const _ChartCard({required this.title, this.subtitle, required this.child, this.legend});
+  const _SectionCard({required this.title, required this.child, this.trailing});
 
   @override
   Widget build(BuildContext context) {
@@ -1162,9 +1416,8 @@ class _ChartCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: _kCardBg,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _kCardBorder),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 3))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1172,9 +1425,15 @@ class _ChartCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _SectionTitle(title, subtitle: subtitle),
-              if (legend != null)
-                Row(children: legend!.map((l) => Padding(padding: const EdgeInsets.only(left: 12), child: l)).toList()),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: _kTextPrimary,
+                ),
+              ),
+              if (trailing != null) trailing!,
             ],
           ),
           const SizedBox(height: 14),
@@ -1185,37 +1444,143 @@ class _ChartCard extends StatelessWidget {
   }
 }
 
-class _LegendDot extends StatelessWidget {
-  final Color color;
+// ─── KPI Card (identical to DashboardScreen _KpiCard) ─────────────────────
+class _KpiItem {
   final String label;
-  const _LegendDot({required this.color, required this.label});
+  final String value;
+  final IconData icon;
+  final Color iconBg;
+  final Color iconColor;
+  final String trend;
+  final bool trendUp;
+
+  const _KpiItem({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.iconBg,
+    required this.iconColor,
+    required this.trend,
+    required this.trendUp,
+  });
+}
+
+class _KpiCard extends StatelessWidget {
+  final _KpiItem item;
+  const _KpiCard({required this.item});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-        const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 9, color: _kTextSecondary)),
-      ],
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _kCardBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _kCardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: item.iconBg,
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Icon(item.icon, size: 17, color: item.iconColor),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                decoration: BoxDecoration(
+                  color: item.trendUp ? _kGreenBg : _kRedBg,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      item.trendUp
+                          ? Icons.arrow_upward_rounded
+                          : Icons.arrow_downward_rounded,
+                      size: 9,
+                      color: item.trendUp ? _kGreen : _kRed,
+                    ),
+                    const SizedBox(width: 2),
+                    Text(
+                      item.trend,
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: item.trendUp ? _kGreen : _kRed,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                item.value,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: _kTextPrimary,
+                  letterSpacing: -0.3,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                item.label,
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: _kTextSub,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  final String title;
-  final String? subtitle;
-  const _SectionTitle(this.title, {this.subtitle});
+// ─── Bar Item model ────────────────────────────────────────────────────────
+class _BarItem {
+  final String label;
+  final String value;
+  final double rawValue;
+  final Color color;
+  final Color bgColor;
+  final String source;
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _kTextPrimary)),
-        if (subtitle != null)
-          Text(subtitle!, style: const TextStyle(fontSize: 10, color: _kTextSecondary)),
-      ],
-    );
-  }
+  const _BarItem(
+    this.label,
+    this.value,
+    this.rawValue,
+    this.color,
+    this.bgColor, [
+    this.source = '',
+  ]);
+}
+
+// ─── Quick Action model ────────────────────────────────────────────────────
+class _QuickAction {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final Color bg;
+  final VoidCallback onTap;
+
+  const _QuickAction(this.label, this.icon, this.color, this.bg, this.onTap);
 }

@@ -1,13 +1,13 @@
 // lib/core/transactions/controller/transaction_controller.dart - FIXED
 
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'dart:convert';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:LedgerPro_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:sizer/sizer.dart';
 
 class TransactionController extends GetxController {

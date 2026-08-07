@@ -1,9 +1,9 @@
 // lib/core/warehouse/goods_receiving/views/goods_receiving_screen.dart
 
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/core/goodsRecieving/goods_receiving_controller.dart';
-import 'package:LedgerPro_app/core/goodsRecieving/goods_receiving_model.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/core/goodsRecieving/goods_receiving_controller.dart';
+import 'package:BisonsTechs_app/core/goodsRecieving/goods_receiving_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -98,26 +98,43 @@ class GoodsReceivingScreen extends StatelessWidget {
                             letterSpacing: -0.3,
                           ),
                         ),
-                        Obx(() => Text(
-                          '${controller.totalRecords.value} GRNs',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.black.withOpacity(0.55),
-                            fontWeight: FontWeight.w500,
+                        Obx(
+                          () => Text(
+                            '${controller.totalRecords.value} GRNs',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.black.withOpacity(0.55),
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        )),
+                        ),
                       ],
                     ),
                   ),
-                  Obx(() => Row(
-                    children: [
-                      _compactKpi('Draft', controller.stats.value.draftCount.toString(), Colors.orange.shade800),
-                      const SizedBox(width: 6),
-                      _compactKpi('Partial', controller.stats.value.partiallyReceivedCount.toString(), Colors.blue.shade800),
-                      const SizedBox(width: 6),
-                      _compactKpi('Received', controller.stats.value.fullyReceivedCount.toString(), Colors.green.shade800),
-                    ],
-                  )),
+                  Obx(
+                    () => Row(
+                      children: [
+                        _compactKpi(
+                          'Draft',
+                          controller.stats.value.draftCount.toString(),
+                          Colors.orange.shade800,
+                        ),
+                        const SizedBox(width: 6),
+                        _compactKpi(
+                          'Partial',
+                          controller.stats.value.partiallyReceivedCount
+                              .toString(),
+                          Colors.blue.shade800,
+                        ),
+                        const SizedBox(width: 6),
+                        _compactKpi(
+                          'Received',
+                          controller.stats.value.fullyReceivedCount.toString(),
+                          Colors.green.shade800,
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(width: 10),
                   GestureDetector(
                     onTap: controller.refreshGRNs,
@@ -128,7 +145,11 @@ class GoodsReceivingScreen extends StatelessWidget {
                         color: Colors.black.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(9),
                       ),
-                      child: Icon(Icons.refresh_rounded, size: 17, color: Colors.black.withOpacity(0.65)),
+                      child: Icon(
+                        Icons.refresh_rounded,
+                        size: 17,
+                        color: Colors.black.withOpacity(0.65),
+                      ),
                     ),
                   ),
                 ],
@@ -152,18 +173,36 @@ class GoodsReceivingScreen extends StatelessWidget {
                 child: _SearchField(controller: controller),
               ),
             ),
-            Obx(() => SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-              child: Row(
-                children: [
-                  _filterChip('All', controller.selectedFilter.value == 'all', () => controller.filterGRNs('all')),
-                  _filterChip('Draft', controller.selectedFilter.value == 'Draft', () => controller.filterGRNs('Draft')),
-                  _filterChip('Partial', controller.selectedFilter.value == 'Partially Received', () => controller.filterGRNs('Partially Received')),
-                  _filterChip('Received', controller.selectedFilter.value == 'Fully Received', () => controller.filterGRNs('Fully Received')),
-                ],
+            Obx(
+              () => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                child: Row(
+                  children: [
+                    _filterChip(
+                      'All',
+                      controller.selectedFilter.value == 'all',
+                      () => controller.filterGRNs('all'),
+                    ),
+                    _filterChip(
+                      'Draft',
+                      controller.selectedFilter.value == 'Draft',
+                      () => controller.filterGRNs('Draft'),
+                    ),
+                    _filterChip(
+                      'Partial',
+                      controller.selectedFilter.value == 'Partially Received',
+                      () => controller.filterGRNs('Partially Received'),
+                    ),
+                    _filterChip(
+                      'Received',
+                      controller.selectedFilter.value == 'Fully Received',
+                      () => controller.filterGRNs('Fully Received'),
+                    ),
+                  ],
+                ),
               ),
-            )),
+            ),
           ],
         ),
       ),
@@ -174,8 +213,22 @@ class GoodsReceivingScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: color)),
-        Text(label, style: TextStyle(fontSize: 9, color: Colors.black.withOpacity(0.5), fontWeight: FontWeight.w600)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 9,
+            color: Colors.black.withOpacity(0.5),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
     );
   }
@@ -191,7 +244,9 @@ class GoodsReceivingScreen extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected ? Colors.black : Colors.white.withOpacity(0.18),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: selected ? Colors.black : Colors.white.withOpacity(0.4)),
+            border: Border.all(
+              color: selected ? Colors.black : Colors.white.withOpacity(0.4),
+            ),
           ),
           child: Text(
             label,
@@ -206,7 +261,11 @@ class GoodsReceivingScreen extends StatelessWidget {
     );
   }
 
-  void _showDetail(BuildContext context, GoodsReceivingController controller, GoodsReceivingModel item) {
+  void _showDetail(
+    BuildContext context,
+    GoodsReceivingController controller,
+    GoodsReceivingModel item,
+  ) {
     controller.selectGRN(item);
     showModalBottomSheet(
       context: context,
@@ -279,7 +338,9 @@ class _SearchFieldState extends State<_SearchField> {
       controller: _searchCtrl,
       onChanged: (v) {
         setState(() {});
-        v.isEmpty ? widget.controller.clearSearch() : widget.controller.searchGRNs(v);
+        v.isEmpty
+            ? widget.controller.clearSearch()
+            : widget.controller.searchGRNs(v);
       },
       style: const TextStyle(fontSize: 13, color: Colors.black87),
       decoration: InputDecoration(
@@ -297,7 +358,10 @@ class _SearchFieldState extends State<_SearchField> {
               )
             : null,
         border: InputBorder.none,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 11,
+        ),
         isDense: true,
       ),
     );
@@ -312,10 +376,7 @@ class _CreateGRNWizard extends StatelessWidget {
   final GoodsReceivingController controller;
   final VoidCallback onCancel;
 
-  const _CreateGRNWizard({
-    required this.controller,
-    required this.onCancel,
-  });
+  const _CreateGRNWizard({required this.controller, required this.onCancel});
 
   @override
   Widget build(BuildContext context) {
@@ -405,7 +466,10 @@ class _CreateGRNWizard extends StatelessWidget {
         onChanged: controller.searchOrders,
       ),
       if (controller.isSearchingOrders.value)
-        const Padding(padding: EdgeInsets.all(8), child: Center(child: CircularProgressIndicator())),
+        const Padding(
+          padding: EdgeInsets.all(8),
+          child: Center(child: CircularProgressIndicator()),
+        ),
       ...controller.orderSearchResults.map(_orderTile),
       if (controller.selectedOrder.value != null)
         _selectedOrderCard(controller.selectedOrder.value!),
@@ -432,23 +496,40 @@ class _CreateGRNWizard extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(line.productName, style: const TextStyle(fontWeight: FontWeight.w600)),
-                            Text('SKU: ${line.sku}', style: TextStyle(fontSize: 11, color: kSubText)),
+                            Text(
+                              line.productName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              'SKU: ${line.sku}',
+                              style: TextStyle(fontSize: 11, color: kSubText),
+                            ),
                           ],
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
-                          color: line.isFullyReceived ? Colors.green.withOpacity(0.1) : Colors.blue.withOpacity(0.1),
+                          color: line.isFullyReceived
+                              ? Colors.green.withOpacity(0.1)
+                              : Colors.blue.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          line.isFullyReceived ? 'Complete' : '${line.alreadyReceived}/${line.orderedQuantity}',
+                          line.isFullyReceived
+                              ? 'Complete'
+                              : '${line.alreadyReceived}/${line.orderedQuantity}',
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
-                            color: line.isFullyReceived ? Colors.green : Colors.blue,
+                            color: line.isFullyReceived
+                                ? Colors.green
+                                : Colors.blue,
                           ),
                         ),
                       ),
@@ -457,14 +538,42 @@ class _CreateGRNWizard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Text('Ordered: ', style: TextStyle(fontSize: 11, color: kSubText)),
-                      Text('${line.orderedQuantity}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                      Text(
+                        'Ordered: ',
+                        style: TextStyle(fontSize: 11, color: kSubText),
+                      ),
+                      Text(
+                        '${line.orderedQuantity}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       const SizedBox(width: 12),
-                      Text('Received: ', style: TextStyle(fontSize: 11, color: kSubText)),
-                      Text('${line.alreadyReceived}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
+                      Text(
+                        'Received: ',
+                        style: TextStyle(fontSize: 11, color: kSubText),
+                      ),
+                      Text(
+                        '${line.alreadyReceived}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       const SizedBox(width: 12),
-                      Text('Remaining: ', style: TextStyle(fontSize: 11, color: kSubText)),
-                      Text('${line.remainingQuantity}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: kPrimary)),
+                      Text(
+                        'Remaining: ',
+                        style: TextStyle(fontSize: 11, color: kSubText),
+                      ),
+                      Text(
+                        '${line.remainingQuantity}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: kPrimary,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -472,7 +581,9 @@ class _CreateGRNWizard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: TextFormField(
-                          initialValue: line.receivingQuantity > 0 ? line.receivingQuantity.toString() : '',
+                          initialValue: line.receivingQuantity > 0
+                              ? line.receivingQuantity.toString()
+                              : '',
                           keyboardType: TextInputType.number,
                           decoration: InputDecoration(
                             labelText: 'Receiving Qty',
@@ -480,7 +591,10 @@ class _CreateGRNWizard extends StatelessWidget {
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 8,
+                            ),
                             suffixText: line.unit,
                             suffixStyle: TextStyle(color: kSubText),
                           ),
@@ -488,7 +602,10 @@ class _CreateGRNWizard extends StatelessWidget {
                             final q = int.tryParse(v) ?? 0;
                             if (index < controller.lineDrafts.length) {
                               final updatedLine = controller.lineDrafts[index];
-                              updatedLine.receivingQuantity = q.clamp(0, line.remainingQuantity);
+                              updatedLine.receivingQuantity = q.clamp(
+                                0,
+                                line.remainingQuantity,
+                              );
                               controller.lineDrafts[index] = updatedLine;
                             }
                           },
@@ -501,7 +618,8 @@ class _CreateGRNWizard extends StatelessWidget {
                           onPressed: () {
                             if (index < controller.lineDrafts.length) {
                               final updatedLine = controller.lineDrafts[index];
-                              updatedLine.receivingQuantity = line.remainingQuantity;
+                              updatedLine.receivingQuantity =
+                                  line.remainingQuantity;
                               controller.lineDrafts[index] = updatedLine;
                             }
                           },
@@ -600,10 +718,19 @@ class _CreateGRNWizard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _summaryRow('Purchase Order', controller.selectedOrder.value?.orderNumber ?? ''),
-            _summaryRow('Supplier', controller.selectedOrder.value?.supplierName ?? ''),
+            _summaryRow(
+              'Purchase Order',
+              controller.selectedOrder.value?.orderNumber ?? '',
+            ),
+            _summaryRow(
+              'Supplier',
+              controller.selectedOrder.value?.supplierName ?? '',
+            ),
             _summaryRow('Items', '${controller.lineDrafts.length} items'),
-            _summaryRow('Total Receiving', '${controller.totalReceivingQuantity} items'),
+            _summaryRow(
+              'Total Receiving',
+              '${controller.totalReceivingQuantity} items',
+            ),
           ],
         ),
       ),
@@ -775,7 +902,10 @@ class _CreateGRNWizard extends StatelessWidget {
               children: [
                 Text(
                   order.orderNumber,
-                  style: TextStyle(fontWeight: FontWeight.w700, color: kPrimary),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: kPrimary,
+                  ),
                 ),
                 Text(
                   order.supplierName,
@@ -812,7 +942,10 @@ class _CreateGRNWizard extends StatelessWidget {
             OutlinedButton(
               onPressed: controller.previousStep,
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 14,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -822,7 +955,13 @@ class _CreateGRNWizard extends StatelessWidget {
                 children: [
                   Icon(Icons.arrow_back, size: 16, color: kSubText),
                   const SizedBox(width: 4),
-                  Text('Back', style: TextStyle(color: kSubText, fontWeight: FontWeight.w600)),
+                  Text(
+                    'Back',
+                    style: TextStyle(
+                      color: kSubText,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -832,7 +971,10 @@ class _CreateGRNWizard extends StatelessWidget {
               onPressed: controller.nextStep,
               style: ElevatedButton.styleFrom(
                 backgroundColor: kPrimary,
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 14,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -840,7 +982,13 @@ class _CreateGRNWizard extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Text('Next', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
+                  Text(
+                    'Next',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   const SizedBox(width: 4),
                   Icon(Icons.arrow_forward, size: 16, color: Colors.black),
                 ],
@@ -848,10 +996,15 @@ class _CreateGRNWizard extends StatelessWidget {
             )
           else
             ElevatedButton(
-              onPressed: controller.isSubmitting.value ? null : controller.createGRN,
+              onPressed: controller.isSubmitting.value
+                  ? null
+                  : controller.createGRN,
               style: ElevatedButton.styleFrom(
                 backgroundColor: kPrimary,
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 14,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -861,13 +1014,22 @@ class _CreateGRNWizard extends StatelessWidget {
                   ? const SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.black,
+                      ),
                     )
                   : Row(
                       children: [
                         Icon(Icons.save, size: 18, color: Colors.black),
                         const SizedBox(width: 6),
-                        Text('Save Draft', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
+                        Text(
+                          'Save Draft',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ],
                     ),
             ),
@@ -900,7 +1062,10 @@ class _GRNDetailSheetState extends State<_GRNDetailSheet> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final current = widget.controller.grns.firstWhereOrNull((g) => g.id == widget.grnItem.id) ??
+      final current =
+          widget.controller.grns.firstWhereOrNull(
+            (g) => g.id == widget.grnItem.id,
+          ) ??
           widget.grnItem;
 
       return Column(
@@ -913,11 +1078,15 @@ class _GRNDetailSheetState extends State<_GRNDetailSheet> {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: widget.controller.getStatusColor(current.status).withOpacity(0.1),
+                  color: widget.controller
+                      .getStatusColor(current.status)
+                      .withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
-                  current.isFullyReceived ? Icons.check_circle : Icons.inventory_2,
+                  current.isFullyReceived
+                      ? Icons.check_circle
+                      : Icons.inventory_2,
                   color: widget.controller.getStatusColor(current.status),
                   size: 24,
                 ),
@@ -943,9 +1112,14 @@ class _GRNDetailSheetState extends State<_GRNDetailSheet> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
-                  color: widget.controller.getStatusColor(current.status).withOpacity(0.1),
+                  color: widget.controller
+                      .getStatusColor(current.status)
+                      .withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -975,10 +1149,7 @@ class _GRNDetailSheetState extends State<_GRNDetailSheet> {
             children: [
               const Text(
                 'Received Items',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                ),
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
               ),
               Text(
                 '${current.totalItems} items',
@@ -987,51 +1158,62 @@ class _GRNDetailSheetState extends State<_GRNDetailSheet> {
             ],
           ),
           const SizedBox(height: 8),
-          ...current.items.map((item) => Container(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: Colors.grey.withOpacity(0.06)),
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.productName,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                      Text(
-                        'Ordered: ${item.orderedQuantity} • Received: ${item.receivingQuantity} • Remaining: ${item.remainingQuantity}',
-                        style: TextStyle(fontSize: 11, color: kSubText),
-                      ),
-                    ],
-                  ),
+          ...current.items.map(
+            (item) => Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: Colors.grey.withOpacity(0.06)),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: item.isFullyReceived ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    item.isFullyReceived ? 'Complete' : '${item.receivingQuantity}/${item.orderedQuantity}',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: item.isFullyReceived ? Colors.green : Colors.orange,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.productName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                        Text(
+                          'Ordered: ${item.orderedQuantity} • Received: ${item.receivingQuantity} • Remaining: ${item.remainingQuantity}',
+                          style: TextStyle(fontSize: 11, color: kSubText),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ],
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: item.isFullyReceived
+                          ? Colors.green.withOpacity(0.1)
+                          : Colors.orange.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      item.isFullyReceived
+                          ? 'Complete'
+                          : '${item.receivingQuantity}/${item.orderedQuantity}',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: item.isFullyReceived
+                            ? Colors.green
+                            : Colors.orange,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          )),
+          ),
 
           const SizedBox(height: 12),
 
@@ -1106,7 +1288,9 @@ class _GRNDetailSheetState extends State<_GRNDetailSheet> {
                     onPressed: widget.controller.isSubmitting.value
                         ? null
                         : () async {
-                            final ok = await widget.controller.confirmGRN(current.id);
+                            final ok = await widget.controller.confirmGRN(
+                              current.id,
+                            );
                             if (ok) widget.onClose();
                           },
                     style: ElevatedButton.styleFrom(
@@ -1131,7 +1315,9 @@ class _GRNDetailSheetState extends State<_GRNDetailSheet> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () async {
-                        final ok = await widget.controller.deleteGRN(current.id);
+                        final ok = await widget.controller.deleteGRN(
+                          current.id,
+                        );
                         if (ok) widget.onClose();
                       },
                       style: OutlinedButton.styleFrom(
@@ -1167,10 +1353,7 @@ class _GRNDetailSheetState extends State<_GRNDetailSheet> {
             ),
             child: Text(
               'Close',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: kSubText,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w600, color: kSubText),
             ),
           ),
         ],
@@ -1180,11 +1363,27 @@ class _GRNDetailSheetState extends State<_GRNDetailSheet> {
 
   Widget _detailGrid(GoodsReceivingModel current) {
     final items = [
-      {'label': 'Purchase Order', 'value': current.purchaseOrderNumber, 'icon': Icons.receipt_long},
-      {'label': 'Supplier', 'value': current.supplierName, 'icon': Icons.business},
-      {'label': 'Receiving Date', 'value': DateFormat('dd MMM yyyy').format(current.receivingDate), 'icon': Icons.calendar_today},
+      {
+        'label': 'Purchase Order',
+        'value': current.purchaseOrderNumber,
+        'icon': Icons.receipt_long,
+      },
+      {
+        'label': 'Supplier',
+        'value': current.supplierName,
+        'icon': Icons.business,
+      },
+      {
+        'label': 'Receiving Date',
+        'value': DateFormat('dd MMM yyyy').format(current.receivingDate),
+        'icon': Icons.calendar_today,
+      },
       if (current.receivedBy != null && current.receivedBy!.isNotEmpty)
-        {'label': 'Received By', 'value': current.receivedBy!, 'icon': Icons.person},
+        {
+          'label': 'Received By',
+          'value': current.receivedBy!,
+          'icon': Icons.person,
+        },
       if (current.notes != null && current.notes!.isNotEmpty)
         {'label': 'Notes', 'value': current.notes!, 'icon': Icons.note},
     ];
@@ -1202,7 +1401,11 @@ class _GRNDetailSheetState extends State<_GRNDetailSheet> {
                   color: kPrimary.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Icon(item['icon'] as IconData, size: 14, color: kPrimary),
+                child: Icon(
+                  item['icon'] as IconData,
+                  size: 14,
+                  color: kPrimary,
+                ),
               ),
               const SizedBox(width: 10),
               SizedBox(
@@ -1317,7 +1520,10 @@ class _GRNListView extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimary,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -1367,7 +1573,9 @@ class _GRNListView extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
-                          item.isFullyReceived ? Icons.check_circle : Icons.inventory_2,
+                          item.isFullyReceived
+                              ? Icons.check_circle
+                              : Icons.inventory_2,
                           color: color,
                           size: 22,
                         ),
@@ -1390,10 +1598,7 @@ class _GRNListView extends StatelessWidget {
                             const SizedBox(height: 3),
                             Text(
                               item.supplierName,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: kText,
-                              ),
+                              style: TextStyle(fontSize: 12, color: kText),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -1438,7 +1643,9 @@ class _GRNListView extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  DateFormat('dd MMM yyyy').format(item.receivingDate),
+                                  DateFormat(
+                                    'dd MMM yyyy',
+                                  ).format(item.receivingDate),
                                   style: TextStyle(
                                     fontSize: 9,
                                     color: kSubText,

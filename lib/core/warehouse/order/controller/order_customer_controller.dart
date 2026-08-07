@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/core/warehouse/order/model/customer_model.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/model/customer_model.dart';
 import 'package:get/get.dart';
 
 class OrderCustomerController extends GetxController {
@@ -58,17 +58,16 @@ class OrderCustomerController extends GetxController {
     try {
       final response = await _api.get(
         '/api/warehouse/customers',
-        queryParameters: {
-          'page': append ? page.value + 1 : 1,
-          'limit': 20,
-        },
+        queryParameters: {'page': append ? page.value + 1 : 1, 'limit': 20},
         requiresAuth: true,
       );
 
       if (response.success && response.data is Map) {
         final payload = response.data as Map<String, dynamic>;
         final list = (payload['data'] as List? ?? [])
-            .map((e) => WarehouseCustomer.fromJson(Map<String, dynamic>.from(e)))
+            .map(
+              (e) => WarehouseCustomer.fromJson(Map<String, dynamic>.from(e)),
+            )
             .toList();
         final pagination = payload['pagination'] as Map<String, dynamic>? ?? {};
 
@@ -80,7 +79,8 @@ class OrderCustomerController extends GetxController {
           page.value = (pagination['page'] as num?)?.toInt() ?? 1;
         }
 
-        total.value = (pagination['total'] as num?)?.toInt() ?? customers.length;
+        total.value =
+            (pagination['total'] as num?)?.toInt() ?? customers.length;
         hasNext.value = pagination['hasNext'] == true;
       }
     } catch (e) {
@@ -103,17 +103,16 @@ class OrderCustomerController extends GetxController {
     try {
       final response = await _api.get(
         '/api/warehouse/customers/search',
-        queryParameters: {
-          'q': query,
-          'limit': 20,
-        },
+        queryParameters: {'q': query, 'limit': 20},
         requiresAuth: true,
       );
 
       if (response.success && response.data is Map) {
         final payload = response.data as Map<String, dynamic>;
         final list = (payload['data'] as List? ?? [])
-            .map((e) => WarehouseCustomer.fromJson(Map<String, dynamic>.from(e)))
+            .map(
+              (e) => WarehouseCustomer.fromJson(Map<String, dynamic>.from(e)),
+            )
             .toList();
 
         if (append) {

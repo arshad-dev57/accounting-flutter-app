@@ -1,13 +1,13 @@
 // core/FixedAssets/controllers/fixed_asset_controller.dart
 // COMPLETE CONTROLLER WITH LAZY LOADING, PAGINATION & ALL DIALOGS
 
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'dart:io';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/config/apiconfig.dart';
-import 'package:LedgerPro_app/core/FixedAssets/models/fixed_asset_model.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/config/apiconfig.dart';
+import 'package:BisonsTechs_app/core/FixedAssets/models/fixed_asset_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -23,7 +23,7 @@ class FixedAssetController extends GetxController {
   var allAssets = <FixedAsset>[].obs;
   var assets = <FixedAsset>[].obs;
   var vendors = <Map<String, dynamic>>[].obs;
-  
+
   var isLoading = true.obs;
   var isLoadingMore = false.obs;
   var isProcessing = false.obs;
@@ -38,7 +38,8 @@ class FixedAssetController extends GetxController {
   var hasPrevPage = false.obs;
   var itemsPerPage = 20.obs;
   var serverSupportsPagination = false.obs;
-
+  var assetSaved = false.obs;
+  var assetUpdated = false.obs;
   final List<String> filterOptions = [
     'All',
     'Active',
@@ -130,10 +131,20 @@ class FixedAssetController extends GetxController {
           // Parse pagination info
           if (responseData['pagination'] != null) {
             final pagination = responseData['pagination'];
-            totalPages.value = pagination['pages'] ?? pagination['totalPages'] ?? 1;
-            totalItems.value = pagination['total'] ?? pagination['totalItems'] ?? newAssets.length;
-            hasNextPage.value = pagination['hasNext'] ?? pagination['nextPage'] != null ?? false;
-            hasPrevPage.value = pagination['hasPrev'] ?? pagination['prevPage'] != null ?? false;
+            totalPages.value =
+                pagination['pages'] ?? pagination['totalPages'] ?? 1;
+            totalItems.value =
+                pagination['total'] ??
+                pagination['totalItems'] ??
+                newAssets.length;
+            hasNextPage.value =
+                pagination['hasNext'] ??
+                pagination['nextPage'] != null ??
+                false;
+            hasPrevPage.value =
+                pagination['hasPrev'] ??
+                pagination['prevPage'] != null ??
+                false;
             serverSupportsPagination.value = true;
           } else if (responseData['total'] != null) {
             totalPages.value = responseData['pages'] ?? 1;
@@ -144,13 +155,15 @@ class FixedAssetController extends GetxController {
           } else if (responseData['totalCount'] != null) {
             totalItems.value = responseData['totalCount'];
             totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
-            hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+            hasNextPage.value =
+                (currentPage.value * itemsPerPage.value) < totalItems.value;
             hasPrevPage.value = currentPage.value > 1;
             serverSupportsPagination.value = false;
           } else {
             totalItems.value = assets.length;
             totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
-            hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+            hasNextPage.value =
+                (currentPage.value * itemsPerPage.value) < totalItems.value;
             hasPrevPage.value = currentPage.value > 1;
             serverSupportsPagination.value = false;
           }
@@ -207,7 +220,8 @@ class FixedAssetController extends GetxController {
           final data = responseData['data'];
           totalAssets.value = data['totalAssets'] ?? 0;
           totalCost.value = (data['totalCost'] ?? 0).toDouble();
-          totalDepreciation.value = (data['accumulatedDepreciation'] ?? 0).toDouble();
+          totalDepreciation.value = (data['accumulatedDepreciation'] ?? 0)
+              .toDouble();
           totalNetBookValue.value = (data['netBookValue'] ?? 0).toDouble();
         }
       }
@@ -218,9 +232,18 @@ class FixedAssetController extends GetxController {
 
   void _updateSummaryForFiltered(List<FixedAsset> filteredAssets) {
     totalAssets.value = filteredAssets.length;
-    totalCost.value = filteredAssets.fold(0.0, (sum, a) => sum + a.purchaseCost);
-    totalDepreciation.value = filteredAssets.fold(0.0, (sum, a) => sum + a.accumulatedDepreciation);
-    totalNetBookValue.value = filteredAssets.fold(0.0, (sum, a) => sum + a.netBookValue);
+    totalCost.value = filteredAssets.fold(
+      0.0,
+      (sum, a) => sum + a.purchaseCost,
+    );
+    totalDepreciation.value = filteredAssets.fold(
+      0.0,
+      (sum, a) => sum + a.accumulatedDepreciation,
+    );
+    totalNetBookValue.value = filteredAssets.fold(
+      0.0,
+      (sum, a) => sum + a.netBookValue,
+    );
   }
 
   // ─── SEARCH ──────────────────────────────────────────────────────
@@ -250,6 +273,7 @@ class FixedAssetController extends GetxController {
   }) async {
     try {
       isProcessing.value = true;
+      assetSaved.value = false; // reset
 
       final Map<String, dynamic> assetData = {
         'name': name,
@@ -267,24 +291,29 @@ class FixedAssetController extends GetxController {
       }
 
       if (warrantyExpiry != null) {
-        assetData['warrantyExpiry'] = DateFormat('yyyy-MM-dd').format(warrantyExpiry);
+        assetData['warrantyExpiry'] = DateFormat(
+          'yyyy-MM-dd',
+        ).format(warrantyExpiry);
       }
 
-      final response = await _apiClient.post('/api/fixed-assets', body: assetData);
+      final response = await _apiClient.post(
+        '/api/fixed-assets',
+        body: assetData,
+      );
 
-      if (response.success && response.statusCode == 201) {
+      if (response.success &&
+          (response.statusCode == 201 || response.statusCode == 200)) {
         final responseData = response.data;
-        if (responseData['success'] == true) {
+        if (responseData['success'] == true || responseData['data'] != null) {
+          await loadFixedAssets(resetPage: true);
+          await loadSummary();
+          assetSaved.value = true; // ✅ signal dialog ko
           AppSnackbar.success(
             kSuccess,
-            'Success ✅',
+            'Success',
             'Fixed asset added successfully',
             duration: const Duration(seconds: 3),
           );
-          await loadFixedAssets(resetPage: true);
-          await loadSummary();
-          // Close the form dialog
-          Get.back();
         } else {
           _showError(responseData['message'] ?? 'Failed to add asset');
         }
@@ -315,6 +344,7 @@ class FixedAssetController extends GetxController {
   }) async {
     try {
       isProcessing.value = true;
+      assetUpdated.value = false; // reset
 
       final Map<String, dynamic> assetData = {
         'name': name,
@@ -332,24 +362,28 @@ class FixedAssetController extends GetxController {
       }
 
       if (warrantyExpiry != null) {
-        assetData['warrantyExpiry'] = DateFormat('yyyy-MM-dd').format(warrantyExpiry);
+        assetData['warrantyExpiry'] = DateFormat(
+          'yyyy-MM-dd',
+        ).format(warrantyExpiry);
       }
 
-      final response = await _apiClient.put('/api/fixed-assets/$id', body: assetData);
+      final response = await _apiClient.put(
+        '/api/fixed-assets/$id',
+        body: assetData,
+      );
 
       if (response.success && response.statusCode == 200) {
         final responseData = response.data;
         if (responseData['success'] == true) {
+          await loadFixedAssets(resetPage: true);
+          await loadSummary();
+          assetUpdated.value = true; // ✅ signal dialog ko
           AppSnackbar.success(
             kSuccess,
             'Success ✅',
             'Fixed asset updated successfully',
             duration: const Duration(seconds: 3),
           );
-          await loadFixedAssets(resetPage: true);
-          await loadSummary();
-          // Close the form dialog
-          Get.back();
         } else {
           _showError(responseData['message'] ?? 'Failed to update asset');
         }
@@ -417,7 +451,10 @@ class FixedAssetController extends GetxController {
         'depreciationDate': DateFormat('yyyy-MM-dd').format(DateTime.now()),
       };
 
-      final response = await _apiClient.post('/api/fixed-assets/depreciate', body: depData);
+      final response = await _apiClient.post(
+        '/api/fixed-assets/depreciate',
+        body: depData,
+      );
 
       // Close loading dialog
       Get.back();
@@ -501,7 +538,10 @@ class FixedAssetController extends GetxController {
         'depreciationDate': DateFormat('yyyy-MM-dd').format(DateTime.now()),
       };
 
-      final response = await _apiClient.post('/api/fixed-assets/depreciate-all', body: depData);
+      final response = await _apiClient.post(
+        '/api/fixed-assets/depreciate-all',
+        body: depData,
+      );
 
       // Close loading dialog
       Get.back();
@@ -593,7 +633,10 @@ class FixedAssetController extends GetxController {
         'disposalReason': disposalReason,
       };
 
-      final response = await _apiClient.post('/api/fixed-assets/dispose', body: disposeData);
+      final response = await _apiClient.post(
+        '/api/fixed-assets/dispose',
+        body: disposeData,
+      );
 
       // Close loading dialog
       Get.back();
@@ -820,10 +863,7 @@ class FixedAssetController extends GetxController {
             ),
             Text(
               subtitle,
-              style: TextStyle(
-                fontSize: 10,
-                color: color.withOpacity(0.7),
-              ),
+              style: TextStyle(fontSize: 10, color: color.withOpacity(0.7)),
             ),
           ],
         ),
@@ -857,10 +897,7 @@ class FixedAssetController extends GetxController {
                   SizedBox(height: 16),
                   Text(
                     'Generating PDF...',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                   SizedBox(height: 4),
                   Text(
@@ -901,11 +938,7 @@ class FixedAssetController extends GetxController {
 
       if (Get.isDialogOpen ?? false) Get.back();
 
-      AppSnackbar.success(
-        kSuccess,
-        'Success',
-        'PDF exported successfully',
-      );
+      AppSnackbar.success(kSuccess, 'Success', 'PDF exported successfully');
       await OpenFile.open(file.path);
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
@@ -939,10 +972,7 @@ class FixedAssetController extends GetxController {
                   SizedBox(height: 16),
                   Text(
                     'Building Excel...',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                   SizedBox(height: 4),
                   Text(
@@ -995,7 +1025,10 @@ class FixedAssetController extends GetxController {
       final summaryRows = [
         ['Total Assets', totalAssets.value.toString()],
         ['Total Cost', _formatAmountSimple(totalCost.value)],
-        ['Total Accumulated Depreciation', _formatAmountSimple(totalDepreciation.value)],
+        [
+          'Total Accumulated Depreciation',
+          _formatAmountSimple(totalDepreciation.value),
+        ],
         ['Total Net Book Value', _formatAmountSimple(totalNetBookValue.value)],
       ];
 
@@ -1062,16 +1095,49 @@ class FixedAssetController extends GetxController {
         _excelSetCell(assetsSheet, row, 5, asset.purchaseCost, bgColor: bg);
         _excelSetCell(assetsSheet, row, 6, asset.usefulLife, bgColor: bg);
         _excelSetCell(assetsSheet, row, 7, asset.salvageValue, bgColor: bg);
-        _excelSetCell(assetsSheet, row, 8, asset.depreciationMethod, bgColor: bg);
-        _excelSetCell(assetsSheet, row, 9, asset.currentDepreciation, bgColor: bg);
-        _excelSetCell(assetsSheet, row, 10, asset.accumulatedDepreciation, bgColor: bg);
+        _excelSetCell(
+          assetsSheet,
+          row,
+          8,
+          asset.depreciationMethod,
+          bgColor: bg,
+        );
+        _excelSetCell(
+          assetsSheet,
+          row,
+          9,
+          asset.currentDepreciation,
+          bgColor: bg,
+        );
+        _excelSetCell(
+          assetsSheet,
+          row,
+          10,
+          asset.accumulatedDepreciation,
+          bgColor: bg,
+        );
         _excelSetCell(assetsSheet, row, 11, asset.netBookValue, bgColor: bg);
         _excelSetCell(assetsSheet, row, 12, asset.location, bgColor: bg);
         _excelSetCell(assetsSheet, row, 13, asset.supplier, bgColor: bg);
         row++;
       }
 
-      final colWidths = [12.0, 25.0, 15.0, 12.0, 12.0, 15.0, 10.0, 12.0, 15.0, 15.0, 18.0, 15.0, 15.0, 20.0];
+      final colWidths = [
+        12.0,
+        25.0,
+        15.0,
+        12.0,
+        12.0,
+        15.0,
+        10.0,
+        12.0,
+        15.0,
+        15.0,
+        18.0,
+        15.0,
+        15.0,
+        20.0,
+      ];
       for (int i = 0; i < colWidths.length; i++) {
         assetsSheet.setColumnWidth(i, colWidths[i]);
       }
@@ -1098,18 +1164,39 @@ class FixedAssetController extends GetxController {
       Map<String, double> categoryNBV = {};
 
       for (var asset in assets) {
-        categoryCount[asset.category] = (categoryCount[asset.category] ?? 0) + 1;
-        categoryCost[asset.category] = (categoryCost[asset.category] ?? 0) + asset.purchaseCost;
-        categoryNBV[asset.category] = (categoryNBV[asset.category] ?? 0) + asset.netBookValue;
+        categoryCount[asset.category] =
+            (categoryCount[asset.category] ?? 0) + 1;
+        categoryCost[asset.category] =
+            (categoryCost[asset.category] ?? 0) + asset.purchaseCost;
+        categoryNBV[asset.category] =
+            (categoryNBV[asset.category] ?? 0) + asset.netBookValue;
       }
 
       int catRow = 1;
       for (var category in categoryCount.keys) {
         final bg = catRow.isEven ? 'F5F5F5' : 'FFFFFF';
         _excelSetCell(categorySheet, catRow, 0, category, bgColor: bg);
-        _excelSetCell(categorySheet, catRow, 1, categoryCount[category]!, bgColor: bg);
-        _excelSetCell(categorySheet, catRow, 2, categoryCost[category]!, bgColor: bg);
-        _excelSetCell(categorySheet, catRow, 3, categoryNBV[category]!, bgColor: bg);
+        _excelSetCell(
+          categorySheet,
+          catRow,
+          1,
+          categoryCount[category]!,
+          bgColor: bg,
+        );
+        _excelSetCell(
+          categorySheet,
+          catRow,
+          2,
+          categoryCost[category]!,
+          bgColor: bg,
+        );
+        _excelSetCell(
+          categorySheet,
+          catRow,
+          3,
+          categoryNBV[category]!,
+          bgColor: bg,
+        );
         catRow++;
       }
 
@@ -1131,11 +1218,7 @@ class FixedAssetController extends GetxController {
 
       if (Get.isDialogOpen ?? false) Get.back();
 
-      AppSnackbar.success(
-        kSuccess,
-        'Success',
-        'Excel exported successfully',
-      );
+      AppSnackbar.success(kSuccess, 'Success', 'Excel exported successfully');
       await OpenFile.open(file.path);
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
@@ -1256,10 +1339,26 @@ class FixedAssetController extends GetxController {
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
         children: [
-          _pdfSummaryItem('Total Assets', totalAssets.value.toString(), PdfColors.indigo700),
-          _pdfSummaryItem('Total Cost', _formatAmountSimple(totalCost.value), PdfColors.green700),
-          _pdfSummaryItem('Total Depreciation', _formatAmountSimple(totalDepreciation.value), PdfColors.orange700),
-          _pdfSummaryItem('Net Book Value', _formatAmountSimple(totalNetBookValue.value), PdfColors.blue700),
+          _pdfSummaryItem(
+            'Total Assets',
+            totalAssets.value.toString(),
+            PdfColors.indigo700,
+          ),
+          _pdfSummaryItem(
+            'Total Cost',
+            _formatAmountSimple(totalCost.value),
+            PdfColors.green700,
+          ),
+          _pdfSummaryItem(
+            'Total Depreciation',
+            _formatAmountSimple(totalDepreciation.value),
+            PdfColors.orange700,
+          ),
+          _pdfSummaryItem(
+            'Net Book Value',
+            _formatAmountSimple(totalNetBookValue.value),
+            PdfColors.blue700,
+          ),
         ],
       ),
     );
@@ -1268,9 +1367,19 @@ class FixedAssetController extends GetxController {
   pw.Widget _pdfSummaryItem(String label, String value, PdfColor color) {
     return pw.Column(
       children: [
-        pw.Text(label, style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
+        pw.Text(
+          label,
+          style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+        ),
         pw.SizedBox(height: 4),
-        pw.Text(value, style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: color)),
+        pw.Text(
+          value,
+          style: pw.TextStyle(
+            fontSize: 11,
+            fontWeight: pw.FontWeight.bold,
+            color: color,
+          ),
+        ),
       ],
     );
   }
@@ -1279,7 +1388,10 @@ class FixedAssetController extends GetxController {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        pw.Text('Fixed Assets Details', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+        pw.Text(
+          'Fixed Assets Details',
+          style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+        ),
         pw.SizedBox(height: 8),
         pw.Container(
           padding: const pw.EdgeInsets.symmetric(vertical: 8),
@@ -1290,44 +1402,165 @@ class FixedAssetController extends GetxController {
           ),
           child: pw.Row(
             children: [
-              pw.Expanded(flex: 1, child: pw.Text('Code', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 2, child: pw.Text('Asset Name', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 1, child: pw.Text('Category', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 1, child: pw.Text('Status', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 1, child: pw.Text('Cost', textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 1, child: pw.Text('Depreciation', textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 1, child: pw.Text('NBV', textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+              pw.Expanded(
+                flex: 1,
+                child: pw.Text(
+                  'Code',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Asset Name',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 1,
+                child: pw.Text(
+                  'Category',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 1,
+                child: pw.Text(
+                  'Status',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 1,
+                child: pw.Text(
+                  'Cost',
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 1,
+                child: pw.Text(
+                  'Depreciation',
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 1,
+                child: pw.Text(
+                  'NBV',
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
             ],
           ),
         ),
-        ...assets.map((asset) => pw.Container(
-          padding: const pw.EdgeInsets.symmetric(vertical: 6),
-          decoration: const pw.BoxDecoration(
-            border: pw.Border(
-              bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.5),
-            ),
-          ),
-          child: pw.Row(
-            children: [
-              pw.Expanded(flex: 1, child: pw.Text(asset.assetCode, style: pw.TextStyle(fontSize: 9))),
-              pw.Expanded(flex: 2, child: pw.Text(asset.name, style: pw.TextStyle(fontSize: 9))),
-              pw.Expanded(flex: 1, child: pw.Text(asset.category, style: pw.TextStyle(fontSize: 9))),
-              pw.Expanded(flex: 1, child: pw.Text(asset.status, style: pw.TextStyle(fontSize: 9))),
-              pw.Expanded(flex: 1, child: pw.Text(_formatAmountSimple(asset.purchaseCost), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 9))),
-              pw.Expanded(flex: 1, child: pw.Text(_formatAmountSimple(asset.accumulatedDepreciation), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 9))),
-              pw.Expanded(flex: 1, child: pw.Text(_formatAmountSimple(asset.netBookValue), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 9))),
-            ],
-          ),
-        )).toList(),
+        ...assets
+            .map(
+              (asset) => pw.Container(
+                padding: const pw.EdgeInsets.symmetric(vertical: 6),
+                decoration: const pw.BoxDecoration(
+                  border: pw.Border(
+                    bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.5),
+                  ),
+                ),
+                child: pw.Row(
+                  children: [
+                    pw.Expanded(
+                      flex: 1,
+                      child: pw.Text(
+                        asset.assetCode,
+                        style: pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                    pw.Expanded(
+                      flex: 2,
+                      child: pw.Text(
+                        asset.name,
+                        style: pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                    pw.Expanded(
+                      flex: 1,
+                      child: pw.Text(
+                        asset.category,
+                        style: pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                    pw.Expanded(
+                      flex: 1,
+                      child: pw.Text(
+                        asset.status,
+                        style: pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                    pw.Expanded(
+                      flex: 1,
+                      child: pw.Text(
+                        _formatAmountSimple(asset.purchaseCost),
+                        textAlign: pw.TextAlign.right,
+                        style: pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                    pw.Expanded(
+                      flex: 1,
+                      child: pw.Text(
+                        _formatAmountSimple(asset.accumulatedDepreciation),
+                        textAlign: pw.TextAlign.right,
+                        style: pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                    pw.Expanded(
+                      flex: 1,
+                      child: pw.Text(
+                        _formatAmountSimple(asset.netBookValue),
+                        textAlign: pw.TextAlign.right,
+                        style: pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+            .toList(),
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),
           child: pw.Row(
             children: [
-              pw.Expanded(flex: 5, child: pw.Text('Total', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 1, child: pw.Text(_formatAmountSimple(totalCost.value), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 1, child: pw.Text(_formatAmountSimple(totalDepreciation.value), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 1, child: pw.Text(_formatAmountSimple(totalNetBookValue.value), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+              pw.Expanded(
+                flex: 5,
+                child: pw.Text(
+                  'Total',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 1,
+                child: pw.Text(
+                  _formatAmountSimple(totalCost.value),
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 1,
+                child: pw.Text(
+                  _formatAmountSimple(totalDepreciation.value),
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 1,
+                child: pw.Text(
+                  _formatAmountSimple(totalNetBookValue.value),
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
             ],
           ),
         ),
@@ -1340,15 +1573,20 @@ class FixedAssetController extends GetxController {
     Map<String, double> categoryNBV = {};
 
     for (var asset in assets) {
-      categoryCost[asset.category] = (categoryCost[asset.category] ?? 0) + asset.purchaseCost;
-      categoryNBV[asset.category] = (categoryNBV[asset.category] ?? 0) + asset.netBookValue;
+      categoryCost[asset.category] =
+          (categoryCost[asset.category] ?? 0) + asset.purchaseCost;
+      categoryNBV[asset.category] =
+          (categoryNBV[asset.category] ?? 0) + asset.netBookValue;
     }
 
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.SizedBox(height: 16),
-        pw.Text('Category Breakdown', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+        pw.Text(
+          'Category Breakdown',
+          style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+        ),
         pw.SizedBox(height: 8),
         pw.Container(
           padding: const pw.EdgeInsets.symmetric(vertical: 8),
@@ -1359,10 +1597,37 @@ class FixedAssetController extends GetxController {
           ),
           child: pw.Row(
             children: [
-              pw.Expanded(flex: 2, child: pw.Text('Category', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 1, child: pw.Text('Count', textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 2, child: pw.Text('Total Cost', textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 2, child: pw.Text('Net Book Value', textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Category',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 1,
+                child: pw.Text(
+                  'Count',
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Total Cost',
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Net Book Value',
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
             ],
           ),
         ),
@@ -1377,10 +1642,34 @@ class FixedAssetController extends GetxController {
             ),
             child: pw.Row(
               children: [
-                pw.Expanded(flex: 2, child: pw.Text(category, style: pw.TextStyle(fontSize: 10))),
-                pw.Expanded(flex: 1, child: pw.Text(count.toString(), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 10))),
-                pw.Expanded(flex: 2, child: pw.Text(_formatAmountSimple(categoryCost[category]!), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 10))),
-                pw.Expanded(flex: 2, child: pw.Text(_formatAmountSimple(categoryNBV[category]!), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 10))),
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Text(category, style: pw.TextStyle(fontSize: 10)),
+                ),
+                pw.Expanded(
+                  flex: 1,
+                  child: pw.Text(
+                    count.toString(),
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(fontSize: 10),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Text(
+                    _formatAmountSimple(categoryCost[category]!),
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(fontSize: 10),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Text(
+                    _formatAmountSimple(categoryNBV[category]!),
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(fontSize: 10),
+                  ),
+                ),
               ],
             ),
           );
@@ -1389,7 +1678,6 @@ class FixedAssetController extends GetxController {
     );
   }
 
-  // ─── DIALOGS ──────────────────────────────────────────────────────
   void showAddAssetDialog() {
     final formKey = GlobalKey<FormState>();
     String name = '';
@@ -1402,6 +1690,15 @@ class FixedAssetController extends GetxController {
     String? selectedSupplierId;
     DateTime? warrantyExpiry;
     String notes = '';
+
+    assetSaved.value = false; // reset before opening
+
+    // ✅ listener jo dialog close karega
+    final worker = ever(assetSaved, (bool saved) {
+      if (saved) {
+        if (Get.isDialogOpen ?? false) Get.back();
+      }
+    });
 
     Get.dialog(
       Dialog(
@@ -1418,7 +1715,6 @@ class FixedAssetController extends GetxController {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Header
                   Row(
                     children: [
                       Container(
@@ -1457,7 +1753,12 @@ class FixedAssetController extends GetxController {
                       ),
                       IconButton(
                         icon: const Icon(Icons.close, size: 20),
-                        onPressed: isProcessing.value ? null : () => Get.back(),
+                        onPressed: isProcessing.value
+                            ? null
+                            : () {
+                                worker.dispose(); // ✅ worker dispose
+                                Get.back();
+                              },
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                       ),
@@ -1475,18 +1776,24 @@ class FixedAssetController extends GetxController {
                               label: 'Asset Name *',
                               hint: 'e.g., Office Building',
                               onChanged: (v) => name = v,
-                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                              validator: (v) =>
+                                  v?.isEmpty == true ? 'Required' : null,
                             ),
                             const SizedBox(height: 16),
-
                             _buildDropdownField(
                               label: 'Category *',
                               value: category,
-                              items: const ['Building', 'Vehicle', 'IT Equipment', 'Furniture', 'Machinery', 'Equipment'],
+                              items: const [
+                                'Building',
+                                'Vehicle',
+                                'IT Equipment',
+                                'Furniture',
+                                'Machinery',
+                                'Equipment',
+                              ],
                               onChanged: (v) => setState(() => category = v!),
                             ),
                             const SizedBox(height: 16),
-
                             _buildDatePickerField(
                               'Purchase Date *',
                               purchaseDate,
@@ -1494,58 +1801,57 @@ class FixedAssetController extends GetxController {
                               context,
                             ),
                             const SizedBox(height: 16),
-
                             _buildTextField(
                               label: 'Purchase Cost *',
                               hint: '0.00',
                               prefixText: CurrencyUtils.prefix,
-                              onChanged: (v) => purchaseCost = double.tryParse(v) ?? 0,
-                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                              onChanged: (v) =>
+                                  purchaseCost = double.tryParse(v) ?? 0,
+                              validator: (v) =>
+                                  v?.isEmpty == true ? 'Required' : null,
                               keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 16),
-
                             _buildTextField(
                               label: 'Useful Life (years) *',
                               hint: '5',
-                              onChanged: (v) => usefulLife = int.tryParse(v) ?? 5,
-                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                              onChanged: (v) =>
+                                  usefulLife = int.tryParse(v) ?? 5,
+                              validator: (v) =>
+                                  v?.isEmpty == true ? 'Required' : null,
                               keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 16),
-
                             _buildTextField(
                               label: 'Salvage Value',
                               hint: '0.00',
                               prefixText: CurrencyUtils.prefix,
-                              onChanged: (v) => salvageValue = double.tryParse(v) ?? 0,
+                              onChanged: (v) =>
+                                  salvageValue = double.tryParse(v) ?? 0,
                               keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 16),
-
                             _buildTextField(
                               label: 'Location',
                               hint: 'e.g., Main Office',
                               onChanged: (v) => location = v,
                             ),
                             const SizedBox(height: 16),
-
                             _buildSupplierDropdownField(
                               selectedSupplierId,
                               (v) => setState(() => selectedSupplierId = v),
                               vendors.toList(),
                             ),
                             const SizedBox(height: 16),
-
                             _buildDatePickerField(
                               'Warranty Expiry',
-                              warrantyExpiry ?? DateTime.now().add(const Duration(days: 365)),
+                              warrantyExpiry ??
+                                  DateTime.now().add(const Duration(days: 365)),
                               (d) => setState(() => warrantyExpiry = d),
                               context,
                               optional: true,
                             ),
                             const SizedBox(height: 16),
-
                             _buildTextField(
                               label: 'Notes',
                               hint: 'Additional notes',
@@ -1562,7 +1868,12 @@ class FixedAssetController extends GetxController {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: isProcessing.value ? null : () => Get.back(),
+                          onPressed: isProcessing.value
+                              ? null
+                              : () {
+                                  worker.dispose(); // ✅ worker dispose
+                                  Get.back();
+                                },
                           style: OutlinedButton.styleFrom(
                             foregroundColor: kPrimary,
                             side: const BorderSide(color: kPrimary),
@@ -1571,7 +1882,7 @@ class FixedAssetController extends GetxController {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: Text(
+                          child: const Text(
                             'Cancel',
                             style: TextStyle(
                               fontSize: 14,
@@ -1612,12 +1923,14 @@ class FixedAssetController extends GetxController {
                               ),
                             ),
                             child: isProcessing.value
-                                ? SizedBox(
+                                ? const SizedBox(
                                     width: 20,
                                     height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.black),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.black,
+                                      ),
                                     ),
                                   )
                                 : const Text(
@@ -1640,7 +1953,7 @@ class FixedAssetController extends GetxController {
         ),
       ),
       barrierDismissible: false,
-    );
+    ).then((_) => worker.dispose()); // ✅ dialog close hone par bhi dispose
   }
 
   void showEditAssetDialog(FixedAsset asset) {
@@ -1656,7 +1969,6 @@ class FixedAssetController extends GetxController {
     DateTime? warrantyExpiry = asset.warrantyExpiry;
     String notes = asset.notes;
 
-    // Find supplier if exists
     if (asset.supplier.isNotEmpty) {
       final vendor = vendors.firstWhere(
         (v) => v['name'] == asset.supplier,
@@ -1666,6 +1978,15 @@ class FixedAssetController extends GetxController {
         selectedSupplierId = vendor['_id'].toString();
       }
     }
+
+    assetUpdated.value = false; // reset before opening
+
+    // ✅ listener jo dialog close karega
+    final worker = ever(assetUpdated, (bool updated) {
+      if (updated) {
+        if (Get.isDialogOpen ?? false) Get.back();
+      }
+    });
 
     Get.dialog(
       Dialog(
@@ -1682,7 +2003,6 @@ class FixedAssetController extends GetxController {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Header
                   Row(
                     children: [
                       Container(
@@ -1721,7 +2041,12 @@ class FixedAssetController extends GetxController {
                       ),
                       IconButton(
                         icon: const Icon(Icons.close, size: 20),
-                        onPressed: isProcessing.value ? null : () => Get.back(),
+                        onPressed: isProcessing.value
+                            ? null
+                            : () {
+                                worker.dispose(); // ✅
+                                Get.back();
+                              },
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                       ),
@@ -1740,18 +2065,24 @@ class FixedAssetController extends GetxController {
                               hint: 'e.g., Office Building',
                               initialValue: name,
                               onChanged: (v) => name = v,
-                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                              validator: (v) =>
+                                  v?.isEmpty == true ? 'Required' : null,
                             ),
                             const SizedBox(height: 16),
-
                             _buildDropdownField(
                               label: 'Category *',
                               value: category,
-                              items: const ['Building', 'Vehicle', 'IT Equipment', 'Furniture', 'Machinery', 'Equipment'],
+                              items: const [
+                                'Building',
+                                'Vehicle',
+                                'IT Equipment',
+                                'Furniture',
+                                'Machinery',
+                                'Equipment',
+                              ],
                               onChanged: (v) => setState(() => category = v!),
                             ),
                             const SizedBox(height: 16),
-
                             _buildDatePickerField(
                               'Purchase Date *',
                               purchaseDate,
@@ -1759,38 +2090,39 @@ class FixedAssetController extends GetxController {
                               context,
                             ),
                             const SizedBox(height: 16),
-
                             _buildTextField(
                               label: 'Purchase Cost *',
                               hint: '0.00',
                               prefixText: CurrencyUtils.prefix,
                               initialValue: purchaseCost.toString(),
-                              onChanged: (v) => purchaseCost = double.tryParse(v) ?? 0,
-                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                              onChanged: (v) =>
+                                  purchaseCost = double.tryParse(v) ?? 0,
+                              validator: (v) =>
+                                  v?.isEmpty == true ? 'Required' : null,
                               keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 16),
-
                             _buildTextField(
                               label: 'Useful Life (years) *',
                               hint: '5',
                               initialValue: usefulLife.toString(),
-                              onChanged: (v) => usefulLife = int.tryParse(v) ?? 5,
-                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                              onChanged: (v) =>
+                                  usefulLife = int.tryParse(v) ?? 5,
+                              validator: (v) =>
+                                  v?.isEmpty == true ? 'Required' : null,
                               keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 16),
-
                             _buildTextField(
                               label: 'Salvage Value',
                               hint: '0.00',
                               prefixText: CurrencyUtils.prefix,
                               initialValue: salvageValue.toString(),
-                              onChanged: (v) => salvageValue = double.tryParse(v) ?? 0,
+                              onChanged: (v) =>
+                                  salvageValue = double.tryParse(v) ?? 0,
                               keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 16),
-
                             _buildTextField(
                               label: 'Location',
                               hint: 'e.g., Main Office',
@@ -1798,23 +2130,21 @@ class FixedAssetController extends GetxController {
                               onChanged: (v) => location = v,
                             ),
                             const SizedBox(height: 16),
-
                             _buildSupplierDropdownField(
                               selectedSupplierId,
                               (v) => setState(() => selectedSupplierId = v),
                               vendors.toList(),
                             ),
                             const SizedBox(height: 16),
-
                             _buildDatePickerField(
                               'Warranty Expiry',
-                              warrantyExpiry ?? DateTime.now().add(const Duration(days: 365)),
+                              warrantyExpiry ??
+                                  DateTime.now().add(const Duration(days: 365)),
                               (d) => setState(() => warrantyExpiry = d),
                               context,
                               optional: true,
                             ),
                             const SizedBox(height: 16),
-
                             _buildTextField(
                               label: 'Notes',
                               hint: 'Additional notes',
@@ -1832,7 +2162,12 @@ class FixedAssetController extends GetxController {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: isProcessing.value ? null : () => Get.back(),
+                          onPressed: isProcessing.value
+                              ? null
+                              : () {
+                                  worker.dispose(); // ✅
+                                  Get.back();
+                                },
                           style: OutlinedButton.styleFrom(
                             foregroundColor: kPrimary,
                             side: const BorderSide(color: kPrimary),
@@ -1841,7 +2176,7 @@ class FixedAssetController extends GetxController {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: Text(
+                          child: const Text(
                             'Cancel',
                             style: TextStyle(
                               fontSize: 14,
@@ -1883,12 +2218,14 @@ class FixedAssetController extends GetxController {
                               ),
                             ),
                             child: isProcessing.value
-                                ? SizedBox(
+                                ? const SizedBox(
                                     width: 20,
                                     height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.black),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.black,
+                                      ),
                                     ),
                                   )
                                 : const Text(
@@ -1911,7 +2248,7 @@ class FixedAssetController extends GetxController {
         ),
       ),
       barrierDismissible: false,
-    );
+    ).then((_) => worker.dispose()); // ✅ dialog close hone par bhi dispose
   }
 
   void showDisposeAssetDialog(FixedAsset asset) {
@@ -1993,7 +2330,6 @@ class FixedAssetController extends GetxController {
                               decoration: BoxDecoration(
                                 color: kBgLight,
                                 borderRadius: BorderRadius.circular(10),
-                            
                               ),
                               child: Column(
                                 children: [
@@ -2022,8 +2358,10 @@ class FixedAssetController extends GetxController {
                               hint: asset.netBookValue.toString(),
                               prefixText: CurrencyUtils.prefix,
                               initialValue: disposalAmount.toString(),
-                              onChanged: (v) => disposalAmount = double.tryParse(v) ?? 0,
-                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                              onChanged: (v) =>
+                                  disposalAmount = double.tryParse(v) ?? 0,
+                              validator: (v) =>
+                                  v?.isEmpty == true ? 'Required' : null,
                               keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 16),
@@ -2043,7 +2381,9 @@ class FixedAssetController extends GetxController {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: isProcessing.value ? null : () => Get.back(),
+                          onPressed: isProcessing.value
+                              ? null
+                              : () => Get.back(),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: kPrimary,
                             side: const BorderSide(color: kPrimary),
@@ -2093,7 +2433,10 @@ class FixedAssetController extends GetxController {
                                     height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.black),
+                                      valueColor:
+                                          const AlwaysStoppedAnimation<Color>(
+                                            Colors.black,
+                                          ),
                                     ),
                                   )
                                 : const Text(
@@ -2159,7 +2502,9 @@ class FixedAssetController extends GetxController {
                             width: 52,
                             height: 52,
                             decoration: BoxDecoration(
-                              color: getAssetCategoryColor(asset.category).withOpacity(0.12),
+                              color: getAssetCategoryColor(
+                                asset.category,
+                              ).withOpacity(0.12),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Icon(
@@ -2198,9 +2543,10 @@ class FixedAssetController extends GetxController {
                                       decoration: BoxDecoration(
                                         color: asset.status == 'Active'
                                             ? kSuccess.withOpacity(0.08)
-                                            : asset.status == 'Fully Depreciated'
-                                                ? kWarning.withOpacity(0.08)
-                                                : kDanger.withOpacity(0.08),
+                                            : asset.status ==
+                                                  'Fully Depreciated'
+                                            ? kWarning.withOpacity(0.08)
+                                            : kDanger.withOpacity(0.08),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
@@ -2210,9 +2556,10 @@ class FixedAssetController extends GetxController {
                                           fontWeight: FontWeight.w600,
                                           color: asset.status == 'Active'
                                               ? kSuccess
-                                              : asset.status == 'Fully Depreciated'
-                                                  ? kWarning
-                                                  : kDanger,
+                                              : asset.status ==
+                                                    'Fully Depreciated'
+                                              ? kWarning
+                                              : kDanger,
                                         ),
                                       ),
                                     ),
@@ -2263,24 +2610,50 @@ class FixedAssetController extends GetxController {
                       const SizedBox(height: 16),
 
                       // Details
-                      _detailRow('Purchase Date', DateFormat('dd MMM yyyy').format(asset.purchaseDate)),
+                      _detailRow(
+                        'Purchase Date',
+                        DateFormat('dd MMM yyyy').format(asset.purchaseDate),
+                      ),
                       _detailRow('Useful Life', '${asset.usefulLife} years'),
-                      _detailRow('Salvage Value', formatAmount(asset.salvageValue)),
-                      _detailRow('Depreciation Method', asset.depreciationMethod),
-                      _detailRow('Monthly Depreciation', formatAmount(asset.currentDepreciation)),
+                      _detailRow(
+                        'Salvage Value',
+                        formatAmount(asset.salvageValue),
+                      ),
+                      _detailRow(
+                        'Depreciation Method',
+                        asset.depreciationMethod,
+                      ),
+                      _detailRow(
+                        'Monthly Depreciation',
+                        formatAmount(asset.currentDepreciation),
+                      ),
                       _detailRow('Location', asset.location),
                       _detailRow('Supplier', asset.supplier),
                       if (asset.warrantyExpiry != null)
-                        _detailRow('Warranty Expiry', DateFormat('dd MMM yyyy').format(asset.warrantyExpiry!)),
+                        _detailRow(
+                          'Warranty Expiry',
+                          DateFormat(
+                            'dd MMM yyyy',
+                          ).format(asset.warrantyExpiry!),
+                        ),
                       if (asset.disposedDate != null) ...[
-                        _detailRow('Disposal Date', DateFormat('dd MMM yyyy').format(asset.disposedDate!)),
-                        _detailRow('Disposal Amount', formatAmount(asset.disposalAmount ?? 0)),
+                        _detailRow(
+                          'Disposal Date',
+                          DateFormat('dd MMM yyyy').format(asset.disposedDate!),
+                        ),
+                        _detailRow(
+                          'Disposal Amount',
+                          formatAmount(asset.disposalAmount ?? 0),
+                        ),
                       ],
-                      if (asset.notes.isNotEmpty) _detailRow('Notes', asset.notes),
+                      if (asset.notes.isNotEmpty)
+                        _detailRow('Notes', asset.notes),
                       _detailRow(
                         'Last Depreciation',
                         asset.lastDepreciationDate != null
-                            ? DateFormat('dd MMM yyyy').format(asset.lastDepreciationDate!)
+                            ? DateFormat(
+                                'dd MMM yyyy',
+                              ).format(asset.lastDepreciationDate!)
                             : 'N/A',
                       ),
                       const SizedBox(height: 16),
@@ -2486,9 +2859,7 @@ class FixedAssetController extends GetxController {
         labelText: label,
         hintText: hint,
         prefixText: prefixText,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
@@ -2514,9 +2885,7 @@ class FixedAssetController extends GetxController {
       value: value,
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
@@ -2541,9 +2910,7 @@ class FixedAssetController extends GetxController {
       value: selectedId,
       decoration: InputDecoration(
         labelText: 'Supplier (Optional)',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
@@ -2557,10 +2924,7 @@ class FixedAssetController extends GetxController {
         style: TextStyle(fontSize: 12, color: kSubText),
       ),
       items: [
-        const DropdownMenuItem(
-          value: '',
-          child: Text('None'),
-        ),
+        const DropdownMenuItem(value: '', child: Text('None')),
         ...suppliers
             .map(
               (s) => DropdownMenuItem<String>(
@@ -2596,9 +2960,7 @@ class FixedAssetController extends GetxController {
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
         child: Row(
           children: [
             Icon(Icons.calendar_today, size: 14, color: kPrimary),
@@ -2626,11 +2988,7 @@ class FixedAssetController extends GetxController {
                 ],
               ),
             ),
-            Icon(
-              Icons.arrow_drop_down,
-              size: 20,
-              color: kSubText,
-            ),
+            Icon(Icons.arrow_drop_down, size: 20, color: kSubText),
           ],
         ),
       ),

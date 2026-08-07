@@ -1,18 +1,18 @@
 // core/CreditNote/controllers/creditnote_controller.dart
 // COMPLETE CONTROLLER WITH ALL DIALOGS
 
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'dart:io';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/CreditNote/models/credit_note_model.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/CreditNote/models/credit_note_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:excel/excel.dart';
+import 'package:excel/excel.dart' as excel;
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 
@@ -22,7 +22,7 @@ class CreditNoteController extends GetxController {
   var creditNotes = <CreditNote>[].obs;
   var allCreditNotes = <CreditNote>[].obs;
   var customers = <Customer>[].obs;
-  
+
   var isLoading = true.obs;
   var isLoadingMore = false.obs;
   var selectedFilter = 'All'.obs;
@@ -97,13 +97,18 @@ class CreditNoteController extends GetxController {
         params['limit'] = itemsPerPage.value;
       }
 
-      if (selectedFilter.value != 'All' && selectedFilter.value != 'Custom Range') {
+      if (selectedFilter.value != 'All' &&
+          selectedFilter.value != 'Custom Range') {
         params['status'] = selectedFilter.value;
       }
 
       if (selectedDateRange.value != null) {
-        params['startDate'] = DateFormat('yyyy-MM-dd').format(selectedDateRange.value!.start);
-        params['endDate'] = DateFormat('yyyy-MM-dd').format(selectedDateRange.value!.end);
+        params['startDate'] = DateFormat(
+          'yyyy-MM-dd',
+        ).format(selectedDateRange.value!.start);
+        params['endDate'] = DateFormat(
+          'yyyy-MM-dd',
+        ).format(selectedDateRange.value!.end);
       }
 
       if (searchQuery.value.isNotEmpty) {
@@ -133,10 +138,20 @@ class CreditNoteController extends GetxController {
           // Parse pagination info
           if (data['pagination'] != null) {
             final pagination = data['pagination'];
-            totalPages.value = pagination['pages'] ?? pagination['totalPages'] ?? 1;
-            totalItems.value = pagination['total'] ?? pagination['totalItems'] ?? newNotes.length;
-            hasNextPage.value = pagination['hasNext'] ?? pagination['nextPage'] != null ?? false;
-            hasPrevPage.value = pagination['hasPrev'] ?? pagination['prevPage'] != null ?? false;
+            totalPages.value =
+                pagination['pages'] ?? pagination['totalPages'] ?? 1;
+            totalItems.value =
+                pagination['total'] ??
+                pagination['totalItems'] ??
+                newNotes.length;
+            hasNextPage.value =
+                pagination['hasNext'] ??
+                pagination['nextPage'] != null ??
+                false;
+            hasPrevPage.value =
+                pagination['hasPrev'] ??
+                pagination['prevPage'] != null ??
+                false;
             serverSupportsPagination.value = true;
           } else if (data['total'] != null) {
             totalPages.value = data['pages'] ?? 1;
@@ -147,13 +162,15 @@ class CreditNoteController extends GetxController {
           } else if (data['totalCount'] != null) {
             totalItems.value = data['totalCount'];
             totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
-            hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+            hasNextPage.value =
+                (currentPage.value * itemsPerPage.value) < totalItems.value;
             hasPrevPage.value = currentPage.value > 1;
             serverSupportsPagination.value = false;
           } else {
             totalItems.value = creditNotes.length;
             totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
-            hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+            hasNextPage.value =
+                (currentPage.value * itemsPerPage.value) < totalItems.value;
             hasPrevPage.value = currentPage.value > 1;
             serverSupportsPagination.value = false;
           }
@@ -181,7 +198,9 @@ class CreditNoteController extends GetxController {
   // ─── LOAD CUSTOMERS ──────────────────────────────────────────────
   Future<void> loadCustomers() async {
     try {
-      final response = await _apiClient.get('/api/accounts-receivable/customers');
+      final response = await _apiClient.get(
+        '/api/accounts-receivable/customers',
+      );
       if (response.success && response.data['success'] == true) {
         customers.value = (response.data['data'] as List)
             .map((j) => Customer.fromJson(j))
@@ -197,8 +216,12 @@ class CreditNoteController extends GetxController {
     try {
       Map<String, dynamic> params = {};
       if (selectedDateRange.value != null) {
-        params['startDate'] = DateFormat('yyyy-MM-dd').format(selectedDateRange.value!.start);
-        params['endDate'] = DateFormat('yyyy-MM-dd').format(selectedDateRange.value!.end);
+        params['startDate'] = DateFormat(
+          'yyyy-MM-dd',
+        ).format(selectedDateRange.value!.start);
+        params['endDate'] = DateFormat(
+          'yyyy-MM-dd',
+        ).format(selectedDateRange.value!.end);
       }
 
       final response = await _apiClient.get(
@@ -227,7 +250,9 @@ class CreditNoteController extends GetxController {
     appliedAmount.value = notes.fold(0.0, (s, n) => s + n.appliedAmount);
     remainingAmount.value = notes.fold(0.0, (s, n) => s + n.remainingAmount);
     expiredAmount.value = notes
-        .where((n) => n.expiryDate != null && n.expiryDate!.isBefore(DateTime.now()))
+        .where(
+          (n) => n.expiryDate != null && n.expiryDate!.isBefore(DateTime.now()),
+        )
         .fold(0.0, (s, n) => s + n.remainingAmount);
 
     final now = DateTime.now();
@@ -235,15 +260,22 @@ class CreditNoteController extends GetxController {
     final weekStart = now.subtract(Duration(days: now.weekday - 1));
 
     thisMonthTotal.value = notes
-        .where((n) => n.date.isAfter(monthStart.subtract(const Duration(days: 1))))
+        .where(
+          (n) => n.date.isAfter(monthStart.subtract(const Duration(days: 1))),
+        )
         .fold(0.0, (s, n) => s + n.amount);
     thisWeekTotal.value = notes
-        .where((n) => n.date.isAfter(weekStart.subtract(const Duration(days: 1))))
+        .where(
+          (n) => n.date.isAfter(weekStart.subtract(const Duration(days: 1))),
+        )
         .fold(0.0, (s, n) => s + n.amount);
   }
 
-  // ─── GET UNPAID INVOICES ──────────────────────────────────────────
-  Future<List<InvoiceForCreditNote>> getUnpaidInvoices(String customerId) async {
+  // ─── GET INVOICES FOR CREDIT NOTE / APPLY ───────────────────────
+  Future<List<InvoiceForCreditNote>> getUnpaidInvoices(
+    String customerId, {
+    String purpose = 'create',
+  }) async {
     try {
       isLoadingBills.value = true;
       currentCustomerId.value = customerId;
@@ -251,6 +283,7 @@ class CreditNoteController extends GetxController {
 
       final response = await _apiClient.get(
         '/api/credit-notes/unpaid-invoices/$customerId',
+        queryParameters: {'purpose': purpose},
       );
 
       if (response.success && response.data['success'] == true) {
@@ -340,8 +373,11 @@ class CreditNoteController extends GetxController {
       // Close loading dialog
       Get.back();
 
-      if (response.success && (response.statusCode == 201 || response.statusCode == 200)) {
+      if (response.success &&
+          (response.statusCode == 201 || response.statusCode == 200)) {
         if (response.data['success'] == true) {
+          // Close the main "New Credit Note" form dialog
+          if (Get.isDialogOpen ?? false) Get.back();
           AppSnackbar.success(
             kSuccess,
             'Success ✅',
@@ -350,7 +386,9 @@ class CreditNoteController extends GetxController {
           await loadCreditNotesData(resetPage: true);
           await loadSummary();
         } else {
-          _showError(response.data['message'] ?? 'Failed to create credit note');
+          _showError(
+            response.data['message'] ?? 'Failed to create credit note',
+          );
         }
       } else {
         _showError(response.data['message'] ?? 'Failed to create credit note');
@@ -428,6 +466,8 @@ class CreditNoteController extends GetxController {
       Get.back();
 
       if (response.success && response.data['success'] == true) {
+        // Close the main "Apply Credit Note" form dialog
+        if (Get.isDialogOpen ?? false) Get.back();
         AppSnackbar.success(
           kSuccess,
           'Success ✅',
@@ -506,6 +546,8 @@ class CreditNoteController extends GetxController {
     final selectedInvoiceId = ''.obs;
     final selectedInvoice = Rxn<InvoiceForCreditNote>();
     final selectedReasonType = 'Return'.obs;
+    final returnedItems = <String, int>{}.obs; // lineItemId -> return qty
+    final computedCreditAmount = 0.0.obs;
 
     // Controllers
     final reasonController = TextEditingController();
@@ -610,37 +652,44 @@ class CreditNoteController extends GetxController {
                         Row(
                           children: [
                             Expanded(
-                              child: Obx(() => DropdownButtonFormField<String>(
-                                    decoration: _inputDecoration('Select Customer *'),
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.black,
-                                    ),
-                                    dropdownColor: kCardBg,
-                                    value: selectedCustomerId.value.isEmpty
-                                        ? null
-                                        : selectedCustomerId.value,
-                                    items: customers.map((c) {
-                                      return DropdownMenuItem(
-                                        value: c.id,
-                                        child: Text(c.name,
-                                            overflow: TextOverflow.ellipsis),
-                                      );
-                                    }).toList(),
-                                    onChanged: (val) async {
-                                      selectedCustomerId.value = val!;
-                                      selectedInvoiceId.value = '';
-                                      selectedInvoice.value = null;
-                                      amountController.clear();
-                                      await getUnpaidInvoices(val);
-                                    },
-                                    validator: (v) =>
-                                        v == null ? 'Customer required' : null,
-                                  )),
+                              child: Obx(
+                                () => DropdownButtonFormField<String>(
+                                  decoration: _inputDecoration(
+                                    'Select Customer *',
+                                  ),
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.black,
+                                  ),
+                                  dropdownColor: kCardBg,
+                                  value: selectedCustomerId.value.isEmpty
+                                      ? null
+                                      : selectedCustomerId.value,
+                                  items: customers.map((c) {
+                                    return DropdownMenuItem(
+                                      value: c.id,
+                                      child: Text(
+                                        c.name,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (val) async {
+                                    selectedCustomerId.value = val!;
+                                    selectedInvoiceId.value = '';
+                                    selectedInvoice.value = null;
+                                    amountController.clear();
+                                    await getUnpaidInvoices(val);
+                                  },
+                                  validator: (v) =>
+                                      v == null ? 'Customer required' : null,
+                                ),
+                              ),
                             ),
                             const SizedBox(width: 8),
                             IconButton(
-                              onPressed: () => Get.toNamed('/sales/warehouse-customers'),
+                              onPressed: () =>
+                                  Get.toNamed('/sales/warehouse-customers'),
                               icon: Icon(Icons.add, size: 20, color: kPrimary),
                               style: IconButton.styleFrom(
                                 backgroundColor: kPrimary.withOpacity(0.1),
@@ -676,7 +725,8 @@ class CreditNoteController extends GetxController {
                               ),
                               const SizedBox(height: 8),
                               ...unpaidInvoices.map((inv) {
-                                final isSelected = inv.id == selectedInvoiceId.value;
+                                final isSelected =
+                                    inv.id == selectedInvoiceId.value;
                                 return Container(
                                   margin: const EdgeInsets.only(bottom: 6),
                                   decoration: BoxDecoration(
@@ -684,7 +734,6 @@ class CreditNoteController extends GetxController {
                                         ? kPrimary.withOpacity(0.05)
                                         : kBgLight,
                                     borderRadius: BorderRadius.circular(8),
-                                 
                                   ),
                                   child: ListTile(
                                     dense: true,
@@ -697,14 +746,17 @@ class CreditNoteController extends GetxController {
                                       height: 20,
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                       
+
                                         color: isSelected
                                             ? kPrimary
                                             : Colors.transparent,
                                       ),
                                       child: isSelected
-                                          ? const Icon(Icons.check,
-                                              size: 12, color: Colors.white)
+                                          ? const Icon(
+                                              Icons.check,
+                                              size: 12,
+                                              color: Colors.white,
+                                            )
                                           : null,
                                     ),
                                     title: Text(
@@ -716,21 +768,31 @@ class CreditNoteController extends GetxController {
                                       ),
                                     ),
                                     subtitle: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          DateFormat('dd MMM yyyy').format(inv.date),
+                                          DateFormat(
+                                            'dd MMM yyyy',
+                                          ).format(inv.date),
                                           style: TextStyle(
                                             fontSize: 11,
                                             color: kSubText,
                                           ),
                                         ),
                                         Text(
-                                          'Outstanding: ${formatAmount(inv.outstanding)}',
+                                          'Total: ${formatAmount(inv.amount)}  •  Paid: ${formatAmount(inv.paidAmount)}',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: kSubText,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Credited: ${formatAmount(inv.totalCredited)}  •  Eligible: ${formatAmount(inv.eligibleCredit)}',
                                           style: TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w700,
-                                            color: kWarning,
+                                            color: kPrimary,
                                           ),
                                         ),
                                       ],
@@ -746,8 +808,11 @@ class CreditNoteController extends GetxController {
                                     onTap: () {
                                       selectedInvoiceId.value = inv.id;
                                       selectedInvoice.value = inv;
-                                      amountController.text =
-                                          inv.outstanding.toStringAsFixed(2);
+                                      returnedItems.clear();
+                                      amountController.text = inv.eligibleCredit
+                                          .toStringAsFixed(2);
+                                      computedCreditAmount.value =
+                                          inv.eligibleCredit;
                                     },
                                   ),
                                 );
@@ -757,40 +822,224 @@ class CreditNoteController extends GetxController {
                         }),
                         const SizedBox(height: 16),
 
-                        // Reason Type
-                        Obx(() => DropdownButtonFormField<String>(
-                              value: selectedReasonType.value,
-                              decoration: _inputDecoration('Reason Type *'),
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: Colors.black,
+                        // Invoice summary when selected
+                        Obx(() {
+                          final inv = selectedInvoice.value;
+                          if (inv == null) return const SizedBox.shrink();
+                          return Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(14),
+                            margin: const EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(
+                              color: kPrimary.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: kPrimary.withOpacity(0.2),
                               ),
-                              dropdownColor: kCardBg,
-                              items: const [
-                                DropdownMenuItem(
-                                  value: 'Return',
-                                  child: Text('Returned Goods'),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  inv.invoiceNumber,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w800,
+                                    color: kText,
+                                  ),
                                 ),
-                                DropdownMenuItem(
-                                  value: 'Refund',
-                                  child: Text('Service Refund'),
+                                const SizedBox(height: 8),
+                                _invoiceSummaryRow(
+                                  'Invoice Total',
+                                  formatAmount(inv.amount),
                                 ),
-                                DropdownMenuItem(
-                                  value: 'Discount',
-                                  child: Text('Discount Allowed'),
+                                _invoiceSummaryRow(
+                                  'Paid Amount',
+                                  formatAmount(inv.paidAmount),
                                 ),
-                                DropdownMenuItem(
-                                  value: 'Price Adjustment',
-                                  child: Text('Price Adjustment'),
+                                _invoiceSummaryRow(
+                                  'Already Credited',
+                                  formatAmount(inv.totalCredited),
                                 ),
-                                DropdownMenuItem(
-                                  value: 'Damaged Goods',
-                                  child: Text('Damaged Items'),
+                                _invoiceSummaryRow(
+                                  'Eligible Credit',
+                                  formatAmount(inv.eligibleCredit),
+                                  bold: true,
+                                  color: kPrimary,
+                                ),
+                                _invoiceSummaryRow(
+                                  'Outstanding',
+                                  formatAmount(inv.netOutstanding),
+                                  color: inv.netOutstanding < 0
+                                      ? kSuccess
+                                      : kWarning,
                                 ),
                               ],
-                              onChanged: (v) => selectedReasonType.value = v!,
-                              validator: (v) => v == null ? 'Required' : null,
-                            )),
+                            ),
+                          );
+                        }),
+
+                        // Returned goods line item selector
+                        Obx(() {
+                          final inv = selectedInvoice.value;
+                          final isReturn = [
+                            'Return',
+                            'Damaged Goods',
+                          ].contains(selectedReasonType.value);
+                          if (inv == null || !isReturn || inv.items.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Select Returned Items',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: kText,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              ...inv.items.map((item) {
+                                final returnQty = returnedItems[item.id] ?? 0;
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 8),
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: kBgLight,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              item.productName,
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            Text(
+                                              'Sold: ${item.quantity}  •  ${formatAmount(item.unitPrice)}/unit',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: kSubText,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: 70,
+                                        child: TextFormField(
+                                          initialValue: returnQty > 0
+                                              ? '$returnQty'
+                                              : '',
+                                          decoration: InputDecoration(
+                                            labelText: 'Qty',
+                                            isDense: true,
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                  horizontal: 8,
+                                                  vertical: 8,
+                                                ),
+                                            border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                          keyboardType: TextInputType.number,
+                                          onChanged: (v) {
+                                            final qty = int.tryParse(v) ?? 0;
+                                            if (qty <= 0) {
+                                              returnedItems.remove(item.id);
+                                            } else if (qty <= item.quantity) {
+                                              returnedItems[item.id] = qty;
+                                            } else {
+                                              returnedItems[item.id] =
+                                                  item.quantity;
+                                            }
+                                            // Auto-calculate credit from returned items
+                                            double total = 0;
+                                            for (final li in inv.items) {
+                                              final rq =
+                                                  returnedItems[li.id] ?? 0;
+                                              if (rq > 0) {
+                                                final lineSub =
+                                                    li.unitPrice * rq;
+                                                final lineDisc =
+                                                    (li.discount /
+                                                        li.quantity) *
+                                                    rq;
+                                                final lineTax =
+                                                    (li.taxAmount /
+                                                        li.quantity) *
+                                                    rq;
+                                                total +=
+                                                    lineSub -
+                                                    lineDisc +
+                                                    lineTax;
+                                              }
+                                            }
+                                            computedCreditAmount.value = total;
+                                            if (total > 0) {
+                                              amountController.text = total
+                                                  .toStringAsFixed(2);
+                                            }
+                                            returnedItems.refresh();
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }),
+                              const SizedBox(height: 16),
+                            ],
+                          );
+                        }),
+
+                        // Reason Type
+                        Obx(
+                          () => DropdownButtonFormField<String>(
+                            value: selectedReasonType.value,
+                            decoration: _inputDecoration('Reason Type *'),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.black,
+                            ),
+                            dropdownColor: kCardBg,
+                            items: const [
+                              DropdownMenuItem(
+                                value: 'Return',
+                                child: Text('Returned Goods'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'Refund',
+                                child: Text('Service Refund'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'Discount',
+                                child: Text('Discount Allowed'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'Price Adjustment',
+                                child: Text('Price Adjustment'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'Damaged Goods',
+                                child: Text('Damaged Items'),
+                              ),
+                            ],
+                            onChanged: (v) => selectedReasonType.value = v!,
+                            validator: (v) => v == null ? 'Required' : null,
+                          ),
+                        ),
                         const SizedBox(height: 16),
 
                         // Reason Description
@@ -798,7 +1047,8 @@ class CreditNoteController extends GetxController {
                           controller: reasonController,
                           decoration: _inputDecoration(
                             'Reason Description *',
-                            hint: 'e.g. Customer returned 5 units, item damaged',
+                            hint:
+                                'e.g. Customer returned 5 units, item damaged',
                           ),
                           style: const TextStyle(
                             fontSize: 13,
@@ -828,7 +1078,7 @@ class CreditNoteController extends GetxController {
                               if (inv != null) ...[
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Invoice: ${formatAmount(inv.amount)}  •  Outstanding: ${formatAmount(inv.outstanding)}',
+                                  'Eligible credit: ${formatAmount(inv.eligibleCredit)}  •  Outstanding: ${formatAmount(inv.netOutstanding)}',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: kPrimary,
@@ -839,15 +1089,17 @@ class CreditNoteController extends GetxController {
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: amountController,
-                                decoration: _inputDecoration('Amount')
-                                    .copyWith(prefixText: '${CurrencyUtils.prefix} '),
+                                decoration: _inputDecoration('Amount').copyWith(
+                                  prefixText: '${CurrencyUtils.prefix} ',
+                                ),
                                 style: const TextStyle(
                                   fontSize: 13,
                                   color: Colors.black,
                                 ),
-                                keyboardType: const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
                                 validator: (v) {
                                   if (v == null || v.trim().isEmpty) {
                                     return 'Amount required';
@@ -857,8 +1109,8 @@ class CreditNoteController extends GetxController {
                                     return 'Amount must be greater than 0';
                                   }
                                   final inv = selectedInvoice.value;
-                                  if (inv != null && amt > inv.outstanding) {
-                                    return 'Cannot exceed outstanding: ${formatAmount(inv.outstanding)}';
+                                  if (inv != null && amt > inv.eligibleCredit) {
+                                    return 'Cannot exceed eligible credit: ${formatAmount(inv.eligibleCredit)}';
                                   }
                                   return null;
                                 },
@@ -942,22 +1194,65 @@ class CreditNoteController extends GetxController {
                                     return;
                                   }
                                   if (formKey.currentState!.validate()) {
-                                    final amt = double.tryParse(
-                                        amountController.text.trim()) ?? 0;
-                                    createCreditNote(
-                                      customerId: selectedCustomerId.value,
-                                      originalInvoiceId: selectedInvoiceId.value,
-                                      amount: amt,
-                                      reason: reasonController.text.trim(),
-                                      reasonType: selectedReasonType.value,
-                                      items: [
+                                    final amt =
+                                        double.tryParse(
+                                          amountController.text.trim(),
+                                        ) ??
+                                        0;
+                                    final inv = selectedInvoice.value;
+
+                                    // Build line items payload
+                                    List<Map<String, dynamic>> itemsPayload =
+                                        [];
+                                    final isReturn = [
+                                      'Return',
+                                      'Damaged Goods',
+                                    ].contains(selectedReasonType.value);
+
+                                    if (isReturn &&
+                                        inv != null &&
+                                        returnedItems.isNotEmpty) {
+                                      for (final li in inv.items) {
+                                        final rq = returnedItems[li.id] ?? 0;
+                                        if (rq <= 0) continue;
+                                        final lineSub = li.unitPrice * rq;
+                                        final lineDisc =
+                                            (li.discount / li.quantity) * rq;
+                                        final lineTax =
+                                            (li.taxAmount / li.quantity) * rq;
+                                        itemsPayload.add({
+                                          'productId': li.productId,
+                                          'productName': li.productName,
+                                          'description': li.productName,
+                                          'quantity': rq,
+                                          'unitPrice': li.unitPrice,
+                                          'discount': lineDisc,
+                                          'taxRate': li.taxRate,
+                                          'taxAmount': lineTax,
+                                          'amount':
+                                              lineSub - lineDisc + lineTax,
+                                        });
+                                      }
+                                    } else {
+                                      itemsPayload = [
                                         {
-                                          'description': reasonController.text.trim(),
+                                          'description': reasonController.text
+                                              .trim(),
                                           'quantity': 1,
                                           'unitPrice': amt,
                                           'amount': amt,
-                                        }
-                                      ],
+                                        },
+                                      ];
+                                    }
+
+                                    createCreditNote(
+                                      customerId: selectedCustomerId.value,
+                                      originalInvoiceId:
+                                          selectedInvoiceId.value,
+                                      amount: amt,
+                                      reason: reasonController.text.trim(),
+                                      reasonType: selectedReasonType.value,
+                                      items: itemsPayload,
                                       notes: notesController.text.trim(),
                                     );
                                   }
@@ -976,8 +1271,10 @@ class CreditNoteController extends GetxController {
                                   height: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    valueColor: const AlwaysStoppedAnimation<Color>(
-                                        Colors.black),
+                                    valueColor:
+                                        const AlwaysStoppedAnimation<Color>(
+                                          Colors.black,
+                                        ),
                                   ),
                                 )
                               : const Text(
@@ -1014,9 +1311,9 @@ class CreditNoteController extends GetxController {
       text: cn.remainingAmount.toStringAsFixed(2),
     );
 
-    // Load invoices for this customer if not already loaded
+    // Load invoices with outstanding balance for apply flow
     if (currentCustomerId.value != cn.customerId || unpaidInvoices.isEmpty) {
-      getUnpaidInvoices(cn.customerId);
+      getUnpaidInvoices(cn.customerId, purpose: 'apply');
     }
 
     Get.dialog(
@@ -1132,7 +1429,8 @@ class CreditNoteController extends GetxController {
                               ),
                               const SizedBox(height: 8),
                               ...unpaidInvoices.map((inv) {
-                                final isSelected = inv.id == selectedInvoiceId.value;
+                                final isSelected =
+                                    inv.id == selectedInvoiceId.value;
                                 return Container(
                                   margin: const EdgeInsets.only(bottom: 6),
                                   decoration: BoxDecoration(
@@ -1140,7 +1438,6 @@ class CreditNoteController extends GetxController {
                                         ? kPrimary.withOpacity(0.05)
                                         : kBgLight,
                                     borderRadius: BorderRadius.circular(8),
-                                  
                                   ),
                                   child: ListTile(
                                     dense: true,
@@ -1153,14 +1450,17 @@ class CreditNoteController extends GetxController {
                                       height: 20,
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                     
+
                                         color: isSelected
                                             ? kPrimary
                                             : Colors.transparent,
                                       ),
                                       child: isSelected
-                                          ? const Icon(Icons.check,
-                                              size: 12, color: Colors.white)
+                                          ? const Icon(
+                                              Icons.check,
+                                              size: 12,
+                                              color: Colors.white,
+                                            )
                                           : null,
                                     ),
                                     title: Text(
@@ -1172,17 +1472,20 @@ class CreditNoteController extends GetxController {
                                       ),
                                     ),
                                     subtitle: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          DateFormat('dd MMM yyyy').format(inv.date),
+                                          DateFormat(
+                                            'dd MMM yyyy',
+                                          ).format(inv.date),
                                           style: TextStyle(
                                             fontSize: 11,
                                             color: kSubText,
                                           ),
                                         ),
                                         Text(
-                                          'Outstanding: ${formatAmount(inv.outstanding)}',
+                                          'Outstanding: ${formatAmount(inv.outstanding)}  •  Total: ${formatAmount(inv.amount)}',
                                           style: TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w700,
@@ -1202,11 +1505,12 @@ class CreditNoteController extends GetxController {
                                     onTap: () {
                                       selectedInvoiceId.value = inv.id;
                                       selectedInvoice.value = inv;
-                                      final maxAmt = inv.outstanding < cn.remainingAmount
+                                      final maxAmt =
+                                          inv.outstanding < cn.remainingAmount
                                           ? inv.outstanding
                                           : cn.remainingAmount;
-                                      amountController.text =
-                                          maxAmt.toStringAsFixed(2);
+                                      amountController.text = maxAmt
+                                          .toStringAsFixed(2);
                                     },
                                   ),
                                 );
@@ -1233,7 +1537,7 @@ class CreditNoteController extends GetxController {
                               if (inv != null) ...[
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Invoice outstanding: ${formatAmount(inv.outstanding)}  •  CN remaining: ${formatAmount(cn.remainingAmount)}',
+                                  'Invoice outstanding: ${formatAmount(inv.outstanding)}  •  CN available: ${formatAmount(cn.remainingAmount)}',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: kPrimary,
@@ -1244,15 +1548,17 @@ class CreditNoteController extends GetxController {
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: amountController,
-                                decoration: _inputDecoration('Amount')
-                                    .copyWith(prefixText: '${CurrencyUtils.prefix} '),
+                                decoration: _inputDecoration('Amount').copyWith(
+                                  prefixText: '${CurrencyUtils.prefix} ',
+                                ),
                                 style: const TextStyle(
                                   fontSize: 13,
                                   color: Colors.black,
                                 ),
-                                keyboardType: const TextInputType.numberWithOptions(
-                                  decimal: true,
-                                ),
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
                                 validator: (v) {
                                   if (v == null || v.trim().isEmpty) {
                                     return 'Amount required';
@@ -1331,8 +1637,11 @@ class CreditNoteController extends GetxController {
                                     return;
                                   }
                                   if (formKey.currentState!.validate()) {
-                                    final amt = double.tryParse(
-                                        amountController.text.trim()) ?? 0;
+                                    final amt =
+                                        double.tryParse(
+                                          amountController.text.trim(),
+                                        ) ??
+                                        0;
                                     applyCreditNote(
                                       creditNoteId: cn.id,
                                       invoiceId: selectedInvoiceId.value,
@@ -1354,8 +1663,10 @@ class CreditNoteController extends GetxController {
                                   height: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    valueColor: const AlwaysStoppedAnimation<Color>(
-                                        Colors.black),
+                                    valueColor:
+                                        const AlwaysStoppedAnimation<Color>(
+                                          Colors.black,
+                                        ),
                                   ),
                                 )
                               : const Text(
@@ -1388,8 +1699,8 @@ class CreditNoteController extends GetxController {
     final statusColor = cn.status == 'Issued'
         ? kWarning
         : cn.status == 'Applied'
-            ? kSuccess
-            : kDanger;
+        ? kSuccess
+        : kDanger;
 
     showModalBottomSheet(
       context: Get.context!,
@@ -1721,7 +2032,6 @@ class CreditNoteController extends GetxController {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(10),
-      
         ),
         child: Column(
           children: [
@@ -1744,10 +2054,7 @@ class CreditNoteController extends GetxController {
             ),
             Text(
               subtitle,
-              style: TextStyle(
-                fontSize: 10,
-                color: color.withOpacity(0.7),
-              ),
+              style: TextStyle(fontSize: 10, color: color.withOpacity(0.7)),
             ),
           ],
         ),
@@ -1781,10 +2088,7 @@ class CreditNoteController extends GetxController {
                   SizedBox(height: 16),
                   Text(
                     'Generating PDF...',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                   SizedBox(height: 4),
                   Text(
@@ -1870,7 +2174,7 @@ class CreditNoteController extends GetxController {
               borderRadius: pw.BorderRadius.circular(6),
             ),
             child: pw.Text(
-              'LedgerPro',
+              'BisonsTechs',
               style: pw.TextStyle(
                 color: PdfColors.white,
                 fontWeight: pw.FontWeight.bold,
@@ -1918,11 +2222,31 @@ class CreditNoteController extends GetxController {
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
         children: [
-          _pdfSummaryItem('Total Notes', totalCount.value.toString(), PdfColors.indigo700),
-          _pdfSummaryItem('Total Amount', formatAmount(totalAmount.value), PdfColors.indigo700),
-          _pdfSummaryItem('Applied', formatAmount(appliedAmount.value), PdfColors.green700),
-          _pdfSummaryItem('Remaining', formatAmount(remainingAmount.value), PdfColors.indigo700),
-          _pdfSummaryItem('Expired', formatAmount(expiredAmount.value), PdfColors.red700),
+          _pdfSummaryItem(
+            'Total Notes',
+            totalCount.value.toString(),
+            PdfColors.indigo700,
+          ),
+          _pdfSummaryItem(
+            'Total Amount',
+            formatAmount(totalAmount.value),
+            PdfColors.indigo700,
+          ),
+          _pdfSummaryItem(
+            'Applied',
+            formatAmount(appliedAmount.value),
+            PdfColors.green700,
+          ),
+          _pdfSummaryItem(
+            'Remaining',
+            formatAmount(remainingAmount.value),
+            PdfColors.indigo700,
+          ),
+          _pdfSummaryItem(
+            'Expired',
+            formatAmount(expiredAmount.value),
+            PdfColors.red700,
+          ),
         ],
       ),
     );
@@ -1931,9 +2255,19 @@ class CreditNoteController extends GetxController {
   pw.Widget _pdfSummaryItem(String label, String value, PdfColor color) {
     return pw.Column(
       children: [
-        pw.Text(label, style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
+        pw.Text(
+          label,
+          style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+        ),
         pw.SizedBox(height: 4),
-        pw.Text(value, style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: color)),
+        pw.Text(
+          value,
+          style: pw.TextStyle(
+            fontSize: 11,
+            fontWeight: pw.FontWeight.bold,
+            color: color,
+          ),
+        ),
       ],
     );
   }
@@ -1942,7 +2276,10 @@ class CreditNoteController extends GetxController {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        pw.Text('Credit Note Details', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+        pw.Text(
+          'Credit Note Details',
+          style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+        ),
         pw.SizedBox(height: 8),
         pw.Container(
           padding: const pw.EdgeInsets.symmetric(vertical: 8),
@@ -1953,44 +2290,171 @@ class CreditNoteController extends GetxController {
           ),
           child: pw.Row(
             children: [
-              pw.Expanded(flex: 2, child: pw.Text('CN #', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 3, child: pw.Text('Customer', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 2, child: pw.Text('Date', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 2, child: pw.Text('Amount', textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 2, child: pw.Text('Applied', textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 2, child: pw.Text('Remaining', textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 2, child: pw.Text('Status', textAlign: pw.TextAlign.center, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'CN #',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 3,
+                child: pw.Text(
+                  'Customer',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Date',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Amount',
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Applied',
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Remaining',
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Status',
+                  textAlign: pw.TextAlign.center,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
             ],
           ),
         ),
-        ...creditNotes.map((note) => pw.Container(
-          padding: const pw.EdgeInsets.symmetric(vertical: 6),
-          decoration: const pw.BoxDecoration(
-            border: pw.Border(
-              bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.5),
-            ),
-          ),
-          child: pw.Row(
-            children: [
-              pw.Expanded(flex: 2, child: pw.Text(note.creditNoteNumber, style: pw.TextStyle(fontSize: 9))),
-              pw.Expanded(flex: 3, child: pw.Text(note.customerName, style: pw.TextStyle(fontSize: 9))),
-              pw.Expanded(flex: 2, child: pw.Text(DateFormat('dd/MM/yy').format(note.date), style: pw.TextStyle(fontSize: 9))),
-              pw.Expanded(flex: 2, child: pw.Text(formatAmount(note.amount), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 9))),
-              pw.Expanded(flex: 2, child: pw.Text(formatAmount(note.appliedAmount), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 9))),
-              pw.Expanded(flex: 2, child: pw.Text(formatAmount(note.remainingAmount), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 9))),
-              pw.Expanded(flex: 2, child: pw.Text(note.status, textAlign: pw.TextAlign.center, style: pw.TextStyle(fontSize: 9))),
-            ],
-          ),
-        )).toList(),
+        ...creditNotes
+            .map(
+              (note) => pw.Container(
+                padding: const pw.EdgeInsets.symmetric(vertical: 6),
+                decoration: const pw.BoxDecoration(
+                  border: pw.Border(
+                    bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.5),
+                  ),
+                ),
+                child: pw.Row(
+                  children: [
+                    pw.Expanded(
+                      flex: 2,
+                      child: pw.Text(
+                        note.creditNoteNumber,
+                        style: pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                    pw.Expanded(
+                      flex: 3,
+                      child: pw.Text(
+                        note.customerName,
+                        style: pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                    pw.Expanded(
+                      flex: 2,
+                      child: pw.Text(
+                        DateFormat('dd/MM/yy').format(note.date),
+                        style: pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                    pw.Expanded(
+                      flex: 2,
+                      child: pw.Text(
+                        formatAmount(note.amount),
+                        textAlign: pw.TextAlign.right,
+                        style: pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                    pw.Expanded(
+                      flex: 2,
+                      child: pw.Text(
+                        formatAmount(note.appliedAmount),
+                        textAlign: pw.TextAlign.right,
+                        style: pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                    pw.Expanded(
+                      flex: 2,
+                      child: pw.Text(
+                        formatAmount(note.remainingAmount),
+                        textAlign: pw.TextAlign.right,
+                        style: pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                    pw.Expanded(
+                      flex: 2,
+                      child: pw.Text(
+                        note.status,
+                        textAlign: pw.TextAlign.center,
+                        style: pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+            .toList(),
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),
           child: pw.Row(
             children: [
-              pw.Expanded(flex: 7, child: pw.Text('Total', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 2, child: pw.Text(formatAmount(creditNotes.fold(0.0, (s, n) => s + n.amount)), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 2, child: pw.Text(formatAmount(creditNotes.fold(0.0, (s, n) => s + n.appliedAmount)), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 2, child: pw.Text(formatAmount(creditNotes.fold(0.0, (s, n) => s + n.remainingAmount)), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+              pw.Expanded(
+                flex: 7,
+                child: pw.Text(
+                  'Total',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  formatAmount(creditNotes.fold(0.0, (s, n) => s + n.amount)),
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  formatAmount(
+                    creditNotes.fold(0.0, (s, n) => s + n.appliedAmount),
+                  ),
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  formatAmount(
+                    creditNotes.fold(0.0, (s, n) => s + n.remainingAmount),
+                  ),
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
             ],
           ),
         ),
@@ -2024,10 +2488,7 @@ class CreditNoteController extends GetxController {
                   SizedBox(height: 16),
                   Text(
                     'Building Excel...',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                   SizedBox(height: 4),
                   Text(
@@ -2042,11 +2503,11 @@ class CreditNoteController extends GetxController {
         barrierDismissible: false,
       );
 
-      final excel = Excel.createExcel();
+      final workbook = excel.Excel.createExcel();
 
       // Summary Sheet
-      final summarySheet = excel['Summary'];
-      excel.setDefaultSheet('Summary');
+      final summarySheet = workbook['Summary'];
+      workbook.setDefaultSheet('Summary');
 
       _excelSetCell(
         summarySheet,
@@ -2110,7 +2571,7 @@ class CreditNoteController extends GetxController {
       summarySheet.setColumnWidth(1, 20);
 
       // Credit Notes Sheet
-      final notesSheet = excel['Credit Notes'];
+      final notesSheet = workbook['Credit Notes'];
       final headers = [
         'CN #',
         'Date',
@@ -2141,9 +2602,21 @@ class CreditNoteController extends GetxController {
       for (final note in creditNotes) {
         final bg = row.isEven ? 'F5F5F5' : 'FFFFFF';
         _excelSetCell(notesSheet, row, 0, note.creditNoteNumber, bgColor: bg);
-        _excelSetCell(notesSheet, row, 1, DateFormat('dd MMM yyyy').format(note.date), bgColor: bg);
+        _excelSetCell(
+          notesSheet,
+          row,
+          1,
+          DateFormat('dd MMM yyyy').format(note.date),
+          bgColor: bg,
+        );
         _excelSetCell(notesSheet, row, 2, note.customerName, bgColor: bg);
-        _excelSetCell(notesSheet, row, 3, note.originalInvoiceNumber, bgColor: bg);
+        _excelSetCell(
+          notesSheet,
+          row,
+          3,
+          note.originalInvoiceNumber,
+          bgColor: bg,
+        );
         _excelSetCell(notesSheet, row, 4, note.amount, bgColor: bg);
         _excelSetCell(notesSheet, row, 5, note.appliedAmount, bgColor: bg);
         _excelSetCell(notesSheet, row, 6, note.remainingAmount, bgColor: bg);
@@ -2153,14 +2626,25 @@ class CreditNoteController extends GetxController {
         row++;
       }
 
-      final colWidths = [15.0, 12.0, 25.0, 15.0, 15.0, 15.0, 15.0, 18.0, 12.0, 30.0];
+      final colWidths = [
+        15.0,
+        12.0,
+        25.0,
+        15.0,
+        15.0,
+        15.0,
+        15.0,
+        18.0,
+        12.0,
+        30.0,
+      ];
       for (int i = 0; i < colWidths.length; i++) {
         notesSheet.setColumnWidth(i, colWidths[i]);
       }
 
-      excel.delete('Sheet1');
+      workbook.delete('Sheet1');
 
-      final bytes = excel.save();
+      final bytes = workbook.save();
       if (bytes == null) throw Exception('Excel save failed');
 
       final dir = await getTemporaryDirectory();
@@ -2184,7 +2668,7 @@ class CreditNoteController extends GetxController {
   }
 
   void _excelSetCell(
-    Sheet sheet,
+    excel.Sheet sheet,
     int row,
     int col,
     dynamic value, {
@@ -2194,21 +2678,21 @@ class CreditNoteController extends GetxController {
     String fontColor = '000000',
   }) {
     final cell = sheet.cell(
-      CellIndex.indexByColumnRow(columnIndex: col, rowIndex: row),
+      excel.CellIndex.indexByColumnRow(columnIndex: col, rowIndex: row),
     );
     cell.value = value is double
-        ? DoubleCellValue(value)
+        ? excel.DoubleCellValue(value)
         : value is int
-        ? IntCellValue(value)
-        : TextCellValue(value.toString());
+        ? excel.IntCellValue(value)
+        : excel.TextCellValue(value.toString());
 
-    cell.cellStyle = CellStyle(
+    cell.cellStyle = excel.CellStyle(
       bold: bold,
       fontSize: fontSize.toInt(),
-      fontColorHex: ExcelColor.fromHexString('#$fontColor'),
+      fontColorHex: excel.ExcelColor.fromHexString('#$fontColor'),
       backgroundColorHex: bgColor != null
-          ? ExcelColor.fromHexString('#$bgColor')
-          : ExcelColor.fromHexString('#FFFFFF'),
+          ? excel.ExcelColor.fromHexString('#$bgColor')
+          : excel.ExcelColor.fromHexString('#FFFFFF'),
     );
   }
 
@@ -2288,14 +2772,8 @@ class CreditNoteController extends GetxController {
     return InputDecoration(
       labelText: label,
       hintText: hint,
-      hintStyle: TextStyle(
-        color: kSubText.withOpacity(0.6),
-        fontSize: 12,
-      ),
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 12,
-      ),
+      hintStyle: TextStyle(color: kSubText.withOpacity(0.6), fontSize: 12),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       filled: true,
       fillColor: kBgLight,
       border: OutlineInputBorder(
@@ -2358,10 +2836,14 @@ class CreditNoteController extends GetxController {
         children: [
           Row(
             children: [
-              Icon(Icons.inbox_outlined, size: 18, color: kSubText.withOpacity(0.5)),
+              Icon(
+                Icons.inbox_outlined,
+                size: 18,
+                color: kSubText.withOpacity(0.5),
+              ),
               const SizedBox(width: 8),
               Text(
-                'No unpaid invoices found',
+                'No invoices eligible for credit note',
                 style: TextStyle(fontSize: 12, color: kSubText),
               ),
             ],
@@ -2373,6 +2855,31 @@ class CreditNoteController extends GetxController {
               backgroundColor: kPrimary.withOpacity(0.1),
               padding: const EdgeInsets.all(8),
               minimumSize: const Size(36, 36),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _invoiceSummaryRow(
+    String label,
+    String value, {
+    bool bold = false,
+    Color? color,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontSize: 12, color: kSubText)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: bold ? FontWeight.w800 : FontWeight.w600,
+              color: color ?? kText,
             ),
           ),
         ],

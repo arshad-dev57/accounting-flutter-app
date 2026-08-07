@@ -1,6 +1,6 @@
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/core/dashboard/Screens/dashbaord_screen.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/dashboard/Screens/dashbaord_screen.dart';
 import 'package:flutter/material.dart';
 
 class ReceiptScreen extends StatefulWidget {
@@ -10,15 +10,16 @@ class ReceiptScreen extends StatefulWidget {
   State<ReceiptScreen> createState() => _ReceiptScreenState();
 }
 
-class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProviderStateMixin {
+class _ReceiptScreenState extends State<ReceiptScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _whereController = TextEditingController();
   final TextEditingController _whatController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
-  
+
   DateTime _spentDate = DateTime.now();
   String? _selectedPaymentMethod;
   Map<String, dynamic>? _selectedCategory;
-  
+
   // Tax related variables
   late TabController _tabController;
   String _selectedTaxTab = 'Inclusive';
@@ -36,16 +37,66 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
   ];
 
   final List<Map<String, dynamic>> _categories = [
-    {'name': 'Cost of Goods Sold', 'code': 'COGS-500', 'icon': Icons.inventory, 'color': Colors.blue},
-    {'name': 'Advertising', 'code': 'ADV-400', 'icon': Icons.campaign, 'color': Colors.purple},
-    {'name': 'Bank Fees', 'code': 'BNK-200', 'icon': Icons.account_balance, 'color': Colors.red},
-    {'name': 'Office Supplies', 'code': 'OFC-600', 'icon': Icons.business_center, 'color': Colors.orange},
-    {'name': 'Travel Expenses', 'code': 'TRV-700', 'icon': Icons.flight, 'color': Colors.teal},
-    {'name': 'Utilities', 'code': 'UTL-800', 'icon': Icons.electrical_services, 'color': Colors.brown},
-    {'name': 'Rent', 'code': 'RNT-900', 'icon': Icons.home, 'color': Colors.indigo},
-    {'name': 'Insurance', 'code': 'INS-100', 'icon': Icons.security, 'color': Colors.green},
-    {'name': 'Professional Fees', 'code': 'PRF-300', 'icon': Icons.work, 'color': Colors.cyan},
-    {'name': 'Meals & Entertainment', 'code': 'MNL-1000', 'icon': Icons.restaurant, 'color': Colors.pink},
+    {
+      'name': 'Cost of Goods Sold',
+      'code': 'COGS-500',
+      'icon': Icons.inventory,
+      'color': Colors.blue,
+    },
+    {
+      'name': 'Advertising',
+      'code': 'ADV-400',
+      'icon': Icons.campaign,
+      'color': Colors.purple,
+    },
+    {
+      'name': 'Bank Fees',
+      'code': 'BNK-200',
+      'icon': Icons.account_balance,
+      'color': Colors.red,
+    },
+    {
+      'name': 'Office Supplies',
+      'code': 'OFC-600',
+      'icon': Icons.business_center,
+      'color': Colors.orange,
+    },
+    {
+      'name': 'Travel Expenses',
+      'code': 'TRV-700',
+      'icon': Icons.flight,
+      'color': Colors.teal,
+    },
+    {
+      'name': 'Utilities',
+      'code': 'UTL-800',
+      'icon': Icons.electrical_services,
+      'color': Colors.brown,
+    },
+    {
+      'name': 'Rent',
+      'code': 'RNT-900',
+      'icon': Icons.home,
+      'color': Colors.indigo,
+    },
+    {
+      'name': 'Insurance',
+      'code': 'INS-100',
+      'icon': Icons.security,
+      'color': Colors.green,
+    },
+    {
+      'name': 'Professional Fees',
+      'code': 'PRF-300',
+      'icon': Icons.work,
+      'color': Colors.cyan,
+    },
+    {
+      'name': 'Meals & Entertainment',
+      'code': 'MNL-1000',
+      'icon': Icons.restaurant,
+      'color': Colors.pink,
+    },
   ];
 
   // Tax rates for Inclusive and Exclusive
@@ -66,7 +117,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
     ],
     'No Tax': [
       {'name': 'Tax Exempt', 'rate': '0%', 'code': 'EXM-0'},
-    ]
+    ],
   };
 
   @override
@@ -123,7 +174,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
         icon: Icon(Icons.arrow_back, color: kText),
         onPressed: () => Navigator.pop(context),
       ),
-      title:Text(
+      title: Text(
         'Receipt',
         style: TextStyle(
           color: kText,
@@ -139,12 +190,9 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
             foregroundColor: kPrimary,
             padding: const EdgeInsets.symmetric(horizontal: 16),
           ),
-          child:Text(
+          child: Text(
             'Save',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ),
       ],
@@ -161,31 +209,31 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
           // Where was it spent?
           _buildWhereSection(),
           const SizedBox(height: 12),
-          
+
           // What was it for?
           _buildWhatSection(),
           const SizedBox(height: 12),
-          
+
           // Spent today
           _buildSpentDateSection(),
           const SizedBox(height: 12),
-          
+
           // How did you pay?
           _buildPaymentSection(),
           const SizedBox(height: 12),
-          
+
           // Categorise to an account
           _buildCategorySection(),
           const SizedBox(height: 12),
-          
+
           // Tax Section with Tabs
           _buildTaxSection(),
           const SizedBox(height: 12),
-          
+
           // Total
           _buildTotalSection(),
           const SizedBox(height: 12),
-          
+
           // Attach File
           _buildAttachFileSection(),
           const SizedBox(height: 20),
@@ -204,7 +252,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-         Text(
+          Text(
             'Where was it spent?',
             style: TextStyle(
               fontSize: 14,
@@ -223,8 +271,15 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
               controller: _whereController,
               decoration: InputDecoration(
                 hintText: 'Store name or location',
-                hintStyle: TextStyle(color: kSubText.withOpacity(0.5), fontSize: 14),
-                prefixIcon: Icon(Icons.store_outlined, color: kSubText, size: 20),
+                hintStyle: TextStyle(
+                  color: kSubText.withOpacity(0.5),
+                  fontSize: 14,
+                ),
+                prefixIcon: Icon(
+                  Icons.store_outlined,
+                  color: kSubText,
+                  size: 20,
+                ),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 14),
               ),
@@ -245,7 +300,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-         Text(
+          Text(
             'What was it for?',
             style: TextStyle(
               fontSize: 14,
@@ -266,7 +321,10 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
               minLines: 2,
               decoration: InputDecoration(
                 hintText: 'Description of the expense',
-                hintStyle: TextStyle(color: kSubText.withOpacity(0.5), fontSize: 14),
+                hintStyle: TextStyle(
+                  color: kSubText.withOpacity(0.5),
+                  fontSize: 14,
+                ),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.all(14),
               ),
@@ -296,15 +354,12 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
                 children: [
                   Text(
                     'Spent today',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: kSubText,
-                    ),
+                    style: TextStyle(fontSize: 12, color: kSubText),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     _formatDate(_spentDate),
-                    style:  TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: kText,
@@ -330,7 +385,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-         Text(
+          Text(
             'How did you pay?',
             style: TextStyle(
               fontSize: 14,
@@ -357,7 +412,9 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
                       _selectedPaymentMethod ?? 'Select payment method',
                       style: TextStyle(
                         fontSize: 14,
-                        color: _selectedPaymentMethod != null ? kText : kSubText,
+                        color: _selectedPaymentMethod != null
+                            ? kText
+                            : kSubText,
                       ),
                     ),
                   ),
@@ -392,7 +449,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
                 ),
               ),
               const SizedBox(height: 20),
-             Text(
+              Text(
                 'No Bank Connected',
                 style: TextStyle(
                   fontSize: 18,
@@ -404,10 +461,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
               Text(
                 'Please connect a bank account to use payment methods',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: kSubText,
-                ),
+                style: TextStyle(fontSize: 14, color: kSubText),
               ),
               const SizedBox(height: 20),
               Container(
@@ -433,30 +487,32 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
                 ),
               ),
               const SizedBox(height: 20),
-              ..._paymentMethods.map((method) => ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+              ..._paymentMethods.map(
+                (method) => ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: kPrimary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(method['icon'], color: kPrimary),
                   ),
-                  child: Icon(method['icon'], color: kPrimary),
-                ),
-                title: Text(
-                  method['name'],
-                  style:  TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: kText,
+                  title: Text(
+                    method['name'],
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: kText,
+                    ),
                   ),
+                  onTap: () {
+                    setState(() {
+                      _selectedPaymentMethod = method['name'];
+                    });
+                    Navigator.pop(context);
+                  },
                 ),
-                onTap: () {
-                  setState(() {
-                    _selectedPaymentMethod = method['name'];
-                  });
-                  Navigator.pop(context);
-                },
-              )),
+              ),
               const SizedBox(height: 10),
               TextButton(
                 onPressed: () => Navigator.pop(context),
@@ -482,7 +538,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-         Text(
+          Text(
             'Categorise to an account',
             style: TextStyle(
               fontSize: 14,
@@ -506,7 +562,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      _selectedCategory != null 
+                      _selectedCategory != null
                           ? '${_selectedCategory!['code']} - ${_selectedCategory!['name']}'
                           : 'Select a category',
                       style: TextStyle(
@@ -552,7 +608,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
                     ),
                   ),
                   const SizedBox(height: 20),
-                 Text(
+                  Text(
                     'Select Category',
                     style: TextStyle(
                       fontSize: 18,
@@ -603,7 +659,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
       ),
       title: Text(
         category['name'],
-        style:  TextStyle(
+        style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w500,
           color: kText,
@@ -611,10 +667,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
       ),
       subtitle: Text(
         'Code: ${category['code']}',
-        style: TextStyle(
-          fontSize: 12,
-          color: kSubText,
-        ),
+        style: TextStyle(fontSize: 12, color: kSubText),
       ),
       onTap: () {
         setState(() {
@@ -635,7 +688,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-         Text(
+          Text(
             'Tax inclusive',
             style: TextStyle(
               fontSize: 14,
@@ -644,7 +697,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
             ),
           ),
           const SizedBox(height: 12),
-          
+
           // Tab Bar
           Container(
             decoration: BoxDecoration(
@@ -666,9 +719,9 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
               ],
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Tax Rate Selection
           GestureDetector(
             onTap: _selectedTaxTab != 'No Tax' ? _showTaxRateBottomSheet : null,
@@ -688,15 +741,17 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _selectedTaxTab == 'No Tax' ? 'Tax Exempt' : 'Select tax rate',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: kSubText,
-                          ),
+                          _selectedTaxTab == 'No Tax'
+                              ? 'Tax Exempt'
+                              : 'Select tax rate',
+                          style: TextStyle(fontSize: 12, color: kSubText),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          _selectedTaxRate ?? (_selectedTaxTab == 'No Tax' ? 'Tax Exempt' : 'Choose rate'),
+                          _selectedTaxRate ??
+                              (_selectedTaxTab == 'No Tax'
+                                  ? 'Tax Exempt'
+                                  : 'Choose rate'),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -712,7 +767,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
               ),
             ),
           ),
-          
+
           if (_selectedTaxTab == 'No Tax') ...[
             const SizedBox(height: 12),
             Container(
@@ -729,10 +784,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
                   Expanded(
                     child: Text(
                       'No tax will be applied to this receipt',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: kSubText,
-                      ),
+                      style: TextStyle(fontSize: 12, color: kSubText),
                     ),
                   ),
                 ],
@@ -774,44 +826,46 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
                 ),
               ),
               const SizedBox(height: 20),
-              ..._taxRates[_selectedTaxTab]!.map((rate) => ListTile(
-                title: Text(
-                  rate['name'],
-                  style:  TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: kText,
-                  ),
-                ),
-                subtitle: Text(
-                  'Rate: ${rate['rate']} | Code: ${rate['code']}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: kSubText,
-                  ),
-                ),
-                trailing: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    rate['rate'],
+              ..._taxRates[_selectedTaxTab]!.map(
+                (rate) => ListTile(
+                  title: Text(
+                    rate['name'],
                     style: TextStyle(
-                      fontSize: 12,
-                      color: kPrimary,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: kText,
                     ),
                   ),
+                  subtitle: Text(
+                    'Rate: ${rate['rate']} | Code: ${rate['code']}',
+                    style: TextStyle(fontSize: 12, color: kSubText),
+                  ),
+                  trailing: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: kPrimary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      rate['rate'],
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: kPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  onTap: () {
+                    setState(() {
+                      _selectedTaxRate = rate['name'];
+                    });
+                    Navigator.pop(context);
+                  },
                 ),
-                onTap: () {
-                  setState(() {
-                    _selectedTaxRate = rate['name'];
-                  });
-                  Navigator.pop(context);
-                },
-              )),
+              ),
               const SizedBox(height: 10),
               TextButton(
                 onPressed: () => Navigator.pop(context),
@@ -850,14 +904,17 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
                 decoration: InputDecoration(
                   hintText: 'Enter amount',
                   prefixText: CurrencyUtils.prefix,
-                  prefixStyle: TextStyle(color: kText, fontWeight: FontWeight.w600),
+                  prefixStyle: TextStyle(
+                    color: kText,
+                    fontWeight: FontWeight.w600,
+                  ),
                   border: InputBorder.none,
                 ),
               ),
             ),
           ),
           const SizedBox(width: 16),
-         Text(
+          Text(
             'Total',
             style: TextStyle(
               fontSize: 16,
@@ -868,7 +925,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
           const SizedBox(width: 8),
           Text(
             _amountController.text.isEmpty ? '0.00' : _amountController.text,
-            style:  TextStyle(
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w800,
               color: kPrimary,
@@ -889,7 +946,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
       child: OutlinedButton.icon(
         onPressed: _showAttachFileBottomSheet,
         icon: Icon(Icons.attach_file, size: 18, color: kPrimary),
-        label:Text(
+        label: Text(
           'ATTACH FILE',
           style: TextStyle(
             fontSize: 13,
@@ -931,7 +988,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
                 ),
               ),
               const SizedBox(height: 20),
-             Text(
+              Text(
                 'Attach File',
                 style: TextStyle(
                   fontSize: 18,
@@ -992,7 +1049,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
       ),
       title: Text(
         label,
-        style:  TextStyle(
+        style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w500,
           color: kText,
@@ -1025,7 +1082,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
       _showErrorSnackBar('Please enter where it was spent');
       return;
     }
-    
+
     if (_amountController.text.isEmpty) {
       _showErrorSnackBar('Please enter the amount');
       return;
@@ -1047,12 +1104,10 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
         content: Text('Receipt saved successfully'),
         backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
-    
+
     Navigator.pop(context);
   }
 
@@ -1062,9 +1117,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
         content: Text(message),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
@@ -1074,7 +1127,20 @@ class _ReceiptScreenState extends State<ReceiptScreen> with SingleTickerProvider
   }
 
   String _getMonth(int month) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return months[month - 1];
   }
 }

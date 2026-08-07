@@ -1,7 +1,7 @@
 // lib/core/Splash/controller/splash_controller.dart
 
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:LedgerPro_app/core/Onboarding/views/Onboarding_screen.dart';
+import 'package:BisonsTechs_app/core/Onboarding/views/Onboarding_screen.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

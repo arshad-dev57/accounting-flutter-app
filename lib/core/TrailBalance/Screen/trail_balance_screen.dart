@@ -1,8 +1,7 @@
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/FiscalYear/controller/fiscal_year_controller.dart';
-import 'package:LedgerPro_app/core/TrailBalance/controller/trail_balance_controller.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/TrailBalance/controller/trail_balance_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -27,7 +26,8 @@ class TrialBalanceScreen extends StatelessWidget {
           _buildTopHeader(context, controller, fiscalYearController),
           Expanded(
             child: Obx(() {
-              if (controller.isLoading.value && controller.trialBalanceData.isEmpty) {
+              if (controller.isLoading.value &&
+                  controller.trialBalanceData.isEmpty) {
                 return Center(
                   child: LoadingAnimationWidget.discreteCircle(
                     color: kPrimary,
@@ -41,9 +41,7 @@ class TrialBalanceScreen extends StatelessWidget {
                   children: [
                     _buildSummaryCards(controller),
                     const SizedBox(height: 8),
-                    Expanded(
-                      child: _buildListView(controller, context),
-                    ),
+                    Expanded(child: _buildListView(controller, context)),
                   ],
                 ),
               );
@@ -94,7 +92,7 @@ class TrialBalanceScreen extends StatelessWidget {
                         ),
                         Obx(
                           () => Text(
-                            '${controller.trialBalanceData.length} accounts',
+                            '${controller.totalAccounts.value} accounts',
                             style: TextStyle(
                               fontSize: 11,
                               color: Colors.black.withOpacity(0.55),
@@ -166,7 +164,11 @@ class TrialBalanceScreen extends StatelessWidget {
                         child: DropdownButton<String>(
                           hint: Row(
                             children: [
-                              Icon(Icons.account_balance, size: 16, color: kPrimary),
+                              Icon(
+                                Icons.account_balance,
+                                size: 16,
+                                color: kPrimary,
+                              ),
                               const SizedBox(width: 8),
                               const Text(
                                 'Select Fiscal Year',
@@ -174,7 +176,8 @@ class TrialBalanceScreen extends StatelessWidget {
                               ),
                             ],
                           ),
-                          value: fiscalYearController.selectedFiscalYear.value?.id,
+                          value:
+                              fiscalYearController.selectedFiscalYear.value?.id,
                           icon: const Icon(Icons.arrow_drop_down, size: 20),
                           padding: EdgeInsets.zero,
                           isExpanded: true,
@@ -206,12 +209,52 @@ class TrialBalanceScreen extends StatelessWidget {
                           }).toList(),
                           onChanged: (value) {
                             if (value != null) {
-                              final selectedYear = fiscalYearController.fiscalYears
+                              final selectedYear = fiscalYearController
+                                  .fiscalYears
                                   .firstWhere((y) => y.id == value);
-                              fiscalYearController.selectFiscalYear(selectedYear);
-                              controller.fetchTrialBalance();
+                              fiscalYearController.selectFiscalYear(
+                                selectedYear,
+                              );
                             }
                           },
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      onChanged: controller.searchAccounts,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.black87,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Search accounts...',
+                        hintStyle: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade400,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          size: 18,
+                          color: kPrimary,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 10,
                         ),
                       ),
                     ),
@@ -222,42 +265,52 @@ class TrialBalanceScreen extends StatelessWidget {
                     () => SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
-                        children: ['All', 'Assets', 'Liabilities', 'Equity', 'Income', 'Expenses']
-                            .map((filter) {
-                          final isSelected = controller.selectedFilter.value == filter;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 6),
-                            child: GestureDetector(
-                              onTap: () => controller.changeFilter(filter),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 180),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 5,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isSelected
-                                      ? Colors.black
-                                      : Colors.white.withOpacity(0.18),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? Colors.black
-                                        : Colors.white.withOpacity(0.4),
+                        children:
+                            [
+                              'All',
+                              'Assets',
+                              'Liabilities',
+                              'Equity',
+                              'Income',
+                              'Expenses',
+                            ].map((filter) {
+                              final isSelected =
+                                  controller.selectedFilter.value == filter;
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 6),
+                                child: GestureDetector(
+                                  onTap: () => controller.changeFilter(filter),
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 180),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? Colors.black
+                                          : Colors.white.withOpacity(0.18),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? Colors.black
+                                            : Colors.white.withOpacity(0.4),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      filter,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: isSelected
+                                            ? Colors.white
+                                            : Colors.black87,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                                child: Text(
-                                  filter,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: isSelected ? Colors.white : Colors.black87,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
+                              );
+                            }).toList(),
                       ),
                     ),
                   ),
@@ -284,7 +337,11 @@ class TrialBalanceScreen extends StatelessWidget {
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.date_range, size: 14, color: kPrimary),
+                                Icon(
+                                  Icons.date_range,
+                                  size: 14,
+                                  color: kPrimary,
+                                ),
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Obx(
@@ -294,7 +351,11 @@ class TrialBalanceScreen extends StatelessWidget {
                                           : 'Select Date Range',
                                       style: TextStyle(
                                         fontSize: 11,
-                                        color: controller.selectedDateRange.value != null
+                                        color:
+                                            controller
+                                                    .selectedDateRange
+                                                    .value !=
+                                                null
                                             ? Colors.black87
                                             : Colors.grey.shade400,
                                         fontWeight: FontWeight.w500,
@@ -348,9 +409,11 @@ class TrialBalanceScreen extends StatelessWidget {
                             Obx(
                               () => Switch(
                                 value: controller.showZeroBalance.value,
-                                onChanged: (value) => controller.toggleZeroBalance(value),
+                                onChanged: (value) =>
+                                    controller.toggleZeroBalance(value),
                                 activeColor: kPrimary,
-                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
                                 splashRadius: 0,
                               ),
                             ),
@@ -490,7 +553,9 @@ class TrialBalanceScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
-              isBalanced ? Icons.check_circle_outline_rounded : Icons.warning_amber_rounded,
+              isBalanced
+                  ? Icons.check_circle_outline_rounded
+                  : Icons.warning_amber_rounded,
               size: 20,
               color: color,
             ),
@@ -587,41 +652,16 @@ class TrialBalanceScreen extends StatelessWidget {
         );
       }
 
-      return NotificationListener<ScrollNotification>(
-        onNotification: (ScrollNotification scrollInfo) {
-          if (!controller.isLoadingMore.value &&
-              scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent) {
-            controller.loadMoreData();
-          }
-          return false;
+      return ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemCount: data.length,
+        itemBuilder: (context, index) {
+          final account = data[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _buildAccountCard(account, controller, context),
+          );
         },
-        child: ListView.builder(
-          controller: controller.scrollController,
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          itemCount: data.length + 1,
-          itemBuilder: (context, index) {
-            if (index == data.length) {
-              return Obx(
-                () => controller.isLoadingMore.value
-                    ? Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Center(
-                          child: LoadingAnimationWidget.discreteCircle(
-                            color: kPrimary,
-                            size: 30,
-                          ),
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-              );
-            }
-            final account = data[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _buildAccountCard(account, controller, context),
-            );
-          },
-        ),
       );
     });
   }
@@ -638,11 +678,8 @@ class TrialBalanceScreen extends StatelessWidget {
     final netBalance = account.debitBalance - account.creditBalance;
     final accountColor = _getAccountTypeColor(account.accountType);
     final accountIcon = _getAccountIcon(account.accountType);
-    final isZeroBalance = account.debitBalance == 0 && account.creditBalance == 0;
-
-    if (!controller.showZeroBalance.value && isZeroBalance) {
-      return const SizedBox.shrink();
-    }
+    final isZeroBalance =
+        account.debitBalance == 0 && account.creditBalance == 0;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -732,7 +769,10 @@ class TrialBalanceScreen extends StatelessWidget {
                     const SizedBox(width: 8),
                     // Net balance pill
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: netBalance >= 0
                             ? kSuccess.withOpacity(0.1)
@@ -748,7 +788,9 @@ class TrialBalanceScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Icon(
-                            netBalance >= 0 ? Icons.arrow_upward : Icons.arrow_downward,
+                            netBalance >= 0
+                                ? Icons.arrow_upward
+                                : Icons.arrow_downward,
                             size: 10,
                             color: netBalance >= 0 ? kSuccess : kDanger,
                           ),
@@ -922,7 +964,7 @@ class TrialBalanceScreen extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              '${controller.trialBalanceData.length} accounts will be exported',
+              '${controller.totalAccounts.value} accounts will be exported',
               style: TextStyle(fontSize: 12, color: kSubText),
             ),
             const SizedBox(height: 20),
@@ -937,7 +979,7 @@ class TrialBalanceScreen extends StatelessWidget {
                     bgColor: const Color(0xFFFFEBEE),
                     onTap: () {
                       Navigator.pop(ctx);
-                      controller.exportTrialBalance();
+                      controller.exportToPdf();
                     },
                   ),
                 ),
@@ -951,7 +993,7 @@ class TrialBalanceScreen extends StatelessWidget {
                     bgColor: const Color(0xFFE8F5E9),
                     onTap: () {
                       Navigator.pop(ctx);
-                      controller.exportTrialBalance();
+                      controller.exportToExcel();
                     },
                   ),
                 ),
@@ -1013,10 +1055,7 @@ class TrialBalanceScreen extends StatelessWidget {
             ),
             Text(
               subtitle,
-              style: TextStyle(
-                fontSize: 10,
-                color: color.withOpacity(0.7),
-              ),
+              style: TextStyle(fontSize: 10, color: color.withOpacity(0.7)),
             ),
           ],
         ),
@@ -1074,7 +1113,11 @@ class TrialBalanceScreen extends StatelessWidget {
                               color: accountColor.withOpacity(0.12),
                               borderRadius: BorderRadius.circular(14),
                             ),
-                            child: Icon(accountIcon, size: 26, color: accountColor),
+                            child: Icon(
+                              accountIcon,
+                              size: 26,
+                              color: accountColor,
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -1113,7 +1156,10 @@ class TrialBalanceScreen extends StatelessWidget {
                                     const SizedBox(width: 6),
                                     Text(
                                       '• ${account.accountType}',
-                                      style: TextStyle(fontSize: 11, color: kSubText),
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: kSubText,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -1125,9 +1171,19 @@ class TrialBalanceScreen extends StatelessWidget {
                       const SizedBox(height: 16),
                       Row(
                         children: [
-                          _miniKpi('Debit', _formatAmount(account.debitBalance), kSuccess, Icons.trending_up),
+                          _miniKpi(
+                            'Debit',
+                            _formatAmount(account.debitBalance),
+                            kSuccess,
+                            Icons.trending_up,
+                          ),
                           const SizedBox(width: 8),
-                          _miniKpi('Credit', _formatAmount(account.creditBalance), kDanger, Icons.trending_down),
+                          _miniKpi(
+                            'Credit',
+                            _formatAmount(account.creditBalance),
+                            kDanger,
+                            Icons.trending_down,
+                          ),
                           const SizedBox(width: 8),
                           _miniKpi(
                             'Net',

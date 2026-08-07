@@ -1,6 +1,6 @@
 // lib/core/warehouse/category/category_controller.dart - WITH SUB-CATEGORY SUPPORT
 
-import 'package:LedgerPro_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -19,7 +19,13 @@ class CategoriesController extends GetxController {
   RxInt totalProducts = 0.obs;
   RxInt rootCategories = 0.obs;
 
-  final List<String> filters = ['All', 'Main Categories', 'Sub-Categories', 'With Products', 'Empty'];
+  final List<String> filters = [
+    'All',
+    'Main Categories',
+    'Sub-Categories',
+    'With Products',
+    'Empty',
+  ];
 
   var filteredCategories = <Map<String, dynamic>>[].obs;
 
@@ -53,8 +59,12 @@ class CategoriesController extends GetxController {
 
   void _updateKpi() {
     totalCategories.value = categories.length;
-    rootCategories.value = categories.where((c) => c['parentId'] == null).length;
-    totalSubCategories.value = categories.where((c) => c['parentId'] != null).length;
+    rootCategories.value = categories
+        .where((c) => c['parentId'] == null)
+        .length;
+    totalSubCategories.value = categories
+        .where((c) => c['parentId'] != null)
+        .length;
     totalProducts.value = categories.fold(
       0,
       (sum, c) => sum + ((c['productCount'] ?? 0) as int),

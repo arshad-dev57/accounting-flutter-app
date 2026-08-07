@@ -1,5 +1,5 @@
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/core/Users/controller/user_management_controller.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/Users/controller/user_management_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -9,12 +9,10 @@ class AccessManagementScreen extends StatefulWidget {
   const AccessManagementScreen({super.key, this.userId});
 
   @override
-  State<AccessManagementScreen> createState() =>
-      _AccessManagementScreenState();
+  State<AccessManagementScreen> createState() => _AccessManagementScreenState();
 }
 
-class _AccessManagementScreenState
-    extends State<AccessManagementScreen> {
+class _AccessManagementScreenState extends State<AccessManagementScreen> {
   late final UserManagementController _controller;
   User? _user;
   final Map<String, UserPermission> _permissions = {};
@@ -187,11 +185,7 @@ class _AccessManagementScreenState
       route: '__currency',
       icon: Icons.attach_money,
     ),
-    _PageAccess(
-      name: 'My Profile',
-      route: '__profile',
-      icon: Icons.person,
-    ),
+    _PageAccess(name: 'My Profile', route: '__profile', icon: Icons.person),
     _PageAccess(
       name: 'Change Password',
       route: '__changepassword',
@@ -216,8 +210,7 @@ class _AccessManagementScreenState
   void _loadUserData() {
     if (widget.userId == null || widget.userId!.isEmpty) return;
 
-    _user = _controller.users
-        .firstWhereOrNull((u) => u.id == widget.userId);
+    _user = _controller.users.firstWhereOrNull((u) => u.id == widget.userId);
 
     if (_user != null) {
       for (var perm in _user!.permissions) {
@@ -324,8 +317,7 @@ class _AccessManagementScreenState
           const SizedBox(height: 16),
           Expanded(
             child: ListView.builder(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: _availablePages.length,
               itemBuilder: (context, index) {
                 final page = _availablePages[index];
@@ -352,8 +344,7 @@ class _AccessManagementScreenState
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        border:
-            Border(bottom: BorderSide(color: Colors.grey[200]!)),
+        border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
       ),
       child: Row(
         children: [
@@ -391,10 +382,7 @@ class _AccessManagementScreenState
                 const SizedBox(height: 4),
                 Text(
                   _user!.email,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ],
             ),
@@ -470,14 +458,16 @@ class _PermissionCard extends StatelessWidget {
                 value: permission.canView,
                 color: Colors.blue,
                 onChanged: (value) {
-                  onPermissionChanged(UserPermission(
-                    id: permission.id,
-                    page: permission.page,
-                    canView: value,
-                    canCreate: permission.canCreate,
-                    canEdit: permission.canEdit,
-                    canDelete: permission.canDelete,
-                  ));
+                  onPermissionChanged(
+                    UserPermission(
+                      id: permission.id,
+                      page: permission.page,
+                      canView: value,
+                      canCreate: permission.canCreate,
+                      canEdit: permission.canEdit,
+                      canDelete: permission.canDelete,
+                    ),
+                  );
                 },
               ),
               const SizedBox(width: 12),
@@ -486,14 +476,16 @@ class _PermissionCard extends StatelessWidget {
                 value: permission.canCreate,
                 color: Colors.green,
                 onChanged: (value) {
-                  onPermissionChanged(UserPermission(
-                    id: permission.id,
-                    page: permission.page,
-                    canView: permission.canView,
-                    canCreate: value,
-                    canEdit: permission.canEdit,
-                    canDelete: permission.canDelete,
-                  ));
+                  onPermissionChanged(
+                    UserPermission(
+                      id: permission.id,
+                      page: permission.page,
+                      canView: permission.canView,
+                      canCreate: value,
+                      canEdit: permission.canEdit,
+                      canDelete: permission.canDelete,
+                    ),
+                  );
                 },
               ),
               const SizedBox(width: 12),
@@ -502,14 +494,16 @@ class _PermissionCard extends StatelessWidget {
                 value: permission.canEdit,
                 color: Colors.orange,
                 onChanged: (value) {
-                  onPermissionChanged(UserPermission(
-                    id: permission.id,
-                    page: permission.page,
-                    canView: permission.canView,
-                    canCreate: permission.canCreate,
-                    canEdit: value,
-                    canDelete: permission.canDelete,
-                  ));
+                  onPermissionChanged(
+                    UserPermission(
+                      id: permission.id,
+                      page: permission.page,
+                      canView: permission.canView,
+                      canCreate: permission.canCreate,
+                      canEdit: value,
+                      canDelete: permission.canDelete,
+                    ),
+                  );
                 },
               ),
               const SizedBox(width: 12),
@@ -518,14 +512,16 @@ class _PermissionCard extends StatelessWidget {
                 value: permission.canDelete,
                 color: Colors.red,
                 onChanged: (value) {
-                  onPermissionChanged(UserPermission(
-                    id: permission.id,
-                    page: permission.page,
-                    canView: permission.canView,
-                    canCreate: permission.canCreate,
-                    canEdit: permission.canEdit,
-                    canDelete: value,
-                  ));
+                  onPermissionChanged(
+                    UserPermission(
+                      id: permission.id,
+                      page: permission.page,
+                      canView: permission.canView,
+                      canCreate: permission.canCreate,
+                      canEdit: permission.canEdit,
+                      canDelete: value,
+                    ),
+                  );
                 },
               ),
             ],
@@ -557,21 +553,15 @@ class _PermissionToggle extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: value
-                ? color.withOpacity(0.1)
-                : Colors.grey[100],
+            color: value ? color.withOpacity(0.1) : Colors.grey[100],
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: value ? color : Colors.grey[300]!,
-            ),
+            border: Border.all(color: value ? color : Colors.grey[300]!),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                value
-                    ? Icons.check_circle
-                    : Icons.circle_outlined,
+                value ? Icons.check_circle : Icons.circle_outlined,
                 size: 16,
                 color: value ? color : Colors.grey[400],
               ),
@@ -611,10 +601,7 @@ class _LegendItem extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 4),
-        Text(
-          label,
-          style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-        ),
+        Text(label, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
       ],
     );
   }
@@ -625,9 +612,5 @@ class _PageAccess {
   final String route;
   final IconData icon;
 
-  _PageAccess({
-    required this.name,
-    required this.route,
-    required this.icon,
-  });
+  _PageAccess({required this.name, required this.route, required this.icon});
 }

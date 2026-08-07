@@ -32,6 +32,11 @@ class JournalEntry {
   double get totalDebit => lines.fold(0, (sum, line) => sum + line.debit);
   double get totalCredit => lines.fold(0, (sum, line) => sum + line.credit);
 
+  /// Journal entries must balance — Dr total equals Cr total
+  double get entryAmount => totalDebit > 0 ? totalDebit : totalCredit;
+
+  bool get isBalanced => (totalDebit - totalCredit).abs() < 0.01;
+
   // ✅ FIXED: Safe fromJson with null handling
   factory JournalEntry.fromJson(Map<String, dynamic> json) {
     // ✅ SAFE: Handle null lines
@@ -93,13 +98,21 @@ class JournalLine {
 
   // ✅ FIXED: Safe fromJson with null handling
   factory JournalLine.fromJson(Map<String, dynamic> json) {
+    final account = json['account'] as Map<String, dynamic>?;
     return JournalLine(
-      accountId: json['accountId']?.toString() ?? '',
-      accountName: json['accountName']?.toString() ?? '',
-      accountCode: json['accountCode']?.toString() ?? '',
+      accountId: json['accountId']?.toString() ??
+          account?['id']?.toString() ??
+          '',
+      accountName: json['accountName']?.toString() ??
+          account?['name']?.toString() ??
+          '',
+      accountCode: json['accountCode']?.toString() ??
+          account?['code']?.toString() ??
+          '',
       debit: (json['debit'] as num?)?.toDouble() ?? 0.0,
       credit: (json['credit'] as num?)?.toDouble() ?? 0.0,
-      accountType: json['accountType']?.toString(),
+      accountType: json['accountType']?.toString() ??
+          account?['type']?.toString(),
       oldBalance: (json['oldBalance'] as num?)?.toDouble(),
       newBalance: (json['newBalance'] as num?)?.toDouble(),
     );

@@ -1,8 +1,8 @@
 // lib/core/warehouse/quotation/controller/quotation_controller.dart
 
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/quotation/quotation_model.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/quotation/quotation_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -35,7 +35,15 @@ class QuotationController extends GetxController {
   final Rx<DateTime?> fromDate = Rx<DateTime?>(null);
   final Rx<DateTime?> toDate = Rx<DateTime?>(null);
 
-  final List<String> filters = ['all', 'Draft', 'Sent', 'Accepted', 'Rejected', 'Expired', 'Converted'];
+  final List<String> filters = [
+    'all',
+    'Draft',
+    'Sent',
+    'Accepted',
+    'Rejected',
+    'Expired',
+    'Converted',
+  ];
 
   // ─── STATS ────────────────────────────────────────────────────
   final Rx<QuotationStats> stats = QuotationStats(
@@ -53,17 +61,29 @@ class QuotationController extends GetxController {
   final Rx<Map<String, dynamic>> monthlyStats = Rx<Map<String, dynamic>>({});
 
   // ─── CONSTANTS ────────────────────────────────────────────────
-  static const statusOptions = ['all', 'Draft', 'Sent', 'Accepted', 'Rejected', 'Expired', 'Converted'];
+  static const statusOptions = [
+    'all',
+    'Draft',
+    'Sent',
+    'Accepted',
+    'Rejected',
+    'Expired',
+    'Converted',
+  ];
 
   // ─── WIZARD STATE ─────────────────────────────────────────────
   final RxInt wizardStep = 0.obs;
-  final RxList<Map<String, dynamic>> customerSearchResults = <Map<String, dynamic>>[].obs;
+  final RxList<Map<String, dynamic>> customerSearchResults =
+      <Map<String, dynamic>>[].obs;
   final RxBool isSearchingCustomers = false.obs;
-  final Rx<Map<String, dynamic>?> selectedCustomer = Rx<Map<String, dynamic>?>(null);
+  final Rx<Map<String, dynamic>?> selectedCustomer = Rx<Map<String, dynamic>?>(
+    null,
+  );
   final RxList<QuotationLineDraft> lineDrafts = <QuotationLineDraft>[].obs;
-  final RxList<Map<String, dynamic>> productSearchResults = <Map<String, dynamic>>[].obs;
+  final RxList<Map<String, dynamic>> productSearchResults =
+      <Map<String, dynamic>>[].obs;
   final RxBool isSearchingProducts = false.obs;
-  
+
   // ─── CONTROLLERS ─────────────────────────────────────────────
   final customerSearchController = TextEditingController();
   final productSearchController = TextEditingController();
@@ -84,8 +104,12 @@ class QuotationController extends GetxController {
     // Set default dates
     selectedQuotationDate.value = DateTime.now();
     selectedValidUntil.value = DateTime.now().add(const Duration(days: 30));
-    quotationDateController.text = DateFormat('dd MMM yyyy').format(selectedQuotationDate.value!);
-    validUntilController.text = DateFormat('dd MMM yyyy').format(selectedValidUntil.value!);
+    quotationDateController.text = DateFormat(
+      'dd MMM yyyy',
+    ).format(selectedQuotationDate.value!);
+    validUntilController.text = DateFormat(
+      'dd MMM yyyy',
+    ).format(selectedValidUntil.value!);
     fetchQuotations();
   }
 
@@ -130,9 +154,11 @@ class QuotationController extends GetxController {
 
   Future<void> fetchQuotations({bool resetPage = false}) async {
     print('🔵 [QuotationController] fetchQuotations called');
-    print('🔵 [QuotationController] Current Page: ${currentPage.value}, Limit: ${pageLimit.value}');
+    print(
+      '🔵 [QuotationController] Current Page: ${currentPage.value}, Limit: ${pageLimit.value}',
+    );
     print('🔵 [QuotationController] Reset Page: $resetPage');
-    
+
     if (resetPage) currentPage.value = 1;
     try {
       isLoading.value = true;
@@ -157,10 +183,15 @@ class QuotationController extends GetxController {
         print('🔵 [QuotationController] To date: ${params['toDate']}');
       }
 
-      final query = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
+      final query = params.entries
+          .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+          .join('&');
       print('🔵 [QuotationController] API Request: GET /api/quotations?$query');
 
-      final response = await _api.get('/api/quotations?$query', requiresAuth: true);
+      final response = await _api.get(
+        '/api/quotations?$query',
+        requiresAuth: true,
+      );
 
       print('🔵 [QuotationController] Response Status: ${response.statusCode}');
       print('🔵 [QuotationController] Response Success: ${response.success}');
@@ -168,7 +199,7 @@ class QuotationController extends GetxController {
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         print('🔵 [QuotationController] Data length: ${list.length}');
-        
+
         quotations.value = list
             .map((e) => QuotationModel.fromJson(Map<String, dynamic>.from(e)))
             .toList();
@@ -183,8 +214,12 @@ class QuotationController extends GetxController {
         }
 
         if (response.data['stats'] != null) {
-          monthlyStats.value = Map<String, dynamic>.from(response.data['stats']);
-          print('🔵 [QuotationController] Monthly stats: ${monthlyStats.value}');
+          monthlyStats.value = Map<String, dynamic>.from(
+            response.data['stats'],
+          );
+          print(
+            '🔵 [QuotationController] Monthly stats: ${monthlyStats.value}',
+          );
         }
 
         final pagination = response.data['pagination'] as Map<String, dynamic>?;
@@ -196,9 +231,13 @@ class QuotationController extends GetxController {
           hasNext.value = pagination['hasNext'] == true;
           hasPrev.value = pagination['hasPrev'] == true;
           hasMore.value = pagination['hasNext'] == true;
-          
-          print('✅ [QuotationController] Quotations fetched successfully: ${quotations.length} quotations');
-          print('✅ [QuotationController] Total records: ${totalRecords.value}, Total pages: ${totalPages.value}');
+
+          print(
+            '✅ [QuotationController] Quotations fetched successfully: ${quotations.length} quotations',
+          );
+          print(
+            '✅ [QuotationController] Total records: ${totalRecords.value}, Total pages: ${totalPages.value}',
+          );
         }
       } else {
         print('❌ [QuotationController] Failed to fetch quotations');
@@ -211,7 +250,9 @@ class QuotationController extends GetxController {
       Get.snackbar('Error', e.toString());
     } finally {
       isLoading.value = false;
-      print('🔵 [QuotationController] fetchQuotations completed, isLoading: ${isLoading.value}');
+      print(
+        '🔵 [QuotationController] fetchQuotations completed, isLoading: ${isLoading.value}',
+      );
     }
   }
 
@@ -221,17 +262,19 @@ class QuotationController extends GetxController {
     print('🟣 [QuotationController] applyLocalFilters called');
     print('🟣 [QuotationController] Selected filter: ${selectedFilter.value}');
     print('🟣 [QuotationController] Search filter: ${searchFilter.value}');
-    
+
     final list = quotations.toList();
     final filtered = list.where((item) {
       // Status filter
-      if (selectedFilter.value != 'all' && item.status != selectedFilter.value) {
+      if (selectedFilter.value != 'all' &&
+          item.status != selectedFilter.value) {
         return false;
       }
       // Search filter
       if (searchFilter.value.isNotEmpty) {
         final query = searchFilter.value.toLowerCase();
-        final matches = item.quotationNumber.toLowerCase().contains(query) ||
+        final matches =
+            item.quotationNumber.toLowerCase().contains(query) ||
             item.customerName.toLowerCase().contains(query) ||
             item.customerEmail?.toLowerCase().contains(query) == true ||
             item.customerCompany?.toLowerCase().contains(query) == true;
@@ -239,8 +282,10 @@ class QuotationController extends GetxController {
       }
       return true;
     }).toList();
-    
-    print('🟣 [QuotationController] Filtered quotations: ${filtered.length} out of ${list.length}');
+
+    print(
+      '🟣 [QuotationController] Filtered quotations: ${filtered.length} out of ${list.length}',
+    );
     filteredQuotations.value = filtered;
   }
 
@@ -267,13 +312,15 @@ class QuotationController extends GetxController {
 
   Future<void> fetchMoreQuotations() async {
     print('🟡 [QuotationController] fetchMoreQuotations called');
-    print('🟡 [QuotationController] hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}');
-    
+    print(
+      '🟡 [QuotationController] hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}',
+    );
+
     if (!hasMore.value || isLoadingMore.value) {
       print('🟡 [QuotationController] Skipping load more');
       return;
     }
-    
+
     try {
       isLoadingMore.value = true;
       currentPage.value += 1;
@@ -286,18 +333,25 @@ class QuotationController extends GetxController {
       if (searchFilter.value.isNotEmpty) params['search'] = searchFilter.value;
       if (statusFilter.value != 'all') params['status'] = statusFilter.value;
 
-      final query = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
+      final query = params.entries
+          .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+          .join('&');
       print('🟡 [QuotationController] API Request: GET /api/quotations?$query');
 
-      final response = await _api.get('/api/quotations?$query', requiresAuth: true);
+      final response = await _api.get(
+        '/api/quotations?$query',
+        requiresAuth: true,
+      );
 
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         final newQuotations = list
             .map((e) => QuotationModel.fromJson(Map<String, dynamic>.from(e)))
             .toList();
-        
-        print('🟡 [QuotationController] Loaded ${newQuotations.length} more quotations');
+
+        print(
+          '🟡 [QuotationController] Loaded ${newQuotations.length} more quotations',
+        );
         quotations.addAll(newQuotations);
         applyLocalFilters();
 
@@ -307,7 +361,9 @@ class QuotationController extends GetxController {
           totalRecords.value = (pagination['total'] as num?)?.toInt() ?? 0;
           totalPages.value = (pagination['pages'] as num?)?.toInt() ?? 1;
         }
-        print('🟡 [QuotationController] Total quotations now: ${quotations.length}, hasMore: ${hasMore.value}');
+        print(
+          '🟡 [QuotationController] Total quotations now: ${quotations.length}, hasMore: ${hasMore.value}',
+        );
       }
     } catch (e) {
       print('❌ [QuotationController] fetchMoreQuotations error: $e');
@@ -331,14 +387,18 @@ class QuotationController extends GetxController {
     print('🟢 [QuotationController] openCreateWizard called');
     _resetWizard();
     showCreateWizard.value = true;
-    print('🟢 [QuotationController] showCreateWizard: ${showCreateWizard.value}');
+    print(
+      '🟢 [QuotationController] showCreateWizard: ${showCreateWizard.value}',
+    );
   }
 
   void closeCreateWizard() {
     print('🟢 [QuotationController] closeCreateWizard called');
     showCreateWizard.value = false;
     _resetWizard();
-    print('🟢 [QuotationController] showCreateWizard: ${showCreateWizard.value}');
+    print(
+      '🟢 [QuotationController] showCreateWizard: ${showCreateWizard.value}',
+    );
   }
 
   void _resetWizard() {
@@ -355,8 +415,12 @@ class QuotationController extends GetxController {
     termsConditionsController.clear();
     selectedQuotationDate.value = DateTime.now();
     selectedValidUntil.value = DateTime.now().add(const Duration(days: 30));
-    quotationDateController.text = DateFormat('dd MMM yyyy').format(selectedQuotationDate.value!);
-    validUntilController.text = DateFormat('dd MMM yyyy').format(selectedValidUntil.value!);
+    quotationDateController.text = DateFormat(
+      'dd MMM yyyy',
+    ).format(selectedQuotationDate.value!);
+    validUntilController.text = DateFormat(
+      'dd MMM yyyy',
+    ).format(selectedValidUntil.value!);
     print('✅ [QuotationController] Wizard reset complete');
   }
 
@@ -364,29 +428,33 @@ class QuotationController extends GetxController {
 
   Future<void> searchCustomers(String query) async {
     print('🔵 [QuotationController] searchCustomers called with: $query');
-    
+
     if (query.trim().length < 2) {
       print('🔵 [QuotationController] Query too short, clearing results');
       customerSearchResults.clear();
       return;
     }
-    
+
     try {
       isSearchingCustomers.value = true;
       final encoded = Uri.encodeComponent(query.trim());
-      print('🔵 [QuotationController] API Request: GET /api/customers?search=$encoded&limit=10');
-      
+      print(
+        '🔵 [QuotationController] API Request: GET /api/customers?search=$encoded&limit=10',
+      );
+
       final response = await _api.get(
         '/api/customers?search=$encoded&limit=10',
         requiresAuth: true,
       );
-      
+
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         customerSearchResults.value = list
             .map((e) => Map<String, dynamic>.from(e))
             .toList();
-        print('🔵 [QuotationController] Found ${customerSearchResults.length} customers for query: $query');
+        print(
+          '🔵 [QuotationController] Found ${customerSearchResults.length} customers for query: $query',
+        );
       } else {
         print('❌ [QuotationController] No customers found');
         customerSearchResults.clear();
@@ -410,29 +478,33 @@ class QuotationController extends GetxController {
 
   Future<void> searchProducts(String query) async {
     print('🔵 [QuotationController] searchProducts called with: $query');
-    
+
     if (query.trim().length < 2) {
       print('🔵 [QuotationController] Query too short, clearing results');
       productSearchResults.clear();
       return;
     }
-    
+
     try {
       isSearchingProducts.value = true;
       final encoded = Uri.encodeComponent(query.trim());
-      print('🔵 [QuotationController] API Request: GET /api/products?search=$encoded&limit=10');
-      
+      print(
+        '🔵 [QuotationController] API Request: GET /api/products?search=$encoded&limit=10',
+      );
+
       final response = await _api.get(
         '/api/products?search=$encoded&limit=10',
         requiresAuth: true,
       );
-      
+
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         productSearchResults.value = list
             .map((e) => Map<String, dynamic>.from(e))
             .toList();
-        print('🔵 [QuotationController] Found ${productSearchResults.length} products for query: $query');
+        print(
+          '🔵 [QuotationController] Found ${productSearchResults.length} products for query: $query',
+        );
       } else {
         print('❌ [QuotationController] No products found');
         productSearchResults.clear();
@@ -447,16 +519,20 @@ class QuotationController extends GetxController {
 
   void addProductToQuotation(Map<String, dynamic> product) {
     print('🔵 [QuotationController] addProductToQuotation called');
-    
+
     // Check if product already exists in drafts
-    final existingIndex = lineDrafts.indexWhere((line) => line.productId == product['id']);
-    
+    final existingIndex = lineDrafts.indexWhere(
+      (line) => line.productId == product['id'],
+    );
+
     if (existingIndex != -1) {
       // Increment quantity if product already exists
       final existing = lineDrafts[existingIndex];
       existing.quantity += 1;
       lineDrafts[existingIndex] = existing;
-      print('🔵 [QuotationController] Incremented quantity for existing product: ${product['name']}');
+      print(
+        '🔵 [QuotationController] Incremented quantity for existing product: ${product['name']}',
+      );
     } else {
       // Add new product
       final newLine = QuotationLineDraft(
@@ -471,14 +547,16 @@ class QuotationController extends GetxController {
       lineDrafts.add(newLine);
       print('🔵 [QuotationController] Added new product: ${product['name']}');
     }
-    
+
     // Clear product search
     productSearchResults.clear();
     productSearchController.clear();
   }
 
   void removeProductFromQuotation(int index) {
-    print('🔵 [QuotationController] removeProductFromQuotation called for index: $index');
+    print(
+      '🔵 [QuotationController] removeProductFromQuotation called for index: $index',
+    );
     lineDrafts.removeAt(index);
   }
 
@@ -488,7 +566,9 @@ class QuotationController extends GetxController {
       if (quantity > 0) {
         line.quantity = quantity;
         lineDrafts[index] = line;
-        print('🔵 [QuotationController] Updated quantity for product ${line.productName} to $quantity');
+        print(
+          '🔵 [QuotationController] Updated quantity for product ${line.productName} to $quantity',
+        );
       }
     }
   }
@@ -499,7 +579,9 @@ class QuotationController extends GetxController {
       if (unitPrice >= 0) {
         line.unitPrice = unitPrice;
         lineDrafts[index] = line;
-        print('🔵 [QuotationController] Updated unit price for product ${line.productName} to $unitPrice');
+        print(
+          '🔵 [QuotationController] Updated unit price for product ${line.productName} to $unitPrice',
+        );
       }
     }
   }
@@ -510,7 +592,9 @@ class QuotationController extends GetxController {
       if (discount >= 0 && discount <= 100) {
         line.discount = discount;
         lineDrafts[index] = line;
-        print('🔵 [QuotationController] Updated discount for product ${line.productName} to $discount%');
+        print(
+          '🔵 [QuotationController] Updated discount for product ${line.productName} to $discount%',
+        );
       }
     }
   }
@@ -521,7 +605,9 @@ class QuotationController extends GetxController {
       if (taxRate >= 0) {
         line.taxRate = taxRate;
         lineDrafts[index] = line;
-        print('🔵 [QuotationController] Updated tax rate for product ${line.productName} to $taxRate%');
+        print(
+          '🔵 [QuotationController] Updated tax rate for product ${line.productName} to $taxRate%',
+        );
       }
     }
   }
@@ -535,7 +621,7 @@ class QuotationController extends GetxController {
       firstDate: DateTime.now().subtract(const Duration(days: 30)),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    
+
     if (date != null) {
       selectedQuotationDate.value = date;
       quotationDateController.text = DateFormat('dd MMM yyyy').format(date);
@@ -545,11 +631,13 @@ class QuotationController extends GetxController {
   void selectValidUntilDate(BuildContext context) async {
     final date = await showDatePicker(
       context: context,
-      initialDate: selectedValidUntil.value ?? DateTime.now().add(const Duration(days: 30)),
+      initialDate:
+          selectedValidUntil.value ??
+          DateTime.now().add(const Duration(days: 30)),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    
+
     if (date != null) {
       selectedValidUntil.value = date;
       validUntilController.text = DateFormat('dd MMM yyyy').format(date);
@@ -571,10 +659,14 @@ class QuotationController extends GetxController {
   }
 
   void nextStep() {
-    print('🟡 [QuotationController] nextStep called, current step: ${wizardStep.value}');
-    
+    print(
+      '🟡 [QuotationController] nextStep called, current step: ${wizardStep.value}',
+    );
+
     if (wizardStep.value == 0 && !canGoToStep2()) {
-      print('❌ [QuotationController] Cannot go to step 2 - no customer selected');
+      print(
+        '❌ [QuotationController] Cannot go to step 2 - no customer selected',
+      );
       Get.snackbar('Validation', 'Select a customer first');
       return;
     }
@@ -590,7 +682,9 @@ class QuotationController extends GetxController {
   }
 
   void previousStep() {
-    print('🟡 [QuotationController] previousStep called, current step: ${wizardStep.value}');
+    print(
+      '🟡 [QuotationController] previousStep called, current step: ${wizardStep.value}',
+    );
     if (wizardStep.value > 0) {
       wizardStep.value--;
       print('🟡 [QuotationController] Step changed to: ${wizardStep.value}');
@@ -603,7 +697,7 @@ class QuotationController extends GetxController {
 
   Future<bool> createQuotation() async {
     print('🔵 [QuotationController] createQuotation called');
-    
+
     final customer = selectedCustomer.value;
     if (customer == null) {
       print('❌ [QuotationController] No customer selected');
@@ -618,7 +712,7 @@ class QuotationController extends GetxController {
 
     final quotationDate = selectedQuotationDate.value;
     final validUntil = selectedValidUntil.value;
-    
+
     if (quotationDate == null || validUntil == null) {
       print('❌ [QuotationController] Dates not selected');
       Get.snackbar('Validation', 'Please select dates');
@@ -627,15 +721,19 @@ class QuotationController extends GetxController {
 
     try {
       isSubmitting.value = true;
-      
-      final items = lineDrafts.map((line) => {
-        'productId': line.productId,
-        'quantity': line.quantity,
-        'unitPrice': line.unitPrice,
-        'discount': line.discount,
-        'taxRate': line.taxRate,
-        'notes': null,
-      }).toList();
+
+      final items = lineDrafts
+          .map(
+            (line) => {
+              'productId': line.productId,
+              'quantity': line.quantity,
+              'unitPrice': line.unitPrice,
+              'discount': line.discount,
+              'taxRate': line.taxRate,
+              'notes': null,
+            },
+          )
+          .toList();
 
       final payload = {
         'customerId': customer['id'],
@@ -645,21 +743,23 @@ class QuotationController extends GetxController {
         'customerCompany': customer['company'] ?? '',
         'quotationDate': quotationDate.toIso8601String().split('T').first,
         'validUntil': validUntil.toIso8601String().split('T').first,
-        'salesPerson': salesPersonController.text.trim().isEmpty 
-            ? null 
+        'salesPerson': salesPersonController.text.trim().isEmpty
+            ? null
             : salesPersonController.text.trim(),
         'items': items,
-        'notes': notesController.text.trim().isEmpty 
-            ? null 
+        'notes': notesController.text.trim().isEmpty
+            ? null
             : notesController.text.trim(),
-        'termsConditions': termsConditionsController.text.trim().isEmpty 
-            ? null 
+        'termsConditions': termsConditionsController.text.trim().isEmpty
+            ? null
             : termsConditionsController.text.trim(),
         'status': 'Draft',
       };
 
       print('🔵 [QuotationController] Submitting quotation payload');
-      print('🔵 [QuotationController] Customer: ${customer['name']}, Items: ${items.length}');
+      print(
+        '🔵 [QuotationController] Customer: ${customer['name']}, Items: ${items.length}',
+      );
 
       final response = await _api.post(
         '/api/quotations',
@@ -677,8 +777,10 @@ class QuotationController extends GetxController {
         await fetchQuotations(resetPage: true);
         return true;
       }
-      
-      print('❌ [QuotationController] Failed to create quotation: ${response.message}');
+
+      print(
+        '❌ [QuotationController] Failed to create quotation: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to create quotation');
       return false;
     } catch (e) {
@@ -692,7 +794,7 @@ class QuotationController extends GetxController {
 
   Future<bool> updateQuotation(String id, Map<String, dynamic> data) async {
     print('🔵 [QuotationController] updateQuotation called for ID: $id');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.put(
@@ -710,8 +812,10 @@ class QuotationController extends GetxController {
         await fetchQuotations(resetPage: true);
         return true;
       }
-      
-      print('❌ [QuotationController] Failed to update quotation: ${response.message}');
+
+      print(
+        '❌ [QuotationController] Failed to update quotation: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to update quotation');
       return false;
     } catch (e) {
@@ -725,7 +829,7 @@ class QuotationController extends GetxController {
 
   Future<bool> deleteQuotation(String id) async {
     print('🔵 [QuotationController] deleteQuotation called for ID: $id');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.delete(
@@ -742,8 +846,10 @@ class QuotationController extends GetxController {
         await fetchQuotations(resetPage: true);
         return true;
       }
-      
-      print('❌ [QuotationController] Failed to delete quotation: ${response.message}');
+
+      print(
+        '❌ [QuotationController] Failed to delete quotation: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to delete quotation');
       return false;
     } catch (e) {
@@ -760,14 +866,20 @@ class QuotationController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   void selectQuotation(QuotationModel item) {
-    print('🔵 [QuotationController] selectQuotation called for: ${item.quotationNumber}');
+    print(
+      '🔵 [QuotationController] selectQuotation called for: ${item.quotationNumber}',
+    );
     selectedQuotation.value = item;
   }
 
-  Future<bool> updateQuotationStatus(String id, String status, {String? notes}) async {
+  Future<bool> updateQuotationStatus(
+    String id,
+    String status, {
+    String? notes,
+  }) async {
     print('🟣 [QuotationController] updateQuotationStatus called');
     print('🟣 [QuotationController] ID: $id, New Status: $status');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.patch(
@@ -785,8 +897,10 @@ class QuotationController extends GetxController {
         await fetchQuotations();
         return true;
       }
-      
-      print('❌ [QuotationController] Failed to update status: ${response.message}');
+
+      print(
+        '❌ [QuotationController] Failed to update status: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to update status');
       return false;
     } catch (e) {
@@ -800,7 +914,7 @@ class QuotationController extends GetxController {
 
   Future<bool> convertToOrder(String id) async {
     print('🟣 [QuotationController] convertToOrder called for ID: $id');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.post(
@@ -813,12 +927,14 @@ class QuotationController extends GetxController {
       print('🟣 [QuotationController] Response Success: ${response.success}');
 
       if (response.success) {
-        print('✅ [QuotationController] Quotation converted to order successfully');
+        print(
+          '✅ [QuotationController] Quotation converted to order successfully',
+        );
         Get.snackbar('Success', 'Quotation converted to sales order');
         await fetchQuotations();
         return true;
       }
-      
+
       print('❌ [QuotationController] Failed to convert: ${response.message}');
       Get.snackbar('Error', response.message ?? 'Failed to convert to order');
       return false;
@@ -833,7 +949,7 @@ class QuotationController extends GetxController {
 
   Future<bool> sendQuotation(String id) async {
     print('🟣 [QuotationController] sendQuotation called for ID: $id');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.post(
@@ -851,7 +967,7 @@ class QuotationController extends GetxController {
         await fetchQuotations();
         return true;
       }
-      
+
       print('❌ [QuotationController] Failed to send: ${response.message}');
       Get.snackbar('Error', response.message ?? 'Failed to send quotation');
       return false;

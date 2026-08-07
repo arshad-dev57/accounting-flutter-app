@@ -1,8 +1,8 @@
 // lib/core/warehouse/supplier/views/suppliers_screen.dart - UPDATED WITH PRODUCTS SCREEN DESIGN
 
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/responsive_utils.dart';
-import 'package:LedgerPro_app/core/warehouse/supplier/controller/supplier_controller.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
+import 'package:BisonsTechs_app/core/warehouse/supplier/controller/supplier_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';

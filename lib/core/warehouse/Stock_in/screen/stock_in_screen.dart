@@ -1,10 +1,10 @@
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/core/warehouse/Stock_in/controller/stock_in_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/Stock_in/model/stock_movement_model.dart';
-import 'package:LedgerPro_app/core/warehouse/Stock_in/widgets/stock_history_list.dart';
-import 'package:LedgerPro_app/core/warehouse/Stock_in/widgets/stock_in_form.dart';
-import 'package:LedgerPro_app/core/warehouse/Stock_in/widgets/stock_movement_detail_sheet.dart';
-import 'package:LedgerPro_app/core/warehouse/Stock_in/widgets/stock_out_form.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/warehouse/Stock_in/controller/stock_in_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/Stock_in/model/stock_movement_model.dart';
+import 'package:BisonsTechs_app/core/warehouse/Stock_in/widgets/stock_history_list.dart';
+import 'package:BisonsTechs_app/core/warehouse/Stock_in/widgets/stock_in_form.dart';
+import 'package:BisonsTechs_app/core/warehouse/Stock_in/widgets/stock_movement_detail_sheet.dart';
+import 'package:BisonsTechs_app/core/warehouse/Stock_in/widgets/stock_out_form.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';

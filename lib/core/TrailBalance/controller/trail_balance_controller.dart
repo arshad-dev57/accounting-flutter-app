@@ -1,32 +1,26 @@
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'dart:io';
+
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
+import 'package:intl/intl.dart';
 import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:excel/excel.dart';
-import 'package:intl/intl.dart';
 
 class TrialBalanceController extends GetxController {
   var trialBalanceData = <TrialBalanceAccount>[].obs;
   var isLoading = true.obs;
-  var isLoadingMore = false.obs;
   var selectedFilter = 'All'.obs;
   var selectedDateRange = Rx<DateTimeRange?>(null);
   var showZeroBalance = true.obs;
   var searchQuery = ''.obs;
-  var allTrialBalanceData = <TrialBalanceAccount>[].obs;
-  
-  // ✅ Pagination variables
-  var currentPage = 1.obs;
-  var hasMoreData = true.obs;
-  var totalPages = 1.obs;
-  final int pageSize = 20;
+  var totalAccounts = 0.obs;
 
   // Summary totals
   var totalDebit = 0.0.obs;
@@ -34,37 +28,11 @@ class TrialBalanceController extends GetxController {
   var difference = 0.0.obs;
   var isBalanced = false.obs;
 
-  // ✅ Scroll controller for lazy loading
-  final ScrollController scrollController = ScrollController();
-
   final ApiClient _api = Get.find<ApiClient>();
-  final FiscalYearController _fiscalYearController = Get.find<FiscalYearController>();
+  final FiscalYearController _fiscalYearController =
+      Get.find<FiscalYearController>();
 
-  void searchEntries(String query) {
-    searchQuery.value = query;
-
-    if (query.isEmpty) {
-      trialBalanceData.value = allTrialBalanceData.value;
-    } else {
-      final searchLower = query.toLowerCase();
-      final results = allTrialBalanceData.where((account) {
-        return account.accountName.toLowerCase().contains(searchLower) ||
-            account.accountCode.toLowerCase().contains(searchLower) ||
-            account.accountType.toLowerCase().contains(searchLower);
-      }).toList();
-      trialBalanceData.value = results;
-    }
-
-    _updateTotalsForFilteredData();
-  }
-
-  void _updateTotalsForFilteredData() {
-    final filtered = trialBalanceData.value;
-    totalDebit.value = filtered.fold(0.0, (sum, acc) => sum + acc.debitBalance);
-    totalCredit.value = filtered.fold(0.0, (sum, acc) => sum + acc.creditBalance);
-    difference.value = totalDebit.value - totalCredit.value;
-    isBalanced.value = (difference.value.abs() < 0.01);
-  }
+  Worker? _fiscalYearWorker;
 
   double _toDouble(dynamic value) {
     if (value == null) return 0.0;
@@ -81,32 +49,40 @@ class TrialBalanceController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // ✅ Reset pagination before fetch
-    currentPage.value = 1;
-    hasMoreData.value = true;
-    fetchTrialBalance();
+    _bootstrap();
   }
 
   @override
   void onClose() {
-    scrollController.dispose();
+    _fiscalYearWorker?.dispose();
     super.onClose();
   }
 
-  // ✅ Modified: Fetch with pagination support
-  Future<void> fetchTrialBalance({bool resetPagination = true}) async {
-    try {
-      if (resetPagination) {
-        isLoading(true);
-        currentPage.value = 1;
-        hasMoreData.value = true;
-        trialBalanceData.clear();
-        allTrialBalanceData.clear();
+  Future<void> _bootstrap() async {
+    if (_fiscalYearController.isLoading.value) {
+      while (_fiscalYearController.isLoading.value) {
+        await Future.delayed(const Duration(milliseconds: 50));
       }
+    }
 
-      Map<String, dynamic> queryParams = {
-        'page': currentPage.value,
-        'limit': pageSize,
+    if (_fiscalYearController.fiscalYears.isEmpty) {
+      await _fiscalYearController.fetchFiscalYears();
+    }
+
+    _fiscalYearWorker = ever(_fiscalYearController.selectedFiscalYear, (_) {
+      fetchTrialBalance();
+    });
+
+    await fetchTrialBalance();
+  }
+
+  Future<void> fetchTrialBalance() async {
+    try {
+      isLoading(true);
+      trialBalanceData.clear();
+
+      final queryParams = <String, dynamic>{
+        'showZeroBalance': showZeroBalance.value.toString(),
       };
 
       if (selectedFilter.value != 'All') {
@@ -114,14 +90,14 @@ class TrialBalanceController extends GetxController {
       }
 
       if (selectedDateRange.value != null) {
-        queryParams['startDate'] = selectedDateRange.value!.start.toIso8601String();
+        queryParams['startDate'] = selectedDateRange.value!.start
+            .toIso8601String();
         queryParams['endDate'] = selectedDateRange.value!.end.toIso8601String();
       }
 
-      queryParams['showZeroBalance'] = showZeroBalance.value.toString();
-
-      if (_fiscalYearController.selectedFiscalYear.value != null) {
-        queryParams['fiscalYearId'] = _fiscalYearController.selectedFiscalYear.value!.id;
+      final selectedYear = _fiscalYearController.selectedFiscalYear.value;
+      if (selectedYear != null) {
+        queryParams['fiscalYearId'] = selectedYear.id;
       }
 
       if (searchQuery.value.isNotEmpty) {
@@ -135,96 +111,53 @@ class TrialBalanceController extends GetxController {
 
       if (response.success) {
         final data = response.data;
-        final accounts = (data['data'] as List)
-            .map((e) => TrialBalanceAccount.fromJson(e))
+        final accounts = (data['data'] as List? ?? [])
+            .map((e) => TrialBalanceAccount.fromJson(e as Map<String, dynamic>))
             .toList();
 
-        // ✅ Update pagination info
-        final meta = data['meta'] ?? {};
-        totalPages.value = meta['totalPages'] ?? 1;
-        hasMoreData.value = currentPage.value < totalPages.value;
+        trialBalanceData.value = accounts;
+        totalAccounts.value = data['count'] ?? accounts.length;
 
-        if (resetPagination) {
-          allTrialBalanceData.value = accounts;
-          trialBalanceData.value = accounts;
-        } else {
-          // ✅ Append new data for lazy loading
-          allTrialBalanceData.addAll(accounts);
-          trialBalanceData.addAll(accounts);
-        }
-
-        // ✅ Update summary only when resetting pagination
-        if (resetPagination) {
-          totalDebit.value = _toDouble(data['summary']?['totalDebit'] ?? 0);
-          totalCredit.value = _toDouble(data['summary']?['totalCredit'] ?? 0);
-          difference.value = _toDouble(data['summary']?['difference'] ?? 0);
-          isBalanced.value = data['summary']?['isBalanced'] ?? false;
-        }
-
-        // ✅ If search is active, apply search filter
-        if (searchQuery.value.isNotEmpty) {
-          _applySearchFilter();
-        }
+        final summary = data['summary'] as Map<String, dynamic>? ?? {};
+        totalDebit.value = _toDouble(summary['totalDebit']);
+        totalCredit.value = _toDouble(summary['totalCredit']);
+        difference.value = _toDouble(summary['difference']);
+        isBalanced.value = summary['isBalanced'] == true;
+      } else {
+        AppSnackbar.error(
+          kDanger,
+          'Error',
+          response.message.isNotEmpty
+              ? response.message
+              : 'Failed to load trial balance',
+        );
       }
     } catch (e) {
       AppSnackbar.error(kDanger, 'Error', 'Failed to load trial balance: $e');
     } finally {
-      if (resetPagination) {
-        isLoading(false);
-      }
-      isLoadingMore(false);
+      isLoading(false);
     }
-  }
-
-  // ✅ New: Load more data for lazy loading
-  Future<void> loadMoreData() async {
-    if (isLoadingMore.value || !hasMoreData.value) return;
-    
-    isLoadingMore(true);
-    currentPage.value++;
-    await fetchTrialBalance(resetPagination: false);
-    isLoadingMore(false);
-  }
-
-  // ✅ New: Apply search filter on current data
-  void _applySearchFilter() {
-    if (searchQuery.value.isEmpty) {
-      trialBalanceData.value = allTrialBalanceData.value;
-      return;
-    }
-    final query = searchQuery.value.toLowerCase();
-    final filtered = allTrialBalanceData.where((account) {
-      return account.accountName.toLowerCase().contains(query) ||
-          account.accountCode.toLowerCase().contains(query) ||
-          account.accountType.toLowerCase().contains(query);
-    }).toList();
-    trialBalanceData.value = filtered;
   }
 
   void changeFilter(String filter) {
     selectedFilter.value = filter;
-    // ✅ Reset pagination on filter change
-    currentPage.value = 1;
-    hasMoreData.value = true;
-    fetchTrialBalance(resetPagination: true);
+    fetchTrialBalance();
   }
 
   void toggleZeroBalance(bool value) {
     showZeroBalance.value = value;
-    // ✅ Reset pagination on toggle
-    currentPage.value = 1;
-    hasMoreData.value = true;
-    fetchTrialBalance(resetPagination: true);
+    fetchTrialBalance();
   }
 
   void setDateRange(DateTimeRange? range) {
     selectedDateRange.value = range;
-    // ✅ Reset pagination on date range change
-    currentPage.value = 1;
-    hasMoreData.value = true;
-    fetchTrialBalance(resetPagination: true);
+    fetchTrialBalance();
   }
 
+  void searchAccounts(String query) {
+    searchQuery.value = query;
+    fetchTrialBalance();
+  }
 
   void exportToPdf() async {
     try {
@@ -262,7 +195,8 @@ class TrialBalanceController extends GetxController {
       );
 
       final dir = await getTemporaryDirectory();
-      final fileName = 'trial_balance_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+      final fileName =
+          'trial_balance_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
       final file = File('${dir.path}/$fileName');
       await file.writeAsBytes(await pdf.save());
 
@@ -315,7 +249,7 @@ class TrialBalanceController extends GetxController {
               borderRadius: pw.BorderRadius.circular(6),
             ),
             child: pw.Text(
-              'LedgerPro',
+              'BisonsTechs',
               style: pw.TextStyle(
                 color: PdfColors.white,
                 fontWeight: pw.FontWeight.bold,
@@ -365,10 +299,21 @@ class TrialBalanceController extends GetxController {
           pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
             children: [
-              _pdfSummaryItem('Total Debit', _formatAmount(totalDebit.value), PdfColors.green700),
-              _pdfSummaryItem('Total Credit', _formatAmount(totalCredit.value), PdfColors.red700),
-              _pdfSummaryItem('Difference', _formatAmount(difference.value), 
-                  isBalanced.value ? PdfColors.green700 : PdfColors.orange700),
+              _pdfSummaryItem(
+                'Total Debit',
+                _formatAmount(totalDebit.value),
+                PdfColors.green700,
+              ),
+              _pdfSummaryItem(
+                'Total Credit',
+                _formatAmount(totalCredit.value),
+                PdfColors.red700,
+              ),
+              _pdfSummaryItem(
+                'Difference',
+                _formatAmount(difference.value),
+                isBalanced.value ? PdfColors.green700 : PdfColors.orange700,
+              ),
             ],
           ),
           pw.SizedBox(height: 8),
@@ -390,13 +335,19 @@ class TrialBalanceController extends GetxController {
   pw.Widget _pdfSummaryItem(String label, String value, PdfColor color) {
     return pw.Column(
       children: [
-        pw.Text(label, style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
+        pw.Text(
+          label,
+          style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+        ),
         pw.SizedBox(height: 4),
-        pw.Text(value, style: pw.TextStyle(
-          fontSize: 11,
-          fontWeight: pw.FontWeight.bold,
-          color: color,
-        )),
+        pw.Text(
+          value,
+          style: pw.TextStyle(
+            fontSize: 11,
+            fontWeight: pw.FontWeight.bold,
+            color: color,
+          ),
+        ),
       ],
     );
   }
@@ -405,7 +356,10 @@ class TrialBalanceController extends GetxController {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        pw.Text('Trial Balance Details', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+        pw.Text(
+          'Trial Balance Details',
+          style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+        ),
         pw.SizedBox(height: 8),
         pw.Container(
           padding: const pw.EdgeInsets.symmetric(vertical: 8),
@@ -416,55 +370,135 @@ class TrialBalanceController extends GetxController {
           ),
           child: pw.Row(
             children: [
-              pw.Expanded(flex: 1, child: pw.Text('Code', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 3, child: pw.Text('Account Name', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 1, child: pw.Text('Type', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 2, child: pw.Text('Debit', textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 2, child: pw.Text('Credit', textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+              pw.Expanded(
+                flex: 1,
+                child: pw.Text(
+                  'Code',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 3,
+                child: pw.Text(
+                  'Account Name',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 1,
+                child: pw.Text(
+                  'Type',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Debit',
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Credit',
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
             ],
           ),
         ),
-        ...trialBalanceData.map((account) => pw.Container(
-          padding: const pw.EdgeInsets.symmetric(vertical: 6),
-          decoration: const pw.BoxDecoration(
-            border: pw.Border(
-              bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.5),
+        ...trialBalanceData.map(
+          (account) => pw.Container(
+            padding: const pw.EdgeInsets.symmetric(vertical: 6),
+            decoration: const pw.BoxDecoration(
+              border: pw.Border(
+                bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.5),
+              ),
+            ),
+            child: pw.Row(
+              children: [
+                pw.Expanded(
+                  flex: 1,
+                  child: pw.Text(
+                    account.accountCode,
+                    style: const pw.TextStyle(fontSize: 9),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 3,
+                  child: pw.Text(
+                    account.accountName,
+                    style: const pw.TextStyle(fontSize: 9),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 1,
+                  child: pw.Text(
+                    account.accountType,
+                    style: const pw.TextStyle(fontSize: 9),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Text(
+                    account.debitBalance > 0
+                        ? _formatAmount(account.debitBalance)
+                        : '-',
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(fontSize: 9, color: PdfColors.green700),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Text(
+                    account.creditBalance > 0
+                        ? _formatAmount(account.creditBalance)
+                        : '-',
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(fontSize: 9, color: PdfColors.red700),
+                  ),
+                ),
+              ],
             ),
           ),
-          child: pw.Row(
-            children: [
-              pw.Expanded(flex: 1, child: pw.Text(account.accountCode, style: const pw.TextStyle(fontSize: 9))),
-              pw.Expanded(flex: 3, child: pw.Text(account.accountName, style: const pw.TextStyle(fontSize: 9))),
-              pw.Expanded(flex: 1, child: pw.Text(account.accountType, style: const pw.TextStyle(fontSize: 9))),
-              pw.Expanded(flex: 2, child: pw.Text(
-                account.debitBalance > 0 ? _formatAmount(account.debitBalance) : '-',
-                textAlign: pw.TextAlign.right,
-                style: pw.TextStyle(fontSize: 9, color: PdfColors.green700),
-              )),
-              pw.Expanded(flex: 2, child: pw.Text(
-                account.creditBalance > 0 ? _formatAmount(account.creditBalance) : '-',
-                textAlign: pw.TextAlign.right,
-                style: pw.TextStyle(fontSize: 9, color: PdfColors.red700),
-              )),
-            ],
-          ),
-        )).toList(),
+        ),
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),
           child: pw.Row(
             children: [
-              pw.Expanded(flex: 5, child: pw.Text('Total', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-              pw.Expanded(flex: 2, child: pw.Text(
-                _formatAmount(totalDebit.value),
-                textAlign: pw.TextAlign.right,
-                style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.green700),
-              )),
-              pw.Expanded(flex: 2, child: pw.Text(
-                _formatAmount(totalCredit.value),
-                textAlign: pw.TextAlign.right,
-                style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.red700),
-              )),
+              pw.Expanded(
+                flex: 5,
+                child: pw.Text(
+                  'Total',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  _formatAmount(totalDebit.value),
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.green700,
+                  ),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  _formatAmount(totalCredit.value),
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.red700,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -476,7 +510,9 @@ class TrialBalanceController extends GetxController {
     try {
       Get.dialog(
         AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -491,41 +527,91 @@ class TrialBalanceController extends GetxController {
 
       final excel = Excel.createExcel();
 
-      // Summary Sheet
       final summarySheet = excel['Summary'];
       excel.setDefaultSheet('Summary');
 
-      _excelSetCell(summarySheet, 0, 0, 'Trial Balance Report', bold: true, fontSize: 14, bgColor: '1A237E', fontColor: 'FFFFFF');
-      _excelSetCell(summarySheet, 1, 0, 'Generated: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now())}', fontSize: 9, fontColor: '757575');
+      _excelSetCell(
+        summarySheet,
+        0,
+        0,
+        'Trial Balance Report',
+        bold: true,
+        fontSize: 14,
+        bgColor: '1A237E',
+        fontColor: 'FFFFFF',
+      );
+      _excelSetCell(
+        summarySheet,
+        1,
+        0,
+        'Generated: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now())}',
+        fontSize: 9,
+        fontColor: '757575',
+      );
 
       if (selectedDateRange.value != null) {
-        _excelSetCell(summarySheet, 2, 0, 'Period: ${DateFormat('dd MMM yyyy').format(selectedDateRange.value!.start)} - ${DateFormat('dd MMM yyyy').format(selectedDateRange.value!.end)}', fontSize: 10, fontColor: '1A237E');
+        _excelSetCell(
+          summarySheet,
+          2,
+          0,
+          'Period: ${DateFormat('dd MMM yyyy').format(selectedDateRange.value!.start)} - ${DateFormat('dd MMM yyyy').format(selectedDateRange.value!.end)}',
+          fontSize: 10,
+          fontColor: '1A237E',
+        );
       }
 
-      _excelSetCell(summarySheet, 4, 0, 'SUMMARY', bold: true, fontSize: 11, bgColor: 'E8EAF6');
+      _excelSetCell(
+        summarySheet,
+        4,
+        0,
+        'SUMMARY',
+        bold: true,
+        fontSize: 11,
+        bgColor: 'E8EAF6',
+      );
 
       final summaryRows = [
         ['Total Debit', _formatAmount(totalDebit.value)],
         ['Total Credit', _formatAmount(totalCredit.value)],
         ['Difference', _formatAmount(difference.value)],
         ['Status', isBalanced.value ? 'Balanced ✓' : 'Not Balanced ✗'],
-        ['Total Accounts', trialBalanceData.length.toString()],
+        ['Total Accounts', totalAccounts.value.toString()],
       ];
 
       for (int r = 0; r < summaryRows.length; r++) {
         for (int c = 0; c < 2; c++) {
-          _excelSetCell(summarySheet, 5 + r, c, summaryRows[r][c], bgColor: r.isEven ? 'FFFFFF' : 'F5F5F5');
+          _excelSetCell(
+            summarySheet,
+            5 + r,
+            c,
+            summaryRows[r][c],
+            bgColor: r.isEven ? 'FFFFFF' : 'F5F5F5',
+          );
         }
       }
       summarySheet.setColumnWidth(0, 25);
       summarySheet.setColumnWidth(1, 20);
 
-      // Trial Balance Sheet
       final tbSheet = excel['Trial Balance'];
-      final headers = ['Account Code', 'Account Name', 'Account Type', 'Debit', 'Credit'];
+      final headers = [
+        'Account Code',
+        'Account Name',
+        'Account Type',
+        'Debit',
+        'Credit',
+      ];
 
       for (int i = 0; i < headers.length; i++) {
-        _excelSetCell(tbSheet, 0, i, headers[i], bold: true, bgColor: '1A237E', fontColor: 'FFFFFF', fontSize: 10);
+        _excelSetCell(
+          tbSheet,
+          0,
+          i,
+          headers[i],
+          bold: true,
+          bgColor: '1A237E',
+          fontColor: 'FFFFFF',
+          fontSize: 10,
+        );
       }
 
       int row = 1;
@@ -534,15 +620,44 @@ class TrialBalanceController extends GetxController {
         _excelSetCell(tbSheet, row, 0, account.accountCode, bgColor: bg);
         _excelSetCell(tbSheet, row, 1, account.accountName, bgColor: bg);
         _excelSetCell(tbSheet, row, 2, account.accountType, bgColor: bg);
-        _excelSetCell(tbSheet, row, 3, account.debitBalance > 0 ? account.debitBalance : '', bgColor: bg, fontColor: '2E7D32');
-        _excelSetCell(tbSheet, row, 4, account.creditBalance > 0 ? account.creditBalance : '', bgColor: bg, fontColor: 'C62828');
+        _excelSetCell(
+          tbSheet,
+          row,
+          3,
+          account.debitBalance > 0 ? account.debitBalance : '',
+          bgColor: bg,
+          fontColor: '2E7D32',
+        );
+        _excelSetCell(
+          tbSheet,
+          row,
+          4,
+          account.creditBalance > 0 ? account.creditBalance : '',
+          bgColor: bg,
+          fontColor: 'C62828',
+        );
         row++;
       }
 
-      // Totals row
       _excelSetCell(tbSheet, row, 2, 'TOTAL', bold: true, bgColor: 'E8EAF6');
-      _excelSetCell(tbSheet, row, 3, totalDebit.value, bold: true, bgColor: 'E8EAF6', fontColor: '2E7D32');
-      _excelSetCell(tbSheet, row, 4, totalCredit.value, bold: true, bgColor: 'E8EAF6', fontColor: 'C62828');
+      _excelSetCell(
+        tbSheet,
+        row,
+        3,
+        totalDebit.value,
+        bold: true,
+        bgColor: 'E8EAF6',
+        fontColor: '2E7D32',
+      );
+      _excelSetCell(
+        tbSheet,
+        row,
+        4,
+        totalCredit.value,
+        bold: true,
+        bgColor: 'E8EAF6',
+        fontColor: 'C62828',
+      );
 
       final colWidths = [15.0, 35.0, 15.0, 15.0, 15.0];
       for (int i = 0; i < colWidths.length; i++) {
@@ -555,7 +670,8 @@ class TrialBalanceController extends GetxController {
       if (bytes == null) throw Exception('Excel save failed');
 
       final dir = await getTemporaryDirectory();
-      final fileName = 'trial_balance_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
+      final fileName =
+          'trial_balance_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
       final file = File('${dir.path}/$fileName');
       await file.writeAsBytes(bytes);
 
@@ -570,56 +686,32 @@ class TrialBalanceController extends GetxController {
     }
   }
 
-  void _excelSetCell(Sheet sheet, int row, int col, dynamic value, {
+  void _excelSetCell(
+    Sheet sheet,
+    int row,
+    int col,
+    dynamic value, {
     bool bold = false,
     double fontSize = 10,
     String? bgColor,
     String fontColor = '000000',
   }) {
-    final cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: col, rowIndex: row));
-    cell.value = value is double ? DoubleCellValue(value) : value is int ? IntCellValue(value) : TextCellValue(value.toString());
+    final cell = sheet.cell(
+      CellIndex.indexByColumnRow(columnIndex: col, rowIndex: row),
+    );
+    cell.value = value is double
+        ? DoubleCellValue(value)
+        : value is int
+        ? IntCellValue(value)
+        : TextCellValue(value.toString());
 
     cell.cellStyle = CellStyle(
       bold: bold,
       fontSize: fontSize.toInt(),
       fontColorHex: ExcelColor.fromHexString('#$fontColor'),
-      backgroundColorHex: bgColor != null ? ExcelColor.fromHexString('#$bgColor') : ExcelColor.fromHexString('#FFFFFF'),
-    );
-  }
-
-  void exportTrialBalance() {
-    Get.bottomSheet(
-      Container(
-        padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: Icon(Icons.picture_as_pdf, color: Color(0xFFE53935)),
-              title: Text('Export as PDF'),
-              onTap: () {
-                Get.back();
-                exportToPdf();
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.table_chart, color: Color(0xFF2E7D32)),
-              title: Text('Export as Excel'),
-              onTap: () {
-                Get.back();
-                exportToExcel();
-              },
-            ),
-          ],
-        ),
-      ),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColorHex: bgColor != null
+          ? ExcelColor.fromHexString('#$bgColor')
+          : ExcelColor.fromHexString('#FFFFFF'),
     );
   }
 
@@ -647,12 +739,12 @@ class TrialBalanceAccount {
 
   factory TrialBalanceAccount.fromJson(Map<String, dynamic> json) {
     return TrialBalanceAccount(
-      accountId: json['accountId'],
-      accountCode: json['accountCode'],
-      accountName: json['accountName'],
-      accountType: json['accountType'],
-      debitBalance: (json['debitBalance'] ?? 0).toDouble(),
-      creditBalance: (json['creditBalance'] ?? 0).toDouble(),
+      accountId: json['accountId']?.toString() ?? '',
+      accountCode: json['accountCode']?.toString() ?? '',
+      accountName: json['accountName']?.toString() ?? '',
+      accountType: json['accountType']?.toString() ?? '',
+      debitBalance: (json['debitBalance'] as num?)?.toDouble() ?? 0.0,
+      creditBalance: (json['creditBalance'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }

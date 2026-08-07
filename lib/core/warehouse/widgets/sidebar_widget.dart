@@ -1,11 +1,11 @@
 // lib/core/warehouse/widgets/sidebar_widget.dart
 
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/login/screen/login_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/dashboard/warehouse_dashboard_controller.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/dashboard/warehouse_dashboard_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class WarehouseSidebar extends StatelessWidget {
@@ -64,7 +64,7 @@ class WarehouseSidebar extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: const [
                         Text(
-                          'LedgerPro',
+                          'BisonsTechs',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

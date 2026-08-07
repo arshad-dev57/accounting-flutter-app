@@ -1,10 +1,10 @@
 // screens/profit_loss_statement_screen.dart - COMPLETE PROFESSIONAL MOBILE DESIGN
 
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/FiscalYear/controller/fiscal_year_controller.dart';
-import 'package:LedgerPro_app/core/profitlossStatement/controllers/profit_and_loss_controller.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/profitlossStatement/controllers/profit_and_loss_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -40,9 +40,7 @@ class ProfitLossStatementScreen extends StatelessWidget {
                     _buildFiscalYearSelector(fiscalYearController, controller),
                     _buildPeriodBar(controller, context),
                     const SizedBox(height: 8),
-                    Expanded(
-                      child: _buildReportBody(controller, context),
-                    ),
+                    Expanded(child: _buildReportBody(controller, context)),
                   ],
                 ),
               );
@@ -187,10 +185,7 @@ class ProfitLossStatementScreen extends StatelessWidget {
             icon: const Icon(Icons.arrow_drop_down, size: 20),
             padding: EdgeInsets.zero,
             isExpanded: true,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.black87,
-            ),
+            style: const TextStyle(fontSize: 12, color: Colors.black87),
             items: fiscalYearController.fiscalYears.map((year) {
               return DropdownMenuItem(
                 value: year.id,
@@ -203,10 +198,7 @@ class ProfitLossStatementScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        year.name,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      child: Text(year.name, overflow: TextOverflow.ellipsis),
                     ),
                   ],
                 ),
@@ -237,48 +229,53 @@ class ProfitLossStatementScreen extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Obx(() => SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: controller.periodOptions
-                    .where((p) => p != 'Custom Range')
-                    .map((p) {
-                  final isSelected = controller.selectedPeriod.value == p;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: GestureDetector(
-                      onTap: () => controller.changePeriod(p),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? Colors.black
-                              : Colors.white.withOpacity(0.18),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: isSelected
-                                ? Colors.black
-                                : Colors.white.withOpacity(0.4),
+            child: Obx(
+              () => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: controller.periodOptions
+                      .where((p) => p != 'Custom Range')
+                      .map((p) {
+                        final isSelected = controller.selectedPeriod.value == p;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: GestureDetector(
+                            onTap: () => controller.changePeriod(p),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? Colors.black
+                                    : Colors.white.withOpacity(0.18),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? Colors.black
+                                      : Colors.white.withOpacity(0.4),
+                                ),
+                              ),
+                              child: Text(
+                                p,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.black87,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          p,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: isSelected ? Colors.white : Colors.black87,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
+                        );
+                      })
+                      .toList(),
+                ),
               ),
-            )),
+            ),
           ),
           const SizedBox(width: 8),
           GestureDetector(
@@ -320,86 +317,102 @@ class ProfitLossStatementScreen extends StatelessWidget {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
       physics: const BouncingScrollPhysics(),
-      child: Obx(() => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildPeriodTitleCard(controller),
-          const SizedBox(height: 12),
-
-          // Revenue Section
-          _buildSection(
-            title: 'Revenue',
-            icon: Icons.trending_up,
-            color: kSuccess,
-            items: controller.revenueItems.map((i) => _SectionItem(i.name, i.amount)).toList(),
-            total: controller.totalRevenue.value,
-            totalLabel: 'Total Revenue',
-          ),
-          const SizedBox(height: 12),
-
-          // COGS
-          if (controller.costOfGoodsSold.value > 0) ...[
-            _buildSection(
-              title: 'Cost of Goods Sold',
-              icon: Icons.inventory_2_outlined,
-              color: kWarning,
-              items: [_SectionItem('COGS', controller.costOfGoodsSold.value)],
-              total: controller.costOfGoodsSold.value,
-              totalLabel: 'Total COGS',
-            ),
+      child: Obx(
+        () => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildPeriodTitleCard(controller),
             const SizedBox(height: 12),
-          ],
 
-          // Gross Profit
-          _buildGrossProfitCard(controller),
-          const SizedBox(height: 12),
-
-          // Operating Expenses
-          _buildSection(
-            title: 'Operating Expenses',
-            icon: Icons.receipt_long,
-            color: kDanger,
-            items: controller.expenseItems.map((i) => _SectionItem(i.name, i.amount)).toList(),
-            total: controller.operatingExpenses.value,
-            totalLabel: 'Total Operating Expenses',
-          ),
-          const SizedBox(height: 12),
-
-          // Other Income
-          if (controller.otherIncomeItems.isNotEmpty) ...[
+            // Revenue Section
             _buildSection(
-              title: 'Other Income',
-              icon: Icons.add_circle_outline,
+              title: 'Revenue',
+              icon: Icons.trending_up,
               color: kSuccess,
-              items: controller.otherIncomeItems.map((i) => _SectionItem(i.name, i.amount)).toList(),
-              total: controller.otherIncomeItems.fold(0.0, (s, i) => s + i.amount),
-              totalLabel: 'Total Other Income',
+              items: controller.revenueItems
+                  .map((i) => _SectionItem(i.name, i.amount))
+                  .toList(),
+              total: controller.totalRevenue.value,
+              totalLabel: 'Total Revenue',
             ),
             const SizedBox(height: 12),
-          ],
 
-          // Other Expenses
-          if (controller.otherExpenseItems.isNotEmpty) ...[
+            // COGS
+            if (controller.costOfGoodsSold.value > 0) ...[
+              _buildSection(
+                title: 'Cost of Goods Sold',
+                icon: Icons.inventory_2_outlined,
+                color: kWarning,
+                items: [_SectionItem('COGS', controller.costOfGoodsSold.value)],
+                total: controller.costOfGoodsSold.value,
+                totalLabel: 'Total COGS',
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            // Gross Profit
+            _buildGrossProfitCard(controller),
+            const SizedBox(height: 12),
+
+            // Operating Expenses
             _buildSection(
-              title: 'Other Expenses',
-              icon: Icons.remove_circle_outline,
+              title: 'Operating Expenses',
+              icon: Icons.receipt_long,
               color: kDanger,
-              items: controller.otherExpenseItems.map((i) => _SectionItem(i.name, i.amount)).toList(),
-              total: controller.otherExpenseItems.fold(0.0, (s, i) => s + i.amount),
-              totalLabel: 'Total Other Expenses',
+              items: controller.expenseItems
+                  .map((i) => _SectionItem(i.name, i.amount))
+                  .toList(),
+              total: controller.operatingExpenses.value,
+              totalLabel: 'Total Operating Expenses',
             ),
             const SizedBox(height: 12),
+
+            // Other Income
+            if (controller.otherIncomeItems.isNotEmpty) ...[
+              _buildSection(
+                title: 'Other Income',
+                icon: Icons.add_circle_outline,
+                color: kSuccess,
+                items: controller.otherIncomeItems
+                    .map((i) => _SectionItem(i.name, i.amount))
+                    .toList(),
+                total: controller.otherIncomeItems.fold(
+                  0.0,
+                  (s, i) => s + i.amount,
+                ),
+                totalLabel: 'Total Other Income',
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            // Other Expenses
+            if (controller.otherExpenseItems.isNotEmpty) ...[
+              _buildSection(
+                title: 'Other Expenses',
+                icon: Icons.remove_circle_outline,
+                color: kDanger,
+                items: controller.otherExpenseItems
+                    .map((i) => _SectionItem(i.name, i.amount))
+                    .toList(),
+                total: controller.otherExpenseItems.fold(
+                  0.0,
+                  (s, i) => s + i.amount,
+                ),
+                totalLabel: 'Total Other Expenses',
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            // Net Profit / Loss
+            _buildNetProfitCard(controller),
+            const SizedBox(height: 16),
+
+            // Action buttons
+            _buildActionButtons(controller),
+            const SizedBox(height: 20),
           ],
-
-          // Net Profit / Loss
-          _buildNetProfitCard(controller),
-          const SizedBox(height: 16),
-
-          // Action buttons
-          _buildActionButtons(controller),
-          const SizedBox(height: 20),
-        ],
-      )),
+        ),
+      ),
     );
   }
 
@@ -485,7 +498,9 @@ class ProfitLossStatementScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: color.withOpacity(0.06),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(14),
+              ),
             ),
             child: Row(
               children: [
@@ -546,7 +561,9 @@ class ProfitLossStatementScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: color.withOpacity(0.08),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(14),
+              ),
             ),
             child: Row(
               children: [
@@ -768,10 +785,7 @@ class ProfitLossStatementScreen extends StatelessWidget {
           child: OutlinedButton.icon(
             onPressed: () => controller.exportToPdf(),
             icon: Icon(Icons.picture_as_pdf, size: 16, color: kDanger),
-            label: Text(
-              'PDF',
-              style: TextStyle(fontSize: 12, color: kDanger),
-            ),
+            label: Text('PDF', style: TextStyle(fontSize: 12, color: kDanger)),
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: kDanger),
               padding: const EdgeInsets.symmetric(vertical: 10),
@@ -781,7 +795,6 @@ class ProfitLossStatementScreen extends StatelessWidget {
             ),
           ),
         ),
-     
       ],
     );
   }

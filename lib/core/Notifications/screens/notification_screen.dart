@@ -1,7 +1,7 @@
 // screens/notification_screen.dart - Professional Notification Screen
 
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/core/Notifications/controllers/notification_controller.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/Notifications/controllers/notification_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -29,29 +29,35 @@ class _NotificationScreenState extends State<NotificationScreen> {
         children: [
           _buildTopHeader(context),
           Expanded(
-            child: Obx(() => _controller.isLoading.value
-                ? const Center(child: CircularProgressIndicator())
-                : _controller.hasError.value
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.error_outline, size: 48, color: kDanger),
-                            const SizedBox(height: 16),
-                            Text(
-                              _controller.errorMessage.value,
-                              textAlign: TextAlign.center,
-                              style:  TextStyle(color: kSubText),
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: () => _controller.refresh(),
-                              child: const Text('Retry'),
-                            ),
-                          ],
-                        ),
-                      )
-                    : _buildNotificationList()),
+            child: Obx(
+              () => _controller.isLoading.value
+                  ? const Center(child: CircularProgressIndicator())
+                  : _controller.hasError.value
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            size: 48,
+                            color: kDanger,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _controller.errorMessage.value,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: kSubText),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () => _controller.refresh(),
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    )
+                  : _buildNotificationList(),
+            ),
           ),
         ],
       ),
@@ -105,41 +111,57 @@ class _NotificationScreenState extends State<NotificationScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Obx(() => _controller.unreadCount.value > 0
-                      ? GestureDetector(
-                          onTap: () => _controller.markAllAsRead(),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              'Mark all read',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.black.withOpacity(0.75),
-                                fontWeight: FontWeight.w600,
+                  Obx(
+                    () => _controller.unreadCount.value > 0
+                        ? GestureDetector(
+                            onTap: () => _controller.markAllAsRead(),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                'Mark all read',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.black.withOpacity(0.75),
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
-                          ),
-                        )
-                      : const SizedBox.shrink()),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
                 ],
               ),
             ),
             // Filter Tabs
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: Obx(() => Row(
-                children: [
-                  _buildFilterTab('All', _controller.selectedFilter.value == 'All'),
-                  const SizedBox(width: 8),
-                  _buildFilterTab('Unread', _controller.selectedFilter.value == 'Unread'),
-                  const SizedBox(width: 8),
-                  _buildFilterTab('Important', _controller.selectedFilter.value == 'Important'),
-                ],
-              )),
+              child: Obx(
+                () => Row(
+                  children: [
+                    _buildFilterTab(
+                      'All',
+                      _controller.selectedFilter.value == 'All',
+                    ),
+                    const SizedBox(width: 8),
+                    _buildFilterTab(
+                      'Unread',
+                      _controller.selectedFilter.value == 'Unread',
+                    ),
+                    const SizedBox(width: 8),
+                    _buildFilterTab(
+                      'Important',
+                      _controller.selectedFilter.value == 'Important',
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
@@ -236,10 +258,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
     final isUnread = !notification.isRead;
     final category = notification.category;
     final time = notification.timeAgo;
-    
+
     IconData icon;
     Color color;
-    
+
     switch (notification.type) {
       case 'success':
         icon = Icons.check_circle_rounded;
@@ -302,16 +324,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: color.withOpacity(0.2),
-                      width: 1,
-                    ),
+                    border: Border.all(color: color.withOpacity(0.2), width: 1),
                   ),
-                  child: Icon(
-                    icon,
-                    size: 22,
-                    color: color,
-                  ),
+                  child: Icon(icon, size: 22, color: color),
                 ),
                 const SizedBox(width: 14),
                 // Content

@@ -1,5 +1,16 @@
 // equity_model.dart mein fromChartOfAccountsJson method add karo:
 
+// Helper function to derive accountType from account name
+String _deriveAccountType(String name) {
+  final n = name.toLowerCase();
+  if (n.contains('drawing')) return 'Drawings';
+  if (n.contains('retained') || n.contains('retention'))
+    return 'Retained Earnings';
+  if (n.contains('reserve')) return 'Reserves';
+  if (n.contains('share')) return 'Share Capital';
+  return 'Capital';
+}
+
 class EquityAccount {
   final String id;
   final String accountName;
@@ -27,17 +38,25 @@ class EquityAccount {
 
   // Chart of Accounts se data convert karne ke liye
   factory EquityAccount.fromChartOfAccountsJson(Map<String, dynamic> json) {
+    final String name = json['name'] ?? '';
+    final String accountType =
+        json['subType'] ?? json['accountType'] ?? _deriveAccountType(name);
+
     return EquityAccount(
-      id: json['_id'] ?? '',
-      accountName: json['name'] ?? '',
-      accountCode: json['code'] ?? '',
-      accountType: _mapAccountType(json['type'] ?? 'Equity'),
+      id: json['id'] ?? json['_id'] ?? '',
+      accountName: name,
+      accountCode: json['code'] ?? json['accountCode'] ?? '',
+      accountType: accountType,
       openingBalance: (json['openingBalance'] ?? 0).toDouble(),
-      currentBalance: (json['currentBalance'] ?? json['openingBalance'] ?? 0).toDouble(),
-      additions: 0,  // Chart of Accounts se nahi aata, separate transactions se calculate karna hoga
+      currentBalance: (json['currentBalance'] ?? json['openingBalance'] ?? 0)
+          .toDouble(),
+      additions:
+          0, // Chart of Accounts se nahi aata, separate transactions se calculate karna hoga
       withdrawals: 0, // Chart of Accounts se nahi aata
-      lastUpdated: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : DateTime.now(),
-      notes: json['description'] ?? '',
+      lastUpdated: json['updatedAt'] != null
+          ? DateTime.tryParse(json['updatedAt'].toString()) ?? DateTime.now()
+          : DateTime.now(),
+      notes: json['description'] ?? json['notes'] ?? '',
     );
   }
 
@@ -52,17 +71,11 @@ class EquityAccount {
       currentBalance: (json['currentBalance'] ?? 0).toDouble(),
       additions: (json['additions'] ?? 0).toDouble(),
       withdrawals: (json['withdrawals'] ?? 0).toDouble(),
-      lastUpdated: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : DateTime.now(),
+      lastUpdated: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'])
+          : DateTime.now(),
       notes: json['notes'] ?? '',
     );
-  }
-
-  static String _mapAccountType(String type) {
-    // Equity ke andar subtypes
-    if (type == 'Equity') {
-      return 'Capital'; // Default
-    }
-    return type;
   }
 }
 
@@ -74,7 +87,6 @@ class OwnerTransaction {
   final double amount;
   final String description;
   final String reference;
-  final String status;
 
   OwnerTransaction({
     required this.id,
@@ -84,19 +96,19 @@ class OwnerTransaction {
     required this.amount,
     required this.description,
     required this.reference,
-    required this.status,
   });
 
   factory OwnerTransaction.fromJson(Map<String, dynamic> json) {
     return OwnerTransaction(
       id: json['id'] ?? json['_id'] ?? '',
-      date: json['date'] != null ? DateTime.parse(json['date']) : DateTime.now(),
-      type: json['type'] ?? '',
       accountName: json['accountName'] ?? '',
+      type: json['type'] ?? 'Additional Capital',
+      date: json['date'] != null
+          ? DateTime.tryParse(json['date'].toString()) ?? DateTime.now()
+          : DateTime.now(),
       amount: (json['amount'] ?? 0).toDouble(),
       description: json['description'] ?? '',
       reference: json['reference'] ?? '',
-      status: json['status'] ?? 'Posted',
     );
   }
 }

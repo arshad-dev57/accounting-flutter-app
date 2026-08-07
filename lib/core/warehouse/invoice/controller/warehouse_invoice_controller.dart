@@ -1,8 +1,6 @@
-import 'package:LedgerPro_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-// ─────────────────────── MODELS ───────────────────────
 
 class WarehouseInvoiceStats {
   final int total;
@@ -113,11 +111,16 @@ class WarehouseInvoiceModel {
   final double discountTotal;
   final double grandTotal;
   final double paidAmount;
+  final double creditIssued;
+  final double netOutstanding;
   final String invoiceStatus;
   final String paymentStatus;
   final String? notes;
   final DateTime invoiceDate;
   final DateTime dueDate;
+
+  /// sales | purchase
+  final String invoiceType;
 
   WarehouseInvoiceModel({
     required this.id,
@@ -134,18 +137,37 @@ class WarehouseInvoiceModel {
     required this.discountTotal,
     required this.grandTotal,
     required this.paidAmount,
+    this.creditIssued = 0,
+    this.netOutstanding = 0,
     required this.invoiceStatus,
     required this.paymentStatus,
     this.notes,
     required this.invoiceDate,
     required this.dueDate,
+    this.invoiceType = 'sales',
   });
 
-  double get outstanding => grandTotal - paidAmount;
-  bool get isOverdue => dueDate.isBefore(DateTime.now()) && paymentStatus != 'Paid';
+  double get outstanding {
+    if (netOutstanding != 0 || creditIssued > 0) return netOutstanding;
+    return grandTotal - paidAmount;
+  }
+
+  String get displayStatus {
+    if (netOutstanding < 0) return 'Credit Balance';
+    if (netOutstanding == 0 && (paidAmount > 0 || creditIssued > 0))
+      return 'Paid';
+    return paymentStatus;
+  }
+
+  bool get isPurchase => invoiceType == 'purchase';
+  bool get isSales => !isPurchase;
+
+  bool get isOverdue =>
+      dueDate.isBefore(DateTime.now()) && paymentStatus != 'Paid';
   bool get isPaid => invoiceStatus == 'Paid' || paymentStatus == 'Paid';
   bool get isUnpaid => invoiceStatus == 'Unpaid' || paymentStatus == 'Unpaid';
-  bool get isPartial => invoiceStatus == 'Partial' || paymentStatus == 'Partial';
+  bool get isPartial =>
+      invoiceStatus == 'Partial' || paymentStatus == 'Partial';
   bool get isCancelled => invoiceStatus == 'Cancelled';
 
   factory WarehouseInvoiceModel.fromJson(Map<String, dynamic> json) {
@@ -155,11 +177,20 @@ class WarehouseInvoiceModel {
       orderId: json['orderId']?.toString(),
       orderNumber: json['orderNumber']?.toString(),
       customerId: json['customerId']?.toString(),
-      customerName: json['customerName']?.toString() ?? '',
+      customerName:
+          json['customerName']?.toString() ??
+          json['partyName']?.toString() ??
+          json['supplierName']?.toString() ??
+          '',
       customerEmail: json['customerEmail']?.toString(),
       customerPhone: json['customerPhone']?.toString(),
-      items: (json['items'] as List?)
-              ?.map((e) => WarehouseInvoiceItemModel.fromJson(Map<String, dynamic>.from(e)))
+      items:
+          (json['items'] as List?)
+              ?.map(
+                (e) => WarehouseInvoiceItemModel.fromJson(
+                  Map<String, dynamic>.from(e),
+                ),
+              )
               .toList() ??
           [],
       subtotal: _toDouble(json['subtotal']),
@@ -167,11 +198,14 @@ class WarehouseInvoiceModel {
       discountTotal: _toDouble(json['discountTotal']),
       grandTotal: _toDouble(json['grandTotal']),
       paidAmount: _toDouble(json['paidAmount']),
+      creditIssued: _toDouble(json['creditIssued']),
+      netOutstanding: _toDouble(json['netOutstanding']),
       invoiceStatus: json['invoiceStatus']?.toString() ?? 'Unpaid',
       paymentStatus: json['paymentStatus']?.toString() ?? 'Unpaid',
       notes: json['notes']?.toString(),
       invoiceDate: _parseDate(json['invoiceDate'] ?? json['createdAt']),
       dueDate: _parseDate(json['dueDate']),
+      invoiceType: (json['invoiceType']?.toString() ?? 'sales').toLowerCase(),
     );
   }
 
@@ -193,7 +227,12 @@ class TrendPoint {
   final double collected;
   final int count;
 
-  TrendPoint({required this.date, this.revenue = 0, this.collected = 0, this.count = 0});
+  TrendPoint({
+    required this.date,
+    this.revenue = 0,
+    this.collected = 0,
+    this.count = 0,
+  });
 
   factory TrendPoint.fromJson(Map<String, dynamic> json) {
     return TrendPoint(
@@ -235,14 +274,14 @@ class InvoiceLineDraft {
   double get lineTotal => amount + taxAmount;
 
   Map<String, dynamic> toPayload() => {
-        'productId': productId,
-        'productName': description.split(' (').first,
-        'sku': sku,
-        'description': description,
-        'quantity': quantity,
-        'unitPrice': unitPrice,
-        'taxRate': taxRate,
-      };
+    'productId': productId,
+    'productName': description.split(' (').first,
+    'sku': sku,
+    'description': description,
+    'quantity': quantity,
+    'unitPrice': unitPrice,
+    'taxRate': taxRate,
+  };
 
   factory InvoiceLineDraft.fromProduct(Map<String, dynamic> product) {
     final name = product['name']?.toString() ?? 'Product';
@@ -289,12 +328,16 @@ class InvoiceDraft {
 
   double get subtotal => lines.fold(0.0, (s, l) => s + l.amount);
   double get taxTotal => lines.fold(0.0, (s, l) => s + l.taxAmount);
-  double get grandTotal => (subtotal + taxTotal - discount).clamp(0, double.infinity);
+  double get grandTotal =>
+      (subtotal + taxTotal - discount).clamp(0, double.infinity);
 
   Map<String, dynamic> toPayload() {
     var noteText = notes;
     if (sourceOrderNumber != null && sourceOrderNumber!.isNotEmpty) {
-      noteText = [if (notes.isNotEmpty) notes, 'Warehouse order: $sourceOrderNumber'].join('\n');
+      noteText = [
+        if (notes.isNotEmpty) notes,
+        'Warehouse order: $sourceOrderNumber',
+      ].join('\n');
     }
     return {
       'customerId': customerId,
@@ -311,7 +354,6 @@ class InvoiceDraft {
   }
 }
 
-
 class WarehouseInvoiceController extends GetxController {
   final ApiClient _api = Get.find<ApiClient>();
 
@@ -323,11 +365,16 @@ class WarehouseInvoiceController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxBool isSubmitting = false.obs;
   final RxBool showCreateForm = false.obs;
-  final Rx<WarehouseInvoiceModel?> selectedInvoice = Rx<WarehouseInvoiceModel?>(null);
+  final Rx<WarehouseInvoiceModel?> selectedInvoice = Rx<WarehouseInvoiceModel?>(
+    null,
+  );
 
   final RxString statusFilter = 'all'.obs;
   final RxString paymentFilter = 'all'.obs;
   final RxString searchFilter = ''.obs;
+
+  /// all | sales | purchase
+  final RxString invoiceTypeFilter = 'all'.obs;
 
   final RxInt currentPage = 1.obs;
   final RxInt pageLimit = 10.obs;
@@ -351,8 +398,16 @@ class WarehouseInvoiceController extends GetxController {
   ).obs;
 
   // ✅ FIXED: Only valid statuses
-  static const statusFilters = ['all', 'Unpaid', 'Partial', 'Paid', 'Overdue', 'Cancelled'];
+  static const statusFilters = [
+    'all',
+    'Unpaid',
+    'Partial',
+    'Paid',
+    'Overdue',
+    'Cancelled',
+  ];
   static const paymentFilters = ['all', 'Unpaid', 'Partial', 'Paid'];
+  static const invoiceTypeFilters = ['all', 'sales', 'purchase'];
 
   @override
   void onInit() {
@@ -363,76 +418,108 @@ class WarehouseInvoiceController extends GetxController {
 
   Future<void> fetchCustomers() async {
     try {
-      final response = await _api.get('/api/warehouse/customers', queryParameters: {'limit': 100}, requiresAuth: true);
+      final response = await _api.get(
+        '/api/warehouse/customers',
+        queryParameters: {'limit': 100},
+        requiresAuth: true,
+      );
       if (response.success && response.data != null) {
-        customers.value = List<Map<String, dynamic>>.from(response.data['data'] ?? []);
+        customers.value = List<Map<String, dynamic>>.from(
+          response.data['data'] ?? [],
+        );
       }
     } catch (_) {}
   }
 
   Future<void> fetchInvoices({bool resetPage = false}) async {
-  if (resetPage) currentPage.value = 1;
-  
-  try {
-    isLoading.value = true;
-    final params = <String, String>{
-      'page': currentPage.value.toString(),
-      'limit': pageLimit.value.toString(),
-    };
-    if (statusFilter.value != 'all') params['status'] = statusFilter.value;
-    if (paymentFilter.value != 'all') params['paymentStatus'] = paymentFilter.value;
-    if (searchFilter.value.isNotEmpty) params['search'] = searchFilter.value;
+    if (resetPage) currentPage.value = 1;
 
-    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    print('📤 REQUEST: /api/warehouse/invoices');
-    print('📤 PARAMS: $params');
-    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    try {
+      isLoading.value = true;
+      final params = <String, String>{
+        'page': currentPage.value.toString(),
+        'limit': pageLimit.value.toString(),
+        'invoiceType': invoiceTypeFilter.value,
+      };
+      if (statusFilter.value != 'all') params['status'] = statusFilter.value;
+      if (paymentFilter.value != 'all')
+        params['paymentStatus'] = paymentFilter.value;
+      if (searchFilter.value.isNotEmpty) params['search'] = searchFilter.value;
 
-    final response = await _api.get('/api/warehouse/invoices', queryParameters: params, requiresAuth: true);
-    
-    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    print('📥 RESPONSE:');
-    print('📥 Success: ${response.success}');
-    print('📥 Status Code: ${response.statusCode}');
-    print('📥 Full Response Data:');
-    print(response.data);
-    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      print('📤 REQUEST: /api/warehouse/invoices');
+      print('📤 PARAMS: $params');
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-    if (response.success && response.data != null) {
-      final list = response.data['data'] as List? ?? [];
-      invoices.value = list.map((e) => WarehouseInvoiceModel.fromJson(Map<String, dynamic>.from(e))).toList();
+      final response = await _api.get(
+        '/api/warehouse/invoices',
+        queryParameters: params,
+        requiresAuth: true,
+      );
 
-      if (response.data['stats'] != null) {
-        stats.value = WarehouseInvoiceStats.fromJson(Map<String, dynamic>.from(response.data['stats']));
-      }
-      if (response.data['trend'] != null) {
-        trend.value = (response.data['trend'] as List)
-            .map((e) => TrendPoint.fromJson(Map<String, dynamic>.from(e)))
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      print('📥 RESPONSE:');
+      print('📥 Success: ${response.success}');
+      print('📥 Status Code: ${response.statusCode}');
+      print('📥 Full Response Data:');
+      print(response.data);
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+      if (response.success && response.data != null) {
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('🔍 DATA KEYS: ${response.data?.keys}');
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+        final list = response.data['data'] as List? ?? [];
+        print('LIST LENGTH: ${list.length}');
+        print('FIRST ITEM: ${list.isNotEmpty ? list.first : 'empty'}');
+
+        invoices.value = list
+            .map(
+              (e) =>
+                  WarehouseInvoiceModel.fromJson(Map<String, dynamic>.from(e)),
+            )
             .toList();
-      }
 
-      final pagination = response.data['pagination'] as Map<String, dynamic>?;
-      if (pagination != null) {
-        currentPage.value = (pagination['page'] as num?)?.toInt() ?? 1;
-        totalRecords.value = (pagination['total'] as num?)?.toInt() ?? 0;
-        totalPages.value = (pagination['pages'] as num?)?.toInt() ?? 1;
-        hasNext.value = pagination['hasNext'] == true;
-        hasPrev.value = pagination['hasPrev'] == true;
+        if (response.data['stats'] != null) {
+          stats.value = WarehouseInvoiceStats.fromJson(
+            Map<String, dynamic>.from(response.data['stats']),
+          );
+        }
+        if (response.data['trend'] != null) {
+          trend.value = (response.data['trend'] as List)
+              .map((e) => TrendPoint.fromJson(Map<String, dynamic>.from(e)))
+              .toList();
+        }
+
+        final pagination = response.data['pagination'] as Map<String, dynamic>?;
+        if (pagination != null) {
+          currentPage.value = (pagination['page'] as num?)?.toInt() ?? 1;
+          totalRecords.value = (pagination['total'] as num?)?.toInt() ?? 0;
+          totalPages.value = (pagination['pages'] as num?)?.toInt() ?? 1;
+          hasNext.value = pagination['hasNext'] == true;
+          hasPrev.value = pagination['hasPrev'] == true;
+        }
       }
+    } catch (e) {
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      print('❌ ERROR: $e');
+      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      Get.snackbar('Error', e.toString());
+    } finally {
+      isLoading.value = false;
     }
-  } catch (e) {
-    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    print('❌ ERROR: $e');
-    print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    Get.snackbar('Error', e.toString());
-  } finally {
-    isLoading.value = false;
   }
-}
+
   Future<void> refreshInvoices() => fetchInvoices(resetPage: true);
 
   void applyStatusFilter(String v) {
     statusFilter.value = v;
+    fetchInvoices(resetPage: true);
+  }
+
+  void applyInvoiceTypeFilter(String v) {
+    invoiceTypeFilter.value = v;
     fetchInvoices(resetPage: true);
   }
 
@@ -459,7 +546,11 @@ class WarehouseInvoiceController extends GetxController {
     try {
       final params = <String, dynamic>{'limit': 15};
       if (query.trim().isNotEmpty) params['search'] = query.trim();
-      final response = await _api.get('/api/warehouse/products', queryParameters: params, requiresAuth: true);
+      final response = await _api.get(
+        '/api/warehouse/products',
+        queryParameters: params,
+        requiresAuth: true,
+      );
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         return list.map((item) {
@@ -488,7 +579,9 @@ class WarehouseInvoiceController extends GetxController {
         final list = response.data['data'] as List? ?? [];
         billableOrders.value = list
             .map((e) => OrderModel.fromJson(Map<String, dynamic>.from(e)))
-            .where((o) => o.orderStatus != 'Cancelled' && o.orderStatus != 'Draft')
+            .where(
+              (o) => o.orderStatus != 'Cancelled' && o.orderStatus != 'Draft',
+            )
             .toList();
       }
     } catch (_) {
@@ -511,12 +604,16 @@ class WarehouseInvoiceController extends GetxController {
   }
 
   InvoiceDraft draftFromOrder(OrderModel order) {
-    final taxRate = order.subtotal > 0 ? (order.taxTotal / order.subtotal) * 100 : 0.0;
+    final taxRate = order.subtotal > 0
+        ? (order.taxTotal / order.subtotal) * 100
+        : 0.0;
     final lines = order.items.map((item) {
       return InvoiceLineDraft(
         productId: item.productId,
         sku: item.sku,
-        description: item.sku.isNotEmpty ? '${item.productName} (${item.sku})' : item.productName,
+        description: item.sku.isNotEmpty
+            ? '${item.productName} (${item.sku})'
+            : item.productName,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         taxRate: taxRate,
@@ -561,14 +658,23 @@ class WarehouseInvoiceController extends GetxController {
     try {
       isSubmitting.value = true;
       final payload = draft.toPayload();
-      final response = await _api.post('/api/warehouse/invoices', body: payload, requiresAuth: true);
+      final response = await _api.post(
+        '/api/warehouse/invoices',
+        body: payload,
+        requiresAuth: true,
+      );
       if (response.success) {
         Get.snackbar('Success', 'Warehouse invoice created');
         closeCreateForm();
         await fetchInvoices(resetPage: true);
         return true;
       }
-      Get.snackbar('Error', response.message.isNotEmpty ? response.message : 'Failed to create invoice');
+      Get.snackbar(
+        'Error',
+        response.message.isNotEmpty
+            ? response.message
+            : 'Failed to create invoice',
+      );
       return false;
     } catch (e) {
       Get.snackbar('Error', e.toString());
@@ -591,7 +697,10 @@ class WarehouseInvoiceController extends GetxController {
         await fetchInvoices(resetPage: true);
         return true;
       }
-      Get.snackbar('Error', response.message.isNotEmpty ? response.message : 'Failed');
+      Get.snackbar(
+        'Error',
+        response.message.isNotEmpty ? response.message : 'Failed',
+      );
       return false;
     } catch (e) {
       Get.snackbar('Error', e.toString());
@@ -627,7 +736,10 @@ class WarehouseInvoiceController extends GetxController {
   Future<bool> deleteInvoice(WarehouseInvoiceModel invoice) async {
     try {
       isSubmitting.value = true;
-      final response = await _api.delete('/api/warehouse/invoices/${invoice.id}', requiresAuth: true);
+      final response = await _api.delete(
+        '/api/warehouse/invoices/${invoice.id}',
+        requiresAuth: true,
+      );
       if (response.success) {
         Get.snackbar('Success', 'Invoice deleted');
         await fetchInvoices();
@@ -655,8 +767,6 @@ class WarehouseInvoiceController extends GetxController {
     }
   }
 }
-
-// ─────────────────────── ORDER MODEL (if needed) ───────────────────────
 
 class OrderModel {
   final String id;
@@ -697,8 +807,11 @@ class OrderModel {
       taxTotal: _toDouble(json['taxTotal']),
       discountTotal: _toDouble(json['discountTotal']),
       customerNotes: json['customerNotes']?.toString(),
-      items: (json['items'] as List?)
-              ?.map((e) => OrderItemModel.fromJson(Map<String, dynamic>.from(e)))
+      items:
+          (json['items'] as List?)
+              ?.map(
+                (e) => OrderItemModel.fromJson(Map<String, dynamic>.from(e)),
+              )
               .toList() ??
           [],
     );

@@ -1,10 +1,11 @@
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/core/warehouse/order/controller/sales_order_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/order/model/order_model.dart';
-import 'package:LedgerPro_app/core/warehouse/order/widgets/customer_picker_sheet.dart';
-import 'package:LedgerPro_app/core/warehouse/order/widgets/product_search_field.dart';
-import 'package:LedgerPro_app/core/warehouse/order/widgets/setting_dropdown_field.dart';
-import 'package:LedgerPro_app/core/warehousesettings/warehouse_settings_screen.dart' hide kBg;
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/controller/sales_order_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/model/order_model.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/widgets/customer_picker_sheet.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/widgets/product_search_field.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/widgets/setting_dropdown_field.dart';
+import 'package:BisonsTechs_app/core/warehousesettings/warehouse_settings_screen.dart'
+    hide kBg;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -22,9 +23,7 @@ class CreateOrderForm extends StatelessWidget {
   void _navigateToSettings(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const SettingsScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const SettingsScreen()),
     );
   }
 
@@ -52,26 +51,29 @@ class CreateOrderForm extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: kDanger.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                            color: kDanger.withOpacity(0.2)),
+                        border: Border.all(color: kDanger.withOpacity(0.2)),
                       ),
                       child: Text(
                         c.formError.value,
-                        style:
-                            TextStyle(color: kDanger, fontSize: 12),
+                        style: TextStyle(color: kDanger, fontSize: 12),
                       ),
                     ),
 
-                  _section(
-                      'Customer Information', Icons.person_outline, [
+                  _section('Customer Information', Icons.person_outline, [
                     _customerPicker(context),
                     const SizedBox(height: 10),
-                    _textField('Email', c.customerEmail.value,
-                        (v) => c.customerEmail.value = v,
-                        keyboard: TextInputType.emailAddress),
+                    _textField(
+                      'Email',
+                      c.customerEmail.value,
+                      (v) => c.customerEmail.value = v,
+                      keyboard: TextInputType.emailAddress,
+                    ),
                     const SizedBox(height: 10),
-                    _textField('Phone', c.customerPhone.value,
-                        (v) => c.customerPhone.value = v),
+                    _textField(
+                      'Phone',
+                      c.customerPhone.value,
+                      (v) => c.customerPhone.value = v,
+                    ),
                     const SizedBox(height: 10),
                     SettingDropdownField(
                       label: 'Customer Type',
@@ -82,36 +84,39 @@ class CreateOrderForm extends StatelessWidget {
                       onManage: () => _navigateToSettings(context),
                     ),
                     const SizedBox(height: 10),
-                    _textField('Company Name', c.customerCompany.value,
-                        (v) => c.customerCompany.value = v),
+                    _textField(
+                      'Company Name',
+                      c.customerCompany.value,
+                      (v) => c.customerCompany.value = v,
+                    ),
                     const SizedBox(height: 10),
-                    _textField('Tax ID / NTN', c.customerTaxId.value,
-                        (v) => c.customerTaxId.value = v),
+                    _textField(
+                      'Tax ID / NTN',
+                      c.customerTaxId.value,
+                      (v) => c.customerTaxId.value = v,
+                    ),
                   ]),
 
-                  _section('Shipping Address',
-                      Icons.local_shipping_outlined, [
+                  _section('Shipping Address', Icons.local_shipping_outlined, [
                     ..._addressFields(c.shippingAddress.value, (addr) {
                       c.shippingAddress.value = addr;
-                      if (c.sameAsShipping.value)
-                        c.billingAddress.value = addr;
+                      if (c.sameAsShipping.value) c.billingAddress.value = addr;
                     }),
                   ]),
 
-                  _section('Billing Address',
-                      Icons.receipt_long_outlined, [
+                  _section('Billing Address', Icons.receipt_long_outlined, [
                     CheckboxListTile(
                       contentPadding: EdgeInsets.zero,
                       value: c.sameAsShipping.value,
-                      onChanged: (v) =>
-                          c.toggleSameAsShipping(v ?? true),
-                      title: const Text('Same as shipping address',
-                          style: TextStyle(fontSize: 13)),
+                      onChanged: (v) => c.toggleSameAsShipping(v ?? true),
+                      title: const Text(
+                        'Same as shipping address',
+                        style: TextStyle(fontSize: 13),
+                      ),
                       controlAffinity: ListTileControlAffinity.leading,
                     ),
                     if (!c.sameAsShipping.value)
-                      ..._addressFields(c.billingAddress.value,
-                          (addr) {
+                      ..._addressFields(c.billingAddress.value, (addr) {
                         c.billingAddress.value = addr;
                       }),
                   ]),
@@ -146,31 +151,38 @@ class CreateOrderForm extends StatelessWidget {
                       onManage: () => _navigateToSettings(context),
                     ),
                     const SizedBox(height: 10),
-                    _textField('Sales Person', c.salesPerson.value,
-                        (v) => c.salesPerson.value = v),
+                    _textField(
+                      'Sales Person',
+                      c.salesPerson.value,
+                      (v) => c.salesPerson.value = v,
+                    ),
                     const SizedBox(height: 10),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text('Expected Delivery Date',
-                          style: TextStyle(fontSize: 13)),
+                      title: const Text(
+                        'Expected Delivery Date',
+                        style: TextStyle(fontSize: 13),
+                      ),
                       subtitle: Text(
                         c.expectedDeliveryDate.value == null
                             ? 'Not set'
-                            : c.formatDate(
-                                c.expectedDeliveryDate.value!),
+                            : c.formatDate(c.expectedDeliveryDate.value!),
                         style: const TextStyle(fontSize: 12),
                       ),
                       trailing: const Icon(
-                          Icons.calendar_today_outlined,
-                          size: 20),
+                        Icons.calendar_today_outlined,
+                        size: 20,
+                      ),
                       onTap: () async {
                         final picked = await showDatePicker(
                           context: context,
-                          initialDate: DateTime.now()
-                              .add(const Duration(days: 1)),
+                          initialDate: DateTime.now().add(
+                            const Duration(days: 1),
+                          ),
                           firstDate: DateTime.now(),
-                          lastDate: DateTime.now()
-                              .add(const Duration(days: 365)),
+                          lastDate: DateTime.now().add(
+                            const Duration(days: 365),
+                          ),
                         );
                         if (picked != null)
                           c.expectedDeliveryDate.value = picked;
@@ -178,8 +190,7 @@ class CreateOrderForm extends StatelessWidget {
                     ),
                   ]),
 
-                  _section('Shipping & Payment',
-                      Icons.payments_outlined, [
+                  _section('Shipping & Payment', Icons.payments_outlined, [
                     SettingDropdownField(
                       label: 'Shipping Method',
                       category: 'shippingMethod',
@@ -189,16 +200,18 @@ class CreateOrderForm extends StatelessWidget {
                       onManage: () => _navigateToSettings(context),
                     ),
                     const SizedBox(height: 10),
-                    _textField('Shipping Carrier',
-                        c.shippingCarrier.value,
-                        (v) => c.shippingCarrier.value = v),
+                    _textField(
+                      'Shipping Carrier',
+                      c.shippingCarrier.value,
+                      (v) => c.shippingCarrier.value = v,
+                    ),
                     const SizedBox(height: 10),
                     _textField(
-                        'Shipping Cost',
-                        c.shippingCost.value.toString(),
-                        (v) => c.shippingCost.value =
-                            double.tryParse(v) ?? 0,
-                        keyboard: TextInputType.number),
+                      'Shipping Cost',
+                      c.shippingCost.value.toString(),
+                      (v) => c.shippingCost.value = double.tryParse(v) ?? 0,
+                      keyboard: TextInputType.number,
+                    ),
                     const SizedBox(height: 10),
                     SettingDropdownField(
                       label: 'Payment Method',
@@ -214,18 +227,21 @@ class CreateOrderForm extends StatelessWidget {
                       decoration: InputDecoration(
                         labelText: 'Payment Status',
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8)),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
                       ),
-                      items: SalesOrderController
-                          .paymentStatusCreateOptions
-                          .map((e) => DropdownMenuItem(
-                                value: e,
-                                child: Text(e,
-                                    overflow: TextOverflow.ellipsis),
-                              ))
+                      items: SalesOrderController.paymentStatusCreateOptions
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e,
+                              child: Text(e, overflow: TextOverflow.ellipsis),
+                            ),
+                          )
                           .toList(),
                       onChanged: (v) {
                         if (v != null) c.paymentStatus.value = v;
@@ -234,26 +250,34 @@ class CreateOrderForm extends StatelessWidget {
                   ]),
 
                   _section('Discounts', Icons.discount_outlined, [
-                    _textField('Coupon Code', c.couponCode.value,
-                        (v) => c.couponCode.value = v),
+                    _textField(
+                      'Coupon Code',
+                      c.couponCode.value,
+                      (v) => c.couponCode.value = v,
+                    ),
                     const SizedBox(height: 10),
                     DropdownButtonFormField<String>(
                       value: c.discountType.value,
                       decoration: InputDecoration(
                         labelText: 'Discount Type',
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8)),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
                       ),
                       items: const [
                         DropdownMenuItem(
-                            value: 'Percentage',
-                            child: Text('Percentage')),
+                          value: 'Percentage',
+                          child: Text('Percentage'),
+                        ),
                         DropdownMenuItem(
-                            value: 'Fixed',
-                            child: Text('Fixed Amount')),
+                          value: 'Fixed',
+                          child: Text('Fixed Amount'),
+                        ),
                       ],
                       onChanged: (v) {
                         if (v != null) c.discountType.value = v;
@@ -272,37 +296,49 @@ class CreateOrderForm extends StatelessWidget {
                       _textField(
                         'Discount Amount',
                         c.discountAmount.value.toString(),
-                        (v) => c.discountAmount.value =
-                            double.tryParse(v) ?? 0,
+                        (v) => c.discountAmount.value = double.tryParse(v) ?? 0,
                         keyboard: TextInputType.number,
                       ),
                   ]),
 
                   _section('Notes', Icons.note_alt_outlined, [
-                    _textField('Customer Notes', c.customerNotes.value,
-                        (v) => c.customerNotes.value = v,
-                        maxLines: 2),
-                    const SizedBox(height: 10),
-                    _textField('Internal Notes', c.internalNotes.value,
-                        (v) => c.internalNotes.value = v,
-                        maxLines: 2),
+                    _textField(
+                      'Customer Notes',
+                      c.customerNotes.value,
+                      (v) => c.customerNotes.value = v,
+                      maxLines: 2,
+                    ),
                     const SizedBox(height: 10),
                     _textField(
-                        'Tags (comma separated)', c.tagsInput.value,
-                        (v) => c.tagsInput.value = v),
+                      'Internal Notes',
+                      c.internalNotes.value,
+                      (v) => c.internalNotes.value = v,
+                      maxLines: 2,
+                    ),
+                    const SizedBox(height: 10),
+                    _textField(
+                      'Tags (comma separated)',
+                      c.tagsInput.value,
+                      (v) => c.tagsInput.value = v,
+                    ),
                   ]),
 
                   _section('Summary', Icons.summarize_outlined, [
+                    _summaryRow('Subtotal', c.formatCurrency(c.subtotal)),
                     _summaryRow(
-                        'Subtotal', c.formatCurrency(c.subtotal)),
-                    _summaryRow('Shipping',
-                        c.formatCurrency(c.shippingCost.value)),
-                    _summaryRow('Discount',
-                        '- ${c.formatCurrency(c.calculatedDiscount)}'),
+                      'Shipping',
+                      c.formatCurrency(c.shippingCost.value),
+                    ),
+                    _summaryRow(
+                      'Discount',
+                      '- ${c.formatCurrency(c.calculatedDiscount)}',
+                    ),
                     const Divider(),
                     _summaryRow(
-                        'Grand Total', c.formatCurrency(c.grandTotal),
-                        bold: true),
+                      'Grand Total',
+                      c.formatCurrency(c.grandTotal),
+                      bold: true,
+                    ),
                   ]),
 
                   const SizedBox(height: 80),
@@ -317,7 +353,10 @@ class CreateOrderForm extends StatelessWidget {
   }
 
   Widget _buildOrderItemsSection(
-      SalesOrderController c, double screenHeight, BuildContext context) {
+    SalesOrderController c,
+    double screenHeight,
+    BuildContext context,
+  ) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 14),
@@ -336,9 +375,10 @@ class CreateOrderForm extends StatelessWidget {
             children: [
               Icon(Icons.inventory_2_outlined, size: 18, color: kPrimary),
               const SizedBox(width: 8),
-              const Text('Order Items',
-                  style: TextStyle(
-                      fontWeight: FontWeight.w700, fontSize: 15)),
+              const Text(
+                'Order Items',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+              ),
               const Spacer(),
               // Plus icon to navigate to Settings
               GestureDetector(
@@ -349,11 +389,7 @@ class CreateOrderForm extends StatelessWidget {
                     color: kPrimary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(
-                    Icons.add,
-                    size: 20,
-                    color: kPrimary,
-                  ),
+                  child: const Icon(Icons.add, size: 20, color: kPrimary),
                 ),
               ),
             ],
@@ -386,10 +422,13 @@ class CreateOrderForm extends StatelessWidget {
                       labelText: 'Qty',
                       labelStyle: const TextStyle(fontSize: 11),
                       border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       isDense: true,
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 18),
+                        horizontal: 10,
+                        vertical: 18,
+                      ),
                     ),
                     onChanged: (v) => c.updateQuantity(int.tryParse(v) ?? 1),
                   ),
@@ -400,34 +439,39 @@ class CreateOrderForm extends StatelessWidget {
                 flex: 3,
                 child: SizedBox(
                   height: 38,
-                  child: Obx(() => ElevatedButton(
-                    onPressed: c.selectedProduct.value == null
-                        ? null
-                        : () {
-                            c.addProductToOrder(
-                                c.selectedProduct.value!, c.quantity.value);
-                            c.clearProductSelection();
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kPrimary,
-                      disabledBackgroundColor: Colors.grey.shade300,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
-                    ),
-                    child: const Text(
-                      'Add Item',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
+                  child: Obx(
+                    () => ElevatedButton(
+                      onPressed: c.selectedProduct.value == null
+                          ? null
+                          : () {
+                              c.addProductToOrder(
+                                c.selectedProduct.value!,
+                                c.quantity.value,
+                              );
+                              c.clearProductSelection();
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kPrimary,
+                        disabledBackgroundColor: Colors.grey.shade300,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        'Add Item',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
-                  )),
+                  ),
                 ),
               ),
             ],
           ),
-          
+
           const SizedBox(height: 8),
 
           // Items List - Fixed with conditional rendering
@@ -437,15 +481,12 @@ class CreateOrderForm extends StatelessWidget {
               alignment: Alignment.center,
               child: Text(
                 'No items added yet',
-                style: TextStyle(
-                    color: Colors.grey.shade400, fontSize: 12),
+                style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
               ),
             )
           else
             ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: screenHeight * 0.18,
-              ),
+              constraints: BoxConstraints(maxHeight: screenHeight * 0.18),
               child: ListView.builder(
                 physics: const AlwaysScrollableScrollPhysics(),
                 shrinkWrap: true,
@@ -457,23 +498,24 @@ class CreateOrderForm extends StatelessWidget {
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(6),
-                      side: BorderSide(
-                          color: Colors.grey.withOpacity(0.1)),
+                      side: BorderSide(color: Colors.grey.withOpacity(0.1)),
                     ),
                     child: ListTile(
                       title: Text(
                         item.productName,
                         style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       subtitle: Text(
                         '${item.sku} • Qty ${item.quantity}',
                         style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey.shade600),
+                          fontSize: 10,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -481,15 +523,18 @@ class CreateOrderForm extends StatelessWidget {
                           Text(
                             c.formatCurrency(item.totalPrice),
                             style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 11),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 11,
+                            ),
                           ),
                           const SizedBox(width: 4),
                           IconButton(
-                            icon: const Icon(Icons.close,
-                                color: kDanger, size: 16),
-                            onPressed: () =>
-                                c.removeCreateItem(index),
+                            icon: const Icon(
+                              Icons.close,
+                              color: kDanger,
+                              size: 16,
+                            ),
+                            onPressed: () => c.removeCreateItem(index),
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
                           ),
@@ -497,7 +542,9 @@ class CreateOrderForm extends StatelessWidget {
                       ),
                       dense: true,
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 0),
+                        horizontal: 8,
+                        vertical: 0,
+                      ),
                       minVerticalPadding: 0,
                     ),
                   );
@@ -511,26 +558,27 @@ class CreateOrderForm extends StatelessWidget {
 
   Widget _header() {
     return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: kCardBg,
         border: Border(
-            bottom:
-                BorderSide(color: Colors.grey.withOpacity(0.15))),
+          bottom: BorderSide(color: Colors.grey.withOpacity(0.15)),
+        ),
       ),
       child: Row(
         children: [
           const Icon(Icons.add_shopping_cart, color: kPrimary),
           const SizedBox(width: 8),
           const Expanded(
-            child: Text('Create New Order',
-                style: TextStyle(
-                    fontSize: 17, fontWeight: FontWeight.w700)),
+            child: Text(
+              'Create New Order',
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+            ),
           ),
           IconButton(
-              onPressed: onCancel,
-              icon: const Icon(Icons.close, size: 22)),
+            onPressed: onCancel,
+            icon: const Icon(Icons.close, size: 22),
+          ),
         ],
       ),
     );
@@ -541,8 +589,7 @@ class CreateOrderForm extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: kCardBg,
-        border: Border(
-            top: BorderSide(color: Colors.grey.withOpacity(0.15))),
+        border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.15))),
       ),
       child: Row(
         children: [
@@ -552,8 +599,7 @@ class CreateOrderForm extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
-              child: const Text('Cancel',
-                  style: TextStyle(fontSize: 13)),
+              child: const Text('Cancel', style: TextStyle(fontSize: 13)),
             ),
           ),
           const SizedBox(width: 10),
@@ -567,29 +613,31 @@ class CreateOrderForm extends StatelessWidget {
                         if (ok && context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                                content: Text(
-                                    'Order created successfully')),
+                              content: Text('Order created successfully'),
+                            ),
                           );
                         }
                       },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimary,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 child: controller.isSubmitting.value
                     ? const SizedBox(
                         width: 18,
                         height: 18,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.black),
+                          strokeWidth: 2,
+                          color: Colors.black,
+                        ),
                       )
                     : const Text(
                         'Create Order',
                         style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600),
+                          color: Colors.black,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
               );
             }),
@@ -599,8 +647,7 @@ class CreateOrderForm extends StatelessWidget {
     );
   }
 
-  Widget _section(
-      String title, IconData icon, List<Widget> children) {
+  Widget _section(String title, IconData icon, List<Widget> children) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 12),
@@ -617,9 +664,13 @@ class CreateOrderForm extends StatelessWidget {
             children: [
               Icon(icon, size: 17, color: kPrimary),
               const SizedBox(width: 6),
-              Text(title,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w700, fontSize: 14)),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 10),
@@ -634,9 +685,10 @@ class CreateOrderForm extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Customer Name *',
-            style: TextStyle(
-                fontSize: 12, fontWeight: FontWeight.w600)),
+        const Text(
+          'Customer Name *',
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        ),
         const SizedBox(height: 4),
         InkWell(
           onTap: () {
@@ -644,27 +696,22 @@ class CreateOrderForm extends StatelessWidget {
               context: context,
               isScrollControlled: true,
               shape: const RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.vertical(top: Radius.circular(16)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
               ),
-              builder: (_) =>
-                  CustomerPickerSheet(onSelect: c.applyCustomer),
+              builder: (_) => CustomerPickerSheet(onSelect: c.applyCustomer),
             );
           },
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(
-                horizontal: 12, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
-              border:
-                  Border.all(color: Colors.grey.withOpacity(0.3)),
+              border: Border.all(color: Colors.grey.withOpacity(0.3)),
               borderRadius: BorderRadius.circular(8),
               color: kBg,
             ),
             child: Row(
               children: [
-                Icon(Icons.person_outline,
-                    size: 16, color: kSubText),
+                Icon(Icons.person_outline, size: 16, color: kSubText),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -701,15 +748,14 @@ class CreateOrderForm extends StatelessWidget {
             labelText: 'Or enter customer name manually',
             border: OutlineInputBorder(),
             isDense: true,
-            contentPadding:
-                EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
           style: const TextStyle(fontSize: 13),
           onChanged: (v) => c.customerName.value = v,
-          controller:
-              TextEditingController(text: c.customerName.value)
-                ..selection = TextSelection.collapsed(
-                    offset: c.customerName.value.length),
+          controller: TextEditingController(text: c.customerName.value)
+            ..selection = TextSelection.collapsed(
+              offset: c.customerName.value.length,
+            ),
         ),
       ],
     );
@@ -719,24 +765,23 @@ class CreateOrderForm extends StatelessWidget {
     OrderAddress address,
     ValueChanged<OrderAddress> onChanged,
   ) {
-    Widget field(
-        String label, String value, void Function(String) setter) {
+    Widget field(String label, String value, void Function(String) setter) {
       return Padding(
         padding: const EdgeInsets.only(bottom: 8),
         child: TextField(
           decoration: InputDecoration(
             labelText: label,
             labelStyle: const TextStyle(fontSize: 12),
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             isDense: true,
             contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12, vertical: 10),
+              horizontal: 12,
+              vertical: 10,
+            ),
           ),
           style: const TextStyle(fontSize: 13),
           controller: TextEditingController(text: value)
-            ..selection =
-                TextSelection.collapsed(offset: value.length),
+            ..selection = TextSelection.collapsed(offset: value.length),
           onChanged: (v) {
             setter(v);
             onChanged(address);
@@ -749,29 +794,29 @@ class CreateOrderForm extends StatelessWidget {
       field('Street', address.street, (v) => address.street = v),
       field('City', address.city, (v) => address.city = v),
       field('State', address.state, (v) => address.state = v),
-      field('Postal Code', address.postalCode,
-          (v) => address.postalCode = v),
+      field('Postal Code', address.postalCode, (v) => address.postalCode = v),
       DropdownButtonFormField<String>(
-        value:
-            SalesOrderController.countryOptions.contains(address.country)
-                ? address.country
-                : 'Pakistan',
+        value: SalesOrderController.countryOptions.contains(address.country)
+            ? address.country
+            : 'Pakistan',
         decoration: InputDecoration(
           labelText: 'Country',
           labelStyle: const TextStyle(fontSize: 12),
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8)),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           isDense: true,
           contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12, vertical: 10),
+            horizontal: 12,
+            vertical: 10,
+          ),
         ),
         style: const TextStyle(fontSize: 13),
         items: SalesOrderController.countryOptions
-            .map((e) => DropdownMenuItem(
-                  value: e,
-                  child:
-                      Text(e, overflow: TextOverflow.ellipsis),
-                ))
+            .map(
+              (e) => DropdownMenuItem(
+                value: e,
+                child: Text(e, overflow: TextOverflow.ellipsis),
+              ),
+            )
             .toList(),
         onChanged: (v) {
           if (v != null) {
@@ -795,42 +840,45 @@ class CreateOrderForm extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(fontSize: 12),
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         isDense: true,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
       ),
       style: const TextStyle(fontSize: 13),
       keyboardType: keyboard,
       maxLines: maxLines,
       controller: TextEditingController(text: value)
-        ..selection =
-            TextSelection.collapsed(offset: value.length),
+        ..selection = TextSelection.collapsed(offset: value.length),
       onChanged: onChanged,
     );
   }
 
-  Widget _summaryRow(String label, String value,
-      {bool bold = false}) {
+  Widget _summaryRow(String label, String value, {bool bold = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         children: [
           Expanded(
-            child: Text(label,
-                style: TextStyle(
-                    fontWeight:
-                        bold ? FontWeight.w700 : FontWeight.w500,
-                    color: kSubText,
-                    fontSize: 13)),
-          ),
-          Text(value,
+            child: Text(
+              label,
               style: TextStyle(
-                  fontWeight:
-                      bold ? FontWeight.w800 : FontWeight.w600,
-                  color: bold ? kPrimary : kText,
-                  fontSize: 13)),
+                fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+                color: kSubText,
+                fontSize: 13,
+              ),
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: bold ? FontWeight.w800 : FontWeight.w600,
+              color: bold ? kPrimary : kText,
+              fontSize: 13,
+            ),
+          ),
         ],
       ),
     );

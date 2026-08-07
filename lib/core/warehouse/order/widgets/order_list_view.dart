@@ -1,11 +1,9 @@
-
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/core/warehouse/order/controller/sales_order_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/order/model/order_model.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/controller/sales_order_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/model/order_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-
 
 class OrderListView extends StatefulWidget {
   final SalesOrderController controller;
@@ -49,13 +47,10 @@ class _OrderListViewState extends State<OrderListView> {
     return Obx(() {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(child: _buildList(context)),
-        ],
+        children: [Expanded(child: _buildList(context))],
       );
     });
   }
-
 
   Widget _buildList(BuildContext context) {
     if (widget.controller.isLoading.value && widget.controller.orders.isEmpty) {
@@ -69,11 +64,25 @@ class _OrderListViewState extends State<OrderListView> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.shopping_cart_outlined, size: 56, color: kSubText.withOpacity(0.35)),
+            Icon(
+              Icons.shopping_cart_outlined,
+              size: 56,
+              color: kSubText.withOpacity(0.35),
+            ),
             const SizedBox(height: 12),
-            Text('No orders found', style: TextStyle(color: kSubText, fontSize: 15, fontWeight: FontWeight.w600)),
+            Text(
+              'No orders found',
+              style: TextStyle(
+                color: kSubText,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 4),
-            Text('Try changing your filters', style: TextStyle(color: kSubText.withOpacity(0.65), fontSize: 12)),
+            Text(
+              'Try changing your filters',
+              style: TextStyle(color: kSubText.withOpacity(0.65), fontSize: 12),
+            ),
           ],
         ),
       );
@@ -88,14 +97,20 @@ class _OrderListViewState extends State<OrderListView> {
       child: ListView.separated(
         controller: _scrollController,
         padding: const EdgeInsets.symmetric(vertical: 4),
-        itemCount: widget.controller.orders.length + (widget.controller.isLoadingMore.value ? 1 : 0),
-        separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
+        itemCount:
+            widget.controller.orders.length +
+            (widget.controller.isLoadingMore.value ? 1 : 0),
+        separatorBuilder: (_, __) =>
+            Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
         itemBuilder: (context, index) {
           if (index == widget.controller.orders.length) {
             return Padding(
               padding: const EdgeInsets.all(16),
               child: Center(
-                child: LoadingAnimationWidget.discreteCircle(color: kPrimary, size: 24),
+                child: LoadingAnimationWidget.discreteCircle(
+                  color: kPrimary,
+                  size: 24,
+                ),
               ),
             );
           }
@@ -109,10 +124,7 @@ class _OrderListViewState extends State<OrderListView> {
       ),
     );
   }
-
-
 }
-
 
 class _OrderCard extends StatelessWidget {
   final OrderModel order;
@@ -160,7 +172,8 @@ class _OrderCard extends StatelessWidget {
                           fontSize: 14,
                         ),
                       ),
-                      if (order.customerEmail != null && order.customerEmail!.isNotEmpty)
+                      if (order.customerEmail != null &&
+                          order.customerEmail!.isNotEmpty)
                         Text(
                           order.customerEmail!,
                           style: TextStyle(fontSize: 12, color: kSubText),
@@ -188,7 +201,11 @@ class _OrderCard extends StatelessWidget {
                           color: kPrimary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(7),
                         ),
-                        child: Icon(Icons.visibility_outlined, size: 16, color: kPrimary),
+                        child: Icon(
+                          Icons.visibility_outlined,
+                          size: 16,
+                          color: kPrimary,
+                        ),
                       ),
                     ),
                   ],
@@ -203,7 +220,11 @@ class _OrderCard extends StatelessWidget {
               spacing: 5,
               runSpacing: 5,
               children: [
-                _badge(order.orderType, Colors.grey.shade100, Colors.grey.shade700),
+                _badge(
+                  order.orderType,
+                  Colors.grey.shade100,
+                  Colors.grey.shade700,
+                ),
                 _badge(
                   '${controller.itemCount(order)} item${controller.itemCount(order) == 1 ? '' : 's'}',
                   Colors.blue.shade50,
@@ -211,12 +232,16 @@ class _OrderCard extends StatelessWidget {
                 ),
                 _badge(
                   order.orderStatus,
-                  controller.getStatusColor(order.orderStatus).withOpacity(0.12),
+                  controller
+                      .getStatusColor(order.orderStatus)
+                      .withOpacity(0.12),
                   controller.getStatusColor(order.orderStatus),
                 ),
                 _badge(
                   order.paymentStatus,
-                  controller.getPaymentColor(order.paymentStatus).withOpacity(0.12),
+                  controller
+                      .getPaymentColor(order.paymentStatus)
+                      .withOpacity(0.12),
                   controller.getPaymentColor(order.paymentStatus),
                 ),
                 _badge(

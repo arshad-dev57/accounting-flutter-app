@@ -1,12 +1,12 @@
 ﻿// lib/core/warehouse/order/screen/sales_order_screen.dart
 
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/responsive_utils.dart';
-import 'package:LedgerPro_app/core/warehouse/order/controller/sales_order_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/order/model/order_model.dart';
-import 'package:LedgerPro_app/core/warehouse/order/widgets/create_order_form.dart';
-import 'package:LedgerPro_app/core/warehouse/order/widgets/order_detail_sheet.dart';
-import 'package:LedgerPro_app/core/warehouse/order/widgets/order_list_view.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/controller/sales_order_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/model/order_model.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/widgets/create_order_form.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/widgets/order_detail_sheet.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/widgets/order_list_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';

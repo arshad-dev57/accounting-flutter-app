@@ -136,7 +136,12 @@ class SalesInvoicesSummary {
     );
   }
 
-  double get grandTotal => SalesOrdersSummary._toDouble(stats['grandTotal']);
+  double get grandTotal {
+    final fromGrand = SalesOrdersSummary._toDouble(stats['grandTotal']);
+    if (fromGrand > 0) return fromGrand;
+    // sales_dashboard_controller getInvoiceStats returns `revenue`, not grandTotal
+    return SalesOrdersSummary._toDouble(stats['revenue']);
+  }
   double get paidAmount => SalesOrdersSummary._toDouble(stats['paidAmount']);
   double get outstanding => SalesOrdersSummary._toDouble(stats['outstanding']);
   int get total => (stats['total'] as num?)?.toInt() ?? 0;

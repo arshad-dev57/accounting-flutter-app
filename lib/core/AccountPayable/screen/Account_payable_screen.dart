@@ -1,11 +1,11 @@
 // screens/accounts_payable_screen.dart - COMPLETE FIXED VERSION
 
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/AccountPayable/controller/account_payable_controller.dart';
-import 'package:LedgerPro_app/core/Vendor&Supplier/screens/vendor_supplier_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/supplier/screen/supplier_screen.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/AccountPayable/controller/account_payable_controller.dart';
+import 'package:BisonsTechs_app/core/Vendor&Supplier/screens/vendor_supplier_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/supplier/screen/supplier_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -39,9 +39,7 @@ class AccountsPayableScreen extends StatelessWidget {
                   children: [
                     _buildSummaryCards(controller),
                     const SizedBox(height: 8),
-                    Expanded(
-                      child: _buildListView(controller, context),
-                    ),
+                    Expanded(child: _buildListView(controller, context)),
                   ],
                 ),
               );
@@ -74,7 +72,10 @@ class AccountsPayableScreen extends StatelessWidget {
   // TOP HEADER
   // ═══════════════════════════════════════════════════════════════
 
-  Widget _buildTopHeader(BuildContext context, AccountsPayableController controller) {
+  Widget _buildTopHeader(
+    BuildContext context,
+    AccountsPayableController controller,
+  ) {
     return Container(
       color: kPrimary,
       child: SafeArea(
@@ -174,7 +175,10 @@ class AccountsPayableScreen extends StatelessWidget {
                       ),
                       child: TextField(
                         onChanged: (value) => controller.searchBills(value),
-                        style: const TextStyle(fontSize: 13, color: Colors.black87),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black87,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Search bills...',
                           hintStyle: TextStyle(
@@ -187,7 +191,9 @@ class AccountsPayableScreen extends StatelessWidget {
                             color: Colors.grey.shade400,
                           ),
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                          ),
                         ),
                       ),
                     ),
@@ -212,11 +218,19 @@ class AccountsPayableScreen extends StatelessWidget {
                         () => DropdownButton<String>(
                           value: controller.selectedFilter.value,
                           icon: const Icon(Icons.arrow_drop_down, size: 20),
-                          style: const TextStyle(fontSize: 12, color: Colors.black87),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black87,
+                          ),
                           underline: const SizedBox.shrink(),
-                          items: ['All', 'Unpaid', 'Paid', 'Overdue', 'Partial'].map((f) {
-                            return DropdownMenuItem(value: f, child: Text(f));
-                          }).toList(),
+                          items: ['All', 'Unpaid', 'Paid', 'Overdue', 'Partial']
+                              .map((f) {
+                                return DropdownMenuItem(
+                                  value: f,
+                                  child: Text(f),
+                                );
+                              })
+                              .toList(),
                           onChanged: (v) {
                             if (v != null) controller.changeFilter(v);
                           },
@@ -360,7 +374,10 @@ class AccountsPayableScreen extends StatelessWidget {
   // LIST VIEW WITH LAZY LOADING
   // ═══════════════════════════════════════════════════════════════
 
-  Widget _buildListView(AccountsPayableController controller, BuildContext context) {
+  Widget _buildListView(
+    AccountsPayableController controller,
+    BuildContext context,
+  ) {
     return Obx(() {
       final bills = controller.bills;
 
@@ -384,7 +401,10 @@ class AccountsPayableScreen extends StatelessWidget {
                 onPressed: () => _showAddBillDialog(controller, context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimary,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 10,
+                  ),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -455,10 +475,10 @@ class AccountsPayableScreen extends StatelessWidget {
     final statusColor = bill.status == 'Paid'
         ? kSuccess
         : bill.status == 'Overdue'
-            ? kDanger
-            : bill.status == 'Partial'
-                ? kWarning
-                : kPrimary;
+        ? kDanger
+        : bill.status == 'Partial'
+        ? kWarning
+        : kPrimary;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -466,10 +486,7 @@ class AccountsPayableScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: statusColor.withOpacity(0.2),
-          width: 1.5,
-        ),
+        border: Border.all(color: statusColor.withOpacity(0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -603,7 +620,8 @@ class AccountsPayableScreen extends StatelessWidget {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _showBillDetails(bill, controller, context),
+                        onPressed: () =>
+                            _showBillDetails(bill, controller, context),
                         icon: Icon(
                           Icons.visibility_outlined,
                           size: 14,
@@ -630,7 +648,8 @@ class AccountsPayableScreen extends StatelessWidget {
                       const SizedBox(width: 10),
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () => _recordBillPayment(bill, controller, context),
+                          onPressed: () =>
+                              _recordBillPayment(bill, controller, context),
                           icon: const Icon(
                             Icons.payment,
                             size: 14,
@@ -669,7 +688,10 @@ class AccountsPayableScreen extends StatelessWidget {
   // ADD BILL DIALOG - PROFESSIONAL DESIGN
   // ═══════════════════════════════════════════════════════════════
 
-  void _showAddBillDialog(AccountsPayableController controller, BuildContext ctx) async {
+  void _showAddBillDialog(
+    AccountsPayableController controller,
+    BuildContext ctx,
+  ) async {
     final formKey = GlobalKey<FormState>();
     DateTime selectedDate = DateTime.now();
     DateTime dueDate = DateTime.now().add(const Duration(days: 30));
@@ -690,7 +712,10 @@ class AccountsPayableScreen extends StatelessWidget {
           double calculateTotal() {
             double itemTotal = items.fold(
               0.0,
-              (s, i) => s + (i['quantity'] as num).toDouble() * (i['unitPrice'] as num).toDouble(),
+              (s, i) =>
+                  s +
+                  (i['quantity'] as num).toDouble() *
+                      (i['unitPrice'] as num).toDouble(),
             );
             double tax = itemTotal * (taxRate / 100);
             return itemTotal + tax - discount;
@@ -803,7 +828,8 @@ class AccountsPayableScreen extends StatelessWidget {
                             const SizedBox(height: 16),
 
                             Obx(() {
-                              final hasMatch = supplierId.isEmpty ||
+                              final hasMatch =
+                                  supplierId.isEmpty ||
                                   controller.suppliers.any(
                                     (s) => s.id == supplierId,
                                   );
@@ -831,7 +857,9 @@ class AccountsPayableScreen extends StatelessWidget {
                             _buildTextField(
                               label: 'Tax Rate (%)',
                               hint: '0',
-                              onChanged: (v) => setState(() => taxRate = double.tryParse(v) ?? 0),
+                              onChanged: (v) => setState(
+                                () => taxRate = double.tryParse(v) ?? 0,
+                              ),
                               keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 16),
@@ -840,7 +868,9 @@ class AccountsPayableScreen extends StatelessWidget {
                               label: 'Discount',
                               hint: '0.00',
                               prefixText: CurrencyUtils.prefix,
-                              onChanged: (v) => setState(() => discount = double.tryParse(v) ?? 0),
+                              onChanged: (v) => setState(
+                                () => discount = double.tryParse(v) ?? 0,
+                              ),
                               keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 16),
@@ -874,7 +904,8 @@ class AccountsPayableScreen extends StatelessWidget {
                                 ),
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     'Total Amount',
@@ -947,17 +978,26 @@ class AccountsPayableScreen extends StatelessWidget {
                               onPressed: controller.isSaving.value
                                   ? null
                                   : () async {
-                                      if (!formKey.currentState!.validate()) return;
+                                      if (!formKey.currentState!.validate())
+                                        return;
 
                                       if (supplierId.isEmpty) {
-                                        AppSnackbar.error(kDanger, 'Error', 'Please select a supplier');
+                                        AppSnackbar.error(
+                                          kDanger,
+                                          'Error',
+                                          'Please select a supplier',
+                                        );
                                         return;
                                       }
 
                                       Navigator.pop(context);
                                       await controller.createBill({
-                                        'date': DateFormat('yyyy-MM-dd').format(selectedDate),
-                                        'dueDate': DateFormat('yyyy-MM-dd').format(dueDate),
+                                        'date': DateFormat(
+                                          'yyyy-MM-dd',
+                                        ).format(selectedDate),
+                                        'dueDate': DateFormat(
+                                          'yyyy-MM-dd',
+                                        ).format(dueDate),
                                         'supplierId': supplierId,
                                         'reference': reference,
                                         'description': description,
@@ -969,7 +1009,9 @@ class AccountsPayableScreen extends StatelessWidget {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: kPrimary,
                                 elevation: 0,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -980,7 +1022,10 @@ class AccountsPayableScreen extends StatelessWidget {
                                       height: 20,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.black),
+                                        valueColor:
+                                            const AlwaysStoppedAnimation<Color>(
+                                              Colors.black,
+                                            ),
                                       ),
                                     )
                                   : const Text(
@@ -1018,10 +1063,10 @@ class AccountsPayableScreen extends StatelessWidget {
     final statusColor = bill.status == 'Paid'
         ? kSuccess
         : bill.status == 'Overdue'
-            ? kDanger
-            : bill.status == 'Partial'
-                ? kWarning
-                : kPrimary;
+        ? kDanger
+        : bill.status == 'Partial'
+        ? kWarning
+        : kPrimary;
 
     showModalBottomSheet(
       context: context,
@@ -1159,11 +1204,19 @@ class AccountsPayableScreen extends StatelessWidget {
 
                       // Details
                       _detailRow('Supplier', bill.supplierName),
-                      _detailRow('Bill Date', DateFormat('dd MMM yyyy').format(bill.date)),
-                      _detailRow('Due Date', DateFormat('dd MMM yyyy').format(bill.dueDate),
-                          valueColor: bill.isOverdue ? kDanger : null),
-                      if (bill.reference.isNotEmpty) _detailRow('Reference', bill.reference),
-                      if (bill.description.isNotEmpty) _detailRow('Description', bill.description),
+                      _detailRow(
+                        'Bill Date',
+                        DateFormat('dd MMM yyyy').format(bill.date),
+                      ),
+                      _detailRow(
+                        'Due Date',
+                        DateFormat('dd MMM yyyy').format(bill.dueDate),
+                        valueColor: bill.isOverdue ? kDanger : null,
+                      ),
+                      if (bill.reference.isNotEmpty)
+                        _detailRow('Reference', bill.reference),
+                      if (bill.description.isNotEmpty)
+                        _detailRow('Description', bill.description),
                       const SizedBox(height: 16),
                       Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
                       const SizedBox(height: 16),
@@ -1179,55 +1232,61 @@ class AccountsPayableScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        ...bill.items.map(
-                          (item) => Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: kBgLight,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: Colors.grey.withOpacity(0.1),
+                        ...bill.items
+                            .map(
+                              (item) => Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: kBgLight,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: Colors.grey.withOpacity(0.1),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            item.description,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              color: kText,
+                                            ),
+                                          ),
+                                          Text(
+                                            '${item.quantity} × ${_formatAmount(item.unitPrice)}',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: kSubText,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Text(
+                                      _formatAmount(item.amount),
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
+                                        color: kDanger,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item.description,
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                          color: kText,
-                                        ),
-                                      ),
-                                      Text(
-                                        '${item.quantity} × ${_formatAmount(item.unitPrice)}',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: kSubText,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Text(
-                                  _formatAmount(item.amount),
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w800,
-                                    color: kDanger,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ).toList(),
+                            )
+                            .toList(),
                         const SizedBox(height: 16),
-                        Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                        Divider(
+                          height: 1,
+                          color: Colors.grey.withOpacity(0.12),
+                        ),
                         const SizedBox(height: 16),
                       ],
 
@@ -1241,7 +1300,11 @@ class AccountsPayableScreen extends StatelessWidget {
                                 child: ElevatedButton.icon(
                                   onPressed: () {
                                     Navigator.pop(context);
-                                    _recordBillPayment(bill, controller, context);
+                                    _recordBillPayment(
+                                      bill,
+                                      controller,
+                                      context,
+                                    );
                                   },
                                   icon: const Icon(
                                     Icons.payment,
@@ -1428,12 +1491,26 @@ class AccountsPayableScreen extends StatelessWidget {
                               child: Column(
                                 children: [
                                   _detailRow('Supplier', bill.supplierName),
-                                  _detailRow('Bill Date', DateFormat('dd MMM yyyy').format(bill.date)),
-                                  _detailRow('Due Date', DateFormat('dd MMM yyyy').format(bill.dueDate),
-                                      valueColor: bill.isOverdue ? kDanger : null),
-                                  _detailRow('Total', _formatAmount(bill.totalAmount)),
-                                  _detailRow('Outstanding', _formatAmount(bill.outstanding),
-                                      valueColor: kDanger),
+                                  _detailRow(
+                                    'Bill Date',
+                                    DateFormat('dd MMM yyyy').format(bill.date),
+                                  ),
+                                  _detailRow(
+                                    'Due Date',
+                                    DateFormat(
+                                      'dd MMM yyyy',
+                                    ).format(bill.dueDate),
+                                    valueColor: bill.isOverdue ? kDanger : null,
+                                  ),
+                                  _detailRow(
+                                    'Total',
+                                    _formatAmount(bill.totalAmount),
+                                  ),
+                                  _detailRow(
+                                    'Outstanding',
+                                    _formatAmount(bill.outstanding),
+                                    valueColor: kDanger,
+                                  ),
                                 ],
                               ),
                             ),
@@ -1443,12 +1520,16 @@ class AccountsPayableScreen extends StatelessWidget {
                               label: 'Payment Amount *',
                               hint: bill.outstanding.toStringAsFixed(2),
                               prefixText: CurrencyUtils.prefix,
-                              onChanged: (v) => amount = double.tryParse(v) ?? 0,
+                              onChanged: (v) =>
+                                  amount = double.tryParse(v) ?? 0,
                               validator: (v) {
-                                if (v == null || v.isEmpty) return 'Amount required';
+                                if (v == null || v.isEmpty)
+                                  return 'Amount required';
                                 final val = double.tryParse(v);
-                                if (val == null || val <= 0) return 'Invalid amount';
-                                if (val > bill.outstanding) return 'Exceeds outstanding';
+                                if (val == null || val <= 0)
+                                  return 'Invalid amount';
+                                if (val > bill.outstanding)
+                                  return 'Exceeds outstanding';
                                 return null;
                               },
                               keyboardType: TextInputType.number,
@@ -1466,8 +1547,14 @@ class AccountsPayableScreen extends StatelessWidget {
                             _buildDropdownField(
                               label: 'Payment Method',
                               value: paymentMethod,
-                              items: const ['Bank Transfer', 'Cash', 'Cheque', 'Credit Card'],
-                              onChanged: (v) => setState(() => paymentMethod = v!),
+                              items: const [
+                                'Bank Transfer',
+                                'Cash',
+                                'Cheque',
+                                'Credit Card',
+                              ],
+                              onChanged: (v) =>
+                                  setState(() => paymentMethod = v!),
                             ),
                             const SizedBox(height: 16),
 
@@ -1480,13 +1567,18 @@ class AccountsPayableScreen extends StatelessWidget {
 
                             if (paymentMethod == 'Bank Transfer') ...[
                               Obx(() {
-                                final hasMatch = selectedBankAccountId.isEmpty ||
+                                final hasMatch =
+                                    selectedBankAccountId.isEmpty ||
                                     controller.bankAccounts.any(
-                                      (a) => (a['id'] ?? a['_id']).toString() == selectedBankAccountId,
+                                      (a) =>
+                                          (a['id'] ?? a['_id']).toString() ==
+                                          selectedBankAccountId,
                                     );
                                 return _buildBankAccountDropdownField(
                                   hasMatch ? selectedBankAccountId : null,
-                                  (v) => setState(() => selectedBankAccountId = v ?? ''),
+                                  (v) => setState(
+                                    () => selectedBankAccountId = v ?? '',
+                                  ),
                                   controller.bankAccounts.toList(),
                                 );
                               }),
@@ -1543,8 +1635,13 @@ class AccountsPayableScreen extends StatelessWidget {
                                   ? null
                                   : () {
                                       if (formKey.currentState!.validate()) {
-                                        if (paymentMethod == 'Bank Transfer' && selectedBankAccountId.isEmpty) {
-                                          AppSnackbar.error(kDanger, 'Error', 'Please select a bank account');
+                                        if (paymentMethod == 'Bank Transfer' &&
+                                            selectedBankAccountId.isEmpty) {
+                                          AppSnackbar.error(
+                                            kDanger,
+                                            'Error',
+                                            'Please select a bank account',
+                                          );
                                           return;
                                         }
                                         Navigator.pop(context);
@@ -1562,7 +1659,9 @@ class AccountsPayableScreen extends StatelessWidget {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: kSuccess,
                                 elevation: 0,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -1573,7 +1672,10 @@ class AccountsPayableScreen extends StatelessWidget {
                                       height: 20,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.black),
+                                        valueColor:
+                                            const AlwaysStoppedAnimation<Color>(
+                                              Colors.black,
+                                            ),
                                       ),
                                     )
                                   : const Text(
@@ -1686,10 +1788,7 @@ class AccountsPayableScreen extends StatelessWidget {
           Container(
             width: 5,
             height: 5,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 4),
           Text(
@@ -1742,9 +1841,7 @@ class AccountsPayableScreen extends StatelessWidget {
         labelText: label,
         hintText: hint,
         prefixText: prefixText,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
@@ -1770,9 +1867,7 @@ class AccountsPayableScreen extends StatelessWidget {
       value: value,
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
@@ -1789,80 +1884,85 @@ class AccountsPayableScreen extends StatelessWidget {
   }
 
   // ═══════════════════════════════════════════════════════════════
-// FIXED: Supplier Dropdown - Converts Supplier objects to Map
-// ═══════════════════════════════════════════════════════════════
+  // FIXED: Supplier Dropdown - Converts Supplier objects to Map
+  // ═══════════════════════════════════════════════════════════════
 
-Widget _buildSupplierDropdownField(
-  String? selectedId,
-  void Function(String?) onChanged,
-  List<Supplier> suppliers,  // ✅ Changed from List<Map<String, dynamic>> to List<Supplier>
-  BuildContext context,
-  VoidCallback onRefresh,
-) {
-  // Ensure selectedId is valid (exists in suppliers list)
-  final validSelectedId = suppliers.any((s) => s.id == selectedId) ? selectedId : null;
-  
-  return Row(
-    children: [
-      Expanded(
-        child: DropdownButtonFormField<String>(
-          value: validSelectedId,
-          decoration: InputDecoration(
-            labelText: 'Supplier *',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+  Widget _buildSupplierDropdownField(
+    String? selectedId,
+    void Function(String?) onChanged,
+    List<Supplier>
+    suppliers, // ✅ Changed from List<Map<String, dynamic>> to List<Supplier>
+    BuildContext context,
+    VoidCallback onRefresh,
+  ) {
+    // Ensure selectedId is valid (exists in suppliers list)
+    final validSelectedId = suppliers.any((s) => s.id == selectedId)
+        ? selectedId
+        : null;
+
+    return Row(
+      children: [
+        Expanded(
+          child: DropdownButtonFormField<String>(
+            value: validSelectedId,
+            decoration: InputDecoration(
+              labelText: 'Supplier *',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
+              isDense: true,
+              labelStyle: TextStyle(fontSize: 12, color: kSubText),
             ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 10,
+            style: const TextStyle(fontSize: 13, color: Colors.black),
+            hint: Text(
+              suppliers.isEmpty ? 'No suppliers available' : 'Select supplier',
+              style: TextStyle(fontSize: 12, color: kSubText),
             ),
-            isDense: true,
-            labelStyle: TextStyle(fontSize: 12, color: kSubText),
+            items: suppliers.isEmpty
+                ? []
+                : suppliers
+                      .map(
+                        (s) => DropdownMenuItem<String>(
+                          value: s.id, // ✅ Direct access to Supplier properties
+                          child: Text(
+                            s.name, // ✅ Direct access
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      )
+                      .toList(),
+            onChanged: suppliers.isEmpty ? null : onChanged,
+            validator: (value) =>
+                value == null ? 'Please select a supplier' : null,
           ),
-          style: const TextStyle(fontSize: 13, color: Colors.black),
-          hint: Text(
-            suppliers.isEmpty ? 'No suppliers available' : 'Select supplier',
-            style: TextStyle(fontSize: 12, color: kSubText),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          height: 48,
+          width: 48,
+          decoration: BoxDecoration(
+            color: kPrimary,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: kPrimary.withOpacity(0.3)),
           ),
-          items: suppliers.isEmpty
-              ? []
-              : suppliers
-                  .map(
-                    (s) => DropdownMenuItem<String>(
-                      value: s.id,  // ✅ Direct access to Supplier properties
-                      child: Text(
-                        s.name,  // ✅ Direct access
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  )
-                  .toList(),
-          onChanged: suppliers.isEmpty ? null : onChanged,
-          validator: (value) => value == null ? 'Please select a supplier' : null,
+          child: IconButton(
+            icon: const Icon(Icons.add, color: Colors.black, size: 20),
+            onPressed: () async {
+              Navigator.pop(context);
+              await Get.to(() => SuppliersScreen());
+              onRefresh();
+            },
+            padding: EdgeInsets.zero,
+          ),
         ),
-      ),
-      const SizedBox(width: 8),
-      Container(
-        height: 48,
-        width: 48,
-        decoration: BoxDecoration(
-          color: kPrimary,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: kPrimary.withOpacity(0.3)),
-        ),
-        child: IconButton(
-          icon: const Icon(Icons.add, color: Colors.black, size: 20),
-          onPressed: () async {
-            Navigator.pop(context);
-            await Get.to(() =>  SuppliersScreen());
-            onRefresh();
-          },
-          padding: EdgeInsets.zero,
-        ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
+
   Widget _buildBankAccountDropdownField(
     String? selectedId,
     void Function(String?) onChanged,
@@ -1872,9 +1972,7 @@ Widget _buildSupplierDropdownField(
       value: selectedId,
       decoration: InputDecoration(
         labelText: 'Bank Account *',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
@@ -1890,18 +1988,19 @@ Widget _buildSupplierDropdownField(
       items: bankAccounts.isEmpty
           ? []
           : bankAccounts
-              .map(
-                (a) => DropdownMenuItem<String>(
-                  value: (a['id'] ?? a['_id']).toString(),
-                  child: Text(
-                    a['accountName'] ?? 'Unknown',
-                    overflow: TextOverflow.ellipsis,
+                .map(
+                  (a) => DropdownMenuItem<String>(
+                    value: (a['id'] ?? a['_id']).toString(),
+                    child: Text(
+                      a['accountName'] ?? 'Unknown',
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-              )
-              .toList(),
+                )
+                .toList(),
       onChanged: bankAccounts.isEmpty ? null : onChanged,
-      validator: (value) => value == null ? 'Please select a bank account' : null,
+      validator: (value) =>
+          value == null ? 'Please select a bank account' : null,
     );
   }
 
@@ -1935,10 +2034,7 @@ Widget _buildSupplierDropdownField(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    label,
-                    style: TextStyle(fontSize: 11, color: kSubText),
-                  ),
+                  Text(label, style: TextStyle(fontSize: 11, color: kSubText)),
                   Text(
                     DateFormat('dd MMM yyyy').format(date),
                     style: TextStyle(
@@ -1950,11 +2046,7 @@ Widget _buildSupplierDropdownField(
                 ],
               ),
             ),
-            Icon(
-              Icons.arrow_drop_down,
-              size: 20,
-              color: kSubText,
-            ),
+            Icon(Icons.arrow_drop_down, size: 20, color: kSubText),
           ],
         ),
       ),
@@ -2008,9 +2100,14 @@ Widget _buildSupplierDropdownField(
                           isDense: true,
                           labelStyle: TextStyle(fontSize: 11, color: kSubText),
                         ),
-                        style: const TextStyle(fontSize: 13, color: Colors.black),
-                        onChanged: (v) => setState(() => item['description'] = v),
-                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
+                        onChanged: (v) =>
+                            setState(() => item['description'] = v),
+                        validator: (v) =>
+                            (v == null || v.trim().isEmpty) ? 'Required' : null,
                       ),
                     ),
                     if (items.length > 1) ...[
@@ -2043,7 +2140,10 @@ Widget _buildSupplierDropdownField(
                           isDense: true,
                           labelStyle: TextStyle(fontSize: 11, color: kSubText),
                         ),
-                        style: const TextStyle(fontSize: 13, color: Colors.black),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
                         keyboardType: TextInputType.number,
                         onChanged: (v) => setState(() {
                           item['quantity'] = int.tryParse(v) ?? 1;
@@ -2068,7 +2168,10 @@ Widget _buildSupplierDropdownField(
                           isDense: true,
                           labelStyle: TextStyle(fontSize: 11, color: kSubText),
                         ),
-                        style: const TextStyle(fontSize: 13, color: Colors.black),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
@@ -2088,11 +2191,7 @@ Widget _buildSupplierDropdownField(
         }).toList(),
         TextButton.icon(
           onPressed: () => setState(() {
-            items.add({
-              'description': '',
-              'quantity': 1,
-              'unitPrice': 0.0,
-            });
+            items.add({'description': '', 'quantity': 1, 'unitPrice': 0.0});
           }),
           icon: const Icon(Icons.add, size: 16, color: kPrimary),
           label: Text(

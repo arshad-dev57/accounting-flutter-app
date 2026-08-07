@@ -1,9 +1,9 @@
 // lib/core/warehouse/purchase_payment/views/purchase_payment_screen.dart
 
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/core/purchasePaymentmade/purchase_payment_controller.dart';
-import 'package:LedgerPro_app/core/purchasePaymentmade/purchase_payment_model.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/core/purchasePaymentmade/purchase_payment_controller.dart';
+import 'package:BisonsTechs_app/core/purchasePaymentmade/purchase_payment_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -98,32 +98,40 @@ class PurchasePaymentScreen extends StatelessWidget {
                             letterSpacing: -0.3,
                           ),
                         ),
-                        Obx(() => Text(
-                          '${controller.totalRecords.value} payments',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.black.withOpacity(0.55),
-                            fontWeight: FontWeight.w500,
+                        Obx(
+                          () => Text(
+                            '${controller.totalRecords.value} payments',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.black.withOpacity(0.55),
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        )),
+                        ),
                       ],
                     ),
                   ),
-                  Obx(() => Row(
-                    children: [
-                      _compactKpi(
-                        'Today',
-                        controller.formatCurrency(controller.stats.value.todayAmount),
-                        Colors.green.shade800,
-                      ),
-                      const SizedBox(width: 8),
-                      _compactKpi(
-                        'Month',
-                        controller.formatCurrency(controller.stats.value.monthAmount),
-                        Colors.blue.shade800,
-                      ),
-                    ],
-                  )),
+                  Obx(
+                    () => Row(
+                      children: [
+                        _compactKpi(
+                          'Today',
+                          controller.formatCurrency(
+                            controller.stats.value.todayAmount,
+                          ),
+                          Colors.green.shade800,
+                        ),
+                        const SizedBox(width: 8),
+                        _compactKpi(
+                          'Month',
+                          controller.formatCurrency(
+                            controller.stats.value.monthAmount,
+                          ),
+                          Colors.blue.shade800,
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(width: 10),
                   GestureDetector(
                     onTap: controller.refreshPayments,
@@ -134,7 +142,11 @@ class PurchasePaymentScreen extends StatelessWidget {
                         color: Colors.black.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(9),
                       ),
-                      child: Icon(Icons.refresh_rounded, size: 17, color: Colors.black.withOpacity(0.65)),
+                      child: Icon(
+                        Icons.refresh_rounded,
+                        size: 17,
+                        color: Colors.black.withOpacity(0.65),
+                      ),
                     ),
                   ),
                 ],
@@ -158,18 +170,36 @@ class PurchasePaymentScreen extends StatelessWidget {
                 child: _SearchField(controller: controller),
               ),
             ),
-            Obx(() => SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-              child: Row(
-                children: [
-                  _filterChip('All', controller.selectedFilter.value == 'all', () => controller.filterPayments('all')),
-                  _filterChip('Completed', controller.selectedFilter.value == 'Completed', () => controller.filterPayments('Completed')),
-                  _filterChip('Pending', controller.selectedFilter.value == 'Pending', () => controller.filterPayments('Pending')),
-                  _filterChip('Cancelled', controller.selectedFilter.value == 'Cancelled', () => controller.filterPayments('Cancelled')),
-                ],
+            Obx(
+              () => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                child: Row(
+                  children: [
+                    _filterChip(
+                      'All',
+                      controller.selectedFilter.value == 'all',
+                      () => controller.filterPayments('all'),
+                    ),
+                    _filterChip(
+                      'Completed',
+                      controller.selectedFilter.value == 'Completed',
+                      () => controller.filterPayments('Completed'),
+                    ),
+                    _filterChip(
+                      'Pending',
+                      controller.selectedFilter.value == 'Pending',
+                      () => controller.filterPayments('Pending'),
+                    ),
+                    _filterChip(
+                      'Cancelled',
+                      controller.selectedFilter.value == 'Cancelled',
+                      () => controller.filterPayments('Cancelled'),
+                    ),
+                  ],
+                ),
               ),
-            )),
+            ),
           ],
         ),
       ),
@@ -180,8 +210,22 @@ class PurchasePaymentScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: color)),
-        Text(label, style: TextStyle(fontSize: 9, color: Colors.black.withOpacity(0.5), fontWeight: FontWeight.w600)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 9,
+            color: Colors.black.withOpacity(0.5),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
     );
   }
@@ -197,7 +241,9 @@ class PurchasePaymentScreen extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected ? Colors.black : Colors.white.withOpacity(0.18),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: selected ? Colors.black : Colors.white.withOpacity(0.4)),
+            border: Border.all(
+              color: selected ? Colors.black : Colors.white.withOpacity(0.4),
+            ),
           ),
           child: Text(
             label,
@@ -212,7 +258,11 @@ class PurchasePaymentScreen extends StatelessWidget {
     );
   }
 
-  void _showDetail(BuildContext context, PurchasePaymentController controller, PurchasePaymentModel item) {
+  void _showDetail(
+    BuildContext context,
+    PurchasePaymentController controller,
+    PurchasePaymentModel item,
+  ) {
     controller.selectPayment(item);
     showModalBottomSheet(
       context: context,
@@ -285,7 +335,9 @@ class _SearchFieldState extends State<_SearchField> {
       controller: _searchCtrl,
       onChanged: (v) {
         setState(() {});
-        v.isEmpty ? widget.controller.clearSearch() : widget.controller.searchPayments(v);
+        v.isEmpty
+            ? widget.controller.clearSearch()
+            : widget.controller.searchPayments(v);
       },
       style: const TextStyle(fontSize: 13, color: Colors.black87),
       decoration: InputDecoration(
@@ -303,7 +355,10 @@ class _SearchFieldState extends State<_SearchField> {
               )
             : null,
         border: InputBorder.none,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 11,
+        ),
         isDense: true,
       ),
     );
@@ -318,10 +373,7 @@ class _CreatePaymentForm extends StatelessWidget {
   final PurchasePaymentController controller;
   final VoidCallback onCancel;
 
-  const _CreatePaymentForm({
-    required this.controller,
-    required this.onCancel,
-  });
+  const _CreatePaymentForm({required this.controller, required this.onCancel});
 
   String _format(double v) {
     final currency = Get.find<CurrencyController>();
@@ -378,7 +430,10 @@ class _CreatePaymentForm extends StatelessWidget {
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(10)),
               ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
               isDense: true,
             ),
             onChanged: controller.searchSuppliers,
@@ -419,8 +474,9 @@ class _CreatePaymentForm extends StatelessWidget {
               )
             else
               ...controller.availableInvoices.map((invoice) {
-                final isSelected = controller.selectedInvoices
-                    .any((inv) => inv.id == invoice.id);
+                final isSelected = controller.selectedInvoices.any(
+                  (inv) => inv.id == invoice.id,
+                );
                 return _invoiceTile(invoice, isSelected);
               }),
           ]),
@@ -440,7 +496,10 @@ class _CreatePaymentForm extends StatelessWidget {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 isDense: true,
               ),
               onTap: () => controller.selectPaymentDate(context),
@@ -455,14 +514,17 @@ class _CreatePaymentForm extends StatelessWidget {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 isDense: true,
               ),
               items: PurchasePaymentController.paymentMethods
-                  .map((method) => DropdownMenuItem(
-                        value: method,
-                        child: Text(method),
-                      ))
+                  .map(
+                    (method) =>
+                        DropdownMenuItem(value: method, child: Text(method)),
+                  )
                   .toList(),
               onChanged: (value) {
                 if (value != null) {
@@ -481,13 +543,18 @@ class _CreatePaymentForm extends StatelessWidget {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(10)),
                   ),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                   isDense: true,
                 ),
                 items: controller.bankAccounts.map((account) {
                   return DropdownMenuItem(
                     value: account,
-                    child: Text('${account['accountName']} - ${account['bankName']}'),
+                    child: Text(
+                      '${account['accountName']} - ${account['bankName']}',
+                    ),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -507,7 +574,10 @@ class _CreatePaymentForm extends StatelessWidget {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 isDense: true,
               ),
               onChanged: (v) {
@@ -528,7 +598,10 @@ class _CreatePaymentForm extends StatelessWidget {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 isDense: true,
               ),
             ),
@@ -543,7 +616,10 @@ class _CreatePaymentForm extends StatelessWidget {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 isDense: true,
               ),
             ),
@@ -562,11 +638,21 @@ class _CreatePaymentForm extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _summaryRow('Supplier', controller.selectedSupplier.value?['name'] ?? ''),
-                _summaryRow('Invoices', '${controller.selectedInvoices.length} invoices'),
+                _summaryRow(
+                  'Supplier',
+                  controller.selectedSupplier.value?['name'] ?? '',
+                ),
+                _summaryRow(
+                  'Invoices',
+                  '${controller.selectedInvoices.length} invoices',
+                ),
                 _summaryRow('Payment Method', controller.paymentMethod.value),
                 const Divider(),
-                _summaryRow('Total Amount', _format(controller.selectedTotalAmount), bold: true),
+                _summaryRow(
+                  'Total Amount',
+                  _format(controller.selectedTotalAmount),
+                  bold: true,
+                ),
               ],
             ),
           ),
@@ -611,7 +697,10 @@ class _CreatePaymentForm extends StatelessWidget {
   Widget _supplierTile(Map<String, dynamic> supplier) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      title: Text(supplier['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600)),
+      title: Text(
+        supplier['name'] ?? '',
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
       subtitle: Text(supplier['email'] ?? supplier['phone'] ?? ''),
       trailing: Icon(Icons.chevron_right, color: kSubText),
       onTap: () => controller.selectSupplier(supplier),
@@ -630,7 +719,10 @@ class _CreatePaymentForm extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(supplier['name'] ?? '', style: TextStyle(fontWeight: FontWeight.w700, color: kPrimary)),
+          Text(
+            supplier['name'] ?? '',
+            style: TextStyle(fontWeight: FontWeight.w700, color: kPrimary),
+          ),
           if (supplier['email'] != null) Text(supplier['email']),
           if (supplier['phone'] != null) Text(supplier['phone']),
           Text('Company: ${supplier['companyName'] ?? 'N/A'}'),
@@ -678,10 +770,7 @@ class _CreatePaymentForm extends StatelessWidget {
                       if (invoice.supplierInvoiceNo != null)
                         Text(
                           'Supplier Inv: ${invoice.supplierInvoiceNo}',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: kSubText,
-                          ),
+                          style: TextStyle(fontSize: 10, color: kSubText),
                         ),
                       const SizedBox(height: 2),
                       Text(
@@ -689,7 +778,9 @@ class _CreatePaymentForm extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 11,
                           color: invoice.isOverdue ? Colors.red : kSubText,
-                          fontWeight: invoice.isOverdue ? FontWeight.w600 : FontWeight.w400,
+                          fontWeight: invoice.isOverdue
+                              ? FontWeight.w600
+                              : FontWeight.w400,
                         ),
                       ),
                     ],
@@ -708,7 +799,10 @@ class _CreatePaymentForm extends StatelessWidget {
                     ),
                     if (invoice.isOverdue)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.red.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(4),
@@ -740,7 +834,10 @@ class _CreatePaymentForm extends StatelessWidget {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(8)),
                         ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         isDense: true,
                       ),
                       onChanged: (v) {
@@ -752,7 +849,10 @@ class _CreatePaymentForm extends StatelessWidget {
                   const SizedBox(width: 8),
                   TextButton(
                     onPressed: () {
-                      controller.updateInvoiceAmount(invoice, invoice.outstanding);
+                      controller.updateInvoiceAmount(
+                        invoice,
+                        invoice.outstanding,
+                      );
                     },
                     child: const Text('Full'),
                   ),
@@ -809,14 +909,18 @@ class _CreatePaymentForm extends StatelessWidget {
                 ),
                 side: BorderSide(color: Colors.grey.shade300),
               ),
-              child: Text('Cancel', style: TextStyle(color: kSubText, fontWeight: FontWeight.w600)),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: kSubText, fontWeight: FontWeight.w600),
+              ),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             flex: 2,
             child: ElevatedButton(
-              onPressed: controller.isSubmitting.value || !controller.canMakePayment
+              onPressed:
+                  controller.isSubmitting.value || !controller.canMakePayment
                   ? null
                   : controller.makePayment,
               style: ElevatedButton.styleFrom(
@@ -831,7 +935,10 @@ class _CreatePaymentForm extends StatelessWidget {
                   ? const SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.black,
+                      ),
                     )
                   : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -907,9 +1014,11 @@ class _PaymentDetailSheetState extends State<_PaymentDetailSheet> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final current = widget.controller.payments.firstWhereOrNull(
-        (p) => p.id == widget.paymentItem.id,
-      ) ?? widget.paymentItem;
+      final current =
+          widget.controller.payments.firstWhereOrNull(
+            (p) => p.id == widget.paymentItem.id,
+          ) ??
+          widget.paymentItem;
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -950,7 +1059,10 @@ class _PaymentDetailSheetState extends State<_PaymentDetailSheet> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: _statusColor(current.status).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
@@ -970,14 +1082,17 @@ class _PaymentDetailSheetState extends State<_PaymentDetailSheet> {
           Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
           const SizedBox(height: 16),
           _detailRow('Supplier', current.supplierName),
-          _detailRow('Date', DateFormat('dd MMM yyyy').format(current.paymentDate)),
+          _detailRow(
+            'Date',
+            DateFormat('dd MMM yyyy').format(current.paymentDate),
+          ),
           _detailRow('Method', current.paymentMethod),
-          if (current.bankAccountId != null && current.bankAccountName.isNotEmpty)
+          if (current.bankAccountId != null &&
+              current.bankAccountName.isNotEmpty)
             _detailRow('Bank Account', current.bankAccountName),
           if (current.reference.isNotEmpty)
             _detailRow('Reference', current.reference),
-          if (current.notes.isNotEmpty)
-            _detailRow('Notes', current.notes),
+          if (current.notes.isNotEmpty) _detailRow('Notes', current.notes),
           const SizedBox(height: 16),
           Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
           const SizedBox(height: 12),
@@ -986,10 +1101,7 @@ class _PaymentDetailSheetState extends State<_PaymentDetailSheet> {
             children: [
               const Text(
                 'Invoices Paid',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                ),
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
               ),
               Text(
                 '${current.totalInvoices} invoices',
@@ -998,45 +1110,47 @@ class _PaymentDetailSheetState extends State<_PaymentDetailSheet> {
             ],
           ),
           const SizedBox(height: 8),
-          ...current.invoicePayments.map((inv) => Container(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: Colors.grey.withOpacity(0.06)),
+          ...current.invoicePayments.map(
+            (inv) => Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: Colors.grey.withOpacity(0.06)),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          inv.invoiceNumber,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                        if (inv.invoice != null)
+                          Text(
+                            'Total: ${_format(inv.invoice!.grandTotal)}',
+                            style: TextStyle(fontSize: 11, color: kSubText),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    _format(inv.amountPaid),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                      color: Colors.green,
+                    ),
+                  ),
+                ],
               ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        inv.invoiceNumber,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                      if (inv.invoice != null)
-                        Text(
-                          'Total: ${_format(inv.invoice!.grandTotal)}',
-                          style: TextStyle(fontSize: 11, color: kSubText),
-                        ),
-                    ],
-                  ),
-                ),
-                Text(
-                  _format(inv.amountPaid),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                    color: Colors.green,
-                  ),
-                ),
-              ],
-            ),
-          )),
+          ),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(12),
@@ -1049,10 +1163,7 @@ class _PaymentDetailSheetState extends State<_PaymentDetailSheet> {
               children: [
                 const Text(
                   'Total Amount',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                 ),
                 Text(
                   _format(current.amount),
@@ -1092,30 +1203,40 @@ class _PaymentDetailSheetState extends State<_PaymentDetailSheet> {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  ...current.journalEntry!.lines.map((line) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: Text(
-                            line.accountName,
-                            style: TextStyle(fontSize: 11, color: kSubText),
+                  ...current.journalEntry!.lines.map(
+                    (line) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              line.accountName,
+                              style: TextStyle(fontSize: 11, color: kSubText),
+                            ),
                           ),
-                        ),
-                        if (line.debit > 0)
-                          Text(
-                            'Dr ${_format(line.debit)}',
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.green),
-                          ),
-                        if (line.credit > 0)
-                          Text(
-                            'Cr ${_format(line.credit)}',
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.red),
-                          ),
-                      ],
+                          if (line.debit > 0)
+                            Text(
+                              'Dr ${_format(line.debit)}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.green,
+                              ),
+                            ),
+                          if (line.credit > 0)
+                            Text(
+                              'Cr ${_format(line.credit)}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.red,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                  )),
+                  ),
                 ],
               ),
             ),
@@ -1129,7 +1250,9 @@ class _PaymentDetailSheetState extends State<_PaymentDetailSheet> {
                     onPressed: widget.controller.isSubmitting.value
                         ? null
                         : () async {
-                            final ok = await widget.controller.cancelPayment(current.id);
+                            final ok = await widget.controller.cancelPayment(
+                              current.id,
+                            );
                             if (ok) widget.onClose();
                           },
                     style: ElevatedButton.styleFrom(
@@ -1154,7 +1277,9 @@ class _PaymentDetailSheetState extends State<_PaymentDetailSheet> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () async {
-                        final ok = await widget.controller.deletePayment(current.id);
+                        final ok = await widget.controller.deletePayment(
+                          current.id,
+                        );
                         if (ok) widget.onClose();
                       },
                       style: OutlinedButton.styleFrom(
@@ -1190,10 +1315,7 @@ class _PaymentDetailSheetState extends State<_PaymentDetailSheet> {
             ),
             child: Text(
               'Close',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: kSubText,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w600, color: kSubText),
             ),
           ),
         ],
@@ -1330,7 +1452,10 @@ class _PaymentListView extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimary,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -1390,27 +1515,55 @@ class _PaymentListView extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              item.paymentNumber,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 13,
-                                color: kPrimary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    item.paymentNumber,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 13,
+                                      color: kPrimary,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      _format(item.amount),
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
+                                        color: color,
+                                      ),
+                                      maxLines: 1,
+                                    ),
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.chevron_right,
+                                  size: 18,
+                                  color: Colors.grey.shade400,
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 3),
                             Text(
                               item.supplierName,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: kText,
-                              ),
+                              style: TextStyle(fontSize: 12, color: kText),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            Row(
+                            const SizedBox(height: 6),
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
+                              crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 Container(
                                   padding: const EdgeInsets.symmetric(
@@ -1430,7 +1583,6 @@ class _PaymentListView extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 6),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 6,
@@ -1449,7 +1601,6 @@ class _PaymentListView extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 6),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 6,
@@ -1468,9 +1619,10 @@ class _PaymentListView extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 6),
                                 Text(
-                                  DateFormat('dd MMM yyyy').format(item.paymentDate),
+                                  DateFormat(
+                                    'dd MMM yyyy',
+                                  ).format(item.paymentDate),
                                   style: TextStyle(
                                     fontSize: 9,
                                     color: kSubText,
@@ -1480,25 +1632,6 @@ class _PaymentListView extends StatelessWidget {
                             ),
                           ],
                         ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            _format(item.amount),
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                              color: color,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Icon(
-                            Icons.chevron_right,
-                            size: 18,
-                            color: Colors.grey.shade400,
-                          ),
-                        ],
                       ),
                     ],
                   ),

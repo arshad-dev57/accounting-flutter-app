@@ -1,11 +1,13 @@
 // lib/core/Register/Views/register_screen.dart
 
 import 'dart:io';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/core/Register/controller/registercontroller.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/Register/controller/registercontroller.dart';
 import 'package:country_picker_pro/country_picker_pro.dart';
 import 'package:flutter/material.dart';
+import 'package:intl_phone_field_continued/intl_phone_field.dart';
+import 'package:intl_phone_field_continued/country_picker_dialog.dart';
+import 'package:currency_picker/currency_picker.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
@@ -13,51 +15,10 @@ class RegistrationScreen extends StatelessWidget {
   RegistrationScreen({super.key});
 
   final Rx<Country?> _selectedCountry = Rx<Country?>(null);
-  static List<AppCurrency>? _allCurrencies;
-
-  static List<AppCurrency> _buildAllCurrencies() {
-    if (_allCurrencies != null) return _allCurrencies!;
-    final Map<String, AppCurrency> currencyMap = {};
-    final countryProvider = CountryProvider();
-    final allCountries = countryProvider.getAll();
-    for (final country in allCountries) {
-      final rawCurrency = country.currency.toString();
-      final code = _extractCurrencyCode(rawCurrency);
-      final name = _extractCurrencyName(rawCurrency);
-      final symbol = _extractCurrencySymbol(rawCurrency);
-      if (code != null && name != null && symbol != null) {
-        if (!currencyMap.containsKey(code)) {
-          currencyMap[code] = AppCurrency(
-            code: code,
-            symbol: symbol,
-            name: name,
-          );
-        }
-      }
-    }
-    for (final currency in CurrencyController.currencies) {
-      if (!currencyMap.containsKey(currency.code)) {
-        currencyMap[currency.code] = currency;
-      }
-    }
-    _allCurrencies = currencyMap.values.toList()
-      ..sort((a, b) => a.code.compareTo(b.code));
-    return _allCurrencies!;
-  }
 
   static String? _extractCurrencyCode(String s) {
     final m = RegExp(r'\(([A-Z]{3})\)').firstMatch(s);
     return m?.group(1);
-  }
-
-  static String? _extractCurrencyName(String s) {
-    final m = RegExp(r'^(.+?)\s*\(').firstMatch(s);
-    return m?.group(1)?.trim();
-  }
-
-  static String? _extractCurrencySymbol(String s) {
-    final m = RegExp(r'\([A-Z]{3}\)\s*(.+)$').firstMatch(s);
-    return m?.group(1)?.trim();
   }
 
   @override
@@ -144,10 +105,7 @@ class RegistrationScreen extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             subtitles[step],
-            style: TextStyle(
-              fontSize: 15,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
           ),
         ],
       );
@@ -304,9 +262,6 @@ class RegistrationScreen extends StatelessWidget {
     );
   }
 
-  // ══════════════════════════════════════════════════
-  // STEP 2 — CONTACT
-  // ══════════════════════════════════════════════════
   Widget _buildContactStep(AuthController auth, BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -315,12 +270,7 @@ class RegistrationScreen extends StatelessWidget {
           children: [
             _fieldLabel('Phone Number'),
             const SizedBox(height: 8),
-            _inputField(
-              controller: auth.phoneController,
-              hint: '+92 300 1234567',
-              icon: Icons.phone_outlined,
-              keyboardType: TextInputType.phone,
-            ),
+            _phoneNumberField(auth),
             const SizedBox(height: 18),
             _fieldLabel('Email Address'),
             const SizedBox(height: 8),
@@ -360,9 +310,6 @@ class RegistrationScreen extends StatelessWidget {
     );
   }
 
-  // ══════════════════════════════════════════════════
-  // STEP 3 — BUSINESS
-  // ══════════════════════════════════════════════════
   Widget _buildBusinessStep(AuthController auth, BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -413,21 +360,25 @@ class RegistrationScreen extends StatelessWidget {
           children: [
             _fieldLabel('Business Logo'),
             const SizedBox(height: 8),
-            Obx(() => _buildImageBox(
-              label: 'Upload Logo',
-              icon: Icons.image_outlined,
-              path: auth.logo.value,
-              onTap: auth.pickLogo,
-            )),
+            Obx(
+              () => _buildImageBox(
+                label: 'Upload Logo',
+                icon: Icons.image_outlined,
+                path: auth.logo.value,
+                onTap: auth.pickLogo,
+              ),
+            ),
             const SizedBox(height: 18),
             _fieldLabel('Signature'),
             const SizedBox(height: 8),
-            Obx(() => _buildImageBox(
-              label: 'Draw Signature',
-              icon: Icons.draw_outlined,
-              path: auth.signature.value,
-              onTap: () => auth.drawSignature(Get.context!),
-            )),
+            Obx(
+              () => _buildImageBox(
+                label: 'Draw Signature',
+                icon: Icons.draw_outlined,
+                path: auth.signature.value,
+                onTap: () => auth.drawSignature(Get.context!),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 24),
@@ -659,10 +610,18 @@ class RegistrationScreen extends StatelessWidget {
             _infoRow(
               Icons.attach_money,
               'Currency',
-              auth.selectedCurrencyCode.value,
+              auth.selectedCurrencyName.value.isNotEmpty
+                  ? '${auth.selectedCurrencyCode.value} — ${auth.selectedCurrencyName.value}'
+                  : auth.selectedCurrencyCode.value,
             ),
             _infoRowDivider(),
-            _infoRow(Icons.phone, 'Phone', auth.phoneController.text),
+            _infoRow(
+              Icons.phone,
+              'Phone',
+              auth.fullPhoneNumber.value.isNotEmpty
+                  ? auth.fullPhoneNumber.value
+                  : auth.phoneController.text,
+            ),
             _infoRowDivider(),
             _infoRow(Icons.email, 'Email', auth.emailController.text),
             if (auth.organizationNameController.text.isNotEmpty) ...[
@@ -765,7 +724,8 @@ class RegistrationScreen extends StatelessWidget {
           border: Border.all(
             color: Colors.grey.shade300,
             width: 1,
-            style: BorderStyle.solid, // Dash borders need a package, let's stick to solid
+            style: BorderStyle
+                .solid, // Dash borders need a package, let's stick to solid
           ),
         ),
         child: path.isNotEmpty
@@ -830,6 +790,92 @@ class RegistrationScreen extends StatelessWidget {
     );
   }
 
+  Widget _phoneNumberField(AuthController auth) {
+    return Obx(
+      () => IntlPhoneField(
+        key: ValueKey(auth.phoneCountryIso.value),
+        controller: auth.phoneController,
+        initialCountryCode: auth.phoneCountryIso.value,
+        disableLengthCheck: false,
+        showDropdownIcon: true,
+        dropdownIcon: Icon(
+          Icons.keyboard_arrow_down,
+          color: Colors.grey.shade400,
+          size: 20,
+        ),
+        flagsButtonPadding: const EdgeInsets.only(left: 12, right: 4),
+        style: const TextStyle(
+          fontSize: 16,
+          color: Colors.black,
+          fontWeight: FontWeight.w500,
+        ),
+        dropdownTextStyle: const TextStyle(
+          fontSize: 16,
+          color: Colors.black,
+          fontWeight: FontWeight.w500,
+        ),
+        decoration: InputDecoration(
+          hintText: '300 1234567',
+          hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+          filled: false,
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 18,
+            horizontal: 16,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: kPrimary, width: 2),
+          ),
+        ),
+        pickerDialogStyle: PickerDialogStyle(
+          backgroundColor: Colors.white,
+          countryCodeStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF2D3748),
+          ),
+          countryNameStyle: TextStyle(
+            fontSize: 14,
+            color: Colors.grey.shade700,
+          ),
+          searchFieldInputDecoration: InputDecoration(
+            hintText: 'Search country',
+            hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+            prefixIcon: Icon(Icons.search, color: Colors.grey.shade500),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: kPrimary, width: 2),
+            ),
+          ),
+        ),
+        onChanged: (phone) {
+          final complete = phone.completeNumber.trim();
+          auth.fullPhoneNumber.value = complete.isNotEmpty ? '+$complete' : '';
+          auth.phone.value = auth.fullPhoneNumber.value;
+        },
+        onCountryChanged: (country) {
+          auth.phoneCountryIso.value = country.code;
+        },
+      ),
+    );
+  }
+
   Widget _inputField({
     required TextEditingController controller,
     required String hint,
@@ -844,7 +890,11 @@ class RegistrationScreen extends StatelessWidget {
       obscureText: obscure,
       keyboardType: keyboardType,
       maxLines: maxLines,
-      style: const TextStyle(fontSize: 16, color: Colors.black, fontWeight: FontWeight.w500),
+      style: const TextStyle(
+        fontSize: 16,
+        color: Colors.black,
+        fontWeight: FontWeight.w500,
+      ),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
@@ -887,8 +937,16 @@ class RegistrationScreen extends StatelessWidget {
               _selectedCountry.value = selected;
               auth.countryController.text = selected.name;
               auth.country.value = selected.name;
+              auth.phoneCountryIso.value = selected.countryCode;
               final code = _extractCurrencyCode(selected.currency.toString());
-              if (code != null) auth.selectedCurrencyCode.value = code;
+              if (code != null) {
+                auth.selectedCurrencyCode.value = code;
+                final currency = CurrencyService().findByCode(code);
+                if (currency != null) {
+                  auth.selectedCurrencyName.value = currency.name;
+                  auth.selectedCurrencySymbol.value = currency.symbol;
+                }
+              }
             },
           );
         },
@@ -935,36 +993,134 @@ class RegistrationScreen extends StatelessWidget {
   }
 
   Widget _currencyDropdownField(AuthController auth) {
-    final allCurrencies = _buildAllCurrencies();
-    return Obx(
-      () => _dropdownContainer(
-        child: DropdownButtonFormField<String>(
-          value: auth.selectedCurrencyCode.value.isEmpty
-              ? null
-              : auth.selectedCurrencyCode.value,
-          hint: _dropdownHint('Select currency'),
-          icon: _dropdownIcon(),
-          isExpanded: true,
-          dropdownColor: Colors.white,
-          decoration: _dropdownDecoration(Icons.attach_money),
-          items: allCurrencies
-              .map(
-                (c) => DropdownMenuItem(
-                  value: c.code,
-                  child: Text(
-                    c.displayLabel,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13.5),
-                  ),
+    return Obx(() {
+      final code = auth.selectedCurrencyCode.value;
+      final name = auth.selectedCurrencyName.value;
+      final symbol = auth.selectedCurrencySymbol.value;
+      final hasSelection = code.isNotEmpty;
+
+      String? flagEmoji;
+      if (hasSelection) {
+        try {
+          final c = CurrencyService().findByCode(code);
+          if (c != null && c.flag != null) {
+            flagEmoji = CurrencyUtils.currencyToEmoji(c);
+          }
+        } catch (_) {}
+      }
+
+      return GestureDetector(
+        onTap: () {
+          showCurrencyPicker(
+            context: Get.context!,
+            showFlag: true,
+            showCurrencyName: true,
+            showCurrencyCode: true,
+            showSearchField: true,
+            favorite: ['USD', 'EUR', 'GBP', 'PKR', 'SAR', 'AED'],
+            theme: CurrencyPickerThemeData(
+              backgroundColor: Colors.white,
+              flagSize: 26,
+              titleTextStyle: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF2D3748),
+              ),
+              subtitleTextStyle: TextStyle(
+                fontSize: 13,
+                color: Colors.grey.shade600,
+              ),
+              bottomSheetHeight: MediaQuery.of(Get.context!).size.height * 0.85,
+              inputDecoration: InputDecoration(
+                hintText: 'Search currency',
+                hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+                prefixIcon: Icon(Icons.search, color: Colors.grey.shade500),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
                 ),
-              )
-              .toList(),
-          onChanged: (v) {
-            if (v != null) auth.selectedCurrencyCode.value = v;
-          },
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: kPrimary, width: 2),
+                ),
+                filled: true,
+                fillColor: Colors.grey.shade50,
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 14,
+                  horizontal: 16,
+                ),
+              ),
+            ),
+            onSelect: (Currency currency) {
+              auth.selectedCurrencyCode.value = currency.code;
+              auth.selectedCurrencyName.value = currency.name;
+              auth.selectedCurrencySymbol.value = currency.symbol;
+            },
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey.shade400, width: 1),
+          ),
+          child: Row(
+            children: [
+              if (hasSelection && flagEmoji != null) ...[
+                Text(flagEmoji, style: const TextStyle(fontSize: 20)),
+                const SizedBox(width: 10),
+              ] else ...[
+                Icon(Icons.attach_money, color: Colors.grey.shade400, size: 20),
+                const SizedBox(width: 10),
+              ],
+              Expanded(
+                child: hasSelection
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '$code${symbol.isNotEmpty ? " ($symbol)" : ""}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF2D3748),
+                            ),
+                          ),
+                          if (name.isNotEmpty)
+                            Text(
+                              name,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                        ],
+                      )
+                    : Text(
+                        'Select currency',
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          color: Colors.grey.shade400,
+                        ),
+                      ),
+              ),
+              Icon(
+                Icons.keyboard_arrow_down,
+                color: Colors.grey.shade400,
+                size: 20,
+              ),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   Widget _dropdownContainer({required Widget child}) {

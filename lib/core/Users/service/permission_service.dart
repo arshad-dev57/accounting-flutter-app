@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:LedgerPro_app/core/Users/controller/user_management_controller.dart';
+import 'package:BisonsTechs_app/core/Users/controller/user_management_controller.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -22,11 +22,9 @@ class PermissionService extends GetxService {
       isLoading.value = true;
       final prefs = await SharedPreferences.getInstance();
       final userData = prefs.getString('user');
-      
+
       if (userData != null) {
-        final userMap = Map<String, dynamic>.from(
-          jsonDecode(userData)
-        );
+        final userMap = Map<String, dynamic>.from(jsonDecode(userData));
         _currentUser = User.fromJson(userMap);
       }
     } catch (e) {
@@ -47,58 +45,59 @@ class PermissionService extends GetxService {
   // Check if user has permission for a specific page
   bool hasPermission(String page) {
     if (_currentUser == null) return false;
-    
+
     // Admin has all permissions
     if (_currentUser!.role == 'admin') return true;
-    
+
     // Check specific permission
     final permission = _currentUser!.permissions.firstWhereOrNull(
-      (p) => p.page.toLowerCase() == page.toLowerCase()
+      (p) => p.page.toLowerCase() == page.toLowerCase(),
     );
-    
+
     return permission?.canView ?? false;
   }
 
   // Check if user has access to a module
   bool hasModuleAccess(String module) {
     if (_currentUser == null) return false;
-    
+
     // Admin has all module access
     if (_currentUser!.role == 'admin') return true;
-    
+
     // Check if user has any permission for this module
     final hasModulePermission = _currentUser!.permissions.any((p) {
       final pageLower = p.page.toLowerCase();
       final moduleLower = module.toLowerCase();
       return pageLower.startsWith(moduleLower) && p.canView;
     });
-    
+
     return hasModulePermission;
   }
 
   // Check if user has access to a specific sub-page
   bool hasSubPageAccess(String module, String subPage) {
     if (_currentUser == null) return false;
-    
+
     // Admin has all sub-page access
     if (_currentUser!.role == 'admin') return true;
-    
+
     // Check specific sub-page permission
-    final pageIdentifier = '$module-${subPage.toLowerCase().replaceAll(' ', '-')}';
+    final pageIdentifier =
+        '$module-${subPage.toLowerCase().replaceAll(' ', '-')}';
     final permission = _currentUser!.permissions.firstWhereOrNull(
-      (p) => p.page.toLowerCase() == pageIdentifier
+      (p) => p.page.toLowerCase() == pageIdentifier,
     );
-    
+
     return permission?.canView ?? false;
   }
 
   // Check if user has any module access at all
   bool hasAnyModuleAccess() {
     if (_currentUser == null) return false;
-    
+
     // Admin has all module access
     if (_currentUser!.role == 'admin') return true;
-    
+
     // Check if user has any permissions at all
     return _currentUser!.permissions.isNotEmpty;
   }
@@ -106,14 +105,14 @@ class PermissionService extends GetxService {
   // Get all modules the user has access to
   List<String> getAccessibleModules() {
     if (_currentUser == null) return [];
-    
+
     // Admin has access to all modules
     if (_currentUser!.role == 'admin') {
       return UserManagementController.moduleConfigs
           .map((config) => config.module)
           .toList();
     }
-    
+
     // Get modules from user's permissions
     final modules = <String>{};
     for (var perm in _currentUser!.permissions) {
@@ -124,21 +123,22 @@ class PermissionService extends GetxService {
         }
       }
     }
-    
+
     return modules.toList();
   }
 
   // Get all accessible sub-pages for a module
   List<String> getAccessibleSubPages(String module) {
     if (_currentUser == null) return [];
-    
+
     // Admin has access to all sub-pages
     if (_currentUser!.role == 'admin') {
-      final config = UserManagementController.moduleConfigs
-          .firstWhereOrNull((c) => c.module == module);
+      final config = UserManagementController.moduleConfigs.firstWhereOrNull(
+        (c) => c.module == module,
+      );
       return config?.subPages.map((sp) => sp.page).toList() ?? [];
     }
-    
+
     // Get sub-pages from user's permissions
     final subPages = <String>[];
     for (var perm in _currentUser!.permissions) {
@@ -147,7 +147,7 @@ class PermissionService extends GetxService {
         subPages.add(subPage);
       }
     }
-    
+
     return subPages;
   }
 

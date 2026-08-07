@@ -1,5 +1,5 @@
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/core/warehouse/sales/model/sales_dashboard_model.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/warehouse/sales/model/sales_dashboard_model.dart';
 import 'package:get/get.dart';
 
 class SalesController extends GetxController {
@@ -9,9 +9,9 @@ class SalesController extends GetxController {
   final RxString period = 'month'.obs;
   final RxString selectedPeriod = 'month'.obs;
   final Rx<SalesDashboardModel?> dashboard = Rx<SalesDashboardModel?>(null);
-  
+
   // Custom date range
-  final Rx<DateTime ?> startDate = Rx<DateTime?>(null);
+  final Rx<DateTime?> startDate = Rx<DateTime?>(null);
   final Rx<DateTime?> endDate = Rx<DateTime?>(null);
   final RxBool useCustomDateRange = false.obs;
 
@@ -26,16 +26,18 @@ class SalesController extends GetxController {
   Future<void> fetchDashboard() async {
     try {
       isLoading.value = true;
-      
+
       final queryParams = <String, dynamic>{'period': period.value};
-      
+
       // Add custom date range if selected
-      if (useCustomDateRange.value && startDate.value != null && endDate.value != null) {
+      if (useCustomDateRange.value &&
+          startDate.value != null &&
+          endDate.value != null) {
         queryParams['startDate'] = _formatDate(startDate.value!);
         queryParams['endDate'] = _formatDate(endDate.value!);
         queryParams['period'] = 'custom';
       }
-      
+
       final response = await _api.get(
         '/api/warehouse/sales/dashboard',
         queryParameters: queryParams,
@@ -43,7 +45,7 @@ class SalesController extends GetxController {
       );
       if (response.success && response.data != null) {
         final data = Map<String, dynamic>.from(response.data['data'] ?? {});
-        
+
         // Provide default comparison data if not present
         if (!data.containsKey('comparison')) {
           data['comparison'] = {
@@ -53,27 +55,27 @@ class SalesController extends GetxController {
             'year': _getDefaultComparison(),
           };
         }
-        
+
         // Provide default recent activity if not present
         if (!data.containsKey('recentActivity')) {
           data['recentActivity'] = [];
         }
-        
+
         // Provide default top products if not present
         if (!data.containsKey('topProducts')) {
           data['topProducts'] = [];
         }
-        
+
         // Provide default top customers if not present
         if (!data.containsKey('topCustomers')) {
           data['topCustomers'] = [];
         }
-        
+
         // Provide default revenue breakdown if not present
         if (!data.containsKey('revenueBreakdown')) {
           data['revenueBreakdown'] = _getDefaultRevenueBreakdown();
         }
-        
+
         dashboard.value = SalesDashboardModel.fromJson(data);
       }
     } catch (e) {

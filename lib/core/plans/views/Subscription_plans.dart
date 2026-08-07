@@ -1,8 +1,8 @@
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/responsive_utils.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/dashboard/Screens/dashbaord_screen.dart';
-import 'package:LedgerPro_app/core/plans/controllers/subscription_controller.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/dashboard/Screens/dashbaord_screen.dart';
+import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
@@ -30,11 +30,14 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
     super.initState();
 
     _fadeCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 600));
-    _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
-    _slideAnim = Tween<double>(begin: 20, end: 0).animate(
-      CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut),
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
     );
+    _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
+    _slideAnim = Tween<double>(
+      begin: 20,
+      end: 0,
+    ).animate(CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut));
     _fadeCtrl.forward();
 
     if (_subCtrl.plans.isEmpty) {
@@ -112,7 +115,9 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
     }
 
     // Default to monthly when upgrading from trial
-    final targetPlanId = _selectedPlanId.isNotEmpty ? _selectedPlanId : 'monthly';
+    final targetPlanId = _selectedPlanId.isNotEmpty
+        ? _selectedPlanId
+        : 'monthly';
     final paidPlan = _subCtrl.plans.firstWhere(
       (p) => p['id'] == targetPlanId,
       orElse: () => _subCtrl.plans.isNotEmpty ? _subCtrl.plans[0] : {},
@@ -159,10 +164,7 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              LoadingAnimationWidget.waveDots(
-                color: kPrimary,
-                size: 48,
-              ),
+              LoadingAnimationWidget.waveDots(color: kPrimary, size: 48),
               const SizedBox(height: 16),
               Text(
                 message,
@@ -192,21 +194,16 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0A0E27),
-              Color(0xFF1A1A3E),
-              Color(0xFF2D1B4E),
-            ],
+            colors: [Color(0xFF0A0E27), Color(0xFF1A1A3E), Color(0xFF2D1B4E)],
           ),
         ),
         child: SafeArea(
           child: FadeTransition(
             opacity: _fadeAnim,
             child: SlideTransition(
-              position: _slideAnim.drive(Tween<Offset>(
-                begin: const Offset(0, 0.03),
-                end: Offset.zero,
-              )),
+              position: _slideAnim.drive(
+                Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero),
+              ),
               child: Obx(() {
                 return Column(
                   children: [
@@ -279,10 +276,7 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
               decoration: BoxDecoration(
                 color: kSuccess.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: kSuccess.withOpacity(0.3),
-                  width: 1,
-                ),
+                border: Border.all(color: kSuccess.withOpacity(0.3), width: 1),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -324,8 +318,9 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
     final isTrial = _subCtrl.isTrialActive.value;
     final daysLeft = _subCtrl.remainingDays;
     final totalDays = isTrial ? 30 : (plan == 'yearly' ? 365 : 30);
-    final progress =
-        daysLeft <= 0 ? 1.0 : (daysLeft / totalDays).clamp(0.0, 1.0);
+    final progress = daysLeft <= 0
+        ? 1.0
+        : (daysLeft / totalDays).clamp(0.0, 1.0);
 
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(
@@ -336,7 +331,14 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
         children: [
           // ── Hero Status Card ──
           _buildHeroCard(
-              plan, status, isTrial, daysLeft, totalDays, progress, isWeb),
+            plan,
+            status,
+            isTrial,
+            daysLeft,
+            totalDays,
+            progress,
+            isWeb,
+          ),
 
           SizedBox(height: isWeb ? 24 : 20),
 
@@ -369,8 +371,15 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
     );
   }
 
-  Widget _buildHeroCard(String plan, String status, bool isTrial, int daysLeft,
-      int totalDays, double progress, bool isWeb) {
+  Widget _buildHeroCard(
+    String plan,
+    String status,
+    bool isTrial,
+    int daysLeft,
+    int totalDays,
+    double progress,
+    bool isWeb,
+  ) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(isWeb ? 32 : 24),
@@ -379,20 +388,21 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
           colors: isTrial
               ? [const Color(0xFF1A237E), const Color(0xFF283593)]
               : plan == 'yearly'
-                  ? [const Color(0xFF4A148C), const Color(0xFF6A1B9A)]
-                  : [const Color(0xFF1B5E20), const Color(0xFF2E7D32)],
+              ? [const Color(0xFF4A148C), const Color(0xFF6A1B9A)]
+              : [const Color(0xFF1B5E20), const Color(0xFF2E7D32)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(isWeb ? 24 : 20),
         boxShadow: [
           BoxShadow(
-            color: (isTrial
-                    ? const Color(0xFF1A237E)
-                    : plan == 'yearly'
+            color:
+                (isTrial
+                        ? const Color(0xFF1A237E)
+                        : plan == 'yearly'
                         ? const Color(0xFF4A148C)
                         : const Color(0xFF1B5E20))
-                .withOpacity(0.4),
+                    .withOpacity(0.4),
             blurRadius: 30,
             offset: const Offset(0, 12),
           ),
@@ -554,7 +564,7 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
               ? [const Color(0xFFFFF3E0), const Color(0xFFFFE0B2)]
               : [
                   Colors.white.withOpacity(0.95),
-                  Colors.white.withOpacity(0.85)
+                  Colors.white.withOpacity(0.85),
                 ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -604,9 +614,7 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
                       style: TextStyle(
                         fontSize: isWeb ? 16 : 14,
                         fontWeight: FontWeight.w700,
-                        color: isUrgent
-                            ? const Color(0xFFE65100)
-                            : kText,
+                        color: isUrgent ? const Color(0xFFE65100) : kText,
                       ),
                     ),
                     SizedBox(height: isWeb ? 4 : 2),
@@ -614,9 +622,7 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
                       'Pick a plan below and upgrade to keep access',
                       style: TextStyle(
                         fontSize: isWeb ? 13 : 11,
-                        color: isUrgent
-                            ? const Color(0xFFBF360C)
-                            : kSubText,
+                        color: isUrgent ? const Color(0xFFBF360C) : kSubText,
                       ),
                     ),
                   ],
@@ -636,8 +642,7 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
                   : const Icon(Icons.upgrade_rounded, size: 18),
@@ -779,10 +784,7 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(isWeb ? 14 : 12),
-          border: Border.all(
-            color: Colors.red.withOpacity(0.3),
-            width: 1,
-          ),
+          border: Border.all(color: Colors.red.withOpacity(0.3), width: 1),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -968,7 +970,6 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
                 ],
               ),
             )
-
           // ── Empty / Error ──
           else if (_subCtrl.plans.isEmpty)
             Padding(
@@ -998,8 +999,7 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
                         vertical: isWeb ? 14 : 12,
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(isWeb ? 12 : 10),
+                        borderRadius: BorderRadius.circular(isWeb ? 12 : 10),
                       ),
                     ),
                     child: Text(
@@ -1014,7 +1014,6 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
                 ],
               ),
             )
-
           // ── Plans ──
           else ...[
             _buildPlanTabs(),
@@ -1038,10 +1037,7 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.08),
         borderRadius: BorderRadius.circular(isWeb ? 40 : 32),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
       ),
       child: Row(
         children: _subCtrl.plans.map((plan) {
@@ -1080,8 +1076,9 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
                       style: TextStyle(
                         color: isSelected ? kText : Colors.white,
                         fontSize: isWeb ? 15 : 13,
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                       ),
                     ),
                     if (isPopular) ...[
@@ -1167,10 +1164,7 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
                     ),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [
-                          Colors.amber.shade400,
-                          Colors.amber.shade600
-                        ],
+                        colors: [Colors.amber.shade400, Colors.amber.shade600],
                       ),
                       borderRadius: BorderRadius.circular(isWeb ? 12 : 10),
                     ),
@@ -1227,8 +1221,10 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
                 decoration: BoxDecoration(
                   color: kSuccess.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(isWeb ? 10 : 8),
-                  border:
-                      Border.all(color: kSuccess.withOpacity(0.2), width: 1),
+                  border: Border.all(
+                    color: kSuccess.withOpacity(0.2),
+                    width: 1,
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -1255,7 +1251,11 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
             // Features header
             Row(
               children: [
-                Icon(Icons.check_circle, color: kPrimary, size: isWeb ? 22 : 18),
+                Icon(
+                  Icons.check_circle,
+                  color: kPrimary,
+                  size: isWeb ? 22 : 18,
+                ),
                 SizedBox(width: isWeb ? 12 : 8),
                 Text(
                   'Plan includes',
@@ -1293,8 +1293,9 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
                         width: isWeb ? 24 : 20,
                         child: const CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
                       )
                     : Text(
@@ -1312,10 +1313,7 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
             Center(
               child: Text(
                 'Cancel anytime. No hidden charges.',
-                style: TextStyle(
-                  fontSize: isWeb ? 11 : 10,
-                  color: kSubText,
-                ),
+                style: TextStyle(fontSize: isWeb ? 11 : 10, color: kSubText),
               ),
             ),
           ],
@@ -1398,8 +1396,7 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
                   : const Icon(Icons.rocket_launch_rounded, size: 18),
@@ -1501,14 +1498,26 @@ class _SelectPlanScreenState extends State<SelectPlanScreen>
 
   String _formatDate(DateTime dt) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
   }
 
   String _formatPrice(num price) {
     return price.toInt().toString().replaceAllMapped(
-        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},');
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]},',
+    );
   }
 }

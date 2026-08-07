@@ -1,6 +1,6 @@
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/core/warehouse/Stock_in/controller/stock_in_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/Stock_in/model/stock_movement_model.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/warehouse/Stock_in/controller/stock_in_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/Stock_in/model/stock_movement_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -107,11 +107,7 @@ class StockHistoryList extends StatelessWidget {
                           color: color.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Icon(
-                          m.getTypeIcon(),
-                          color: color,
-                          size: 22,
-                        ),
+                        child: Icon(m.getTypeIcon(), color: color, size: 22),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -131,10 +127,7 @@ class StockHistoryList extends StatelessWidget {
                             const SizedBox(height: 3),
                             Text(
                               '${m.previousStock} → ${m.newStock}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: kText,
-                              ),
+                              style: TextStyle(fontSize: 12, color: kText),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -165,7 +158,9 @@ class StockHistoryList extends StatelessWidget {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: controller.getStatusColor(m.status).withOpacity(0.1),
+                                    color: controller
+                                        .getStatusColor(m.status)
+                                        .withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
@@ -173,7 +168,9 @@ class StockHistoryList extends StatelessWidget {
                                     style: TextStyle(
                                       fontSize: 9,
                                       fontWeight: FontWeight.w600,
-                                      color: controller.getStatusColor(m.status),
+                                      color: controller.getStatusColor(
+                                        m.status,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -219,5 +216,4 @@ class StockHistoryList extends StatelessWidget {
       );
     });
   }
-
 }

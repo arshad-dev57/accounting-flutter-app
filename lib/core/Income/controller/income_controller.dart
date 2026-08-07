@@ -1,17 +1,17 @@
 // core/Income/controller/income_controller.dart - COMPLETE WITH ALL REQUIRED METHODS
 
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'dart:convert';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/config/apiconfig.dart';
-import 'package:LedgerPro_app/core/Income/models/income_model.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/config/apiconfig.dart';
+import 'package:BisonsTechs_app/core/Income/models/income_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:universal_html/html.dart' as html;
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:LedgerPro_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
@@ -160,6 +160,8 @@ class IncomeController extends GetxController {
       if (response.success) {
         final Map<String, dynamic> responseData = response.data;
 
+        print("📥 Income API Response: ${json.encode(responseData)}");
+
         if (responseData['success'] == true) {
           List<dynamic> incomesData = [];
 
@@ -171,14 +173,23 @@ class IncomeController extends GetxController {
             incomesData = [];
           }
 
+          print("📊 Incomes data count: ${incomesData.length}");
+          print(
+            "🔍 Current filters - Type: ${selectedType.value}, Filter: ${selectedFilter.value}, Search: ${searchQuery.value}",
+          );
+
           final newIncomes = incomesData
               .map((json) => Income.fromJson(json))
               .toList();
 
+          print("✅ Parsed incomes count: ${newIncomes.length}");
+
           if (resetPage) {
             incomes.value = newIncomes;
+            print("🔄 Reset page - Total incomes: ${incomes.length}");
           } else {
             incomes.addAll(newIncomes);
+            print("➕ Added incomes - Total: ${incomes.length}");
           }
 
           if (responseData['pagination'] != null) {
@@ -423,6 +434,8 @@ class IncomeController extends GetxController {
 
       final response = await _api.post('/api/income', body: incomeData);
 
+      print("📥 Create Income Response: ${json.encode(response.data)}");
+
       // Close loading dialog
       Get.back();
 
@@ -435,7 +448,9 @@ class IncomeController extends GetxController {
             'Income recorded and posted to ledger',
             duration: const Duration(seconds: 3),
           );
+          print("🔄 Calling refreshData after successful income creation");
           await refreshData();
+          print("✅ refreshData completed");
         } else {
           _showError(responseData['message'] ?? 'Failed to create income');
         }
@@ -740,10 +755,7 @@ class IncomeController extends GetxController {
             ),
             Text(
               subtitle,
-              style: TextStyle(
-                fontSize: 10,
-                color: color.withOpacity(0.7),
-              ),
+              style: TextStyle(fontSize: 10, color: color.withOpacity(0.7)),
             ),
           ],
         ),
@@ -997,20 +1009,8 @@ class IncomeController extends GetxController {
           DateFormat('dd MMM yyyy').format(income.date),
           bgColor: bg,
         );
-        _excelSetCell(
-          incomeSheet,
-          row,
-          4,
-          income.subtotal,
-          bgColor: bg,
-        );
-        _excelSetCell(
-          incomeSheet,
-          row,
-          5,
-          income.taxAmount,
-          bgColor: bg,
-        );
+        _excelSetCell(incomeSheet, row, 4, income.subtotal, bgColor: bg);
+        _excelSetCell(incomeSheet, row, 5, income.taxAmount, bgColor: bg);
         _excelSetCell(
           incomeSheet,
           row,
@@ -1025,7 +1025,14 @@ class IncomeController extends GetxController {
       }
 
       // Totals row
-      _excelSetCell(incomeSheet, row, 6, 'TOTAL', bold: true, bgColor: 'E8EAF6');
+      _excelSetCell(
+        incomeSheet,
+        row,
+        6,
+        'TOTAL',
+        bold: true,
+        bgColor: 'E8EAF6',
+      );
       _excelSetCell(
         incomeSheet,
         row,
@@ -1050,7 +1057,9 @@ class IncomeController extends GetxController {
           'incomes_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
 
       if (kIsWeb) {
-        final blob = html.Blob([bytes], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        final blob = html.Blob([
+          bytes,
+        ], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         final url = html.Url.createObjectUrlFromBlob(blob);
         final anchor = html.AnchorElement(href: url)
           ..setAttribute('download', fileName)
@@ -1154,7 +1163,7 @@ class IncomeController extends GetxController {
               borderRadius: pw.BorderRadius.circular(6),
             ),
             child: pw.Text(
-              'LedgerPro',
+              'BisonsTechs',
               style: pw.TextStyle(
                 color: PdfColors.white,
                 fontWeight: pw.FontWeight.bold,

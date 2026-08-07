@@ -1,11 +1,11 @@
 // screens/journal_entries_screen.dart
 
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/journalEntries/Controllers/journal_entries_exportservice.dart';
-import 'package:LedgerPro_app/core/journalEntries/Controllers/journal_entry_controller.dart';
-import 'package:LedgerPro_app/core/journalEntries/model/journal_entry_model.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/journalEntries/Controllers/journal_entries_exportservice.dart';
+import 'package:BisonsTechs_app/core/journalEntries/Controllers/journal_entry_controller.dart';
+import 'package:BisonsTechs_app/core/journalEntries/model/journal_entry_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -28,9 +28,13 @@ class JournalEntriesScreen extends StatelessWidget {
           _buildTopHeader(context, controller, _searchCtrl),
           Expanded(
             child: Obx(() {
-              if (controller.isLoading.value && controller.journalEntries.isEmpty) {
+              if (controller.isLoading.value &&
+                  controller.journalEntries.isEmpty) {
                 return Center(
-                  child: LoadingAnimationWidget.discreteCircle(color: kPrimary, size: 40),
+                  child: LoadingAnimationWidget.discreteCircle(
+                    color: kPrimary,
+                    size: 40,
+                  ),
                 );
               }
               return Padding(
@@ -38,9 +42,7 @@ class JournalEntriesScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     _buildSummaryCards(controller),
-                    Expanded(
-                      child: _buildListView(controller, context),
-                    ),
+                    Expanded(child: _buildListView(controller, context)),
                   ],
                 ),
               );
@@ -69,7 +71,11 @@ class JournalEntriesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTopHeader(BuildContext context, JournalEntryController controller, TextEditingController searchCtrl) {
+  Widget _buildTopHeader(
+    BuildContext context,
+    JournalEntryController controller,
+    TextEditingController searchCtrl,
+  ) {
     void showDateRangePicker_() async {
       final picked = await showDateRangePicker(
         context: context,
@@ -110,7 +116,7 @@ class JournalEntriesScreen extends StatelessWidget {
                         ),
                         Obx(
                           () => Text(
-                            '${controller.journalEntries.length} entries',
+                            '${controller.totalEntries.value} entries',
                             style: TextStyle(
                               fontSize: 11,
                               color: Colors.black.withOpacity(0.55),
@@ -122,7 +128,7 @@ class JournalEntriesScreen extends StatelessWidget {
                     ),
                   ),
                   GestureDetector(
-                    onTap: controller.fetchJournalEntries,
+                    onTap: () => controller.refresh(),
                     child: Container(
                       width: 36,
                       height: 36,
@@ -218,7 +224,8 @@ class JournalEntriesScreen extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                 child: Row(
                   children: ['All', 'Posted', 'Draft'].map((filter) {
-                    final isSelected = controller.selectedFilter.value == filter;
+                    final isSelected =
+                        controller.selectedFilter.value == filter;
                     return Padding(
                       padding: const EdgeInsets.only(right: 6),
                       child: GestureDetector(
@@ -262,7 +269,10 @@ class JournalEntriesScreen extends StatelessWidget {
                 return Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: kPrimary.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(8),
@@ -273,7 +283,11 @@ class JournalEntriesScreen extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.date_range, size: 16, color: Colors.black87),
+                            Icon(
+                              Icons.date_range,
+                              size: 16,
+                              color: Colors.black87,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               '${DateFormat('MMM dd, yyyy').format(range.start)} - ${DateFormat('MMM dd, yyyy').format(range.end)}',
@@ -287,7 +301,11 @@ class JournalEntriesScreen extends StatelessWidget {
                         ),
                         GestureDetector(
                           onTap: () => controller.setDateRange(null),
-                          child: Icon(Icons.close, size: 16, color: Colors.black87),
+                          child: Icon(
+                            Icons.close,
+                            size: 16,
+                            color: Colors.black87,
+                          ),
                         ),
                       ],
                     ),
@@ -301,8 +319,6 @@ class JournalEntriesScreen extends StatelessWidget {
       ),
     );
   }
-
-
 
   // ═══════════════════════════════════════════════════════════════
   // SUMMARY CARDS
@@ -362,7 +378,7 @@ class JournalEntriesScreen extends StatelessWidget {
             color: Colors.black.withOpacity(0.05),
             blurRadius: 5,
             offset: const Offset(0, 2),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -399,7 +415,6 @@ class JournalEntriesScreen extends StatelessWidget {
     );
   }
 
-
   // ═══════════════════════════════════════════════════════════════
   // LIST VIEW
   // ═══════════════════════════════════════════════════════════════
@@ -415,18 +430,32 @@ class JournalEntriesScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.book_outlined, size: 64, color: kSubText.withOpacity(0.5)),
+              Icon(
+                Icons.book_outlined,
+                size: 64,
+                color: kSubText.withOpacity(0.5),
+              ),
               const SizedBox(height: 16),
-              Text('No journal entries found', style: TextStyle(fontSize: 16, color: kSubText)),
+              Text(
+                'No journal entries found',
+                style: TextStyle(fontSize: 16, color: kSubText),
+              ),
               const SizedBox(height: 12),
               ElevatedButton(
-                onPressed: () => _showAddJournalEntryDialog(context, controller),
+                onPressed: () =>
+                    _showAddJournalEntryDialog(context, controller),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimary,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 10,
+                  ),
                   elevation: 0,
                 ),
-                child: const Text('New Entry', style: TextStyle(fontSize: 13, color: Colors.white)),
+                child: const Text(
+                  'New Entry',
+                  style: TextStyle(fontSize: 13, color: Colors.white),
+                ),
               ),
             ],
           ),
@@ -438,14 +467,19 @@ class JournalEntriesScreen extends StatelessWidget {
         itemCount: entries.length + 1,
         itemBuilder: (context, index) {
           if (index == entries.length) {
-            return Obx(() => controller.isLoadingMore.value
-                ? Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Center(
-                      child: LoadingAnimationWidget.discreteCircle(color: kPrimary, size: 30),
-                    ),
-                  )
-                : const SizedBox.shrink());
+            return Obx(
+              () => controller.isLoadingMore.value
+                  ? Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Center(
+                        child: LoadingAnimationWidget.discreteCircle(
+                          color: kPrimary,
+                          size: 30,
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            );
           }
           final entry = entries[index];
           return Padding(
@@ -489,102 +523,127 @@ class JournalEntriesScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           child: Padding(
             padding: const EdgeInsets.all(14),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    statusIcon,
-                    color: statusColor,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              entry.entryNumber,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: kText,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: statusColor.withOpacity(0.08),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              entry.status,
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: statusColor,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            '• ${DateFormat('dd MMM yyyy').format(entry.date)}',
-                            style: TextStyle(fontSize: 11, color: kSubText),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        entry.description,
-                        style: TextStyle(fontSize: 12, color: kSubText),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      _formatAmount(entry.totalDebit),
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: kSuccess,
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: statusColor.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(statusIcon, color: statusColor, size: 22),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            entry.entryNumber,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: kText,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: statusColor.withOpacity(0.08),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  entry.status,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: statusColor,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                DateFormat('dd MMM yyyy').format(entry.date),
+                                style: TextStyle(fontSize: 11, color: kSubText),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            entry.description,
+                            style: TextStyle(fontSize: 12, color: kSubText),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(width: 8),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        _formatAmount(entry.entryAmount),
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: kText,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (entry.lines.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    _entryLinesPreview(entry),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: kSubText.withOpacity(0.8),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  alignment: WrapAlignment.end,
+                  children: [
+                    _sideBadge('Dr', _formatAmount(entry.totalDebit), kSuccess),
+                    _sideBadge('Cr', _formatAmount(entry.totalCredit), kDanger),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
-                        color: kSuccess.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(6),
+                        color: (entry.isBalanced ? kSuccess : kWarning)
+                            .withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        'Dr',
+                        entry.isBalanced ? 'Balanced' : 'Unbalanced',
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 9,
                           fontWeight: FontWeight.w700,
-                          color: kSuccess,
+                          color: entry.isBalanced ? kSuccess : kWarning,
                         ),
                       ),
                     ),
@@ -594,6 +653,58 @@ class JournalEntriesScreen extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  String _entryLinesPreview(JournalEntry entry) {
+    final drNames = entry.lines
+        .where((l) => l.debit > 0)
+        .map((l) => l.accountName)
+        .where((n) => n.isNotEmpty)
+        .take(2)
+        .join(', ');
+    final crNames = entry.lines
+        .where((l) => l.credit > 0)
+        .map((l) => l.accountName)
+        .where((n) => n.isNotEmpty)
+        .take(2)
+        .join(', ');
+
+    final parts = <String>[];
+    if (drNames.isNotEmpty) parts.add('Dr: $drNames');
+    if (crNames.isNotEmpty) parts.add('Cr: $crNames');
+    return parts.join(' · ');
+  }
+
+  Widget _sideBadge(String label, String amount, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            amount,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -610,9 +721,7 @@ class JournalEntriesScreen extends StatelessWidget {
       context: context,
       barrierDismissible: false,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         backgroundColor: Colors.transparent,
         child: Container(
           width: double.infinity,
@@ -717,7 +826,10 @@ class JournalEntriesScreen extends StatelessWidget {
                                 Row(
                                   children: [
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: statusColor.withOpacity(0.08),
                                         borderRadius: BorderRadius.circular(4),
@@ -734,7 +846,10 @@ class JournalEntriesScreen extends StatelessWidget {
                                     const SizedBox(width: 6),
                                     Text(
                                       '• ${DateFormat('dd MMM yyyy').format(entry.date)}',
-                                      style: TextStyle(fontSize: 11, color: kSubText),
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: kSubText,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -773,7 +888,10 @@ class JournalEntriesScreen extends StatelessWidget {
                       Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
                       const SizedBox(height: 16),
                       _detailRow('Description', entry.description),
-                      _detailRow('Reference', entry.reference.isEmpty ? 'N/A' : entry.reference),
+                      _detailRow(
+                        'Reference',
+                        entry.reference.isEmpty ? 'N/A' : entry.reference,
+                      ),
                       _detailRow('Created By', entry.createdBy),
                       const SizedBox(height: 16),
                       Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
@@ -787,57 +905,66 @@ class JournalEntriesScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      ...entry.lines.map((line) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    line.accountName,
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      color: kText,
+                      ...entry.lines.map(
+                        (line) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 3,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      line.accountName,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: kText,
+                                      ),
                                     ),
-                                  ),
-                                  Text(
-                                    line.accountCode,
-                                    style: TextStyle(fontSize: 10, color: kSubText),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                line.debit > 0 ? _formatAmount(line.debit) : '-',
-                                textAlign: TextAlign.right,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: line.debit > 0 ? kSuccess : kSubText,
+                                    Text(
+                                      line.accountCode,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: kSubText,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                line.credit > 0 ? _formatAmount(line.credit) : '-',
-                                textAlign: TextAlign.right,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: line.credit > 0 ? kDanger : kSubText,
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  line.debit > 0
+                                      ? _formatAmount(line.debit)
+                                      : '-',
+                                  textAlign: TextAlign.right,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: line.debit > 0 ? kSuccess : kSubText,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  line.credit > 0
+                                      ? _formatAmount(line.credit)
+                                      : '-',
+                                  textAlign: TextAlign.right,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: line.credit > 0 ? kDanger : kSubText,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      )),
+                      ),
                       const SizedBox(height: 16),
                       Row(
                         children: [
@@ -993,9 +1120,7 @@ class JournalEntriesScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         title: const Text(
           'Search Entries',
           style: TextStyle(
@@ -1022,20 +1147,14 @@ class JournalEntriesScreen extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Colors.black),
-            ),
+            child: const Text('Cancel', style: TextStyle(color: Colors.black)),
           ),
           TextButton(
             onPressed: () {
               controller.searchEntries(searchCtrl.text);
               Navigator.pop(context);
             },
-            child: const Text(
-              'Search',
-              style: TextStyle(color: Colors.black),
-            ),
+            child: const Text('Search', style: TextStyle(color: Colors.black)),
           ),
         ],
       ),
@@ -1053,9 +1172,7 @@ class JournalEntriesScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         title: const Text(
           'Filter',
           style: TextStyle(
@@ -1073,7 +1190,11 @@ class JournalEntriesScreen extends StatelessWidget {
                 'Date Range',
                 style: TextStyle(fontSize: 13, color: Colors.black),
               ),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.black),
+              trailing: const Icon(
+                Icons.arrow_forward_ios,
+                size: 14,
+                color: Colors.black,
+              ),
               contentPadding: EdgeInsets.zero,
               onTap: () async {
                 Navigator.pop(context);
@@ -1090,10 +1211,7 @@ class JournalEntriesScreen extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Close',
-              style: TextStyle(color: Colors.black),
-            ),
+            child: const Text('Close', style: TextStyle(color: Colors.black)),
           ),
         ],
       ),
@@ -1272,10 +1390,7 @@ class JournalEntriesScreen extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               subtitle,
-              style: TextStyle(
-                fontSize: 11,
-                color: color.withOpacity(0.7),
-              ),
+              style: TextStyle(fontSize: 11, color: color.withOpacity(0.7)),
             ),
           ],
         ),
@@ -1286,9 +1401,7 @@ class JournalEntriesScreen extends StatelessWidget {
   void _showExportingLoader(String message) {
     Get.dialog(
       AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1387,106 +1500,101 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
   }
 
   Widget _buildAccountDropdown(JournalLineInput line) {
-  final hasError = _showLineErrors &&
-      (line.accountId.isEmpty ||
-          line.accountId == 'null' ||
-          line.accountId == 'NULL');
+    final hasError =
+        _showLineErrors &&
+        (line.accountId.isEmpty ||
+            line.accountId == 'null' ||
+            line.accountId == 'NULL');
 
-  return Container(
-    constraints: const BoxConstraints(
-      minHeight: 50,
-    ),
-    child: DropdownButtonFormField<String>(
-      isExpanded: true,
-      isDense: true,
-      decoration: InputDecoration(
-        hintText: 'Select account',
-        hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(
-            color: hasError ? kDanger : Colors.grey.withOpacity(0.4),
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(
-            color: hasError ? kDanger : Colors.grey.withOpacity(0.4),
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: hasError ? kDanger : kPrimary),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 12,
-        ),
+    return Container(
+      constraints: const BoxConstraints(minHeight: 50),
+      child: DropdownButtonFormField<String>(
+        isExpanded: true,
         isDense: true,
-        errorText: hasError ? 'Please select an account' : null,
-        errorStyle: const TextStyle(fontSize: 10),
-      ),
-      style: const TextStyle(
-        fontSize: 13,
-        color: Colors.black,
-        fontWeight: FontWeight.w500,
-      ),
-      value: line.accountId.isEmpty || line.accountId == 'null'
-          ? null
-          : line.accountId,
-      items: widget.controller.accounts.map((account) {
-        final accountId = account['id']?.toString() ?? '';
-        final code = account['code']?.toString() ?? '';
-        final name = account['name']?.toString() ?? '';
-        
-        return DropdownMenuItem<String>(
-          value: accountId,
-          child: Container(
-            constraints: const BoxConstraints(
-              maxWidth: 300,
-            ),
-            child: Text(
-              '$code - $name',
-              style: const TextStyle(
-                fontSize: 13,
-                color: Colors.black,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+        decoration: InputDecoration(
+          hintText: 'Select account',
+          hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(
+              color: hasError ? kDanger : Colors.grey.withOpacity(0.4),
             ),
           ),
-        );
-      }).toList(),
-      onChanged: _isSubmitting
-          ? null
-          : (value) {
-              if (value != null && value.isNotEmpty && value != 'null') {
-                setState(() {
-                  line.accountId = value;
-                  final selected = widget.controller.accounts.firstWhere(
-                    (a) => a['id']?.toString() == value,
-                    orElse: () => {},
-                  );
-                  if (selected.isNotEmpty) {
-                    line.accountName = selected['name'] ?? '';
-                    line.accountCode = selected['code'] ?? '';
-                  }
-                });
-              }
-            },
-      // ✅ KEY FIX: Constrain the dropdown menu to prevent overflow
-      menuMaxHeight: 250,
-      iconSize: 20,
-      icon: Icon(
-        Icons.arrow_drop_down,
-        color: hasError ? kDanger : Colors.grey.shade600,
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(
+              color: hasError ? kDanger : Colors.grey.withOpacity(0.4),
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: hasError ? kDanger : kPrimary),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 12,
+          ),
+          isDense: true,
+          errorText: hasError ? 'Please select an account' : null,
+          errorStyle: const TextStyle(fontSize: 10),
+        ),
+        style: const TextStyle(
+          fontSize: 13,
+          color: Colors.black,
+          fontWeight: FontWeight.w500,
+        ),
+        value: line.accountId.isEmpty || line.accountId == 'null'
+            ? null
+            : line.accountId,
+        items: widget.controller.accounts.map((account) {
+          final accountId = account['id']?.toString() ?? '';
+          final code = account['code']?.toString() ?? '';
+          final name = account['name']?.toString() ?? '';
+
+          return DropdownMenuItem<String>(
+            value: accountId,
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 300),
+              child: Text(
+                '$code - $name',
+                style: const TextStyle(fontSize: 13, color: Colors.black),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          );
+        }).toList(),
+        onChanged: _isSubmitting
+            ? null
+            : (value) {
+                if (value != null && value.isNotEmpty && value != 'null') {
+                  setState(() {
+                    line.accountId = value;
+                    final selected = widget.controller.accounts.firstWhere(
+                      (a) => a['id']?.toString() == value,
+                      orElse: () => {},
+                    );
+                    if (selected.isNotEmpty) {
+                      line.accountName = selected['name'] ?? '';
+                      line.accountCode = selected['code'] ?? '';
+                    }
+                  });
+                }
+              },
+        // ✅ KEY FIX: Constrain the dropdown menu to prevent overflow
+        menuMaxHeight: 250,
+        iconSize: 20,
+        icon: Icon(
+          Icons.arrow_drop_down,
+          color: hasError ? kDanger : Colors.grey.shade600,
+        ),
+        dropdownColor: Colors.white,
+        elevation: 4,
+        borderRadius: BorderRadius.circular(10),
       ),
-      dropdownColor: Colors.white,
-      elevation: 4,
-      borderRadius: BorderRadius.circular(10),
-    ),
-  );
-}
+    );
+  }
+
   Future<void> _handleSubmit() async {
     if (_isSubmitting) return;
 
@@ -1506,7 +1614,10 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
           l.accountId == 'null' ||
           l.accountId == 'NULL') {
         AppSnackbar.error(
-            Colors.red, 'Error', 'Please select an account for all lines');
+          Colors.red,
+          'Error',
+          'Please select an account for all lines',
+        );
         return;
       }
       linesData.add({
@@ -1551,7 +1662,9 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
             padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
             decoration: BoxDecoration(
               color: kPrimary.withOpacity(0.05),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
             ),
             child: Row(
               children: [
@@ -1562,7 +1675,11 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                     color: kPrimary,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.add_task, color: Colors.black, size: 22),
+                  child: const Icon(
+                    Icons.add_task,
+                    color: Colors.black,
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -1587,14 +1704,16 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.close, size: 20, color: Colors.black),
-                  onPressed: _isSubmitting ? null : () => Navigator.pop(context),
+                  onPressed: _isSubmitting
+                      ? null
+                      : () => Navigator.pop(context),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 ),
               ],
             ),
           ),
-          
+
           Expanded(
             child: Form(
               key: _formKey,
@@ -1619,7 +1738,9 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                           borderSide: BorderSide.none,
                         ),
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         isDense: true,
                         labelStyle: TextStyle(fontSize: 13, color: kSubText),
                       ),
@@ -1649,11 +1770,15 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                           onTap: _isSubmitting ? null : _addLine,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
                               color: kPrimary.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: kPrimary.withOpacity(0.3)),
+                              border: Border.all(
+                                color: kPrimary.withOpacity(0.3),
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -1675,26 +1800,26 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Lines
                     ..._lines.asMap().entries.map((entry) {
                       final index = entry.key;
                       final line = entry.value;
                       return _buildLineCard(line, index);
                     }),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Balance Summary
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: isBalanced 
+                        color: isBalanced
                             ? kSuccess.withOpacity(0.08)
                             : kWarning.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: isBalanced 
+                          color: isBalanced
                               ? kSuccess.withOpacity(0.2)
                               : kWarning.withOpacity(0.2),
                         ),
@@ -1755,7 +1880,7 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
               ),
             ),
           ),
-          
+
           // Footer
           Container(
             padding: const EdgeInsets.all(24),
@@ -1773,8 +1898,8 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: _isSubmitting 
-                        ? null 
+                    onPressed: _isSubmitting
+                        ? null
                         : () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: kPrimary,
@@ -1815,7 +1940,9 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                                 height: 16,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.black,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -1879,7 +2006,11 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
               const Spacer(),
               if (_lines.length > 2)
                 IconButton(
-                  icon: Icon(Icons.remove_circle_outline, size: 18, color: kDanger),
+                  icon: Icon(
+                    Icons.remove_circle_outline,
+                    size: 18,
+                    color: kDanger,
+                  ),
                   onPressed: _isSubmitting ? null : () => _removeLine(index),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
@@ -1912,17 +2043,25 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                         ),
                       ),
                     ),
-                    prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+                    prefixIconConstraints: const BoxConstraints(
+                      minWidth: 0,
+                      minHeight: 0,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide.none,
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                     isDense: true,
                   ),
                   style: const TextStyle(fontSize: 13, color: Colors.black),
                   textAlign: TextAlign.right,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   onChanged: (value) {
                     setState(() {
                       line.debit = double.tryParse(value) ?? 0;
@@ -1956,17 +2095,25 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                         ),
                       ),
                     ),
-                    prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+                    prefixIconConstraints: const BoxConstraints(
+                      minWidth: 0,
+                      minHeight: 0,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide.none,
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                     isDense: true,
                   ),
                   style: const TextStyle(fontSize: 13, color: Colors.black),
                   textAlign: TextAlign.right,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   onChanged: (value) {
                     setState(() {
                       line.credit = double.tryParse(value) ?? 0;
@@ -2017,12 +2164,20 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                 children: [
                   Text(
                     'Journal Date',
-                    style: TextStyle(fontSize: 11, color: kSubText, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: kSubText,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     DateFormat('dd MMM yyyy').format(_selectedDate),
-                    style: TextStyle(fontSize: 14, color: kText, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: kText,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -2046,7 +2201,10 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         isDense: true,
         labelStyle: TextStyle(fontSize: 13, color: kSubText),
       ),

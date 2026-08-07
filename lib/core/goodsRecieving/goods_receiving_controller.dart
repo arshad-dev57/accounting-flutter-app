@@ -1,8 +1,8 @@
 // lib/core/warehouse/goods_receiving/controller/goods_receiving_controller.dart
 
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/core/goodsRecieving/goods_receiving_model.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/core/goodsRecieving/goods_receiving_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -35,7 +35,12 @@ class GoodsReceivingController extends GetxController {
   final Rx<DateTime?> fromDate = Rx<DateTime?>(null);
   final Rx<DateTime?> toDate = Rx<DateTime?>(null);
 
-  final List<String> filters = ['all', 'Draft', 'Partially Received', 'Fully Received'];
+  final List<String> filters = [
+    'all',
+    'Draft',
+    'Partially Received',
+    'Fully Received',
+  ];
 
   // ─── STATS ────────────────────────────────────────────────────
   final Rx<GoodsReceivingStats> stats = GoodsReceivingStats(
@@ -49,9 +54,11 @@ class GoodsReceivingController extends GetxController {
 
   // ─── CREATE WIZARD STATE ─────────────────────────────────────
   final RxInt wizardStep = 0.obs;
-  final RxList<PurchaseOrderForReceiving> orderSearchResults = <PurchaseOrderForReceiving>[].obs;
+  final RxList<PurchaseOrderForReceiving> orderSearchResults =
+      <PurchaseOrderForReceiving>[].obs;
   final RxBool isSearchingOrders = false.obs;
-  final Rx<PurchaseOrderForReceiving?> selectedOrder = Rx<PurchaseOrderForReceiving?>(null);
+  final Rx<PurchaseOrderForReceiving?> selectedOrder =
+      Rx<PurchaseOrderForReceiving?>(null);
   final RxList<GRNLineDraft> lineDrafts = <GRNLineDraft>[].obs;
 
   // ─── CONTROLLERS ─────────────────────────────────────────────
@@ -68,13 +75,17 @@ class GoodsReceivingController extends GetxController {
     super.onInit();
     print('🟢 [GoodsReceivingController] onInit called');
     selectedReceivingDate.value = DateTime.now();
-    receivingDateController.text = DateFormat('dd MMM yyyy').format(selectedReceivingDate.value!);
+    receivingDateController.text = DateFormat(
+      'dd MMM yyyy',
+    ).format(selectedReceivingDate.value!);
     fetchGRNs();
   }
 
   @override
   void onClose() {
-    print('🟢 [GoodsReceivingController] onClose called - disposing controllers');
+    print(
+      '🟢 [GoodsReceivingController] onClose called - disposing controllers',
+    );
     orderSearchController.dispose();
     receivingDateController.dispose();
     receivedByController.dispose();
@@ -89,8 +100,8 @@ class GoodsReceivingController extends GetxController {
   }
 
   bool get canConfirmReceiving {
-    return lineDrafts.any((line) => line.receivingQuantity > 0) && 
-           selectedOrder.value != null;
+    return lineDrafts.any((line) => line.receivingQuantity > 0) &&
+        selectedOrder.value != null;
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -99,9 +110,11 @@ class GoodsReceivingController extends GetxController {
 
   Future<void> fetchGRNs({bool resetPage = false}) async {
     print('🔵 [GoodsReceivingController] fetchGRNs called');
-    print('🔵 [GoodsReceivingController] Current Page: ${currentPage.value}, Limit: ${pageLimit.value}');
+    print(
+      '🔵 [GoodsReceivingController] Current Page: ${currentPage.value}, Limit: ${pageLimit.value}',
+    );
     print('🔵 [GoodsReceivingController] Reset Page: $resetPage');
-    
+
     if (resetPage) currentPage.value = 1;
     try {
       isLoading.value = true;
@@ -111,11 +124,15 @@ class GoodsReceivingController extends GetxController {
       };
       if (searchFilter.value.isNotEmpty) {
         params['search'] = searchFilter.value;
-        print('🔵 [GoodsReceivingController] Search filter: ${searchFilter.value}');
+        print(
+          '🔵 [GoodsReceivingController] Search filter: ${searchFilter.value}',
+        );
       }
       if (statusFilter.value != 'all') {
         params['status'] = statusFilter.value;
-        print('🔵 [GoodsReceivingController] Status filter: ${statusFilter.value}');
+        print(
+          '🔵 [GoodsReceivingController] Status filter: ${statusFilter.value}',
+        );
       }
       if (fromDate.value != null) {
         params['fromDate'] = fromDate.value!.toIso8601String().split('T').first;
@@ -126,20 +143,33 @@ class GoodsReceivingController extends GetxController {
         print('🔵 [GoodsReceivingController] To date: ${params['toDate']}');
       }
 
-      final query = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
-      print('🔵 [GoodsReceivingController] API Request: GET /api/purchase/goods-receiving?$query');
+      final query = params.entries
+          .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+          .join('&');
+      print(
+        '🔵 [GoodsReceivingController] API Request: GET /api/purchase/goods-receiving?$query',
+      );
 
-      final response = await _api.get('/api/purchase/goods-receiving?$query', requiresAuth: true);
+      final response = await _api.get(
+        '/api/purchase/goods-receiving?$query',
+        requiresAuth: true,
+      );
 
-      print('🔵 [GoodsReceivingController] Response Status: ${response.statusCode}');
-      print('🔵 [GoodsReceivingController] Response Success: ${response.success}');
+      print(
+        '🔵 [GoodsReceivingController] Response Status: ${response.statusCode}',
+      );
+      print(
+        '🔵 [GoodsReceivingController] Response Success: ${response.success}',
+      );
 
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         print('🔵 [GoodsReceivingController] Data length: ${list.length}');
-        
+
         grns.value = list
-            .map((e) => GoodsReceivingModel.fromJson(Map<String, dynamic>.from(e)))
+            .map(
+              (e) => GoodsReceivingModel.fromJson(Map<String, dynamic>.from(e)),
+            )
             .toList();
 
         applyLocalFilters();
@@ -160,14 +190,21 @@ class GoodsReceivingController extends GetxController {
           hasNext.value = pagination['hasNext'] == true;
           hasPrev.value = pagination['hasPrev'] == true;
           hasMore.value = pagination['hasNext'] == true;
-          
-          print('✅ [GoodsReceivingController] GRNs fetched successfully: ${grns.length} GRNs');
-          print('✅ [GoodsReceivingController] Total records: ${totalRecords.value}, Total pages: ${totalPages.value}');
+
+          print(
+            '✅ [GoodsReceivingController] GRNs fetched successfully: ${grns.length} GRNs',
+          );
+          print(
+            '✅ [GoodsReceivingController] Total records: ${totalRecords.value}, Total pages: ${totalPages.value}',
+          );
         }
       } else {
         print('❌ [GoodsReceivingController] Failed to fetch GRNs');
         print('❌ [GoodsReceivingController] Response data: ${response.data}');
-        Get.snackbar('Error', response.message ?? 'Failed to load goods receivings');
+        Get.snackbar(
+          'Error',
+          response.message ?? 'Failed to load goods receivings',
+        );
       }
     } catch (e) {
       print('❌ [GoodsReceivingController] fetchGRNs error: $e');
@@ -175,7 +212,9 @@ class GoodsReceivingController extends GetxController {
       Get.snackbar('Error', e.toString());
     } finally {
       isLoading.value = false;
-      print('🔵 [GoodsReceivingController] fetchGRNs completed, isLoading: ${isLoading.value}');
+      print(
+        '🔵 [GoodsReceivingController] fetchGRNs completed, isLoading: ${isLoading.value}',
+      );
     }
   }
 
@@ -183,27 +222,33 @@ class GoodsReceivingController extends GetxController {
 
   void applyLocalFilters() {
     print('🟣 [GoodsReceivingController] applyLocalFilters called');
-    print('🟣 [GoodsReceivingController] Selected filter: ${selectedFilter.value}');
+    print(
+      '🟣 [GoodsReceivingController] Selected filter: ${selectedFilter.value}',
+    );
     print('🟣 [GoodsReceivingController] Search filter: ${searchFilter.value}');
-    
+
     final list = grns.toList();
     final filtered = list.where((item) {
       // Status filter
-      if (selectedFilter.value != 'all' && item.status != selectedFilter.value) {
+      if (selectedFilter.value != 'all' &&
+          item.status != selectedFilter.value) {
         return false;
       }
       // Search filter
       if (searchFilter.value.isNotEmpty) {
         final query = searchFilter.value.toLowerCase();
-        final matches = item.grnNumber.toLowerCase().contains(query) ||
+        final matches =
+            item.grnNumber.toLowerCase().contains(query) ||
             item.supplierName.toLowerCase().contains(query) ||
             item.purchaseOrderNumber.toLowerCase().contains(query);
         if (!matches) return false;
       }
       return true;
     }).toList();
-    
-    print('🟣 [GoodsReceivingController] Filtered GRNs: ${filtered.length} out of ${list.length}');
+
+    print(
+      '🟣 [GoodsReceivingController] Filtered GRNs: ${filtered.length} out of ${list.length}',
+    );
     filteredGrns.value = filtered;
   }
 
@@ -230,13 +275,15 @@ class GoodsReceivingController extends GetxController {
 
   Future<void> fetchMoreGRNs() async {
     print('🟡 [GoodsReceivingController] fetchMoreGRNs called');
-    print('🟡 [GoodsReceivingController] hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}');
-    
+    print(
+      '🟡 [GoodsReceivingController] hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}',
+    );
+
     if (!hasMore.value || isLoadingMore.value) {
       print('🟡 [GoodsReceivingController] Skipping load more');
       return;
     }
-    
+
     try {
       isLoadingMore.value = true;
       currentPage.value += 1;
@@ -249,18 +296,29 @@ class GoodsReceivingController extends GetxController {
       if (searchFilter.value.isNotEmpty) params['search'] = searchFilter.value;
       if (statusFilter.value != 'all') params['status'] = statusFilter.value;
 
-      final query = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
-      print('🟡 [GoodsReceivingController] API Request: GET /api/purchase/goods-receiving?$query');
+      final query = params.entries
+          .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+          .join('&');
+      print(
+        '🟡 [GoodsReceivingController] API Request: GET /api/purchase/goods-receiving?$query',
+      );
 
-      final response = await _api.get('/api/purchase/goods-receiving?$query', requiresAuth: true);
+      final response = await _api.get(
+        '/api/purchase/goods-receiving?$query',
+        requiresAuth: true,
+      );
 
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         final newGRNs = list
-            .map((e) => GoodsReceivingModel.fromJson(Map<String, dynamic>.from(e)))
+            .map(
+              (e) => GoodsReceivingModel.fromJson(Map<String, dynamic>.from(e)),
+            )
             .toList();
-        
-        print('🟡 [GoodsReceivingController] Loaded ${newGRNs.length} more GRNs');
+
+        print(
+          '🟡 [GoodsReceivingController] Loaded ${newGRNs.length} more GRNs',
+        );
         grns.addAll(newGRNs);
         applyLocalFilters();
 
@@ -270,7 +328,9 @@ class GoodsReceivingController extends GetxController {
           totalRecords.value = (pagination['total'] as num?)?.toInt() ?? 0;
           totalPages.value = (pagination['pages'] as num?)?.toInt() ?? 1;
         }
-        print('🟡 [GoodsReceivingController] Total GRNs now: ${grns.length}, hasMore: ${hasMore.value}');
+        print(
+          '🟡 [GoodsReceivingController] Total GRNs now: ${grns.length}, hasMore: ${hasMore.value}',
+        );
       } else {
         print('❌ [GoodsReceivingController] Failed to load more GRNs');
       }
@@ -302,14 +362,18 @@ class GoodsReceivingController extends GetxController {
     print('🟢 [GoodsReceivingController] openCreateWizard called');
     _resetWizard();
     showCreateWizard.value = true;
-    print('🟢 [GoodsReceivingController] showCreateWizard: ${showCreateWizard.value}');
+    print(
+      '🟢 [GoodsReceivingController] showCreateWizard: ${showCreateWizard.value}',
+    );
   }
 
   void closeCreateWizard() {
     print('🟢 [GoodsReceivingController] closeCreateWizard called');
     showCreateWizard.value = false;
     _resetWizard();
-    print('🟢 [GoodsReceivingController] showCreateWizard: ${showCreateWizard.value}');
+    print(
+      '🟢 [GoodsReceivingController] showCreateWizard: ${showCreateWizard.value}',
+    );
   }
 
   void _resetWizard() {
@@ -322,7 +386,9 @@ class GoodsReceivingController extends GetxController {
     receivedByController.clear();
     notesController.clear();
     selectedReceivingDate.value = DateTime.now();
-    receivingDateController.text = DateFormat('dd MMM yyyy').format(selectedReceivingDate.value!);
+    receivingDateController.text = DateFormat(
+      'dd MMM yyyy',
+    ).format(selectedReceivingDate.value!);
     print('✅ [GoodsReceivingController] Wizard reset complete');
   }
 
@@ -330,29 +396,37 @@ class GoodsReceivingController extends GetxController {
 
   Future<void> searchOrders(String query) async {
     print('🔵 [GoodsReceivingController] searchOrders called with: "$query"');
-    
+
     if (query.trim().length < 2) {
       print('🔵 [GoodsReceivingController] Query too short, clearing results');
       orderSearchResults.clear();
       return;
     }
-    
+
     try {
       isSearchingOrders.value = true;
       final encoded = Uri.encodeComponent(query.trim());
-      print('🔵 [GoodsReceivingController] API Request: GET /api/purchase/goods-receiving/available-orders?search=$encoded&limit=10');
-      
+      print(
+        '🔵 [GoodsReceivingController] API Request: GET /api/purchase/goods-receiving/available-orders?search=$encoded&limit=10',
+      );
+
       final response = await _api.get(
         '/api/purchase/goods-receiving/available-orders?search=$encoded&limit=10',
         requiresAuth: true,
       );
-      
+
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         orderSearchResults.value = list
-            .map((e) => PurchaseOrderForReceiving.fromJson(Map<String, dynamic>.from(e)))
+            .map(
+              (e) => PurchaseOrderForReceiving.fromJson(
+                Map<String, dynamic>.from(e),
+              ),
+            )
             .toList();
-        print('🔵 [GoodsReceivingController] Found ${orderSearchResults.length} orders for query: $query');
+        print(
+          '🔵 [GoodsReceivingController] Found ${orderSearchResults.length} orders for query: $query',
+        );
       } else {
         print('❌ [GoodsReceivingController] No orders found');
         orderSearchResults.clear();
@@ -368,12 +442,14 @@ class GoodsReceivingController extends GetxController {
 
   void selectOrderForReceiving(PurchaseOrderForReceiving order) {
     print('🔵 [GoodsReceivingController] selectOrderForReceiving called');
-    print('🔵 [GoodsReceivingController] Selected order: ${order.orderNumber} - ${order.supplierName}');
-    
+    print(
+      '🔵 [GoodsReceivingController] Selected order: ${order.orderNumber} - ${order.supplierName}',
+    );
+
     selectedOrder.value = order;
     orderSearchResults.clear();
     orderSearchController.text = order.orderNumber ?? '';
-    
+
     // Create line drafts from order items
     lineDrafts.value = order.remainingItems.map((item) {
       return GRNLineDraft(
@@ -388,8 +464,10 @@ class GoodsReceivingController extends GetxController {
         unit: item.unit,
       );
     }).toList();
-    
-    print('🔵 [GoodsReceivingController] Created ${lineDrafts.length} line drafts for order');
+
+    print(
+      '🔵 [GoodsReceivingController] Created ${lineDrafts.length} line drafts for order',
+    );
   }
 
   // ─── DATE SELECTION ──────────────────────────────────────────
@@ -401,7 +479,7 @@ class GoodsReceivingController extends GetxController {
       firstDate: DateTime.now().subtract(const Duration(days: 30)),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    
+
     if (date != null) {
       selectedReceivingDate.value = date;
       receivingDateController.text = DateFormat('dd MMM yyyy').format(date);
@@ -423,29 +501,44 @@ class GoodsReceivingController extends GetxController {
   }
 
   void nextStep() {
-    print('🟡 [GoodsReceivingController] nextStep called, current step: ${wizardStep.value}');
-    
+    print(
+      '🟡 [GoodsReceivingController] nextStep called, current step: ${wizardStep.value}',
+    );
+
     if (wizardStep.value == 0 && !canGoToStep2()) {
-      print('❌ [GoodsReceivingController] Cannot go to step 2 - no order selected');
+      print(
+        '❌ [GoodsReceivingController] Cannot go to step 2 - no order selected',
+      );
       Get.snackbar('Validation', 'Select a purchase order first');
       return;
     }
     if (wizardStep.value == 1 && !canGoToStep3()) {
-      print('❌ [GoodsReceivingController] Cannot go to step 3 - no items selected');
-      Get.snackbar('Validation', 'Enter receiving quantity for at least one item');
+      print(
+        '❌ [GoodsReceivingController] Cannot go to step 3 - no items selected',
+      );
+      Get.snackbar(
+        'Validation',
+        'Enter receiving quantity for at least one item',
+      );
       return;
     }
     if (wizardStep.value < 2) {
       wizardStep.value++;
-      print('🟡 [GoodsReceivingController] Step changed to: ${wizardStep.value}');
+      print(
+        '🟡 [GoodsReceivingController] Step changed to: ${wizardStep.value}',
+      );
     }
   }
 
   void previousStep() {
-    print('🟡 [GoodsReceivingController] previousStep called, current step: ${wizardStep.value}');
+    print(
+      '🟡 [GoodsReceivingController] previousStep called, current step: ${wizardStep.value}',
+    );
     if (wizardStep.value > 0) {
       wizardStep.value--;
-      print('🟡 [GoodsReceivingController] Step changed to: ${wizardStep.value}');
+      print(
+        '🟡 [GoodsReceivingController] Step changed to: ${wizardStep.value}',
+      );
     }
   }
 
@@ -455,7 +548,7 @@ class GoodsReceivingController extends GetxController {
 
   Future<bool> createGRN() async {
     print('🔵 [GoodsReceivingController] createGRN called');
-    
+
     final order = selectedOrder.value;
     if (order == null) {
       print('❌ [GoodsReceivingController] No order selected');
@@ -469,37 +562,48 @@ class GoodsReceivingController extends GetxController {
       return false;
     }
 
-    final selectedItems = lineDrafts.where((line) => line.receivingQuantity > 0).toList();
+    final selectedItems = lineDrafts
+        .where((line) => line.receivingQuantity > 0)
+        .toList();
     if (selectedItems.isEmpty) {
       print('❌ [GoodsReceivingController] No items selected for receiving');
-      Get.snackbar('Validation', 'Enter receiving quantity for at least one item');
+      Get.snackbar(
+        'Validation',
+        'Enter receiving quantity for at least one item',
+      );
       return false;
     }
 
     try {
       isSubmitting.value = true;
-      
-      final items = selectedItems.map((line) => ({
-        'purchaseOrderItemId': line.purchaseOrderItemId,
-        'receivingQuantity': line.receivingQuantity,
-        'notes': null,
-      })).toList();
+
+      final items = selectedItems
+          .map(
+            (line) => ({
+              'purchaseOrderItemId': line.purchaseOrderItemId,
+              'receivingQuantity': line.receivingQuantity,
+              'notes': null,
+            }),
+          )
+          .toList();
 
       final payload = {
         'purchaseOrderId': order.id,
         'receivingDate': receivingDate.toIso8601String().split('T').first,
-        'receivedBy': receivedByController.text.trim().isEmpty 
-            ? null 
+        'receivedBy': receivedByController.text.trim().isEmpty
+            ? null
             : receivedByController.text.trim(),
-        'notes': notesController.text.trim().isEmpty 
-            ? null 
+        'notes': notesController.text.trim().isEmpty
+            ? null
             : notesController.text.trim(),
         'items': items,
         'status': 'Draft',
       };
 
       print('🔵 [GoodsReceivingController] Submitting GRN payload');
-      print('🔵 [GoodsReceivingController] Order: ${order.orderNumber}, Items: ${items.length}');
+      print(
+        '🔵 [GoodsReceivingController] Order: ${order.orderNumber}, Items: ${items.length}',
+      );
 
       final response = await _api.post(
         '/api/purchase/goods-receiving',
@@ -507,8 +611,12 @@ class GoodsReceivingController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🔵 [GoodsReceivingController] Response Status: ${response.statusCode}');
-      print('🔵 [GoodsReceivingController] Response Success: ${response.success}');
+      print(
+        '🔵 [GoodsReceivingController] Response Status: ${response.statusCode}',
+      );
+      print(
+        '🔵 [GoodsReceivingController] Response Success: ${response.success}',
+      );
 
       if (response.success) {
         print('✅ [GoodsReceivingController] GRN created successfully!');
@@ -517,9 +625,14 @@ class GoodsReceivingController extends GetxController {
         await fetchGRNs(resetPage: true);
         return true;
       }
-      
-      print('❌ [GoodsReceivingController] Failed to create GRN: ${response.message}');
-      Get.snackbar('Error', response.message ?? 'Failed to create goods receiving');
+
+      print(
+        '❌ [GoodsReceivingController] Failed to create GRN: ${response.message}',
+      );
+      Get.snackbar(
+        'Error',
+        response.message ?? 'Failed to create goods receiving',
+      );
       return false;
     } catch (e) {
       print('❌ [GoodsReceivingController] createGRN error: $e');
@@ -535,13 +648,15 @@ class GoodsReceivingController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   void selectGRN(GoodsReceivingModel grn) {
-    print('🔵 [GoodsReceivingController] selectGRN called for: ${grn.grnNumber}');
+    print(
+      '🔵 [GoodsReceivingController] selectGRN called for: ${grn.grnNumber}',
+    );
     selectedGRN.value = grn;
   }
 
   Future<bool> confirmGRN(String id) async {
     print('🟣 [GoodsReceivingController] confirmGRN called for ID: $id');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.post(
@@ -550,18 +665,32 @@ class GoodsReceivingController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🟣 [GoodsReceivingController] Response Status: ${response.statusCode}');
-      print('🟣 [GoodsReceivingController] Response Success: ${response.success}');
+      print(
+        '🟣 [GoodsReceivingController] Response Status: ${response.statusCode}',
+      );
+      print(
+        '🟣 [GoodsReceivingController] Response Success: ${response.success}',
+      );
 
       if (response.success) {
-        print('✅ [GoodsReceivingController] GRN confirmed and inventory updated');
-        Get.snackbar('Success', 'Goods receiving confirmed and inventory updated');
+        print(
+          '✅ [GoodsReceivingController] GRN confirmed and inventory updated',
+        );
+        Get.snackbar(
+          'Success',
+          'Goods receiving confirmed and inventory updated',
+        );
         await fetchGRNs();
         return true;
       }
-      
-      print('❌ [GoodsReceivingController] Failed to confirm GRN: ${response.message}');
-      Get.snackbar('Error', response.message ?? 'Failed to confirm goods receiving');
+
+      print(
+        '❌ [GoodsReceivingController] Failed to confirm GRN: ${response.message}',
+      );
+      Get.snackbar(
+        'Error',
+        response.message ?? 'Failed to confirm goods receiving',
+      );
       return false;
     } catch (e) {
       print('❌ [GoodsReceivingController] confirmGRN error: $e');
@@ -574,7 +703,7 @@ class GoodsReceivingController extends GetxController {
 
   Future<bool> deleteGRN(String id) async {
     print('🔵 [GoodsReceivingController] deleteGRN called for ID: $id');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.delete(
@@ -582,8 +711,12 @@ class GoodsReceivingController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🔵 [GoodsReceivingController] Response Status: ${response.statusCode}');
-      print('🔵 [GoodsReceivingController] Response Success: ${response.success}');
+      print(
+        '🔵 [GoodsReceivingController] Response Status: ${response.statusCode}',
+      );
+      print(
+        '🔵 [GoodsReceivingController] Response Success: ${response.success}',
+      );
 
       if (response.success) {
         print('✅ [GoodsReceivingController] GRN deleted successfully');
@@ -591,9 +724,14 @@ class GoodsReceivingController extends GetxController {
         await fetchGRNs(resetPage: true);
         return true;
       }
-      
-      print('❌ [GoodsReceivingController] Failed to delete GRN: ${response.message}');
-      Get.snackbar('Error', response.message ?? 'Failed to delete goods receiving');
+
+      print(
+        '❌ [GoodsReceivingController] Failed to delete GRN: ${response.message}',
+      );
+      Get.snackbar(
+        'Error',
+        response.message ?? 'Failed to delete goods receiving',
+      );
       return false;
     } catch (e) {
       print('❌ [GoodsReceivingController] deleteGRN error: $e');
@@ -606,15 +744,19 @@ class GoodsReceivingController extends GetxController {
 
   Future<GoodsReceivingModel?> getGRNById(String id) async {
     print('🔵 [GoodsReceivingController] getGRNById called for ID: $id');
-    
+
     try {
       final response = await _api.get(
         '/api/purchase/goods-receiving/$id',
         requiresAuth: true,
       );
 
-      print('🔵 [GoodsReceivingController] Response Status: ${response.statusCode}');
-      print('🔵 [GoodsReceivingController] Response Success: ${response.success}');
+      print(
+        '🔵 [GoodsReceivingController] Response Status: ${response.statusCode}',
+      );
+      print(
+        '🔵 [GoodsReceivingController] Response Success: ${response.success}',
+      );
 
       if (response.success && response.data != null) {
         final grn = GoodsReceivingModel.fromJson(

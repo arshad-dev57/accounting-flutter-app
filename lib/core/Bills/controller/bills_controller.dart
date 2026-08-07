@@ -1,13 +1,13 @@
 // core/bills/controller/bills_controller.dart - COMPLETE WITH LAZY LOADING
 
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:universal_html/html.dart' as html;
 import 'package:get/get.dart';
-import 'package:LedgerPro_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:intl/intl.dart';
@@ -193,10 +193,16 @@ class BillController extends GetxController {
         // Parse pagination info
         if (data['pagination'] != null) {
           final pagination = data['pagination'];
-          totalPages.value = pagination['pages'] ?? pagination['totalPages'] ?? 1;
-          totalItems.value = pagination['total'] ?? pagination['totalItems'] ?? newBills.length;
-          hasNextPage.value = pagination['hasNext'] ?? pagination['nextPage'] != null ?? false;
-          hasPrevPage.value = pagination['hasPrev'] ?? pagination['prevPage'] != null ?? false;
+          totalPages.value =
+              pagination['pages'] ?? pagination['totalPages'] ?? 1;
+          totalItems.value =
+              pagination['total'] ??
+              pagination['totalItems'] ??
+              newBills.length;
+          hasNextPage.value =
+              pagination['hasNext'] ?? pagination['nextPage'] != null ?? false;
+          hasPrevPage.value =
+              pagination['hasPrev'] ?? pagination['prevPage'] != null ?? false;
           serverSupportsPagination.value = true;
         } else if (data['total'] != null) {
           totalPages.value = data['pages'] ?? 1;
@@ -207,13 +213,15 @@ class BillController extends GetxController {
         } else if (data['totalCount'] != null) {
           totalItems.value = data['totalCount'];
           totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
-          hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+          hasNextPage.value =
+              (currentPage.value * itemsPerPage.value) < totalItems.value;
           hasPrevPage.value = currentPage.value > 1;
           serverSupportsPagination.value = false;
         } else {
           totalItems.value = bills.length;
           totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
-          hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+          hasNextPage.value =
+              (currentPage.value * itemsPerPage.value) < totalItems.value;
           hasPrevPage.value = currentPage.value > 1;
           serverSupportsPagination.value = false;
         }
@@ -322,7 +330,9 @@ class BillController extends GetxController {
 
       final payload = {
         'supplierId': billData['supplierId'],
-        'billNumber': billData['billNumber'] ?? 'BILL-${DateTime.now().millisecondsSinceEpoch}',
+        'billNumber':
+            billData['billNumber'] ??
+            'BILL-${DateTime.now().millisecondsSinceEpoch}',
         'date': billData['date'],
         'dueDate': billData['dueDate'],
         'reference': billData['reference'] ?? '',
@@ -628,10 +638,7 @@ class BillController extends GetxController {
             ),
             Text(
               subtitle,
-              style: TextStyle(
-                fontSize: 10,
-                color: color.withOpacity(0.7),
-              ),
+              style: TextStyle(fontSize: 10, color: color.withOpacity(0.7)),
             ),
           ],
         ),
@@ -776,7 +783,7 @@ class BillController extends GetxController {
               borderRadius: pw.BorderRadius.circular(6),
             ),
             child: pw.Text(
-              'LedgerPro',
+              'BisonsTechs',
               style: pw.TextStyle(
                 color: PdfColors.white,
                 fontWeight: pw.FontWeight.bold,
@@ -1564,6 +1571,7 @@ class Bill {
     );
   }
 }
+
 class BillItem {
   final String description;
   final int quantity;

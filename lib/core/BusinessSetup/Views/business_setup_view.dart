@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class BusinessSetupScreen extends StatefulWidget {
   // final Map<String, String> userData;
-  
+
   const BusinessSetupScreen({super.key});
 
   @override
@@ -11,12 +11,13 @@ class BusinessSetupScreen extends StatefulWidget {
 
 class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
   int _currentStep = 0;
-  
+
   // Controllers
   final TextEditingController _businessNameController = TextEditingController();
   final TextEditingController _countryController = TextEditingController();
-  final TextEditingController _financialYearController = TextEditingController();
-  
+  final TextEditingController _financialYearController =
+      TextEditingController();
+
   final List<String> countries = [
     'United States',
     'United Kingdom',
@@ -50,7 +51,7 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
           icon: Icon(Icons.arrow_back, color: Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
-        title:Text(
+        title: Text(
           'Setup Your Business',
           style: TextStyle(
             color: Colors.black87,
@@ -97,18 +98,15 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
                         children: [
                           Text(
                             'Welcome, arshad',
-                            style:  TextStyle(
+                            style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: Colors.black87,
                             ),
                           ),
-                         Text(
+                          Text(
                             'Let\'s setup your business',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
+                            style: TextStyle(fontSize: 14, color: Colors.grey),
                           ),
                         ],
                       ),
@@ -134,8 +132,8 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
-              child: _currentStep == 0 
-                  ? _buildBusinessInfoStep() 
+              child: _currentStep == 0
+                  ? _buildBusinessInfoStep()
                   : _buildFinancialYearStep(),
             ),
           ),
@@ -147,7 +145,7 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
   Widget _buildProgressStep(int step, String label) {
     bool isActive = _currentStep >= step;
     bool isCompleted = _currentStep > step;
-    
+
     return Expanded(
       child: Column(
         children: [
@@ -155,11 +153,11 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: isCompleted 
-                  ? Colors.green 
-                  : isActive 
-                      ? Colors.green[100] 
-                      : Colors.grey[200],
+              color: isCompleted
+                  ? Colors.green
+                  : isActive
+                  ? Colors.green[100]
+                  : Colors.grey[200],
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -190,7 +188,7 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
 
   Widget _buildProgressLine(int step) {
     bool isActive = _currentStep > step;
-    
+
     return Container(
       width: 40,
       height: 2,
@@ -206,7 +204,7 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-         Text(
+          Text(
             'Business Information',
             style: TextStyle(
               fontSize: 24,
@@ -215,16 +213,13 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
             ),
           ),
           const SizedBox(height: 8),
-         Text(
+          Text(
             'Tell us about your business',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Business Icon
           Center(
             child: Container(
@@ -241,11 +236,11 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Business Name
-         Text(
+          Text(
             'What\'s your business name?',
             style: TextStyle(
               fontSize: 16,
@@ -275,11 +270,11 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
               prefixIcon: Icon(Icons.business, color: Colors.grey[600]),
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Country
-         Text(
+          Text(
             'Country',
             style: TextStyle(
               fontSize: 16,
@@ -295,12 +290,17 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
               border: Border.all(color: Colors.grey[300]!),
             ),
             child: DropdownButtonFormField<String>(
-              value: _countryController.text.isEmpty ? null : _countryController.text,
-              hint:Text('Select your business country'),
+              value: _countryController.text.isEmpty
+                  ? null
+                  : _countryController.text,
+              hint: Text('Select your business country'),
               icon: Icon(Icons.arrow_drop_down, color: Colors.grey),
               decoration: InputDecoration(
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
                 prefixIcon: Icon(Icons.public, color: Colors.grey[600]),
               ),
               items: countries.map((String country) {
@@ -316,16 +316,17 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
               },
             ),
           ),
-          
+
           const SizedBox(height: 40),
-          
+
           // Next Button
           SizedBox(
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
-              onPressed: _businessNameController.text.isNotEmpty && 
-                       _countryController.text.isNotEmpty
+              onPressed:
+                  _businessNameController.text.isNotEmpty &&
+                      _countryController.text.isNotEmpty
                   ? () {
                       setState(() {
                         _currentStep = 1;
@@ -341,12 +342,9 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
                 elevation: 0,
                 disabledBackgroundColor: Colors.grey[300],
               ),
-              child:Text(
+              child: Text(
                 'Next',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -360,7 +358,7 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-         Text(
+          Text(
             'Financial Year',
             style: TextStyle(
               fontSize: 24,
@@ -369,16 +367,13 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
             ),
           ),
           const SizedBox(height: 8),
-         Text(
+          Text(
             'Set your financial reporting period',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Calendar Icon
           Center(
             child: Container(
@@ -395,9 +390,9 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Info Card
           Container(
             padding: const EdgeInsets.all(16),
@@ -412,21 +407,18 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Your financial year determines your reporting period for tax and LedgerPro purposes.',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.blue[700],
-                    ),
+                    'Your financial year determines your reporting period for tax and BisonsTechs purposes.',
+                    style: TextStyle(fontSize: 13, color: Colors.blue[700]),
                   ),
                 ),
               ],
             ),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Financial Year End
-         Text(
+          Text(
             'What is the last day of your financial year?',
             style: TextStyle(
               fontSize: 16,
@@ -442,19 +434,21 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
               border: Border.all(color: Colors.grey[300]!),
             ),
             child: DropdownButtonFormField<String>(
-              value: _financialYearController.text.isEmpty ? null : _financialYearController.text,
-              hint:Text('Select financial year end'),
+              value: _financialYearController.text.isEmpty
+                  ? null
+                  : _financialYearController.text,
+              hint: Text('Select financial year end'),
               icon: Icon(Icons.arrow_drop_down, color: Colors.grey),
               decoration: InputDecoration(
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
                 prefixIcon: Icon(Icons.calendar_month, color: Colors.grey[600]),
               ),
               items: financialYearEnds.map((String date) {
-                return DropdownMenuItem<String>(
-                  value: date,
-                  child: Text(date),
-                );
+                return DropdownMenuItem<String>(value: date, child: Text(date));
               }).toList(),
               onChanged: (String? newValue) {
                 setState(() {
@@ -463,9 +457,9 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
               },
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Example text
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -478,9 +472,9 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 40),
-          
+
           // Complete Setup Button
           SizedBox(
             width: double.infinity,
@@ -500,18 +494,15 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
                 elevation: 0,
                 disabledBackgroundColor: Colors.grey[300],
               ),
-              child:Text(
+              child: Text(
                 'Complete Setup',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Skip option
           Center(
             child: TextButton(
@@ -520,10 +511,7 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
               },
               child: Text(
                 'I\'ll do this later',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.grey[600], fontSize: 14),
               ),
             ),
           ),
@@ -560,23 +548,18 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-               Text(
+                Text(
                   'Business Setup Complete!',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   'Your business "${_businessNameController.text}" has been successfully configured.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Business Summary
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -586,17 +569,23 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
                   ),
                   child: Column(
                     children: [
-                      _buildSummaryRow('Business', _businessNameController.text),
+                      _buildSummaryRow(
+                        'Business',
+                        _businessNameController.text,
+                      ),
                       const Divider(),
                       _buildSummaryRow('Country', _countryController.text),
                       const Divider(),
-                      _buildSummaryRow('Financial Year', _financialYearController.text),
+                      _buildSummaryRow(
+                        'Financial Year',
+                        _financialYearController.text,
+                      ),
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 SizedBox(
                   width: double.infinity,
                   height: 50,
@@ -611,7 +600,7 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child:Text('Go to Dashboard'),
+                    child: Text('Go to Dashboard'),
                   ),
                 ),
               ],
@@ -630,18 +619,18 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          title:Text('Skip Business Setup?'),
-          content:Text(
-            'You can always set up your business later from settings. Would you like to continue to dashboard?'
+          title: Text('Skip Business Setup?'),
+          content: Text(
+            'You can always set up your business later from settings. Would you like to continue to dashboard?',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child:Text('Cancel'),
+              child: Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context); 
+                Navigator.pop(context);
                 _navigateToDashboard();
               },
               style: ElevatedButton.styleFrom(
@@ -650,7 +639,7 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child:Text('Skip'),
+              child: Text('Skip'),
             ),
           ],
         );
@@ -662,19 +651,10 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 14,
-          ),
-        ),
+        Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
         Text(
           value,
-          style:  TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         ),
       ],
     );
@@ -683,9 +663,7 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
   void _navigateToDashboard() {
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(
-        builder: (context) => const DashboardScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const DashboardScreen()),
       (route) => false,
     );
   }
@@ -706,7 +684,7 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:Text('Dashboard'),
+        title: Text('Dashboard'),
         backgroundColor: Colors.green[400],
         foregroundColor: Colors.white,
       ),
@@ -718,18 +696,12 @@ class DashboardScreen extends StatelessWidget {
             SizedBox(height: 20),
             Text(
               'Welcome to your Dashboard!',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 10),
             Text(
               'Your business is all set up.',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
           ],
         ),

@@ -1,6 +1,6 @@
 // settings_controller.dart
 import 'package:get/get.dart';
-import 'package:LedgerPro_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:flutter/material.dart';
 
 // ============================================================
@@ -68,31 +68,112 @@ class SettingCategory {
 // CONSTANTS
 // ============================================================
 const List<SettingCategory> productSettingCategories = [
-  SettingCategory(id: 'productType', label: 'Product Types', description: 'Manage product types', iconName: 'package'),
-  SettingCategory(id: 'rackLocation', label: 'Rack Locations', description: 'Manage warehouse rack locations', iconName: 'map_pin'),
-  SettingCategory(id: 'zone', label: 'Zones', description: 'Manage warehouse zones', iconName: 'layers'),
-  SettingCategory(id: 'weightUnit', label: 'Weight Units', description: 'Manage weight units', iconName: 'scale'),
-  SettingCategory(id: 'dimensionUnit', label: 'Dimension Units', description: 'Manage dimension units', iconName: 'ruler'),
-  SettingCategory(id: 'size', label: 'Sizes', description: 'Manage product sizes', iconName: 'tag'),
-  SettingCategory(id: 'shippingClass', label: 'Shipping Classes', description: 'Manage shipping classes', iconName: 'truck'),
-  SettingCategory(id: 'stockUnit', label: 'Stock Units', description: 'Manage stock units', iconName: 'box'),
-  SettingCategory(id: 'taxType', label: 'Tax Types', description: 'Manage tax types', iconName: 'file_text'),
+  SettingCategory(
+    id: 'productType',
+    label: 'Product Types',
+    description: 'Manage product types',
+    iconName: 'package',
+  ),
+  SettingCategory(
+    id: 'rackLocation',
+    label: 'Rack Locations',
+    description: 'Manage warehouse rack locations',
+    iconName: 'map_pin',
+  ),
+  SettingCategory(
+    id: 'zone',
+    label: 'Zones',
+    description: 'Manage warehouse zones',
+    iconName: 'layers',
+  ),
+  SettingCategory(
+    id: 'weightUnit',
+    label: 'Weight Units',
+    description: 'Manage weight units',
+    iconName: 'scale',
+  ),
+  SettingCategory(
+    id: 'dimensionUnit',
+    label: 'Dimension Units',
+    description: 'Manage dimension units',
+    iconName: 'ruler',
+  ),
+  SettingCategory(
+    id: 'size',
+    label: 'Sizes',
+    description: 'Manage product sizes',
+    iconName: 'tag',
+  ),
+  SettingCategory(
+    id: 'shippingClass',
+    label: 'Shipping Classes',
+    description: 'Manage shipping classes',
+    iconName: 'truck',
+  ),
+  SettingCategory(
+    id: 'stockUnit',
+    label: 'Stock Units',
+    description: 'Manage stock units',
+    iconName: 'box',
+  ),
+  SettingCategory(
+    id: 'taxType',
+    label: 'Tax Types',
+    description: 'Manage tax types',
+    iconName: 'file_text',
+  ),
 ];
 
 const List<SettingCategory> orderSettingCategories = [
-  SettingCategory(id: 'orderType', label: 'Order Types', description: 'Manage order types', iconName: 'shopping_cart'),
-  SettingCategory(id: 'priority', label: 'Priorities', description: 'Manage order priorities', iconName: 'clock'),
-  SettingCategory(id: 'orderSource', label: 'Order Sources', description: 'Manage order sources', iconName: 'globe'),
-  SettingCategory(id: 'shippingMethod', label: 'Shipping Methods', description: 'Manage shipping methods', iconName: 'truck'),
-  SettingCategory(id: 'paymentMethod', label: 'Payment Methods', description: 'Manage payment methods', iconName: 'credit_card'),
-  SettingCategory(id: 'shippingCarrier', label: 'Shipping Carriers', description: 'Manage shipping carriers', iconName: 'boxes'),
-  SettingCategory(id: 'physicalStatus', label: 'Physical Status', description: 'Manage physical status', iconName: 'shield'),
+  SettingCategory(
+    id: 'orderType',
+    label: 'Order Types',
+    description: 'Manage order types',
+    iconName: 'shopping_cart',
+  ),
+  SettingCategory(
+    id: 'priority',
+    label: 'Priorities',
+    description: 'Manage order priorities',
+    iconName: 'clock',
+  ),
+  SettingCategory(
+    id: 'orderSource',
+    label: 'Order Sources',
+    description: 'Manage order sources',
+    iconName: 'globe',
+  ),
+  SettingCategory(
+    id: 'shippingMethod',
+    label: 'Shipping Methods',
+    description: 'Manage shipping methods',
+    iconName: 'truck',
+  ),
+  SettingCategory(
+    id: 'paymentMethod',
+    label: 'Payment Methods',
+    description: 'Manage payment methods',
+    iconName: 'credit_card',
+  ),
+  SettingCategory(
+    id: 'shippingCarrier',
+    label: 'Shipping Carriers',
+    description: 'Manage shipping carriers',
+    iconName: 'boxes',
+  ),
+  SettingCategory(
+    id: 'physicalStatus',
+    label: 'Physical Status',
+    description: 'Manage physical status',
+    iconName: 'shield',
+  ),
 ];
 
 // ============================================================
 // CONTROLLER
 // ============================================================
-class SettingsController extends GetxController with GetSingleTickerProviderStateMixin {
+class SettingsController extends GetxController
+    with GetSingleTickerProviderStateMixin {
   final ApiClient _api = Get.find<ApiClient>();
 
   // ─── Tab Controller ──────────────────────────────────────────
@@ -140,7 +221,7 @@ class SettingsController extends GetxController with GetSingleTickerProviderStat
   void onInit() {
     super.onInit();
     tabController = TabController(length: 2, vsync: this);
-    
+
     // Listen to tab changes
     tabController.addListener(() {
       if (!tabController.indexIsChanging) {
@@ -153,7 +234,7 @@ class SettingsController extends GetxController with GetSingleTickerProviderStat
         }
       }
     });
-    
+
     // Initialize with first product category
     if (productSettingCategories.isNotEmpty) {
       activeCategory.value = productSettingCategories.first.id;
@@ -183,22 +264,22 @@ class SettingsController extends GetxController with GetSingleTickerProviderStat
         '/api/settings',
         queryParameters: {'category': activeCategory.value},
       );
-      
+
       print('Response status: ${response.statusCode}');
       print('Response success: ${response.success}');
       print('Response data: ${response.data}');
-      
+
       if (response.success) {
         final data = response.data;
         print('Full response data: $data');
-        
+
         // Check if data is a Map
         if (data is Map<String, dynamic>) {
           // Check if success is true
           if (data['success'] == true) {
             // Get the data array - handle different response structures
             List list = [];
-            
+
             // Try different possible response structures
             if (data['data'] != null) {
               if (data['data'] is List) {
@@ -221,9 +302,9 @@ class SettingsController extends GetxController with GetSingleTickerProviderStat
               // Direct list: { "success": true, "list": [...] }
               list = data['list'] as List;
             }
-            
+
             print('Found ${list.length} items');
-            
+
             items.value = list.map((e) {
               print('Processing item: $e');
               return SettingItem.fromJson(e as Map<String, dynamic>);
@@ -252,9 +333,9 @@ class SettingsController extends GetxController with GetSingleTickerProviderStat
     errorMessage.value = '';
     try {
       final response = await _api.post('/api/settings', body: payload);
-      
+
       print('Create response: ${response.data}');
-      
+
       if (response.success) {
         final data = response.data;
         if (data is Map<String, dynamic> && data['success'] == true) {
@@ -284,9 +365,9 @@ class SettingsController extends GetxController with GetSingleTickerProviderStat
     errorMessage.value = '';
     try {
       final response = await _api.put('/api/settings/$id', body: payload);
-      
+
       print('Update response: ${response.data}');
-      
+
       if (response.success) {
         final data = response.data;
         if (data is Map<String, dynamic> && data['success'] == true) {
@@ -317,12 +398,12 @@ class SettingsController extends GetxController with GetSingleTickerProviderStat
       _showError('Cannot delete default item. Set another as default first.');
       return;
     }
-    
+
     try {
       final response = await _api.delete('/api/settings/$id');
-      
+
       print('Delete response: ${response.data}');
-      
+
       if (response.success) {
         final data = response.data;
         if (data is Map<String, dynamic> && data['success'] == true) {

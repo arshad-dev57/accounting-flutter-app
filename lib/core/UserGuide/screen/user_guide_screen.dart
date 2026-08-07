@@ -11,10 +11,7 @@ class UserGuideScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text(
           'User Guide',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         backgroundColor: const Color(0xFF1AB4F5),
         elevation: 0,
@@ -30,25 +27,25 @@ class UserGuideScreen extends StatelessWidget {
           children: [
             // Header Banner
             _buildHeaderBanner(),
-            
+
             // Welcome Section
             _buildWelcomeSection(),
-            
+
             // Getting Started
             _buildGettingStartedSection(),
-            
+
             // Main Features
             _buildMainFeaturesSection(),
-            
+
             // Navigation Guide
             _buildNavigationGuide(),
-            
+
             // Quick Tips
             // _buildQuickTipsSection(),
-            
+
             // FAQ Section
             _buildFAQSection(),
-            
+
             // Support Section
             _buildSupportSection(),
           ],
@@ -81,15 +78,11 @@ class UserGuideScreen extends StatelessWidget {
               color: Colors.white.withOpacity(0.2),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.menu_book,
-              size: 60,
-              color: Colors.white,
-            ),
+            child: const Icon(Icons.menu_book, size: 60, color: Colors.white),
           ),
           const SizedBox(height: 16),
           Text(
-            'LedgerPro Pro',
+            'BisonsTechs Pro',
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -100,10 +93,7 @@ class UserGuideScreen extends StatelessWidget {
           Text(
             'Complete Guide to Manage Your Business Finances',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white70,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.white70),
           ),
         ],
       ),
@@ -146,7 +136,7 @@ class UserGuideScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Welcome to LedgerPro Pro!',
+                  'Welcome to BisonsTechs Pro!',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -189,25 +179,29 @@ class UserGuideScreen extends StatelessWidget {
           _buildStepCard(
             number: '1',
             title: 'Create Your Account',
-            description: 'Sign up with your email and password. Start your 30-day free trial immediately.',
+            description:
+                'Sign up with your email and password. Start your 30-day free trial immediately.',
             icon: Icons.person_add,
           ),
           _buildStepCard(
             number: '2',
             title: 'Set Up Your Business Profile',
-            description: 'Add your company name, address, and business details to personalize your account.',
+            description:
+                'Add your company name, address, and business details to personalize your account.',
             icon: Icons.business,
           ),
           _buildStepCard(
             number: '3',
             title: 'Add Chart of Accounts',
-            description: 'Create accounts for Assets, Liabilities, Income, and Expenses to organize your finances.',
+            description:
+                'Create accounts for Assets, Liabilities, Income, and Expenses to organize your finances.',
             icon: Icons.account_balance_wallet,
           ),
           _buildStepCard(
             number: '4',
             title: 'Start Recording Transactions',
-            description: 'Log your daily income, expenses, create invoices, and manage bills.',
+            description:
+                'Log your daily income, expenses, create invoices, and manage bills.',
             icon: Icons.receipt,
           ),
         ],
@@ -400,10 +394,7 @@ class UserGuideScreen extends StatelessWidget {
           Text(
             description,
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11,
-              color: const Color(0xFF7A8FA6),
-            ),
+            style: TextStyle(fontSize: 11, color: const Color(0xFF7A8FA6)),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -431,24 +422,27 @@ class UserGuideScreen extends StatelessWidget {
           _buildNavItem(
             icon: Icons.dashboard,
             title: 'Dashboard',
-            description: 'View your financial summary, charts, and key metrics at a glance.',
+            description:
+                'View your financial summary, charts, and key metrics at a glance.',
           ),
           _buildNavItem(
             icon: Icons.account_balance_wallet,
             title: 'Chart of Accounts',
-            description: 'Manage all your financial accounts (Assets, Liabilities, Equity, Income, Expenses).',
+            description:
+                'Manage all your financial accounts (Assets, Liabilities, Equity, Income, Expenses).',
           ),
           _buildNavItem(
             icon: Icons.receipt_long,
             title: 'Transactions',
-            description: 'View and manage all your financial transactions in one place.',
+            description:
+                'View and manage all your financial transactions in one place.',
           ),
           _buildNavItem(
             icon: Icons.assessment,
             title: 'Reports',
-            description: 'Generate Profit & Loss, Balance Sheet, Cash Flow, and Trial Balance reports.',
+            description:
+                'Generate Profit & Loss, Balance Sheet, Cash Flow, and Trial Balance reports.',
           ),
-        
         ],
       ),
     );
@@ -543,24 +537,21 @@ class UserGuideScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             _buildTipItem(
-              '📊', 
-              'Regularly reconcile your accounts to avoid discrepancies'
+              '📊',
+              'Regularly reconcile your accounts to avoid discrepancies',
+            ),
+            _buildTipItem('💾', 'Take regular backups of your financial data'),
+            _buildTipItem(
+              '📅',
+              'Set reminders for bill payments and invoice due dates',
             ),
             _buildTipItem(
-              '💾', 
-              'Take regular backups of your financial data'
+              '📈',
+              'Review financial reports monthly to track business growth',
             ),
             _buildTipItem(
-              '📅', 
-              'Set reminders for bill payments and invoice due dates'
-            ),
-            _buildTipItem(
-              '📈', 
-              'Review financial reports monthly to track business growth'
-            ),
-            _buildTipItem(
-              '🔒', 
-              'Keep your password secure and change it periodically'
+              '🔒',
+              'Keep your password secure and change it periodically',
             ),
           ],
         ),
@@ -578,10 +569,7 @@ class UserGuideScreen extends StatelessWidget {
           Expanded(
             child: Text(
               tip,
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.white,
-              ),
+              style: TextStyle(fontSize: 13, color: Colors.white),
             ),
           ),
         ],
@@ -607,23 +595,28 @@ class UserGuideScreen extends StatelessWidget {
           const SizedBox(height: 16),
           _buildFAQItem(
             question: 'How do I start my free trial?',
-            answer: 'Simply create an account and your 30-day free trial will start automatically. No credit card required.',
+            answer:
+                'Simply create an account and your 30-day free trial will start automatically. No credit card required.',
           ),
           _buildFAQItem(
             question: 'Can I create multiple bank accounts?',
-            answer: 'Yes! You can add and manage multiple bank accounts under the Bank Accounts section.',
+            answer:
+                'Yes! You can add and manage multiple bank accounts under the Bank Accounts section.',
           ),
           _buildFAQItem(
             question: 'How do I generate financial reports?',
-            answer: 'Go to Reports section and select the report you want (P&L, Balance Sheet, Cash Flow, or Trial Balance).',
+            answer:
+                'Go to Reports section and select the report you want (P&L, Balance Sheet, Cash Flow, or Trial Balance).',
           ),
           _buildFAQItem(
             question: 'Is my data secure?',
-            answer: 'Yes! All your data is encrypted and stored securely. We use industry-standard security practices.',
+            answer:
+                'Yes! All your data is encrypted and stored securely. We use industry-standard security practices.',
           ),
           _buildFAQItem(
             question: 'Can I export my data?',
-            answer: 'Yes, you can export your transactions and reports in PDF and Excel formats.',
+            answer:
+                'Yes, you can export your transactions and reports in PDF and Excel formats.',
           ),
         ],
       ),
@@ -650,7 +643,11 @@ class UserGuideScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.help_outline, color: Color(0xFF1AB4F5), size: 20),
+              const Icon(
+                Icons.help_outline,
+                color: Color(0xFF1AB4F5),
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -691,7 +688,10 @@ class UserGuideScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFF1AB4F5).withOpacity(0.3), width: 1.5),
+          border: Border.all(
+            color: const Color(0xFF1AB4F5).withOpacity(0.3),
+            width: 1.5,
+          ),
         ),
         child: Column(
           children: [
@@ -709,10 +709,7 @@ class UserGuideScreen extends StatelessWidget {
             Text(
               'Our support team is here to help you',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                color: const Color(0xFF7A8FA6),
-              ),
+              style: TextStyle(fontSize: 13, color: const Color(0xFF7A8FA6)),
             ),
             const SizedBox(height: 16),
             // Row(
@@ -755,11 +752,8 @@ class UserGuideScreen extends StatelessWidget {
             // ),
             // const SizedBox(height: 12),
             Text(
-              'support@LedgerPro.com',
-              style: TextStyle(
-                fontSize: 12,
-                color: const Color(0xFF1AB4F5),
-              ),
+              'support@BisonsTechs.com',
+              style: TextStyle(fontSize: 12, color: const Color(0xFF1AB4F5)),
             ),
           ],
         ),

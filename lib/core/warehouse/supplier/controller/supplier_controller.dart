@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:LedgerPro_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:get/get.dart';
 
 class SupplierController extends GetxController {
@@ -71,7 +71,9 @@ class SupplierController extends GetxController {
         if (_statusFilter.isNotEmpty) 'status': _statusFilter,
       };
 
-      print('🔵 [SupplierController] API Request: GET /api/warehouse/supplier with params: $queryParams');
+      print(
+        '🔵 [SupplierController] API Request: GET /api/warehouse/supplier with params: $queryParams',
+      );
 
       final response = await apiClient.get(
         '/api/warehouse/supplier',
@@ -97,8 +99,10 @@ class SupplierController extends GetxController {
         currentPage.value = pagination['page'] ?? 1;
         totalPages.value = pagination['pages'] ?? 1;
         totalRecords.value = pagination['total'] ?? 0;
-        
-        print('✅ [SupplierController] Total Records: ${totalRecords.value}, Total Pages: ${totalPages.value}');
+
+        print(
+          '✅ [SupplierController] Total Records: ${totalRecords.value}, Total Pages: ${totalPages.value}',
+        );
       } else {
         errorMessage.value = response.message.isNotEmpty
             ? response.message
@@ -130,10 +134,14 @@ class SupplierController extends GetxController {
   // ─── Mobile: load more (infinite scroll) ─────────────────────
   Future<void> fetchMoreSuppliers() async {
     if (isLoadingMore.value || !hasMore.value) {
-      print('🟡 [SupplierController] fetchMoreSuppliers skipped - loading: ${isLoadingMore.value}, hasMore: ${hasMore.value}');
+      print(
+        '🟡 [SupplierController] fetchMoreSuppliers skipped - loading: ${isLoadingMore.value}, hasMore: ${hasMore.value}',
+      );
       return;
     }
-    print('🟡 [SupplierController] fetchMoreSuppliers called - Loading page ${_mobilePage + 1}');
+    print(
+      '🟡 [SupplierController] fetchMoreSuppliers called - Loading page ${_mobilePage + 1}',
+    );
     isLoadingMore.value = true;
     _mobilePage++;
     await _fetchMobilePage();
@@ -161,7 +169,9 @@ class SupplierController extends GetxController {
         final json = response.data;
         final newItems = List<Map<String, dynamic>>.from(json['data'] ?? []);
         suppliers.addAll(newItems);
-        print('🔵 [SupplierController] Added ${newItems.length} suppliers, total: ${suppliers.length}');
+        print(
+          '🔵 [SupplierController] Added ${newItems.length} suppliers, total: ${suppliers.length}',
+        );
 
         final kpi = json['kpi'] ?? {};
         totalSuppliers.value = kpi['total'] ?? 0;
@@ -172,8 +182,10 @@ class SupplierController extends GetxController {
         totalRecords.value = pagination['total'] ?? 0;
         totalPages.value = pagination['pages'] ?? 1;
         hasMore.value = _mobilePage < (pagination['pages'] ?? 1);
-        
-        print('✅ [SupplierController] _fetchMobilePage - hasMore: ${hasMore.value}');
+
+        print(
+          '✅ [SupplierController] _fetchMobilePage - hasMore: ${hasMore.value}',
+        );
       }
     } catch (e) {
       _mobilePage--; // revert so user can retry
@@ -208,14 +220,18 @@ class SupplierController extends GetxController {
   // ─── Pagination ───────────────────────────────────────────────
   void nextPage() {
     if (currentPage.value < totalPages.value && !isLoading.value) {
-      print('🔵 [SupplierController] nextPage called - Going to page ${currentPage.value + 1}');
+      print(
+        '🔵 [SupplierController] nextPage called - Going to page ${currentPage.value + 1}',
+      );
       fetchSuppliers(page: currentPage.value + 1);
     }
   }
 
   void previousPage() {
     if (currentPage.value > 1 && !isLoading.value) {
-      print('🔵 [SupplierController] previousPage called - Going to page ${currentPage.value - 1}');
+      print(
+        '🔵 [SupplierController] previousPage called - Going to page ${currentPage.value - 1}',
+      );
       fetchSuppliers(page: currentPage.value - 1);
     }
   }
@@ -332,10 +348,10 @@ class SupplierController extends GetxController {
       final phone = (s['phone'] ?? '').toLowerCase();
       final contact = (s['contactPerson'] ?? '').toLowerCase();
       return name.contains(lowerQuery) ||
-             company.contains(lowerQuery) ||
-             email.contains(lowerQuery) ||
-             phone.contains(lowerQuery) ||
-             contact.contains(lowerQuery);
+          company.contains(lowerQuery) ||
+          email.contains(lowerQuery) ||
+          phone.contains(lowerQuery) ||
+          contact.contains(lowerQuery);
     }).toList();
   }
 

@@ -1,17 +1,17 @@
 // core/Expense/controller/expense_controller.dart - COMPLETE FIXED
 
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'dart:convert';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/config/apiconfig.dart';
-import 'package:LedgerPro_app/core/Expense/model/expense_model.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/config/apiconfig.dart';
+import 'package:BisonsTechs_app/core/Expense/model/expense_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:universal_html/html.dart' as html;
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:LedgerPro_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
@@ -111,8 +111,8 @@ class ExpenseController extends GetxController {
     searchQuery.value = searchController.text;
 
     if (searchQuery.value.isEmpty) {
-      expenses.value = allExpenses.value;
-      _updateSummaryForFiltered(allExpenses.value);
+      expenses.assignAll(allExpenses);
+      _updateSummaryForFiltered(allExpenses);
     } else {
       final searchLower = searchQuery.value.toLowerCase();
       final results = allExpenses.where((expense) {
@@ -122,7 +122,7 @@ class ExpenseController extends GetxController {
             expense.vendorName.toLowerCase().contains(searchLower) ||
             expense.reference.toLowerCase().contains(searchLower);
       }).toList();
-      expenses.value = results;
+      expenses.assignAll(results);
       _updateSummaryForFiltered(results);
     }
   }
@@ -370,18 +370,34 @@ class ExpenseController extends GetxController {
         params['endDate'] = DateFormat('yyyy-MM-dd').format(endDate.value!);
       }
 
+      print('🔍 [loadExpenses] Loading expenses with params: $params');
       final response = await _api.get('/api/expenses', queryParameters: params);
+
+      print('🔍 [loadExpenses] Response success: ${response.success}');
+      print('🔍 [loadExpenses] Response data: ${response.data}');
 
       if (response.success) {
         final responseData = response.data;
+        print('🔍 [loadExpenses] responseData: $responseData');
+        print(
+          '🔍 [loadExpenses] responseData["data"] type: ${responseData['data'].runtimeType}',
+        );
+
         if (responseData['data'] is List) {
           List<dynamic> expensesData = responseData['data'];
+          print(
+            '🔍 [loadExpenses] expensesData length: ${expensesData.length}',
+          );
+          print('🔍 [loadExpenses] expensesData: $expensesData');
+
           final newExpenses = expensesData
               .map((json) => Expense.fromJson(json))
               .toList();
 
+          print('🔍 [loadExpenses] newExpenses length: ${newExpenses.length}');
+
           if (currentPage.value == 1) {
-            allExpenses.value = newExpenses;
+            allExpenses.assignAll(newExpenses);
           } else {
             allExpenses.addAll(newExpenses);
           }
@@ -389,21 +405,26 @@ class ExpenseController extends GetxController {
           if (searchQuery.value.isNotEmpty) {
             _onSearchChanged();
           } else {
-            expenses.value = newExpenses;
+            expenses.assignAll(newExpenses);
           }
 
+          print('🔍 [loadExpenses] expenses.length: ${expenses.length}');
+          print('🔍 [loadExpenses] allExpenses.length: ${allExpenses.length}');
+          print('🔍 [loadExpenses] searchQuery.value: "${searchQuery.value}"');
           totalPages.value = responseData['pages'] ?? 1;
           hasMore.value = currentPage.value < totalPages.value;
         } else {
+          print('⚠️ [loadExpenses] responseData["data"] is not a List');
           expenses.clear();
           totalPages.value = 1;
           hasMore.value = false;
         }
       } else {
+        print('❌ [loadExpenses] Response failed: ${response.message}');
         _showError('Failed to load expenses');
       }
     } catch (e) {
-      print('Error loading expenses: $e');
+      print('❌ [loadExpenses] Error: $e');
       _showError('Error loading expenses');
     } finally {
       isLoading.value = false;
@@ -553,6 +574,13 @@ class ExpenseController extends GetxController {
     try {
       isSaving.value = true;
 
+      print('🔍 [Flutter] Creating expense with bankAccountId: $bankAccountId');
+      print('🔍 [Flutter] bankAccountId type: ${bankAccountId.runtimeType}');
+      print('🔍 [Flutter] bankAccountId is null: ${bankAccountId == null}');
+      print(
+        '🔍 [Flutter] bankAccountId isEmpty: ${bankAccountId?.isEmpty ?? true}',
+      );
+
       final Map<String, dynamic> expenseData = {
         'date': DateFormat('yyyy-MM-dd').format(date),
         'expenseType': expenseType,
@@ -566,6 +594,8 @@ class ExpenseController extends GetxController {
         'paymentMethod': paymentMethod,
         'bankAccountId': bankAccountId,
       };
+
+      print('📦 [Flutter] Sending expense data: $expenseData');
 
       final response = await _api.post('/api/expenses', body: expenseData);
 
@@ -582,6 +612,7 @@ class ExpenseController extends GetxController {
           );
           _resetAndReload();
           loadSummary();
+          loadBankAccounts(); // refresh bank balances after deduction
         } else {
           _showError(responseData['message'] ?? 'Failed to create expense');
         }
@@ -967,7 +998,7 @@ class ExpenseController extends GetxController {
               borderRadius: pw.BorderRadius.circular(6),
             ),
             child: pw.Text(
-              'LedgerPro',
+              'BisonsTechs',
               style: pw.TextStyle(
                 color: PdfColors.white,
                 fontWeight: pw.FontWeight.bold,

@@ -1,6 +1,6 @@
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/core/warehouse/Stock_in/controller/stock_in_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/Stock_in/widgets/stock_product_search.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/warehouse/Stock_in/controller/stock_in_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/Stock_in/widgets/stock_product_search.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -8,7 +8,11 @@ class StockOutForm extends StatefulWidget {
   final StockController controller;
   final VoidCallback onSuccess;
 
-  const StockOutForm({super.key, required this.controller, required this.onSuccess});
+  const StockOutForm({
+    super.key,
+    required this.controller,
+    required this.onSuccess,
+  });
 
   @override
   State<StockOutForm> createState() => _StockOutFormState();
@@ -60,7 +64,9 @@ class _StockOutFormState extends State<StockOutForm> {
       productId: _selectedProduct!['id'].toString(),
       quantity: _qty,
       reason: _reasonCtrl.text.trim(),
-      customerName: _customerCtrl.text.trim().isEmpty ? null : _customerCtrl.text.trim(),
+      customerName: _customerCtrl.text.trim().isEmpty
+          ? null
+          : _customerCtrl.text.trim(),
       reference: _referenceCtrl.text.trim(),
       notes: _notesCtrl.text.trim(),
     );
@@ -94,9 +100,15 @@ class _StockOutFormState extends State<StockOutForm> {
             children: [
               Icon(Icons.local_shipping, color: Colors.red.shade600, size: 20),
               const SizedBox(width: 8),
-              const Text('Stock Out', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+              const Text(
+                'Stock Out',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+              ),
               const SizedBox(width: 8),
-              Text('Dispatch inventory', style: TextStyle(fontSize: 11, color: kSubText)),
+              Text(
+                'Dispatch inventory',
+                style: TextStyle(fontSize: 11, color: kSubText),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -109,18 +121,26 @@ class _StockOutFormState extends State<StockOutForm> {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.red.shade200),
               ),
-              child: Text(_error!, style: TextStyle(color: Colors.red.shade700, fontSize: 13)),
+              child: Text(
+                _error!,
+                style: TextStyle(color: Colors.red.shade700, fontSize: 13),
+              ),
             ),
           StockProductSearch(
             controller: widget.controller,
             selectedProduct: _selectedProduct,
-            onSelected: (p) => setState(() => _selectedProduct = p.isEmpty ? null : p),
+            onSelected: (p) =>
+                setState(() => _selectedProduct = p.isEmpty ? null : p),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _quantityCtrl,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Quantity *', border: OutlineInputBorder(), isDense: true),
+            decoration: const InputDecoration(
+              labelText: 'Quantity *',
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
             onChanged: (_) => setState(() {}),
           ),
           if (_selectedProduct != null && _qty > 0) ...[
@@ -141,7 +161,12 @@ class _StockOutFormState extends State<StockOutForm> {
           const SizedBox(height: 12),
           TextField(
             controller: _customerCtrl,
-            decoration: const InputDecoration(labelText: 'Customer', hintText: 'Customer name...', border: OutlineInputBorder(), isDense: true),
+            decoration: const InputDecoration(
+              labelText: 'Customer',
+              hintText: 'Customer name...',
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
           ),
           const SizedBox(height: 12),
           TextField(
@@ -156,32 +181,53 @@ class _StockOutFormState extends State<StockOutForm> {
           const SizedBox(height: 12),
           TextField(
             controller: _referenceCtrl,
-            decoration: const InputDecoration(labelText: 'Reference #', hintText: 'SO # or Invoice #', border: OutlineInputBorder(), isDense: true),
+            decoration: const InputDecoration(
+              labelText: 'Reference #',
+              hintText: 'SO # or Invoice #',
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _notesCtrl,
-            decoration: const InputDecoration(labelText: 'Notes', border: OutlineInputBorder(), isDense: true),
+            decoration: const InputDecoration(
+              labelText: 'Notes',
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
           ),
           const SizedBox(height: 16),
-          Obx(() => ElevatedButton(
-                onPressed: widget.controller.isSubmitting.value ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red.shade600,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                child: widget.controller.isSubmitting.value
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.trending_down, size: 18),
-                          SizedBox(width: 8),
-                          Text('Confirm Stock Out', style: TextStyle(fontWeight: FontWeight.w700)),
-                        ],
+          Obx(
+            () => ElevatedButton(
+              onPressed: widget.controller.isSubmitting.value ? null : _submit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade600,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              child: widget.controller.isSubmitting.value
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
                       ),
-              )),
+                    )
+                  : const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.trending_down, size: 18),
+                        SizedBox(width: 8),
+                        Text(
+                          'Confirm Stock Out',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
         ],
       ),
     );

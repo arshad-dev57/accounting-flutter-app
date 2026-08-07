@@ -1,10 +1,10 @@
 // lib/core/warehouse/reports/screen/low_stock_report_screen.dart
 
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/responsive_utils.dart';
-import 'package:LedgerPro_app/core/warehouse/Reports/controller/low_stock_report_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/products/model/product_model.dart';
-import 'package:LedgerPro_app/core/warehouse/widgets/drawer_widget.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
+import 'package:BisonsTechs_app/core/warehouse/Reports/controller/low_stock_report_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/products/model/product_model.dart';
+import 'package:BisonsTechs_app/core/warehouse/widgets/drawer_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';

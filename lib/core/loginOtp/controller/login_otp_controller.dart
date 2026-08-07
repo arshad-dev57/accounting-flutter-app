@@ -3,14 +3,14 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
-import 'package:LedgerPro_app/Services/permission_service.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/Services/notification_Service.dart';
-import 'package:LedgerPro_app/core/plans/controllers/subscription_controller.dart';
-import 'package:LedgerPro_app/core/plans/views/Subscription_plans.dart';
+import 'package:BisonsTechs_app/Services/permission_service.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Services/notification_Service.dart';
+import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
+import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -65,7 +65,7 @@ class LoginOtpController extends GetxController {
       }
 
       final data = response.data;
-      
+
       // ✅ PRINT THE RESPONSE FOR LOGIN/OTP VERIFICATION
       print('🔐 VERIFY OTP API RESPONSE: ${json.encode(data)}');
 
@@ -88,30 +88,48 @@ class LoginOtpController extends GetxController {
         // ✅ Notification Service Setup (mobile only)
         if (!kIsWeb) {
           try {
-            print('🔔🔔🔔 [LoginOtpController] NOTIFICATION SETUP START 🔔🔔🔔');
+            print(
+              '🔔🔔🔔 [LoginOtpController] NOTIFICATION SETUP START 🔔🔔🔔',
+            );
             final userData = data['user'] as Map<String, dynamic>?;
             if (userData != null && userData['id'] != null) {
               final userId = userData['id'].toString();
-              print('🔔 [LoginOtpController] Setting up notification service for user: $userId');
-              
-              print('🔔 [LoginOtpController] Calling NotificationService.login()...');
+              print(
+                '🔔 [LoginOtpController] Setting up notification service for user: $userId',
+              );
+
+              print(
+                '🔔 [LoginOtpController] Calling NotificationService.login()...',
+              );
               await NotificationService.instance.login(userId);
-              
-              print('🔔 [LoginOtpController] Calling verifyDeviceRegistration()...');
+
+              print(
+                '🔔 [LoginOtpController] Calling verifyDeviceRegistration()...',
+              );
               await NotificationService.instance.verifyDeviceRegistration();
-              
-              print('✅ [LoginOtpController] Notification service setup completed');
-              print('🔔🔔🔔 [LoginOtpController] NOTIFICATION SETUP END 🔔🔔🔔');
+
+              print(
+                '✅ [LoginOtpController] Notification service setup completed',
+              );
+              print(
+                '🔔🔔🔔 [LoginOtpController] NOTIFICATION SETUP END 🔔🔔🔔',
+              );
             } else {
-              print('⚠️ [LoginOtpController] User data or user ID is null, skipping notification setup');
+              print(
+                '⚠️ [LoginOtpController] User data or user ID is null, skipping notification setup',
+              );
             }
           } catch (e) {
-            print('❌ [LoginOtpController] Notification service setup error: $e');
+            print(
+              '❌ [LoginOtpController] Notification service setup error: $e',
+            );
             print('❌ [LoginOtpController] Error type: ${e.runtimeType}');
             // Don't block login on notification error
           }
         } else {
-          print('🔔 [LoginOtpController] Running on web, skipping notification setup');
+          print(
+            '🔔 [LoginOtpController] Running on web, skipping notification setup',
+          );
         }
 
         if (subscriptionController.hasAccess) {
@@ -149,27 +167,25 @@ class LoginOtpController extends GetxController {
       if (data['user'] != null) {
         final user = data['user'];
         await prefs.setString('user_data', json.encode(user));
-        
+
         // ✅ Save user data in format expected by PermissionService
         final permissionService = Get.find<PermissionService>();
         final permissionsList = user['permissions'] as List<dynamic>?;
-        final userPermissions = permissionsList?.map((p) {
-          if (p is Map<String, dynamic>) {
-            return UserPermission(
-              id: p['id']?.toString() ?? '',
-              page: p['page']?.toString() ?? '',
-              canView: p['canView'] ?? true,
-              canCreate: p['canCreate'] ?? false,
-              canEdit: p['canEdit'] ?? false,
-              canDelete: p['canDelete'] ?? false,
-            );
-          }
-          return UserPermission(
-            id: '',
-            page: p.toString(),
-            canView: true,
-          );
-        }).toList() ?? [];
+        final userPermissions =
+            permissionsList?.map((p) {
+              if (p is Map<String, dynamic>) {
+                return UserPermission(
+                  id: p['id']?.toString() ?? '',
+                  page: p['page']?.toString() ?? '',
+                  canView: p['canView'] ?? true,
+                  canCreate: p['canCreate'] ?? false,
+                  canEdit: p['canEdit'] ?? false,
+                  canDelete: p['canDelete'] ?? false,
+                );
+              }
+              return UserPermission(id: '', page: p.toString(), canView: true);
+            }).toList() ??
+            [];
 
         final userDataForPermissions = UserData(
           id: user['_id']?.toString() ?? user['id']?.toString() ?? '',
@@ -179,10 +195,10 @@ class LoginOtpController extends GetxController {
           role: user['role']?.toString() ?? 'user',
           permissions: userPermissions,
         );
-        
+
         await permissionService.saveUserData(userDataForPermissions);
         print('✅ [OTP] User data saved for PermissionService');
-        
+
         // Sync/load currency dynamically from database payload
         Get.find<CurrencyController>().updateFromUserData(user);
 

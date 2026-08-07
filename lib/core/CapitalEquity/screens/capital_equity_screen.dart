@@ -1,11 +1,11 @@
 // screens/capital_equity_screen.dart - COMPLETE PROFESSIONAL MOBILE DESIGN
 
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/CapitalEquity/controller/equity_controller.dart';
-import 'package:LedgerPro_app/core/CapitalEquity/models/equity_model.dart';
-import 'package:LedgerPro_app/core/chartofaccounts/screens/chart_of_account_screen.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/CapitalEquity/controller/equity_controller.dart';
+import 'package:BisonsTechs_app/core/CapitalEquity/models/equity_model.dart';
+import 'package:BisonsTechs_app/core/chartofaccounts/screens/chart_of_account_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -25,7 +25,8 @@ class CapitalEquityScreen extends StatelessWidget {
           _buildTopHeader(context, controller),
           Expanded(
             child: Obx(() {
-              if (controller.isLoading.value && controller.equityAccounts.isEmpty) {
+              if (controller.isLoading.value &&
+                  controller.equityAccounts.isEmpty) {
                 return Center(
                   child: LoadingAnimationWidget.discreteCircle(
                     color: kPrimary,
@@ -39,9 +40,7 @@ class CapitalEquityScreen extends StatelessWidget {
                   children: [
                     _buildSummaryCards(controller),
                     const SizedBox(height: 8),
-                    Expanded(
-                      child: _buildListView(controller, context),
-                    ),
+                    Expanded(child: _buildListView(controller, context)),
                   ],
                 ),
               );
@@ -190,7 +189,10 @@ class CapitalEquityScreen extends StatelessWidget {
                       ),
                       child: TextField(
                         onChanged: (value) => controller.searchEquity(value),
-                        style: const TextStyle(fontSize: 13, color: Colors.black87),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black87,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Search accounts...',
                           hintStyle: TextStyle(
@@ -203,7 +205,9 @@ class CapitalEquityScreen extends StatelessWidget {
                             color: Colors.grey.shade400,
                           ),
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                          ),
                         ),
                       ),
                     ),
@@ -228,11 +232,24 @@ class CapitalEquityScreen extends StatelessWidget {
                         () => DropdownButton<String>(
                           value: controller.selectedFilter.value,
                           icon: const Icon(Icons.arrow_drop_down, size: 20),
-                          style: const TextStyle(fontSize: 12, color: Colors.black87),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black87,
+                          ),
                           underline: const SizedBox.shrink(),
-                          items: ['All', 'Capital', 'Retained Earnings', 'Drawings', 'Reserves'].map((f) {
-                            return DropdownMenuItem(value: f, child: Text(f));
-                          }).toList(),
+                          items:
+                              [
+                                'All',
+                                'Capital',
+                                'Retained Earnings',
+                                'Drawings',
+                                'Reserves',
+                              ].map((f) {
+                                return DropdownMenuItem(
+                                  value: f,
+                                  child: Text(f),
+                                );
+                              }).toList(),
                           onChanged: (v) {
                             if (v != null) controller.applyFilter(v);
                           },
@@ -279,7 +296,9 @@ class CapitalEquityScreen extends StatelessWidget {
             const SizedBox(width: 8),
             _buildProfessionalCard(
               title: 'Retained',
-              amount: controller.formatAmount(controller.totalRetainedEarnings.value),
+              amount: controller.formatAmount(
+                controller.totalRetainedEarnings.value,
+              ),
               color: kSuccess,
               icon: Icons.trending_up,
               bgColor: kSuccess.withOpacity(0.08),
@@ -404,7 +423,10 @@ class CapitalEquityScreen extends StatelessWidget {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimary,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 10,
+                  ),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -481,10 +503,7 @@ class CapitalEquityScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: typeColor.withOpacity(0.2),
-          width: 1.5,
-        ),
+        border: Border.all(color: typeColor.withOpacity(0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -528,11 +547,7 @@ class CapitalEquityScreen extends StatelessWidget {
                           width: 1,
                         ),
                       ),
-                      child: Icon(
-                        typeIcon,
-                        size: 22,
-                        color: typeColor,
-                      ),
+                      child: Icon(typeIcon, size: 22, color: typeColor),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
@@ -565,9 +580,7 @@ class CapitalEquityScreen extends StatelessWidget {
                           Wrap(
                             spacing: 6,
                             runSpacing: 4,
-                            children: [
-                              _badge(account.accountType, typeColor),
-                            ],
+                            children: [_badge(account.accountType, typeColor)],
                           ),
                         ],
                       ),
@@ -631,7 +644,8 @@ class CapitalEquityScreen extends StatelessWidget {
                       const SizedBox(width: 10),
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () => controller.showAddCapitalDialog(account),
+                          onPressed: () =>
+                              controller.showAddCapitalDialog(account),
                           icon: const Icon(
                             Icons.add_circle,
                             size: 14,
@@ -659,7 +673,8 @@ class CapitalEquityScreen extends StatelessWidget {
                       const SizedBox(width: 10),
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () => controller.showRecordDrawingsDialog(account),
+                          onPressed: () =>
+                              controller.showRecordDrawingsDialog(account),
                           icon: const Icon(
                             Icons.remove_circle,
                             size: 14,

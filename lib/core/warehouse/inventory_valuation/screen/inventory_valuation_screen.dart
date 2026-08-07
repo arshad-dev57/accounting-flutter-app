@@ -1,10 +1,10 @@
 // lib/core/warehouse/inventory/screen/inventory_valuation_screen.dart
 
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/responsive_utils.dart';
-import 'package:LedgerPro_app/core/warehouse/inventory_valuation/controller/inventory_valuation_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/inventory_valuation/model/inventory_valuation_model.dart';
-import 'package:LedgerPro_app/core/warehouse/widgets/drawer_widget.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
+import 'package:BisonsTechs_app/core/warehouse/inventory_valuation/controller/inventory_valuation_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/inventory_valuation/model/inventory_valuation_model.dart';
+import 'package:BisonsTechs_app/core/warehouse/widgets/drawer_widget.dart';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';

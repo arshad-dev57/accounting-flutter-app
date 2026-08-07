@@ -1,122 +1,124 @@
 // lib/core/warehouse/sales/screen/sales_dashboard_screen.dart
+//
+// Redesigned to exactly match DashboardScreen's white theme, palette, and
+// component patterns from dashboard_screen.dart
 
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/Utils/responsive_utils.dart';
-import 'package:LedgerPro_app/core/Notifications/screens/notification_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/order/screen/Sales_order_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/refunds/screen/sales_refund_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/returns/screen/sales_return_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/sales/controller/sales_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/sales/model/sales_dashboard_model.dart';
-import 'package:LedgerPro_app/widgets/sales_drawer.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
+import 'package:BisonsTechs_app/core/Notifications/screens/notification_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/sales/controller/sales_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/sales/model/sales_dashboard_model.dart';
+import 'package:BisonsTechs_app/widgets/sales_drawer.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Palette (matching inventory dashboard)
-// ─────────────────────────────────────────────────────────────────────────────
-const _kPageBg = Color(0xFFF3F5FA);
+// ─── White theme palette (identical to DashboardScreen) ───────────────────
+const _kPageBg = Color(0xFFF5F6FA);
 const _kCardBg = Color(0xFFFFFFFF);
-const _kCardBorder = Color(0xFFE9EBF2);
-const _kTextPrimary = Color(0xFF14162B);
-const _kTextSecondary = Color(0xFF8A8FA6);
-const _kBlue = Color(0xFF4361EE);
-const _kGreen = Color(0xFF2DC653);
-const _kOrange = Color(0xFFF4A228);
-const _kRed = Color(0xFFEF4444);
-const _kPurple = Color(0xFF9B59B6);
+const _kCardBorder = Color(0xFFEEEFF4);
+const _kTextPrimary = Color(0xFF1A1D2E);
+const _kTextSub = Color(0xFF8A8FA8);
+const _kTextMuted = Color(0xFFB0B4C8);
+const _kAppBarBg = Color(0xFFF7F9FC);
+const _kChipBg = Color(0xFFF0F2F8);
 
-class SalesDashboardScreen extends StatelessWidget {
+// Semantic colours — same as DashboardScreen
+const _kPrimaryBg = Color(0xFFE6EEF5);
+const _kGreen = Color(0xFF22A869);
+const _kGreenBg = Color(0xFFEAF7F1);
+const _kOrange = Color(0xFFF59E0B);
+const _kOrangeBg = Color(0xFFFFF8E7);
+const _kRed = Color(0xFFEF4444);
+const _kRedBg = Color(0xFFFEF2F2);
+const _kPurple = Color(0xFF7C3AED);
+const _kPurpleBg = Color(0xFFF5F0FF);
+const _kTeal = Color(0xFF0891B2);
+const _kTealBg = Color(0xFFECFAFF);
+
+// Hero card — same gradient tint as DashboardScreen hero
+const _kHeroBg = Color(0xFFE6EEF5);
+const _kHeroBgEnd = Color(0xFFD6E4F0);
+const _kHeroBorder = Color(0xFFB8CFE0);
+const _kHeroIcon = Color(0xFFC5D8E8);
+
+class SalesDashboardScreen extends StatefulWidget {
   const SalesDashboardScreen({super.key});
 
   @override
+  State<SalesDashboardScreen> createState() => _SalesDashboardScreenState();
+}
+
+class _SalesDashboardScreenState extends State<SalesDashboardScreen> {
+  late final SalesController _controller;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  String _selectedTimePeriod = 'This Month';
+  final List<String> _timePeriods = [
+    'Today',
+    'Last Week',
+    'This Month',
+    'Last Month',
+    'This Quarter',
+    'This Year',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.put(SalesController());
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final controller = Get.put(SalesController());
-    final isTablet = MediaQuery.of(context).size.width >= 600;
     final isMobile = ResponsiveUtils.isMobile(context);
+    final isTablet = MediaQuery.of(context).size.width >= 600;
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: _kPageBg,
-      drawer: isMobile ? const SalesDrawer(currentRoute: '/warehouse/sales') : null,
       appBar: _buildAppBar(isMobile),
+      drawer: isMobile
+          ? const SalesDrawer(currentRoute: '/warehouse/sales')
+          : null,
       body: Obx(() {
-        if (controller.isLoading.value) {
-          return _buildShimmerLoading(isTablet);
+        if (_controller.isLoading.value) {
+          return _buildShimmer();
         }
-
-        final data = controller.dashboard.value;
         return RefreshIndicator(
           color: kPrimary,
           backgroundColor: _kCardBg,
-          onRefresh: controller.fetchDashboard,
+          onRefresh: _controller.fetchDashboard,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
             physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (data != null) ...[
-                  _buildGreetingHeader(controller, data),
-                  const SizedBox(height: 14),
-                  _buildPeriodFilter(controller),
-                  const SizedBox(height: 18),
-                  _kpiGrid(context, data, isTablet),
-                  const SizedBox(height: 18),
-                  _SectionPadding(
-                    child: isTablet
-                        ? Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(child: _RevenueChart(data: data)),
-                              const SizedBox(width: 12),
-                              Expanded(child: _OrderStatusChart(data: data)),
-                            ],
-                          )
-                        : Column(
-                            children: [
-                              _RevenueChart(data: data),
-                              const SizedBox(height: 12),
-                              _OrderStatusChart(data: data),
-                            ],
-                          ),
-                  ),
-                  const SizedBox(height: 14),
-                  _SectionPadding(
-                    child: _buildComparisonCardsHorizontal(controller, isTablet),
-                  ),
-                  const SizedBox(height: 14),
-                  _SectionPadding(
-                    child: isTablet
-                        ? Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(child: _buildReceivablesAndActivity(controller)),
-                              const SizedBox(width: 12),
-                              Expanded(child: _quickLinks(context)),
-                            ],
-                          )
-                        : Column(
-                            children: [
-                              _buildReceivablesAndActivity(controller),
-                              const SizedBox(height: 12),
-                              _quickLinks(context),
-                            ],
-                          ),
-                  ),
-                  const SizedBox(height: 14),
-                  _SectionPadding(
-                    child: _buildTopProductsAndCustomers(controller, isTablet),
-                  ),
-                  const SizedBox(height: 14),
-                  _SectionPadding(
-                    child: _buildRevenueBreakdown(controller),
-                  ),
-                ],
+                _buildHeroCard(),
+                const SizedBox(height: 14),
+                _buildPeriodChips(),
+                const SizedBox(height: 16),
+                _buildKpiGrid(isTablet),
+                const SizedBox(height: 16),
+                _buildFinancialOverview(),
+                const SizedBox(height: 16),
+                _buildRevenueTrendCard(),
+                const SizedBox(height: 16),
+                _buildOrderStatusCard(),
+                const SizedBox(height: 16),
+                _buildComparisonCards(isTablet),
+                const SizedBox(height: 16),
+                _buildTopProductsAndCustomers(isTablet),
+                const SizedBox(height: 16),
+                _buildRecentActivity(),
+                const SizedBox(height: 16),
+                _buildRevenueBreakdown(),
+                const SizedBox(height: 16),
+                _buildQuickActions(),
               ],
             ),
           ),
@@ -125,21 +127,26 @@ class SalesDashboardScreen extends StatelessWidget {
     );
   }
 
+  // ─── AppBar (identical structure to DashboardScreen) ─────────────────────
   PreferredSizeWidget _buildAppBar(bool isMobile) {
     return AppBar(
-      backgroundColor: _kCardBg,
+      backgroundColor: _kAppBarBg,
       elevation: 0,
       scrolledUnderElevation: 0,
-      centerTitle: false,
+      surfaceTintColor: Colors.transparent,
       bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(1),
-        child: Container(height: 1, color: _kCardBorder),
+        preferredSize: const Size.fromHeight(0.5),
+        child: Container(height: 0.5, color: _kCardBorder),
       ),
       leading: isMobile
           ? Builder(
-              builder: (context) => IconButton(
-                icon: const Icon(Icons.menu_rounded, color: _kTextPrimary),
-                onPressed: () => Scaffold.of(context).openDrawer(),
+              builder: (ctx) => IconButton(
+                icon: const Icon(
+                  Icons.menu_rounded,
+                  color: _kTextPrimary,
+                  size: 22,
+                ),
+                onPressed: () => Scaffold.of(ctx).openDrawer(),
               ),
             )
           : null,
@@ -147,16 +154,16 @@ class SalesDashboardScreen extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 28,
-            height: 28,
+            width: 30,
+            height: 30,
             decoration: BoxDecoration(
               color: kPrimary,
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(
               Icons.trending_up_rounded,
-              size: 15,
-              color: Colors.black,
+              size: 16,
+              color: Colors.white,
             ),
           ),
           const SizedBox(width: 8),
@@ -165,8 +172,8 @@ class SalesDashboardScreen extends StatelessWidget {
             style: TextStyle(
               color: _kTextPrimary,
               fontSize: 16,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.2,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.3,
             ),
           ),
         ],
@@ -175,158 +182,286 @@ class SalesDashboardScreen extends StatelessWidget {
         IconButton(
           icon: const Icon(
             Icons.notifications_none_rounded,
-            color: _kTextSecondary,
+            color: _kTextSub,
+            size: 22,
           ),
-          onPressed: () {
-            Get.to(() =>  NotificationScreen());
-          },
+          onPressed: () => Get.to(() => const NotificationScreen()),
         ),
         const SizedBox(width: 4),
       ],
     );
   }
 
-  // ─── Greeting Header ──────────────────────────────────────────────────────
-  Widget _buildGreetingHeader(SalesController controller, SalesDashboardModel data) {
-    final fmt = Get.find<CurrencyController>().formatAmount;
-    
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1A237E), Color(0xFF3949AB), Color(0xFF5C6BC0)],
+  // ─── Shimmer ──────────────────────────────────────────────────────────────
+  Widget _buildShimmer() {
+    return Shimmer.fromColors(
+      baseColor: const Color(0xFFEEEFF4),
+      highlightColor: const Color(0xFFF8F9FC),
+      period: const Duration(milliseconds: 1200),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+        physics: const NeverScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _shimmerBox(height: 180, radius: 18),
+            const SizedBox(height: 14),
+            Row(
+              children: List.generate(
+                4,
+                (i) => Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: _shimmerBox(
+                    height: 34,
+                    width: 80 + (i * 10).toDouble(),
+                    radius: 20,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: 4,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: 1.55,
+              ),
+              itemBuilder: (_, __) => _shimmerBox(radius: 14),
+            ),
+            const SizedBox(height: 16),
+            _shimmerBox(height: 220, radius: 16),
+            const SizedBox(height: 16),
+            _shimmerBox(height: 220, radius: 16),
+            const SizedBox(height: 16),
+            _shimmerBox(height: 200, radius: 16),
+            const SizedBox(height: 16),
+            _shimmerBox(height: 100, radius: 16),
+          ],
         ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF3949AB).withOpacity(0.35),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.trending_up_rounded,
-                  size: 18,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Sales Overview',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    Text(
-                      _getCurrentDate(),
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.white.withOpacity(0.65),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              GestureDetector(
-                onTap: () => controller.fetchDashboard(),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.white.withOpacity(0.2)),
-                  ),
-                  child: const Icon(
-                    Icons.refresh_rounded,
-                    size: 17,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Container(height: 1, color: Colors.white.withOpacity(0.15)),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              _headerStat(
-                'Today Orders',
-                '${data.orders.todayCount}',
-                Icons.shopping_cart_rounded,
-                _kBlue,
-              ),
-              _headerDivider(),
-              _headerStat(
-                'Today Revenue',
-                fmt(data.orders.todayRevenue),
-                Icons.attach_money_rounded,
-                _kGreen,
-              ),
-              _headerDivider(),
-              _headerStat(
-                'Pending',
-                '${data.orders.pendingCount}',
-                Icons.pending_rounded,
-                _kOrange,
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }
 
-  Widget _headerStat(String label, String value, IconData icon, Color color) {
+  Widget _shimmerBox({double? height, double? width, double radius = 8}) {
+    return Container(
+      height: height,
+      width: width,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(radius),
+      ),
+    );
+  }
+
+  // ─── Hero Card ────────────────────────────────────────────────────────────
+  Widget _buildHeroCard() {
+    return Obx(() {
+      final data = _controller.dashboard.value;
+      final fmt = Get.find<CurrencyController>().formatAmount;
+
+      final todayOrders = data?.orders.todayCount ?? 0;
+      final todayRevenue = data?.orders.todayRevenue ?? 0.0;
+      final pending = data?.orders.pendingCount ?? 0;
+      final totalRevenue = data?.orders.revenue ?? 0.0;
+
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [_kHeroBg, _kHeroBgEnd],
+          ),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: _kHeroBorder),
+          boxShadow: [
+            BoxShadow(
+              color: kPrimary.withOpacity(0.10),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: _kPrimaryBg,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.trending_up_rounded,
+                              size: 14,
+                              color: kPrimary,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Sales Revenue · $_selectedTimePeriod',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: _kTextSub,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        fmt(totalRevenue),
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          color: _kTextPrimary,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Today: ${fmt(todayRevenue)}  ·  Pending: $pending orders',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: _kTextSub,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _kGreenBg,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.shopping_cart_outlined,
+                              size: 10,
+                              color: _kGreen,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              '$todayOrders order${todayOrders == 1 ? '' : 's'} today',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: _kGreen,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                GestureDetector(
+                  onTap: _controller.fetchDashboard,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _kHeroIcon,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: _kHeroBorder),
+                    ),
+                    child: const Icon(
+                      Icons.refresh_rounded,
+                      size: 16,
+                      color: _kTextSub,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Container(height: 0.5, color: _kCardBorder),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                _heroStat(
+                  'Revenue',
+                  fmt(totalRevenue),
+                  Icons.trending_up_rounded,
+                  _kGreen,
+                  _kGreenBg,
+                ),
+                _heroDivider(),
+                _heroStat(
+                  'Collected',
+                  fmt(data?.invoices.paidAmount ?? 0),
+                  Icons.payments_outlined,
+                  kPrimary,
+                  _kPrimaryBg,
+                ),
+                _heroDivider(),
+                _heroStat(
+                  'Outstanding',
+                  fmt(data?.invoices.outstanding ?? 0),
+                  Icons.schedule_rounded,
+                  _kOrange,
+                  _kOrangeBg,
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _heroStat(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+    Color bg,
+  ) {
     return Expanded(
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 12, color: color),
-              const SizedBox(width: 4),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: color,
-                  letterSpacing: -0.5,
-                ),
-              ),
-            ],
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 14, color: color),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: _kTextPrimary,
+              letterSpacing: -0.2,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 9,
-              color: Colors.white.withOpacity(0.55),
-              fontWeight: FontWeight.w500,
-            ),
+            style: const TextStyle(fontSize: 9, color: _kTextMuted),
             textAlign: TextAlign.center,
           ),
         ],
@@ -334,1247 +469,40 @@ class SalesDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _headerDivider() {
-    return Container(
-      width: 1,
-      height: 36,
-      color: Colors.white.withOpacity(0.15),
-    );
-  }
+  Widget _heroDivider() =>
+      Container(width: 0.5, height: 44, color: _kCardBorder);
 
-  String _getCurrentDate() {
-    final now = DateTime.now();
-    return DateFormat('EEEE, MMM d, yyyy').format(now);
-  }
-
-  // ─── Shimmer Loading ───────────────────────────────────────────────────
-  Widget _buildShimmerLoading(bool isTablet) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
-      child: Shimmer.fromColors(
-        baseColor: Colors.grey.shade300,
-        highlightColor: Colors.grey.shade100,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header card
-            Container(
-              height: 140,
+  // ─── Period Chips ─────────────────────────────────────────────────────────
+  Widget _buildPeriodChips() {
+    return SizedBox(
+      height: 34,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: _timePeriods.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (_, i) {
+          final period = _timePeriods[i];
+          final isActive = period == _selectedTimePeriod;
+          return GestureDetector(
+            onTap: () {
+              setState(() => _selectedTimePeriod = period);
+              _controller.applyPeriodFilter(_mapPeriod(period));
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isActive ? kPrimary : _kChipBg,
                 borderRadius: BorderRadius.circular(20),
               ),
-            ),
-            const SizedBox(height: 14),
-            // Period filter
-            Row(
-              children: List.generate(
-                4,
-                (index) => Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: Container(
-                    width: 80,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
+              alignment: Alignment.center,
+              child: Text(
+                period,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: isActive ? Colors.white : _kTextSub,
                 ),
-              ),
-            ),
-            const SizedBox(height: 18),
-            // KPI Grid
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: 4,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: isTablet ? 4 : 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: isTablet ? 1.15 : 0.95,
-              ),
-              itemBuilder: (_, __) => Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-            ),
-            const SizedBox(height: 18),
-            // Charts row
-            if (isTablet)
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 220,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Container(
-                      height: 220,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            else
-              Column(
-                children: [
-                  Container(
-                    height: 220,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    height: 220,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                ],
-              ),
-            const SizedBox(height: 14),
-            // Comparison cards
-            Row(
-              children: List.generate(
-                2,
-                (index) => Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(right: index == 0 ? 12 : 0),
-                    child: Container(
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            // Bottom section
-            if (isTablet)
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 200,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Container(
-                      height: 200,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            else
-              Column(
-                children: [
-                  Container(
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    height: 200,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                ],
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ─── Period Filter Bar ─────────────────────────────────────────────────
-  Widget _buildPeriodFilter(SalesController controller) {
-    const periods = [
-      ('today', 'Today'),
-      ('week', 'This Week'),
-      ('month', 'This Month'),
-      ('year', 'This Year'),
-    ];
-
-    return Obx(() {
-      return SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            ...periods.map((p) {
-              final isSelected = controller.selectedPeriod.value == p.$1;
-              return GestureDetector(
-                onTap: () => controller.applyPeriodFilter(p.$1),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.only(right: 8),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFF3949AB) : _kCardBg,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isSelected
-                          ? const Color(0xFF3949AB)
-                          : _kCardBorder,
-                      width: 1.5,
-                    ),
-                    boxShadow: isSelected
-                        ? [
-                            BoxShadow(
-                              color: const Color(0xFF3949AB).withOpacity(0.25),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3),
-                            ),
-                          ]
-                        : [],
-                  ),
-                  child: Text(
-                    p.$2,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected ? Colors.white : _kTextSecondary,
-                    ),
-                  ),
-                ),
-              );
-            }),
-            // Custom date range button
-            GestureDetector(
-              onTap: () => _showDateRangePicker(controller),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.only(left: 4),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: controller.selectedPeriod.value == 'custom' 
-                      ? const Color(0xFF3949AB) 
-                      : _kCardBg,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: controller.selectedPeriod.value == 'custom'
-                        ? const Color(0xFF3949AB)
-                        : _kCardBorder,
-                    width: 1.5,
-                  ),
-                  boxShadow: controller.selectedPeriod.value == 'custom'
-                      ? [
-                          BoxShadow(
-                            color: const Color(0xFF3949AB).withOpacity(0.25),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ]
-                      : [],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.calendar_today_rounded,
-                      size: 14,
-                      color: controller.selectedPeriod.value == 'custom'
-                          ? Colors.white
-                          : _kTextSecondary,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      controller.useCustomDateRange.value && 
-                      controller.startDate.value != null && 
-                      controller.endDate.value != null
-                          ? '${_formatShortDate(controller.startDate.value!)} - ${_formatShortDate(controller.endDate.value!)}'
-                          : 'Custom',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: controller.selectedPeriod.value == 'custom'
-                            ? Colors.white
-                            : _kTextSecondary,
-                      ),
-                    ),
-                    if (controller.useCustomDateRange.value) ...[
-                      const SizedBox(width: 6),
-                      GestureDetector(
-                        onTap: () => controller.clearCustomDateRange(),
-                        child: Icon(
-                          Icons.close_rounded,
-                          size: 14,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    });
-  }
-
-  String _formatShortDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year.toString().substring(2)}';
-  }
-
-  Future<void> _showDateRangePicker(SalesController controller) async {
-    final DateTimeRange? picked = await showDateRangePicker(
-      context: Get.context!,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      initialDateRange: controller.startDate.value != null && controller.endDate.value != null
-          ? DateTimeRange(start: controller.startDate.value!, end: controller.endDate.value!)
-          : null,
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF3949AB),
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null) {
-      controller.setCustomDateRange(picked.start, picked.end);
-    }
-  }
-
-  // ─── KPI Grid ──────────────────────────────────────────────────
-
-  Widget _kpiGrid(BuildContext context, SalesDashboardModel data, bool isTablet) {
-    final fmt = Get.find<CurrencyController>().formatAmount;
-    
-    final kpis = [
-      _KpiData(
-        label: 'ORDER REVENUE',
-        value: fmt(data.orders.revenue),
-        icon: Icons.shopping_cart_outlined,
-        accent: _kBlue,
-        sparkData: _generateSparkData(data.orders.revenue),
-        trend: data.orders.revenueGrowth,
-        trendUp: data.orders.revenueGrowth.startsWith('+'),
-      ),
-      _KpiData(
-        label: 'INVOICE TOTAL',
-        value: fmt(data.invoices.grandTotal),
-        icon: Icons.receipt_long_outlined,
-        accent: _kGreen,
-        sparkData: _generateSparkData(data.invoices.grandTotal),
-        trend: data.invoices.grandTotalGrowth,
-        trendUp: data.invoices.grandTotalGrowth.startsWith('+'),
-      ),
-      _KpiData(
-        label: 'COLLECTED',
-        value: fmt(data.invoices.paidAmount),
-        icon: Icons.payments_outlined,
-        accent: const Color(0xFF2E7D32),
-        sparkData: _generateSparkData(data.invoices.paidAmount),
-        trend: data.invoices.paidAmountGrowth,
-        trendUp: data.invoices.paidAmountGrowth.startsWith('+'),
-      ),
-      _KpiData(
-        label: 'OUTSTANDING',
-        value: fmt(data.invoices.outstanding),
-        icon: Icons.pending_actions_outlined,
-        accent: _kOrange,
-        sparkData: _generateSparkData(data.invoices.outstanding),
-        trend: data.invoices.outstandingGrowth,
-        trendUp: data.invoices.outstandingGrowth.startsWith('+'),
-      ),
-    ];
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: kpis.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: isTablet ? 4 : 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: isTablet ? 1.15 : 0.95,
-      ),
-      itemBuilder: (_, i) => _KpiCard(data: kpis[i]),
-    );
-  }
-
-  List<double> _generateSparkData(dynamic value) {
-    // Generate mock sparkline data based on value
-    final baseValue = value is num ? value.toDouble() : 0.0;
-    return [
-      (baseValue * 0.7).toDouble(),
-      (baseValue * 0.85).toDouble(),
-      (baseValue * 0.75).toDouble(),
-      (baseValue * 0.9).toDouble(),
-      (baseValue * 0.8).toDouble(),
-      (baseValue * 0.95).toDouble(),
-      baseValue,
-    ];
-  }
-}
-
-
-class _KpiData {
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color accent;
-  final List<double> sparkData;
-  final String trend;
-  final bool trendUp;
-
-  const _KpiData({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.accent,
-    required this.sparkData,
-    required this.trend,
-    required this.trendUp,
-  });
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// KPI CARD
-// ════════════════════════════════════════════════════════════════════════════
-
-class _KpiCard extends StatelessWidget {
-  final _KpiData data;
-
-  const _KpiCard({required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 13, 14, 10),
-      decoration: BoxDecoration(
-        color: _kCardBg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _kCardBorder),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  color: data.accent.withOpacity(0.10),
-                  borderRadius: BorderRadius.circular(9),
-                ),
-                child: Icon(data.icon, size: 16, color: data.accent),
-              ),
-              _TrendBadge(trend: data.trend, up: data.trendUp),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            data.value,
-            style: const TextStyle(
-              fontSize: 19,
-              fontWeight: FontWeight.w800,
-              color: _kTextPrimary,
-              letterSpacing: -0.4,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            data.label,
-            style: const TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
-              color: _kTextSecondary,
-              letterSpacing: 0.5,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 8),
-          ClipRect(
-            child: SizedBox(
-              height: 32,
-              child: LineChart(
-                LineChartData(
-                  gridData: const FlGridData(show: false),
-                  titlesData: const FlTitlesData(show: false),
-                  borderData: FlBorderData(show: false),
-                  lineTouchData: const LineTouchData(enabled: false),
-                  clipData: const FlClipData.all(),
-                  minX: 0,
-                  maxX: (data.sparkData.length - 1).toDouble(),
-                  minY: data.sparkData.reduce((a, b) => a < b ? a : b).toDouble() * 0.85,
-                  maxY: data.sparkData.reduce((a, b) => a > b ? a : b).toDouble() * 1.15,
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: data.sparkData
-                          .asMap()
-                          .entries
-                          .map((e) => FlSpot(e.key.toDouble(), e.value))
-                          .toList(),
-                      isCurved: true,
-                      color: data.accent,
-                      barWidth: 2,
-                      isStrokeCapRound: true,
-                      dotData: const FlDotData(show: false),
-                      belowBarData: BarAreaData(
-                        show: true,
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            data.accent.withOpacity(0.20),
-                            data.accent.withOpacity(0.0),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// TREND BADGE
-// ════════════════════════════════════════════════════════════════════════════
-
-class _TrendBadge extends StatelessWidget {
-  final String trend;
-  final bool up;
-
-  const _TrendBadge({required this.trend, required this.up});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = up ? _kGreen : _kRed;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.10),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            up ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
-            size: 9,
-            color: color,
-          ),
-          const SizedBox(width: 2),
-          Text(
-            trend,
-            style: TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w700,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// CHART CARD SHELL
-// ════════════════════════════════════════════════════════════════════════════
-
-class _ChartCard extends StatelessWidget {
-  final String title;
-  final String? subtitle;
-  final List<_LegendDot>? legend;
-  final Widget child;
-
-  const _ChartCard({
-    required this.title,
-    this.subtitle,
-    this.legend,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _kCardBg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _kCardBorder),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: _kTextPrimary,
-                      letterSpacing: -0.2,
-                    ),
-                  ),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle!,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: _kTextSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-              if (legend != null)
-                Row(
-                  children: legend!,
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-class _LegendDot extends StatelessWidget {
-  final Color color;
-  final String label;
-
-  const _LegendDot({required this.color, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: _kTextSecondary,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  final String label;
-
-  const _EmptyState({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.inbox_rounded,
-            size: 48,
-            color: Colors.grey.shade300,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade400,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionPadding extends StatelessWidget {
-  final Widget child;
-
-  const _SectionPadding({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: child,
-    );
-  }
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// REVENUE CHART
-// ════════════════════════════════════════════════════════════════════════════
-
-class _RevenueChart extends StatelessWidget {
-  final SalesDashboardModel data;
-
-  const _RevenueChart({required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    final invoiceTrend = data.invoices.trend;
-    final orderTrend = data.orders.trend;
-    if (invoiceTrend.isEmpty && orderTrend.isEmpty) {
-      return _ChartCard(
-        title: 'Revenue Trend',
-        child: const _EmptyState(label: 'No data for this period'),
-      );
-    }
-
-    final allDates = <String>{};
-    for (final p in invoiceTrend) allDates.add(p.date);
-    for (final p in orderTrend) allDates.add(p.date);
-    final sorted = allDates.toList()..sort();
-
-    final invoiceSpots = <FlSpot>[];
-    final orderSpots = <FlSpot>[];
-    for (var i = 0; i < sorted.length; i++) {
-      final d = sorted[i];
-      final inv = invoiceTrend.firstWhere((p) => p.date == d, orElse: () => SalesTrendPoint(date: d));
-      final ord = orderTrend.firstWhere((p) => p.date == d, orElse: () => SalesTrendPoint(date: d));
-      invoiceSpots.add(FlSpot(i.toDouble(), inv.revenue));
-      orderSpots.add(FlSpot(i.toDouble(), ord.orderRevenue));
-    }
-
-    final maxY = [
-      ...invoiceSpots.map((s) => s.y),
-      ...orderSpots.map((s) => s.y),
-    ].fold<double>(0, (a, b) => b > a ? b : a);
-
-    return _ChartCard(
-      title: 'Revenue Trend',
-      legend: const [
-        _LegendDot(color: Color(0xFF0097A7), label: 'Invoices'),
-        _LegendDot(color: _kBlue, label: 'Orders'),
-      ],
-      child: SizedBox(
-        height: 190,
-        child: LineChart(
-          LineChartData(
-            gridData: FlGridData(
-              show: true,
-              drawVerticalLine: false,
-              horizontalInterval: maxY > 0 ? maxY / 4 : 25,
-              getDrawingHorizontalLine: (_) => FlLine(color: _kCardBorder, strokeWidth: 1),
-            ),
-            titlesData: FlTitlesData(
-              leftTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  reservedSize: 32,
-                  interval: maxY > 0 ? maxY / 4 : 25,
-                  getTitlesWidget: (v, _) => Text(
-                    v >= 1000 ? '${(v / 1000).toStringAsFixed(0)}k' : v.toStringAsFixed(0),
-                    style: const TextStyle(fontSize: 9, color: _kTextSecondary),
-                  ),
-                ),
-              ),
-              bottomTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  reservedSize: 22,
-                  getTitlesWidget: (v, _) {
-                    final i = v.toInt();
-                    if (i < 0 || i >= sorted.length) return const SizedBox();
-                    final parts = sorted[i].split('-');
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        '${parts[2]}/${parts[1]}',
-                        style: const TextStyle(fontSize: 9, color: _kTextSecondary),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            ),
-            borderData: FlBorderData(show: false),
-            lineTouchData: LineTouchData(
-              touchTooltipData: LineTouchTooltipData(
-                getTooltipColor: (_) => _kTextPrimary,
-                tooltipBorder: BorderSide(color: _kCardBorder),
-                getTooltipItems: (spots) => spots.map((s) {
-                  return LineTooltipItem(
-                    s.y.toStringAsFixed(0),
-                    TextStyle(
-                      color: s.barIndex == 0 ? const Color(0xFF0097A7) : _kBlue,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-            minX: 0,
-            maxX: (sorted.length - 1).toDouble(),
-            minY: 0,
-            maxY: maxY <= 0 ? 100 : maxY * 1.15,
-            lineBarsData: [
-              LineChartBarData(
-                spots: invoiceSpots,
-                isCurved: true,
-                color: const Color(0xFF0097A7),
-                barWidth: 2,
-                isStrokeCapRound: true,
-                dotData: const FlDotData(show: false),
-                belowBarData: BarAreaData(
-                  show: true,
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      const Color(0xFF0097A7).withOpacity(0.20),
-                      const Color(0xFF0097A7).withOpacity(0.0),
-                    ],
-                  ),
-                ),
-              ),
-              LineChartBarData(
-                spots: orderSpots,
-                isCurved: true,
-                color: _kBlue,
-                barWidth: 2,
-                isStrokeCapRound: true,
-                dotData: const FlDotData(show: false),
-                belowBarData: BarAreaData(
-                  show: true,
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      _kBlue.withOpacity(0.20),
-                      _kBlue.withOpacity(0.0),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// ORDER STATUS CHART
-// ════════════════════════════════════════════════════════════════════════════
-
-class _OrderStatusChart extends StatelessWidget {
-  final SalesDashboardModel data;
-
-  const _OrderStatusChart({required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    final items = data.orders.byStatus.where((s) => s.count > 0).toList();
-    if (items.isEmpty) {
-      return _ChartCard(
-        title: 'Orders by Status',
-        child: const _EmptyState(label: 'No orders'),
-      );
-    }
-
-    final colors = [
-      Colors.orange.shade400,
-      Colors.blue.shade400,
-      Colors.purple.shade400,
-      Colors.green.shade400,
-      Colors.red.shade400,
-    ];
-
-    return _ChartCard(
-      title: 'Orders by Status',
-      child: SizedBox(
-        height: 190,
-        child: BarChart(
-          BarChartData(
-            alignment: BarChartAlignment.spaceAround,
-            maxY: items.map((e) => e.count.toDouble()).reduce((a, b) => a > b ? a : b).toDouble() * 1.2 + 1,
-            gridData: FlGridData(
-              show: true,
-              drawVerticalLine: false,
-              getDrawingHorizontalLine: (_) => FlLine(color: _kCardBorder, strokeWidth: 1),
-            ),
-            borderData: FlBorderData(show: false),
-            titlesData: FlTitlesData(
-              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              leftTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  reservedSize: 28,
-                  getTitlesWidget: (v, _) => Text(
-                    v.toInt().toString(),
-                    style: const TextStyle(fontSize: 9, color: _kTextSecondary),
-                  ),
-                ),
-              ),
-              bottomTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  getTitlesWidget: (v, _) {
-                    final i = v.toInt();
-                    if (i < 0 || i >= items.length) return const SizedBox.shrink();
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: Text(
-                        items[i].status.length > 8 ? items[i].status.substring(0, 7) : items[i].status,
-                        style: const TextStyle(fontSize: 9, color: _kTextSecondary),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-            barTouchData: BarTouchData(
-              touchTooltipData: BarTouchTooltipData(
-                getTooltipColor: (_) => _kTextPrimary,
-                getTooltipItem: (group, _, rod, __) => BarTooltipItem(
-                  '${items[group.x].status}\n${rod.toY.toInt()} orders',
-                  TextStyle(
-                    color: colors[group.x % colors.length],
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-            barGroups: List.generate(items.length, (i) {
-              return BarChartGroupData(
-                x: i,
-                barRods: [
-                  BarChartRodData(
-                    toY: items[i].count.toDouble(),
-                    color: colors[i % colors.length],
-                    width: 20,
-                    borderRadius: BorderRadius.circular(6),
-                  )
-                ],
-              );
-            }),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// CONTINUATION OF SALES DASHBOARD SCREEN METHODS
-// ════════════════════════════════════════════════════════════════════════════
-
-extension _SalesDashboardMethods on SalesDashboardScreen {
-  Widget _buildComparisonCardsHorizontal(SalesController controller, bool isTablet) {
-    return Obx(() {
-      final data = controller.dashboard.value;
-      final comparison = data?.comparison;
-      final fmt = Get.find<CurrencyController>().formatAmount;
-
-      final cards = [
-        _ComparisonCard(
-          period: 'Today',
-          subLabel: 'vs Yesterday',
-          sales: fmt(comparison?.today.currentSales ?? 0),
-          returns: fmt(comparison?.today.currentReturns ?? 0),
-          salesChange: comparison?.today.salesChangePercent ?? 0,
-          returnsChange: comparison?.today.returnsChangePercent ?? 0,
-        ),
-        _ComparisonCard(
-          period: 'This Week',
-          subLabel: 'vs Last Week',
-          sales: fmt(comparison?.week.currentSales ?? 0),
-          returns: fmt(comparison?.week.currentReturns ?? 0),
-          salesChange: comparison?.week.salesChangePercent ?? 0,
-          returnsChange: comparison?.week.returnsChangePercent ?? 0,
-        ),
-        _ComparisonCard(
-          period: 'This Month',
-          subLabel: 'vs Last Month',
-          sales: fmt(comparison?.month.currentSales ?? 0),
-          returns: fmt(comparison?.month.currentReturns ?? 0),
-          salesChange: comparison?.month.salesChangePercent ?? 0,
-          returnsChange: comparison?.month.returnsChangePercent ?? 0,
-        ),
-        _ComparisonCard(
-          period: 'This Year',
-          subLabel: 'vs Last Year',
-          sales: fmt(comparison?.year.currentSales ?? 0),
-          returns: fmt(comparison?.year.currentReturns ?? 0),
-          salesChange: comparison?.year.salesChangePercent ?? 0,
-          returnsChange: comparison?.year.returnsChangePercent ?? 0,
-        ),
-      ];
-
-      if (isTablet) {
-        return Row(
-          children: cards
-              .map((c) => Expanded(child: c))
-              .expand((w) => [w, const SizedBox(width: 12)])
-              .toList()
-            ..removeLast(),
-        );
-      } else {
-        return Column(
-          children: [
-            IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(child: cards[0]),
-                  const SizedBox(width: 12),
-                  Expanded(child: cards[1]),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(child: cards[2]),
-                  const SizedBox(width: 12),
-                  Expanded(child: cards[3]),
-                ],
-              ),
-            ),
-          ],
-        );
-      }
-    });
-  }
-
-  // ─── Receivables & Activity ─────────────────────────────────────────
-
-  Widget _buildReceivablesAndActivity(SalesController controller) {
-    return Obx(() {
-      final data = controller.dashboard.value;
-      final recentActivity = data?.recentActivity ?? [];
-      final fmt = Get.find<CurrencyController>().formatAmount;
-
-      return _ChartCard(
-        title: 'Recent Activity',
-        child: recentActivity.isEmpty
-            ? const _EmptyState(label: 'No recent activity')
-            : ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: recentActivity.take(5).length,
-                separatorBuilder: (_, __) => Divider(
-                  color: _kCardBorder,
-                  height: 1,
-                ),
-                itemBuilder: (context, index) {
-                  final activity = recentActivity[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: _kBlue.withOpacity(0.10),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            _getActivityIcon(activity.type),
-                            size: 18,
-                            color: _kBlue,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                activity.description,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: _kTextPrimary,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                activity.timestamp,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: _kTextSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Text(
-                          activity.amount != null ? fmt(activity.amount) : '',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: _kTextPrimary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-      );
-    });
-  }
-
-  IconData _getActivityIcon(String type) {
-    switch (type.toLowerCase()) {
-      case 'order':
-        return Icons.shopping_cart_rounded;
-      case 'invoice':
-        return Icons.receipt_long_rounded;
-      case 'payment':
-        return Icons.payments_rounded;
-      case 'return':
-        return Icons.assignment_return_rounded;
-      default:
-        return Icons.info_rounded;
-    }
-  }
-
-  // ─── Quick Links ─────────────────────────────────────────────────
-
-  Widget _quickLinks(BuildContext context) {
-    final links = [
-      ('New Order', Icons.add_shopping_cart, '/sales/orders'),
-      ('New Invoice', Icons.receipt, '/sales-invoices'),
-      ('Customers', Icons.people, '/sales/warehouse-customers'),
-      ('Reports', Icons.bar_chart, '/sales/reports'),
-    ];
-
-    return _ChartCard(
-      title: 'Quick Actions',
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 1.2,
-        ),
-        itemCount: links.length,
-        itemBuilder: (context, index) {
-          final link = links[index];
-          return GestureDetector(
-            onTap: () => Get.toNamed(link.$3),
-            child: Container(
-              decoration: BoxDecoration(
-                color: _kBlue.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: _kBlue.withOpacity(0.15)),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(link.$2, size: 24, color: _kBlue),
-                  const SizedBox(height: 8),
-                  Text(
-                    link.$1,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: _kTextPrimary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
               ),
             ),
           );
@@ -1583,396 +511,1140 @@ extension _SalesDashboardMethods on SalesDashboardScreen {
     );
   }
 
-  // ─── Top Products & Customers ─────────────────────────────────────
+  String _mapPeriod(String label) {
+    switch (label) {
+      case 'Today':
+        return 'today';
+      case 'Last Week':
+        return 'week';
+      case 'This Month':
+        return 'month';
+      case 'Last Month':
+        return 'month';
+      case 'This Quarter':
+        return 'year';
+      case 'This Year':
+        return 'year';
+      default:
+        return 'month';
+    }
+  }
 
-  Widget _buildTopProductsAndCustomers(SalesController controller, bool isTablet) {
+  // ─── KPI Grid ─────────────────────────────────────────────────────────────
+  Widget _buildKpiGrid(bool isTablet) {
     return Obx(() {
-      final data = controller.dashboard.value;
+      final data = _controller.dashboard.value;
+      final fmt = Get.find<CurrencyController>().formatAmount;
+
+      final kpis = [
+        _KpiItem(
+          label: 'Order Revenue',
+          value: fmt(data?.orders.revenue ?? 0),
+          icon: Icons.shopping_cart_outlined,
+          iconBg: _kPrimaryBg,
+          iconColor: kPrimary,
+          trend: data?.orders.revenueGrowth ?? '0%',
+          trendUp: (data?.orders.revenueGrowth ?? '').startsWith('+'),
+        ),
+        _KpiItem(
+          label: 'Invoice Total',
+          value: fmt(data?.invoices.grandTotal ?? 0),
+          icon: Icons.receipt_long_outlined,
+          iconBg: _kGreenBg,
+          iconColor: _kGreen,
+          trend: data?.invoices.grandTotalGrowth ?? '0%',
+          trendUp: (data?.invoices.grandTotalGrowth ?? '').startsWith('+'),
+        ),
+        _KpiItem(
+          label: 'Collected',
+          value: fmt(data?.invoices.paidAmount ?? 0),
+          icon: Icons.payments_outlined,
+          iconBg: _kTealBg,
+          iconColor: _kTeal,
+          trend: data?.invoices.paidAmountGrowth ?? '0%',
+          trendUp: (data?.invoices.paidAmountGrowth ?? '').startsWith('+'),
+        ),
+        _KpiItem(
+          label: 'Outstanding',
+          value: fmt(data?.invoices.outstanding ?? 0),
+          icon: Icons.pending_actions_outlined,
+          iconBg: _kOrangeBg,
+          iconColor: _kOrange,
+          trend: (data?.invoices.outstanding ?? 0) > 0 ? 'Pending' : 'Clear',
+          trendUp: (data?.invoices.outstanding ?? 0) <= 0,
+        ),
+      ];
+
+      return GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: kpis.length,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: isTablet ? 4 : 2,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          childAspectRatio: isTablet ? 1.2 : 1.55,
+        ),
+        itemBuilder: (_, i) => _KpiCard(item: kpis[i]),
+      );
+    });
+  }
+
+  // ─── Financial Overview bars ───────────────────────────────────────────────
+  Widget _buildFinancialOverview() {
+    return Obx(() {
+      final data = _controller.dashboard.value;
+      final fmt = Get.find<CurrencyController>().formatAmount;
+
+      final revenue = data?.orders.revenue ?? 0.0;
+      final invoiceTotal = data?.invoices.grandTotal ?? 0.0;
+      final collected = data?.invoices.paidAmount ?? 0.0;
+      final outstanding = data?.invoices.outstanding ?? 0.0;
+      final todayRev = data?.orders.todayRevenue ?? 0.0;
+      final totalOrders = (data?.orders.todayCount ?? 0).toDouble();
+
+      final maxVal = [
+        revenue,
+        invoiceTotal,
+        collected,
+        outstanding,
+        todayRev,
+        totalOrders,
+      ].fold<double>(0, (a, b) => b > a ? b : a);
+
+      final bars = [
+        _BarItem(
+          'Order Revenue',
+          fmt(revenue),
+          revenue,
+          kPrimary,
+          _kPrimaryBg,
+          'Sales orders revenue',
+        ),
+        _BarItem(
+          'Invoice Total',
+          fmt(invoiceTotal),
+          invoiceTotal,
+          _kGreen,
+          _kGreenBg,
+          'All invoices generated',
+        ),
+        _BarItem(
+          'Collected',
+          fmt(collected),
+          collected,
+          _kTeal,
+          _kTealBg,
+          'Paid invoices amount',
+        ),
+        _BarItem(
+          'Outstanding',
+          fmt(outstanding),
+          outstanding,
+          _kOrange,
+          _kOrangeBg,
+          'Unpaid invoices',
+        ),
+        _BarItem(
+          'Today Revenue',
+          fmt(todayRev),
+          todayRev,
+          _kPurple,
+          _kPurpleBg,
+          'Revenue earned today',
+        ),
+        _BarItem(
+          'Today Orders',
+          '$totalOrders',
+          totalOrders,
+          _kRed,
+          _kRedBg,
+          'Orders placed today',
+        ),
+      ];
+
+      return _SectionCard(
+        title: 'Sales overview',
+        trailing: Text(
+          _selectedTimePeriod,
+          style: const TextStyle(fontSize: 12, color: _kTextSub),
+        ),
+        child: Column(children: bars.map((b) => _buildBar(b, maxVal)).toList()),
+      );
+    });
+  }
+
+  Widget _buildBar(_BarItem item, double maxVal) {
+    final fraction = (maxVal > 0 && item.rawValue > 0)
+        ? (item.rawValue / maxVal).clamp(0.0, 1.0)
+        : 0.0;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: item.bgColor,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            alignment: Alignment.center,
+            child: Icon(Icons.circle, size: 8, color: item.color),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.label,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: _kTextSub,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          if (item.source.isNotEmpty) ...[
+                            const SizedBox(height: 1),
+                            Text(
+                              item.source,
+                              style: const TextStyle(
+                                fontSize: 9,
+                                color: _kTextMuted,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    Text(
+                      item.value,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _kTextPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: fraction,
+                    minHeight: 5,
+                    backgroundColor: _kCardBorder,
+                    valueColor: AlwaysStoppedAnimation<Color>(item.color),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Revenue Trend Chart ──────────────────────────────────────────────────
+  Widget _buildRevenueTrendCard() {
+    return Obx(() {
+      final data = _controller.dashboard.value;
+      final invoiceTrend = data?.invoices.trend ?? [];
+      final orderTrend = data?.orders.trend ?? [];
+
+      final allDates = <String>{};
+      for (final p in invoiceTrend) allDates.add(p.date);
+      for (final p in orderTrend) allDates.add(p.date);
+      final sorted = allDates.toList()..sort();
+
+      final invoiceSpots = <FlSpot>[];
+      final orderSpots = <FlSpot>[];
+      for (var i = 0; i < sorted.length; i++) {
+        final d = sorted[i];
+        final inv = invoiceTrend.firstWhere(
+          (p) => p.date == d,
+          orElse: () => SalesTrendPoint(date: d),
+        );
+        final ord = orderTrend.firstWhere(
+          (p) => p.date == d,
+          orElse: () => SalesTrendPoint(date: d),
+        );
+        invoiceSpots.add(FlSpot(i.toDouble(), inv.revenue));
+        orderSpots.add(FlSpot(i.toDouble(), ord.orderRevenue));
+      }
+
+      final maxY = [
+        ...invoiceSpots.map((s) => s.y),
+        ...orderSpots.map((s) => s.y),
+      ].fold<double>(0, (a, b) => b > a ? b : a);
+
+      // Fallback empty data
+      if (sorted.isEmpty) {
+        for (var i = 0; i < 7; i++) {
+          invoiceSpots.add(FlSpot(i.toDouble(), 0));
+          orderSpots.add(FlSpot(i.toDouble(), 0));
+          sorted.add('--');
+        }
+      }
+
+      return _SectionCard(
+        title: 'Revenue trend',
+        trailing: Row(
+          children: [
+            _legendDot(_kTeal, 'Invoices'),
+            const SizedBox(width: 12),
+            _legendDot(kPrimary, 'Orders'),
+          ],
+        ),
+        child: SizedBox(
+          height: 190,
+          child: LineChart(
+            LineChartData(
+              gridData: FlGridData(
+                show: true,
+                drawVerticalLine: false,
+                getDrawingHorizontalLine: (_) =>
+                    const FlLine(color: _kCardBorder, strokeWidth: 1),
+              ),
+              titlesData: FlTitlesData(
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 40,
+                    getTitlesWidget: (v, _) {
+                      final lbl = v >= 1000
+                          ? '${(v / 1000).toStringAsFixed(0)}k'
+                          : v.toInt().toString();
+                      return Text(
+                        lbl,
+                        style: const TextStyle(fontSize: 9, color: _kTextSub),
+                      );
+                    },
+                  ),
+                ),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 22,
+                    interval: sorted.length > 6
+                        ? (sorted.length / 4).ceilToDouble()
+                        : 1,
+                    getTitlesWidget: (v, _) {
+                      final i = v.toInt();
+                      if (i < 0 || i >= sorted.length) return const SizedBox();
+                      final parts = sorted[i].split('-');
+                      final lbl = parts.length >= 3
+                          ? '${parts[2]}/${parts[1]}'
+                          : sorted[i];
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          lbl,
+                          style: const TextStyle(fontSize: 9, color: _kTextSub),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                rightTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                topTitles: const AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+              ),
+              borderData: FlBorderData(show: false),
+              minX: 0,
+              maxX: (sorted.length - 1).toDouble(),
+              minY: 0,
+              maxY: maxY > 0 ? maxY * 1.2 : 100,
+              lineBarsData: [
+                _buildLine(invoiceSpots, _kTeal),
+                _buildLine(orderSpots, kPrimary),
+              ],
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
+  LineChartBarData _buildLine(List<FlSpot> spots, Color color) =>
+      LineChartBarData(
+        spots: spots,
+        isCurved: true,
+        color: color,
+        barWidth: 2.5,
+        isStrokeCapRound: true,
+        dotData: FlDotData(
+          show: true,
+          getDotPainter: (_, __, ___, ____) =>
+              FlDotCirclePainter(radius: 3, color: color, strokeWidth: 0),
+        ),
+        belowBarData: BarAreaData(
+          show: true,
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [color.withOpacity(0.15), color.withOpacity(0.0)],
+          ),
+        ),
+      );
+
+  Widget _legendDot(Color color, String label) => Row(
+    children: [
+      Container(
+        width: 8,
+        height: 8,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      ),
+      const SizedBox(width: 4),
+      Text(label, style: const TextStyle(fontSize: 10, color: _kTextSub)),
+    ],
+  );
+
+  // ─── Order Status Bar Chart ───────────────────────────────────────────────
+  Widget _buildOrderStatusCard() {
+    return Obx(() {
+      final data = _controller.dashboard.value;
+      final items = (data?.orders.byStatus ?? [])
+          .where((s) => s.count > 0)
+          .toList();
+
+      final accent = [kPrimary, _kGreen, _kOrange, _kPurple, _kRed, _kTeal];
+
+      return _SectionCard(
+        title: 'Orders by status',
+        trailing: Text(
+          '${items.fold(0, (s, e) => s + e.count)} total',
+          style: const TextStyle(fontSize: 12, color: _kTextSub),
+        ),
+        child: items.isEmpty
+            ? const _EmptyPlaceholder(label: 'No orders for this period')
+            : SizedBox(
+                height: 180,
+                child: BarChart(
+                  BarChartData(
+                    alignment: BarChartAlignment.spaceAround,
+                    maxY:
+                        items
+                            .map((e) => e.count.toDouble())
+                            .reduce((a, b) => a > b ? a : b) *
+                        1.25,
+                    gridData: FlGridData(
+                      show: true,
+                      drawVerticalLine: false,
+                      getDrawingHorizontalLine: (_) =>
+                          const FlLine(color: _kCardBorder, strokeWidth: 1),
+                    ),
+                    borderData: FlBorderData(show: false),
+                    titlesData: FlTitlesData(
+                      topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 28,
+                          getTitlesWidget: (v, _) => Text(
+                            v.toInt().toString(),
+                            style: const TextStyle(
+                              fontSize: 9,
+                              color: _kTextSub,
+                            ),
+                          ),
+                        ),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          getTitlesWidget: (v, _) {
+                            final i = v.toInt();
+                            if (i < 0 || i >= items.length)
+                              return const SizedBox.shrink();
+                            final s = items[i].status;
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: Text(
+                                s.length > 8 ? s.substring(0, 7) : s,
+                                style: const TextStyle(
+                                  fontSize: 9,
+                                  color: _kTextSub,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    barGroups: List.generate(items.length, (i) {
+                      final color = accent[i % accent.length];
+                      return BarChartGroupData(
+                        x: i,
+                        barRods: [
+                          BarChartRodData(
+                            toY: items[i].count.toDouble(),
+                            color: color,
+                            width: 20,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ],
+                      );
+                    }),
+                  ),
+                ),
+              ),
+      );
+    });
+  }
+
+  // ─── Comparison Cards ────────────────────────────────────────────────────
+  Widget _buildComparisonCards(bool isTablet) {
+    return Obx(() {
+      final data = _controller.dashboard.value;
+      final comparison = data?.comparison;
+      final fmt = Get.find<CurrencyController>().formatAmount;
+
+      final cards = [
+        _ComparisonData(
+          'Today',
+          'vs Yesterday',
+          fmt(comparison?.today.currentSales ?? 0),
+          fmt(comparison?.today.currentReturns ?? 0),
+          comparison?.today.salesChangePercent ?? 0,
+          comparison?.today.returnsChangePercent ?? 0,
+        ),
+        _ComparisonData(
+          'This Week',
+          'vs Last Week',
+          fmt(comparison?.week.currentSales ?? 0),
+          fmt(comparison?.week.currentReturns ?? 0),
+          comparison?.week.salesChangePercent ?? 0,
+          comparison?.week.returnsChangePercent ?? 0,
+        ),
+        _ComparisonData(
+          'This Month',
+          'vs Last Month',
+          fmt(comparison?.month.currentSales ?? 0),
+          fmt(comparison?.month.currentReturns ?? 0),
+          comparison?.month.salesChangePercent ?? 0,
+          comparison?.month.returnsChangePercent ?? 0,
+        ),
+        _ComparisonData(
+          'This Year',
+          'vs Last Year',
+          fmt(comparison?.year.currentSales ?? 0),
+          fmt(comparison?.year.currentReturns ?? 0),
+          comparison?.year.salesChangePercent ?? 0,
+          comparison?.year.returnsChangePercent ?? 0,
+        ),
+      ];
+
+      if (isTablet) {
+        return Row(
+          children: cards
+              .asMap()
+              .entries
+              .map(
+                (e) => [
+                  if (e.key > 0) const SizedBox(width: 10),
+                  Expanded(child: _ComparisonCard(data: e.value)),
+                ],
+              )
+              .expand((w) => w)
+              .toList(),
+        );
+      }
+
+      return Column(
+        children: [
+          Row(
+            children: [
+              Expanded(child: _ComparisonCard(data: cards[0])),
+              const SizedBox(width: 10),
+              Expanded(child: _ComparisonCard(data: cards[1])),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(child: _ComparisonCard(data: cards[2])),
+              const SizedBox(width: 10),
+              Expanded(child: _ComparisonCard(data: cards[3])),
+            ],
+          ),
+        ],
+      );
+    });
+  }
+
+  // ─── Top Products & Customers ─────────────────────────────────────────────
+  Widget _buildTopProductsAndCustomers(bool isTablet) {
+    return Obx(() {
+      final data = _controller.dashboard.value;
       final topProducts = data?.topProducts ?? [];
       final topCustomers = data?.topCustomers ?? [];
       final fmt = Get.find<CurrencyController>().formatAmount;
+
+      final productsCard = _SectionCard(
+        title: 'Top products',
+        trailing: Text(
+          '${topProducts.length} items',
+          style: const TextStyle(fontSize: 12, color: _kTextSub),
+        ),
+        child: topProducts.isEmpty
+            ? const _EmptyPlaceholder(label: 'No products')
+            : Column(
+                children: topProducts.take(5).toList().asMap().entries.map((e) {
+                  final idx = e.key;
+                  final product = e.value;
+                  final isLast = idx == topProducts.take(5).length - 1;
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 9),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                color: _kPrimaryBg,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                '${idx + 1}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: kPrimary,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    product.name,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: _kTextPrimary,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    '${product.quantitySold} sold',
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: _kTextMuted,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              fmt(product.revenue),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: _kTextPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (!isLast)
+                        const Divider(
+                          height: 1,
+                          thickness: 0.5,
+                          color: _kCardBorder,
+                        ),
+                    ],
+                  );
+                }).toList(),
+              ),
+      );
+
+      final customersCard = _SectionCard(
+        title: 'Top customers',
+        trailing: Text(
+          '${topCustomers.length} total',
+          style: const TextStyle(fontSize: 12, color: _kTextSub),
+        ),
+        child: topCustomers.isEmpty
+            ? const _EmptyPlaceholder(label: 'No customers')
+            : Column(
+                children: topCustomers.take(5).toList().asMap().entries.map((
+                  e,
+                ) {
+                  final idx = e.key;
+                  final customer = e.value;
+                  final isLast = idx == topCustomers.take(5).length - 1;
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 9),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: _kGreenBg,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                customer.name.isNotEmpty
+                                    ? customer.name[0].toUpperCase()
+                                    : '?',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: _kGreen,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    customer.name,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: _kTextPrimary,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    '${customer.orderCount} orders',
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: _kTextMuted,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              fmt(customer.totalSpent),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: _kTextPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (!isLast)
+                        const Divider(
+                          height: 1,
+                          thickness: 0.5,
+                          color: _kCardBorder,
+                        ),
+                    ],
+                  );
+                }).toList(),
+              ),
+      );
 
       if (isTablet) {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: _ChartCard(
-                title: 'Top Products',
-                child: topProducts.isEmpty
-                    ? const _EmptyState(label: 'No products')
-                    : ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: topProducts.take(5).length,
-                        separatorBuilder: (_, __) => Divider(color: _kCardBorder, height: 1),
-                        itemBuilder: (context, index) {
-                          final product = topProducts[index];
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: Row(
-                              children: [
-                                Text(
-                                  '${index + 1}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: _kBlue,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        product.name,
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          color: _kTextPrimary,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      Text(
-                                        '${product.quantitySold} sold',
-                                        style: TextStyle(
-                                          fontSize: 9,
-                                          color: _kTextSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Text(
-                                  fmt(product.revenue),
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: _kTextPrimary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-              ),
-            ),
+            Expanded(child: productsCard),
             const SizedBox(width: 12),
-            Expanded(
-              child: _ChartCard(
-                title: 'Top Customers',
-                child: topCustomers.isEmpty
-                    ? const _EmptyState(label: 'No customers')
-                    : ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: topCustomers.take(5).length,
-                        separatorBuilder: (_, __) => Divider(color: _kCardBorder, height: 1),
-                        itemBuilder: (context, index) {
-                          final customer = topCustomers[index];
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                    color: _kGreen.withOpacity(0.10),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      customer.name[0].toUpperCase(),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
-                                        color: _kGreen,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        customer.name,
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          color: _kTextPrimary,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      Text(
-                                        '${customer.orderCount} orders',
-                                        style: TextStyle(
-                                          fontSize: 9,
-                                          color: _kTextSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Text(
-                                  fmt(customer.totalSpent),
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: _kTextPrimary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-              ),
-            ),
-          ],
-        );
-      } else {
-        return Column(
-          children: [
-            _ChartCard(
-              title: 'Top Products',
-              child: topProducts.isEmpty
-                  ? const _EmptyState(label: 'No products')
-                  : ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: topProducts.take(5).length,
-                      separatorBuilder: (_, __) => Divider(color: _kCardBorder, height: 1),
-                      itemBuilder: (context, index) {
-                        final product = topProducts[index];
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Row(
-                            children: [
-                              Text(
-                                '${index + 1}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: _kBlue,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      product.name,
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                        color: _kTextPrimary,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    Text(
-                                      '${product.quantitySold} sold',
-                                      style: TextStyle(
-                                        fontSize: 9,
-                                        color: _kTextSecondary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Text(
-                                fmt(product.revenue),
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: _kTextPrimary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-            ),
-            const SizedBox(height: 12),
-            _ChartCard(
-              title: 'Top Customers',
-              child: topCustomers.isEmpty
-                  ? const _EmptyState(label: 'No customers')
-                  : ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: topCustomers.take(5).length,
-                      separatorBuilder: (_, __) => Divider(color: _kCardBorder, height: 1),
-                      itemBuilder: (context, index) {
-                        final customer = topCustomers[index];
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  color: _kGreen.withOpacity(0.10),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    customer.name.isNotEmpty ? customer.name[0].toUpperCase() : '?',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: _kGreen,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      customer.name,
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                        color: _kTextPrimary,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    Text(
-                                      '${customer.orderCount} orders',
-                                      style: TextStyle(
-                                        fontSize: 9,
-                                        color: _kTextSecondary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Text(
-                                fmt(customer.totalSpent),
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: _kTextPrimary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-            ),
+            Expanded(child: customersCard),
           ],
         );
       }
+
+      return Column(
+        children: [productsCard, const SizedBox(height: 12), customersCard],
+      );
     });
   }
 
-  // ─── Revenue Breakdown ───────────────────────────────────────────
-
-  Widget _buildRevenueBreakdown(SalesController controller) {
+  // ─── Recent Activity ──────────────────────────────────────────────────────
+  Widget _buildRecentActivity() {
     return Obx(() {
-      final data = controller.dashboard.value;
-      final breakdown = data?.revenueBreakdown;
-      final fmt = Get.find<CurrencyController>().formatAmount;
-      final items = breakdown?.items ?? [];
+      final data = _controller.dashboard.value;
+      final activities = (data?.recentActivity ?? []).take(5).toList();
 
-      return _ChartCard(
-        title: 'Revenue Breakdown',
-        child: items.isEmpty
-            ? const _EmptyState(label: 'No revenue data')
-            : Column(
-                children: [
-                  ...items.map((item) {
-                    final percentage = item.percentage;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                item.category,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: _kTextPrimary,
-                                ),
+      if (activities.isEmpty) return const SizedBox.shrink();
+
+      return _SectionCard(
+        title: 'Recent activity',
+        child: Column(
+          children: activities.asMap().entries.map((e) {
+            final idx = e.key;
+            final activity = e.value;
+            final isLast = idx == activities.length - 1;
+
+            Color color;
+            IconData icon;
+            Color bg;
+            switch (activity.type.toLowerCase()) {
+              case 'invoice':
+                color = _kTeal;
+                icon = Icons.receipt_long_outlined;
+                bg = _kTealBg;
+                break;
+              case 'payment':
+                color = _kGreen;
+                icon = Icons.payments_outlined;
+                bg = _kGreenBg;
+                break;
+              case 'return':
+                color = _kOrange;
+                icon = Icons.assignment_return_outlined;
+                bg = _kOrangeBg;
+                break;
+              default:
+                color = kPrimary;
+                icon = Icons.shopping_cart_outlined;
+                bg = _kPrimaryBg;
+            }
+
+            final fmt = Get.find<CurrencyController>().formatAmount;
+
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: bg,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(icon, size: 18, color: color),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              activity.description,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: _kTextPrimary,
                               ),
-                              Text(
-                                '${percentage.toStringAsFixed(1)}%',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: _kBlue,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: LinearProgressIndicator(
-                              value: percentage / 100,
-                              backgroundColor: _kCardBorder,
-                              valueColor: AlwaysStoppedAnimation<Color>(_kBlue),
-                              minHeight: 6,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
+                            const SizedBox(height: 2),
+                            Text(
+                              activity.timestamp,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: _kTextMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          if (activity.amount != null)
+                            Text(
+                              fmt(activity.amount),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: _kTextPrimary,
+                              ),
+                            ),
                           const SizedBox(height: 4),
-                          Text(
-                            fmt(item.amount),
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: _kTextSecondary,
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: bg,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              activity.type[0].toUpperCase() +
+                                  activity.type.substring(1),
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: color,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
                       ),
-                    );
-                  }).toList(),
-                ],
-              ),
+                    ],
+                  ),
+                ),
+                if (!isLast)
+                  const Divider(height: 1, thickness: 0.5, color: _kCardBorder),
+              ],
+            );
+          }).toList(),
+        ),
       );
     });
   }
+
+  // ─── Revenue Breakdown ────────────────────────────────────────────────────
+  Widget _buildRevenueBreakdown() {
+    return Obx(() {
+      final data = _controller.dashboard.value;
+      final items = data?.revenueBreakdown?.items ?? [];
+
+      if (items.isEmpty) return const SizedBox.shrink();
+
+      final accent = [kPrimary, _kGreen, _kOrange, _kPurple, _kTeal, _kRed];
+
+      return _SectionCard(
+        title: 'Revenue breakdown',
+        child: Column(
+          children: items.asMap().entries.map((e) {
+            final idx = e.key;
+            final item = e.value;
+            final color = accent[idx % accent.length];
+            final fmt = Get.find<CurrencyController>().formatAmount;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.10),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(Icons.circle, size: 8, color: color),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              item.category,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: _kTextSub,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  fmt(item.amount),
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: _kTextPrimary,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '${item.percentage.toStringAsFixed(1)}%',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: color,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 5),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: (item.percentage / 100).clamp(0.0, 1.0),
+                            minHeight: 5,
+                            backgroundColor: _kCardBorder,
+                            valueColor: AlwaysStoppedAnimation<Color>(color),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      );
+    });
+  }
+
+  // ─── Quick Actions ────────────────────────────────────────────────────────
+  Widget _buildQuickActions() {
+    final actions = [
+      _QuickAction(
+        'New Order',
+        Icons.add_shopping_cart_outlined,
+        kPrimary,
+        _kPrimaryBg,
+        () => Get.toNamed('/sales/orders'),
+      ),
+      _QuickAction(
+        'New Invoice',
+        Icons.receipt_long_outlined,
+        _kGreen,
+        _kGreenBg,
+        () => Get.toNamed('/sales-invoices'),
+      ),
+      _QuickAction(
+        'Customers',
+        Icons.people_outline_rounded,
+        _kOrange,
+        _kOrangeBg,
+        () => Get.toNamed('/sales/warehouse-customers'),
+      ),
+      _QuickAction(
+        'Reports',
+        Icons.bar_chart_rounded,
+        _kPurple,
+        _kPurpleBg,
+        () => Get.toNamed('/sales/reports'),
+      ),
+    ];
+
+    return _SectionCard(
+      title: 'Quick actions',
+      child: Row(
+        children: actions.map((a) {
+          return Expanded(
+            child: GestureDetector(
+              onTap: a.onTap,
+              child: Column(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: a.bg,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(a.icon, size: 22, color: a.color),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    a.label,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: _kTextPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// COMPARISON CARD
-// ════════════════════════════════════════════════════════════════════════════
+// ─── Section Card (identical to DashboardScreen) ──────────────────────────
+class _SectionCard extends StatelessWidget {
+  final String title;
+  final Widget? trailing;
+  final Widget child;
+  const _SectionCard({required this.title, required this.child, this.trailing});
 
-class _ComparisonCard extends StatelessWidget {
-  final String period;
-  final String subLabel;
-  final String sales;
-  final String returns;
-  final double salesChange;
-  final double returnsChange;
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _kCardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _kCardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: _kTextPrimary,
+                ),
+              ),
+              if (trailing != null) trailing!,
+            ],
+          ),
+          const SizedBox(height: 14),
+          child,
+        ],
+      ),
+    );
+  }
+}
 
-  const _ComparisonCard({
-    required this.period,
-    required this.subLabel,
-    required this.sales,
-    required this.returns,
-    required this.salesChange,
-    required this.returnsChange,
+// ─── KPI Card (identical to DashboardScreen _KpiCard) ─────────────────────
+class _KpiItem {
+  final String label, value, trend;
+  final IconData icon;
+  final Color iconBg, iconColor;
+  final bool trendUp;
+  const _KpiItem({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.iconBg,
+    required this.iconColor,
+    required this.trend,
+    required this.trendUp,
   });
+}
+
+class _KpiCard extends StatelessWidget {
+  final _KpiItem item;
+  const _KpiCard({required this.item});
 
   @override
   Widget build(BuildContext context) {
@@ -1982,32 +1654,143 @@ class _ComparisonCard extends StatelessWidget {
         color: _kCardBg,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _kCardBorder),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: item.iconBg,
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Icon(item.icon, size: 17, color: item.iconColor),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                decoration: BoxDecoration(
+                  color: item.trendUp ? _kGreenBg : _kRedBg,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      item.trendUp
+                          ? Icons.arrow_upward_rounded
+                          : Icons.arrow_downward_rounded,
+                      size: 9,
+                      color: item.trendUp ? _kGreen : _kRed,
+                    ),
+                    const SizedBox(width: 2),
+                    Text(
+                      item.trend,
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: item.trendUp ? _kGreen : _kRed,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                item.value,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: _kTextPrimary,
+                  letterSpacing: -0.3,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                item.label,
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: _kTextSub,
+                ),
+              ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── Bar Item model ────────────────────────────────────────────────────────
+class _BarItem {
+  final String label, value, source;
+  final double rawValue;
+  final Color color, bgColor;
+  const _BarItem(
+    this.label,
+    this.value,
+    this.rawValue,
+    this.color,
+    this.bgColor, [
+    this.source = '',
+  ]);
+}
+
+// ─── Comparison Card ──────────────────────────────────────────────────────
+class _ComparisonData {
+  final String period, subLabel, sales, returns;
+  final double salesChange, returnsChange;
+  const _ComparisonData(
+    this.period,
+    this.subLabel,
+    this.sales,
+    this.returns,
+    this.salesChange,
+    this.returnsChange,
+  );
+}
+
+class _ComparisonCard extends StatelessWidget {
+  final _ComparisonData data;
+  const _ComparisonCard({required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _kCardBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _kCardBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            period,
+            data.period,
             style: const TextStyle(
-              fontSize: 13,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
               color: _kTextPrimary,
             ),
           ),
           Text(
-            subLabel,
-            style: TextStyle(
-              fontSize: 10,
-              color: _kTextSecondary,
-            ),
+            data.subLabel,
+            style: const TextStyle(fontSize: 9, color: _kTextMuted),
           ),
+          const SizedBox(height: 10),
+          Container(height: 0.5, color: _kCardBorder),
           const SizedBox(height: 10),
           Row(
             children: [
@@ -2017,54 +1800,47 @@ class _ComparisonCard extends StatelessWidget {
                   children: [
                     const Text(
                       'Sales',
-                      style: TextStyle(
-                        fontSize: 9,
-                        color: _kTextSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: TextStyle(fontSize: 9, color: _kTextMuted),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      sales,
+                      data.sales,
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w800,
                         color: _kTextPrimary,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 2),
-                    _ChangeBadge(percent: salesChange),
+                    const SizedBox(height: 3),
+                    _ChangeBadge(percent: data.salesChange),
                   ],
                 ),
               ),
-              Container(
-                width: 1,
-                height: 40,
-                color: _kCardBorder,
-              ),
+              Container(width: 0.5, height: 44, color: _kCardBorder),
+              const SizedBox(width: 8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
                       'Returns',
-                      style: TextStyle(
-                        fontSize: 9,
-                        color: _kTextSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: TextStyle(fontSize: 9, color: _kTextMuted),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      returns,
+                      data.returns,
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w800,
                         color: _kTextPrimary,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 2),
-                    _ChangeBadge(percent: returnsChange),
+                    const SizedBox(height: 3),
+                    _ChangeBadge(percent: data.returnsChange),
                   ],
                 ),
               ),
@@ -2078,24 +1854,24 @@ class _ComparisonCard extends StatelessWidget {
 
 class _ChangeBadge extends StatelessWidget {
   final double percent;
-
   const _ChangeBadge({required this.percent});
 
   @override
   Widget build(BuildContext context) {
-    final isPositive = percent >= 0;
-    final color = isPositive ? _kGreen : _kRed;
+    final up = percent >= 0;
+    final color = up ? _kGreen : _kRed;
+    final bg = up ? _kGreenBg : _kRedBg;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.10),
+        color: bg,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            isPositive ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+            up ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
             size: 8,
             color: color,
           ),
@@ -2109,6 +1885,37 @@ class _ChangeBadge extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── Quick Action model ────────────────────────────────────────────────────
+class _QuickAction {
+  final String label;
+  final IconData icon;
+  final Color color, bg;
+  final VoidCallback onTap;
+  const _QuickAction(this.label, this.icon, this.color, this.bg, this.onTap);
+}
+
+// ─── Empty placeholder ─────────────────────────────────────────────────────
+class _EmptyPlaceholder extends StatelessWidget {
+  final String label;
+  const _EmptyPlaceholder({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: Center(
+        child: Column(
+          children: [
+            const Icon(Icons.inbox_outlined, size: 32, color: _kTextMuted),
+            const SizedBox(height: 8),
+            Text(label, style: const TextStyle(fontSize: 12, color: _kTextSub)),
+          ],
+        ),
       ),
     );
   }

@@ -1,8 +1,8 @@
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/Income/controller/income_controller.dart';
-import 'package:LedgerPro_app/core/Income/models/income_model.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/Income/controller/income_controller.dart';
+import 'package:BisonsTechs_app/core/Income/models/income_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -36,9 +36,7 @@ class IncomeScreen extends StatelessWidget {
                   children: [
                     _buildSummaryCards(controller),
                     const SizedBox(height: 8),
-                    Expanded(
-                      child: _buildListView(controller, context),
-                    ),
+                    Expanded(child: _buildListView(controller, context)),
                   ],
                 ),
               );
@@ -130,7 +128,7 @@ class IncomeScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(width: 8,),
+                  SizedBox(width: 8),
                   GestureDetector(
                     onTap: () => controller.exportIncomes(),
                     child: Container(
@@ -162,8 +160,9 @@ class IncomeScreen extends StatelessWidget {
                       return Padding(
                         padding: const EdgeInsets.only(right: 6),
                         child: GestureDetector(
-                          onTap: () =>
-                              controller.applyTypeFilter(isSelected ? 'All' : type),
+                          onTap: () => controller.applyTypeFilter(
+                            isSelected ? 'All' : type,
+                          ),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 180),
                             padding: const EdgeInsets.symmetric(
@@ -186,7 +185,9 @@ class IncomeScreen extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
-                                color: isSelected ? Colors.white : Colors.black87,
+                                color: isSelected
+                                    ? Colors.white
+                                    : Colors.black87,
                               ),
                             ),
                           ),
@@ -246,7 +247,7 @@ class IncomeScreen extends StatelessWidget {
   Widget _buildSummaryCards(IncomeController controller) {
     return Obx(
       () => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
         child: Row(
           children: [
             _buildProfessionalCard(
@@ -257,7 +258,7 @@ class IncomeScreen extends StatelessWidget {
               bgColor: kSuccess.withOpacity(0.08),
               borderColor: kSuccess.withOpacity(0.2),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             _buildProfessionalCard(
               title: 'This Month',
               amount: controller.formatAmount(controller.thisMonthTotal.value),
@@ -266,7 +267,7 @@ class IncomeScreen extends StatelessWidget {
               bgColor: kPrimary.withOpacity(0.08),
               borderColor: kPrimary.withOpacity(0.2),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             _buildProfessionalCard(
               title: 'Records',
               amount: controller.totalCount.value.toString(),
@@ -293,7 +294,7 @@ class IncomeScreen extends StatelessWidget {
   }) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: kCardBg,
           borderRadius: BorderRadius.circular(14),
@@ -312,30 +313,34 @@ class IncomeScreen extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(6),
+                  padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     color: bgColor,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Icon(icon, size: 14, color: color),
+                  child: Icon(icon, size: 12, color: color),
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: kSubText,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.3,
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 9,
+                      color: kSubText,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.3,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               amount,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: FontWeight.w800,
                 color: color,
                 letterSpacing: -0.5,
@@ -343,10 +348,10 @@ class IncomeScreen extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Container(
               height: 2,
-              width: 30,
+              width: 25,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [color, color.withOpacity(0.3)],
@@ -463,8 +468,8 @@ class IncomeScreen extends StatelessWidget {
     final statusColor = income.status == 'Posted'
         ? kSuccess
         : income.status == 'Draft'
-            ? kWarning
-            : kDanger;
+        ? kWarning
+        : kDanger;
     final typeColor = Color(
       int.parse(
             controller.getTypeColor(income.incomeType).substring(1, 7),
@@ -479,10 +484,7 @@ class IncomeScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: statusColor.withOpacity(0.2),
-          width: 1.5,
-        ),
+        border: Border.all(color: statusColor.withOpacity(0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -857,16 +859,17 @@ class IncomeScreen extends StatelessWidget {
                             const SizedBox(height: 16),
 
                             Obx(() {
-                              final hasMatch = selectedIncomeAccountId == null ||
+                              final hasMatch =
+                                  selectedIncomeAccountId == null ||
                                   controller.incomeAccounts.any(
-                                    (a) => (a['id'] ?? a['_id']).toString() ==
+                                    (a) =>
+                                        (a['id'] ?? a['_id']).toString() ==
                                         selectedIncomeAccountId,
                                   );
                               return _buildIncomeAccountDropdownField(
                                 hasMatch ? selectedIncomeAccountId : null,
-                                (v) => setState(
-                                  () => selectedIncomeAccountId = v,
-                                ),
+                                (v) =>
+                                    setState(() => selectedIncomeAccountId = v),
                                 controller.incomeAccounts.toList(),
                               );
                             }),
@@ -875,9 +878,11 @@ class IncomeScreen extends StatelessWidget {
                             Obx(() {
                               if (controller.customers.isEmpty)
                                 return const SizedBox.shrink();
-                              final hasMatch = selectedCustomerId == null ||
+                              final hasMatch =
+                                  selectedCustomerId == null ||
                                   controller.customers.any(
-                                    (c) => (c['id'] ?? c['_id']).toString() ==
+                                    (c) =>
+                                        (c['id'] ?? c['_id']).toString() ==
                                         selectedCustomerId,
                                   );
                               return _buildCustomerDropdownField(
@@ -892,16 +897,28 @@ class IncomeScreen extends StatelessWidget {
                             if (requiresItems()) ...[
                               _buildItemsSection(items, setState),
                               const SizedBox(height: 16),
-                              _buildTaxField(taxRate, (v) => setState(() => taxRate = v)),
+                              _buildTaxField(
+                                taxRate,
+                                (v) => setState(() => taxRate = v),
+                              ),
                             ] else ...[
-                              _buildAmountField(simpleAmount, (v) => setState(() => simpleAmount = v)),
+                              _buildAmountField(
+                                simpleAmount,
+                                (v) => setState(() => simpleAmount = v),
+                              ),
                             ],
                             const SizedBox(height: 16),
 
-                            _buildDescriptionField(description, (v) => description = v),
+                            _buildDescriptionField(
+                              description,
+                              (v) => description = v,
+                            ),
                             const SizedBox(height: 16),
 
-                            _buildReferenceField(reference, (v) => reference = v),
+                            _buildReferenceField(
+                              reference,
+                              (v) => reference = v,
+                            ),
                             const SizedBox(height: 16),
 
                             _buildPaymentMethodField(
@@ -919,7 +936,8 @@ class IncomeScreen extends StatelessWidget {
                                 controller.bankAccounts.isNotEmpty)
                               _buildBankDropdownField(
                                 selectedBankAccountId,
-                                (v) => setState(() => selectedBankAccountId = v),
+                                (v) =>
+                                    setState(() => selectedBankAccountId = v),
                                 controller.bankAccounts,
                               ),
                             const SizedBox(height: 16),
@@ -1071,17 +1089,20 @@ class IncomeScreen extends StatelessWidget {
 
                                       final finalBankAccountId =
                                           paymentMethod == 'Cash'
-                                              ? null
-                                              : selectedBankAccountId;
+                                          ? null
+                                          : selectedBankAccountId;
 
                                       Navigator.pop(context);
                                       await controller.createIncome(
                                         date: selectedDate,
                                         incomeType: incomeType,
-                                        incomeAccountId: selectedIncomeAccountId,
+                                        incomeAccountId:
+                                            selectedIncomeAccountId,
                                         customerId: selectedCustomerId,
                                         items: requiresItems() ? items : [],
-                                        amount: requiresItems() ? null : simpleAmount,
+                                        amount: requiresItems()
+                                            ? null
+                                            : simpleAmount,
                                         taxRate: requiresItems() ? taxRate : 0,
                                         description: description,
                                         reference: reference,
@@ -1092,7 +1113,9 @@ class IncomeScreen extends StatelessWidget {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: kPrimary,
                                 elevation: 0,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -1105,7 +1128,8 @@ class IncomeScreen extends StatelessWidget {
                                         strokeWidth: 2,
                                         valueColor:
                                             const AlwaysStoppedAnimation<Color>(
-                                                Colors.black),
+                                              Colors.black,
+                                            ),
                                       ),
                                     )
                                   : const Text(
@@ -1143,8 +1167,8 @@ class IncomeScreen extends StatelessWidget {
     final statusColor = income.status == 'Posted'
         ? kSuccess
         : income.status == 'Draft'
-            ? kWarning
-            : kDanger;
+        ? kWarning
+        : kDanger;
 
     showModalBottomSheet(
       context: context,
@@ -1309,56 +1333,61 @@ class IncomeScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        ...income.items.map(
-                          (item) => Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: kBgLight,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: Colors.grey.withOpacity(0.1),
+                        ...income.items
+                            .map(
+                              (item) => Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: kBgLight,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: Colors.grey.withOpacity(0.1),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            item.description,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              color: kText,
+                                            ),
+                                          ),
+                                          Text(
+                                            '${item.quantity} × ${controller.formatAmount(item.unitPrice)}',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: kSubText,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Text(
+                                      controller.formatAmount(item.amount),
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
+                                        color: kSuccess,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item.description,
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                          color: kText,
-                                        ),
-                                      ),
-                                      Text(
-                                        '${item.quantity} × ${controller.formatAmount(item.unitPrice)}',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: kSubText,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Text(
-                                  controller.formatAmount(item.amount),
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w800,
-                                    color: kSuccess,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ).toList(),
+                            )
+                            .toList(),
                         const SizedBox(height: 16),
-                        Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                        Divider(
+                          height: 1,
+                          color: Colors.grey.withOpacity(0.12),
+                        ),
                         const SizedBox(height: 16),
                       ],
 
@@ -1551,13 +1580,14 @@ class IncomeScreen extends StatelessWidget {
                             vertical: 10,
                           ),
                           isDense: true,
-                          labelStyle: TextStyle(
-                            fontSize: 11,
-                            color: kSubText,
-                          ),
+                          labelStyle: TextStyle(fontSize: 11, color: kSubText),
                         ),
-                        style: const TextStyle(fontSize: 13, color: Colors.black),
-                        onChanged: (v) => setState(() => item['description'] = v),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
+                        onChanged: (v) =>
+                            setState(() => item['description'] = v),
                         validator: (v) =>
                             (v == null || v.trim().isEmpty) ? 'Required' : null,
                       ),
@@ -1592,7 +1622,10 @@ class IncomeScreen extends StatelessWidget {
                           isDense: true,
                           labelStyle: TextStyle(fontSize: 11, color: kSubText),
                         ),
-                        style: const TextStyle(fontSize: 13, color: Colors.black),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
                         keyboardType: TextInputType.number,
                         onChanged: (v) => setState(() {
                           item['quantity'] = int.tryParse(v) ?? 1;
@@ -1617,17 +1650,19 @@ class IncomeScreen extends StatelessWidget {
                           isDense: true,
                           labelStyle: TextStyle(fontSize: 11, color: kSubText),
                         ),
-                        style: const TextStyle(fontSize: 13, color: Colors.black),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
                         onChanged: (v) => setState(() {
                           item['unitPrice'] = double.tryParse(v) ?? 0;
                         }),
-                        validator: (v) =>
-                            (double.tryParse(v ?? '') ?? 0) <= 0
-                                ? 'Enter valid price'
-                                : null,
+                        validator: (v) => (double.tryParse(v ?? '') ?? 0) <= 0
+                            ? 'Enter valid price'
+                            : null,
                       ),
                     ),
                   ],
@@ -1638,11 +1673,7 @@ class IncomeScreen extends StatelessWidget {
         }).toList(),
         TextButton.icon(
           onPressed: () => setState(() {
-            items.add({
-              'description': '',
-              'quantity': 1,
-              'unitPrice': 0.0,
-            });
+            items.add({'description': '', 'quantity': 1, 'unitPrice': 0.0});
           }),
           icon: const Icon(Icons.add, size: 16, color: kPrimary),
           label: Text(
@@ -1659,9 +1690,7 @@ class IncomeScreen extends StatelessWidget {
       initialValue: '0',
       decoration: InputDecoration(
         labelText: 'Tax Rate (%)',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
@@ -1680,9 +1709,7 @@ class IncomeScreen extends StatelessWidget {
       decoration: InputDecoration(
         labelText: 'Amount *',
         prefixText: CurrencyUtils.prefix,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
@@ -1693,9 +1720,8 @@ class IncomeScreen extends StatelessWidget {
       style: const TextStyle(fontSize: 13, color: Colors.black),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       onChanged: (v) => onChanged(double.tryParse(v) ?? 0),
-      validator: (v) => (double.tryParse(v ?? '') ?? 0) <= 0
-          ? 'Enter valid amount'
-          : null,
+      validator: (v) =>
+          (double.tryParse(v ?? '') ?? 0) <= 0 ? 'Enter valid amount' : null,
     );
   }
 
@@ -1704,9 +1730,7 @@ class IncomeScreen extends StatelessWidget {
       decoration: InputDecoration(
         labelText: 'Description',
         hintText: 'Enter description',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
@@ -1725,9 +1749,7 @@ class IncomeScreen extends StatelessWidget {
       decoration: InputDecoration(
         labelText: 'Reference #',
         hintText: 'e.g., INV-001',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
@@ -1748,9 +1770,7 @@ class IncomeScreen extends StatelessWidget {
       value: value,
       decoration: InputDecoration(
         labelText: 'Payment Method',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
@@ -1759,15 +1779,9 @@ class IncomeScreen extends StatelessWidget {
         labelStyle: TextStyle(fontSize: 11, color: kSubText),
       ),
       style: TextStyle(fontSize: 13, color: kText),
-      items: const [
-        'Cash',
-        'Bank Transfer',
-        'Cheque',
-        'Credit Card',
-      ].map((method) => DropdownMenuItem(
-        value: method,
-        child: Text(method),
-      )).toList(),
+      items: const ['Cash', 'Bank Transfer', 'Cheque', 'Credit Card']
+          .map((method) => DropdownMenuItem(value: method, child: Text(method)))
+          .toList(),
       onChanged: onChanged,
     );
   }
@@ -1781,9 +1795,7 @@ class IncomeScreen extends StatelessWidget {
       value: selectedId,
       decoration: InputDecoration(
         labelText: 'Bank Account',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
@@ -1797,10 +1809,7 @@ class IncomeScreen extends StatelessWidget {
         style: TextStyle(fontSize: 12, color: kSubText),
       ),
       items: [
-        const DropdownMenuItem<String>(
-          value: null,
-          child: Text('None (Cash)'),
-        ),
+        const DropdownMenuItem<String>(value: null, child: Text('None (Cash)')),
         ...bankAccounts.map(
           (a) => DropdownMenuItem<String>(
             value: (a['id'] ?? a['_id']).toString(),
@@ -1845,10 +1854,7 @@ class IncomeScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    label,
-                    style: TextStyle(fontSize: 11, color: kSubText),
-                  ),
+                  Text(label, style: TextStyle(fontSize: 11, color: kSubText)),
                   Text(
                     DateFormat('dd MMM yyyy').format(date),
                     style: TextStyle(
@@ -1860,11 +1866,7 @@ class IncomeScreen extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
-              Icons.arrow_drop_down,
-              size: 20,
-              color: kSubText,
-            ),
+            Icon(Icons.arrow_drop_down, size: 20, color: kSubText),
           ],
         ),
       ),
@@ -1881,9 +1883,7 @@ class IncomeScreen extends StatelessWidget {
       value: value,
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
@@ -1908,9 +1908,7 @@ class IncomeScreen extends StatelessWidget {
       value: selectedId,
       decoration: InputDecoration(
         labelText: 'Income Account *',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
@@ -1928,16 +1926,16 @@ class IncomeScreen extends StatelessWidget {
       items: incomeAccounts.isEmpty
           ? []
           : incomeAccounts
-              .map(
-                (a) => DropdownMenuItem<String>(
-                  value: (a['id'] ?? a['_id']).toString(),
-                  child: Text(
-                    '${a['code'] ?? ''} - ${a['name'] ?? ''}',
-                    overflow: TextOverflow.ellipsis,
+                .map(
+                  (a) => DropdownMenuItem<String>(
+                    value: (a['id'] ?? a['_id']).toString(),
+                    child: Text(
+                      '${a['code'] ?? ''} - ${a['name'] ?? ''}',
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-              )
-              .toList(),
+                )
+                .toList(),
       onChanged: incomeAccounts.isEmpty ? null : onChanged,
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -1957,9 +1955,7 @@ class IncomeScreen extends StatelessWidget {
       value: selectedId,
       decoration: InputDecoration(
         labelText: 'Customer',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
@@ -1976,15 +1972,11 @@ class IncomeScreen extends StatelessWidget {
           .map(
             (c) => DropdownMenuItem<String>(
               value: (c['id'] ?? c['_id']).toString(),
-              child: Text(
-                c['name'] ?? '',
-                overflow: TextOverflow.ellipsis,
-              ),
+              child: Text(c['name'] ?? '', overflow: TextOverflow.ellipsis),
             ),
           )
           .toList(),
       onChanged: onChanged,
     );
   }
-
 }

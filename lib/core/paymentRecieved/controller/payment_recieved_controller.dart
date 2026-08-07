@@ -1,10 +1,11 @@
 // core/paymentReceived/controller/payment_received_controller.dart
 // COMPLETE FIXED VERSION - WITH LAZY LOADING & PAGINATION (NO WEB)
 
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/warehouse/invoice/screen/warehouse_invoice_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'dart:io';
@@ -225,10 +226,20 @@ class PaymentReceivedController extends GetxController {
           // Parse pagination info
           if (data['pagination'] != null) {
             final pagination = data['pagination'];
-            totalPages.value = pagination['pages'] ?? pagination['totalPages'] ?? 1;
-            totalItems.value = pagination['total'] ?? pagination['totalItems'] ?? newPayments.length;
-            hasNextPage.value = pagination['hasNext'] ?? pagination['nextPage'] != null ?? false;
-            hasPrevPage.value = pagination['hasPrev'] ?? pagination['prevPage'] != null ?? false;
+            totalPages.value =
+                pagination['pages'] ?? pagination['totalPages'] ?? 1;
+            totalItems.value =
+                pagination['total'] ??
+                pagination['totalItems'] ??
+                newPayments.length;
+            hasNextPage.value =
+                pagination['hasNext'] ??
+                pagination['nextPage'] != null ??
+                false;
+            hasPrevPage.value =
+                pagination['hasPrev'] ??
+                pagination['prevPage'] != null ??
+                false;
             serverSupportsPagination.value = true;
           } else if (data['total'] != null) {
             totalPages.value = data['pages'] ?? 1;
@@ -239,13 +250,15 @@ class PaymentReceivedController extends GetxController {
           } else if (data['totalCount'] != null) {
             totalItems.value = data['totalCount'];
             totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
-            hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+            hasNextPage.value =
+                (currentPage.value * itemsPerPage.value) < totalItems.value;
             hasPrevPage.value = currentPage.value > 1;
             serverSupportsPagination.value = false;
           } else {
             totalItems.value = payments.length;
             totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
-            hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+            hasNextPage.value =
+                (currentPage.value * itemsPerPage.value) < totalItems.value;
             hasPrevPage.value = currentPage.value > 1;
             serverSupportsPagination.value = false;
           }
@@ -368,7 +381,10 @@ class PaymentReceivedController extends GetxController {
         'notes': notes,
       };
 
-      final response = await _api.post('/api/accounts-receivable/payments', body: body);
+      final response = await _api.post(
+        '/api/accounts-receivable/payments',
+        body: body,
+      );
 
       // Close loading dialog
       Get.back();
@@ -388,7 +404,9 @@ class PaymentReceivedController extends GetxController {
         AppSnackbar.error(
           kDanger,
           'Error',
-          response.message.isNotEmpty ? response.message : 'Failed to record payment',
+          response.message.isNotEmpty
+              ? response.message
+              : 'Failed to record payment',
         );
       }
     } catch (e) {
@@ -445,7 +463,9 @@ class PaymentReceivedController extends GetxController {
     );
 
     try {
-      final response = await _api.delete('/api/accounts-receivable/payments/$paymentId');
+      final response = await _api.delete(
+        '/api/accounts-receivable/payments/$paymentId',
+      );
 
       // Close loading dialog
       Get.back();
@@ -462,7 +482,9 @@ class PaymentReceivedController extends GetxController {
         AppSnackbar.error(
           kDanger,
           'Error',
-          response.message.isNotEmpty ? response.message : 'Failed to delete payment',
+          response.message.isNotEmpty
+              ? response.message
+              : 'Failed to delete payment',
         );
       }
     } catch (e) {
@@ -517,7 +539,9 @@ class PaymentReceivedController extends GetxController {
     );
 
     try {
-      final response = await _api.post('/api/accounts-receivable/payments/$paymentId/clear');
+      final response = await _api.post(
+        '/api/accounts-receivable/payments/$paymentId/clear',
+      );
 
       // Close loading dialog
       Get.back();
@@ -534,7 +558,9 @@ class PaymentReceivedController extends GetxController {
         AppSnackbar.error(
           kDanger,
           'Error',
-          response.message.isNotEmpty ? response.message : 'Failed to clear cheque',
+          response.message.isNotEmpty
+              ? response.message
+              : 'Failed to clear cheque',
         );
       }
     } catch (e) {
@@ -569,7 +595,10 @@ class PaymentReceivedController extends GetxController {
   }
 
   void _updateSummaryForFiltered(List<Payment> filteredPayments) {
-    totalReceived.value = filteredPayments.fold(0.0, (sum, p) => sum + p.amount);
+    totalReceived.value = filteredPayments.fold(
+      0.0,
+      (sum, p) => sum + p.amount,
+    );
 
     final now = DateTime.now();
     final todayStart = DateTime(now.year, now.month, now.day);
@@ -577,15 +606,27 @@ class PaymentReceivedController extends GetxController {
     final thisMonthStart = DateTime(now.year, now.month, 1);
 
     today.value = filteredPayments
-        .where((p) => p.paymentDate.isAfter(todayStart.subtract(const Duration(days: 1))))
+        .where(
+          (p) => p.paymentDate.isAfter(
+            todayStart.subtract(const Duration(days: 1)),
+          ),
+        )
         .fold(0.0, (sum, p) => sum + p.amount);
 
     thisWeek.value = filteredPayments
-        .where((p) => p.paymentDate.isAfter(thisWeekStart.subtract(const Duration(days: 1))))
+        .where(
+          (p) => p.paymentDate.isAfter(
+            thisWeekStart.subtract(const Duration(days: 1)),
+          ),
+        )
         .fold(0.0, (sum, p) => sum + p.amount);
 
     thisMonth.value = filteredPayments
-        .where((p) => p.paymentDate.isAfter(thisMonthStart.subtract(const Duration(days: 1))))
+        .where(
+          (p) => p.paymentDate.isAfter(
+            thisMonthStart.subtract(const Duration(days: 1)),
+          ),
+        )
         .fold(0.0, (sum, p) => sum + p.amount);
   }
 
@@ -612,7 +653,7 @@ class PaymentReceivedController extends GetxController {
   }
 
   void viewInvoice(Payment payment) {
-    // Navigate to invoice details
+    Get.to(() => const WarehouseInvoiceScreen());
   }
 
   void printReceipt(Payment payment) {
@@ -738,10 +779,7 @@ class PaymentReceivedController extends GetxController {
             ),
             Text(
               subtitle,
-              style: TextStyle(
-                fontSize: 10,
-                color: color.withOpacity(0.7),
-              ),
+              style: TextStyle(fontSize: 10, color: color.withOpacity(0.7)),
             ),
           ],
         ),
@@ -775,10 +813,7 @@ class PaymentReceivedController extends GetxController {
                   SizedBox(height: 16),
                   Text(
                     'Generating PDF...',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                   SizedBox(height: 4),
                   Text(
@@ -865,7 +900,7 @@ class PaymentReceivedController extends GetxController {
               borderRadius: pw.BorderRadius.circular(6),
             ),
             child: pw.Text(
-              'LedgerPro',
+              'BisonsTechs',
               style: pw.TextStyle(
                 color: PdfColors.white,
                 fontWeight: pw.FontWeight.bold,
@@ -1160,10 +1195,7 @@ class PaymentReceivedController extends GetxController {
                   SizedBox(height: 16),
                   Text(
                     'Building Excel...',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                   SizedBox(height: 4),
                   Text(
@@ -1247,7 +1279,10 @@ class PaymentReceivedController extends GetxController {
         ['This Week', _formatAmount(thisWeek.value)],
         ['Today', _formatAmount(today.value)],
         ['Total Payments', payments.length.toString()],
-        ['Total Amount', _formatAmount(payments.fold(0.0, (sum, p) => sum + p.amount))],
+        [
+          'Total Amount',
+          _formatAmount(payments.fold(0.0, (sum, p) => sum + p.amount)),
+        ],
       ];
 
       for (int r = 0; r < summaryRows.length; r++) {
@@ -1295,7 +1330,13 @@ class PaymentReceivedController extends GetxController {
       int row = 1;
       for (final payment in payments) {
         final bg = row.isEven ? 'F5F5F5' : 'FFFFFF';
-        _excelSetCell(paymentsSheet, row, 0, payment.paymentNumber, bgColor: bg);
+        _excelSetCell(
+          paymentsSheet,
+          row,
+          0,
+          payment.paymentNumber,
+          bgColor: bg,
+        );
         _excelSetCell(
           paymentsSheet,
           row,
@@ -1304,8 +1345,20 @@ class PaymentReceivedController extends GetxController {
           bgColor: bg,
         );
         _excelSetCell(paymentsSheet, row, 2, payment.customerName, bgColor: bg);
-        _excelSetCell(paymentsSheet, row, 3, payment.invoiceNumber, bgColor: bg);
-        _excelSetCell(paymentsSheet, row, 4, payment.invoiceAmount, bgColor: bg);
+        _excelSetCell(
+          paymentsSheet,
+          row,
+          3,
+          payment.invoiceNumber,
+          bgColor: bg,
+        );
+        _excelSetCell(
+          paymentsSheet,
+          row,
+          4,
+          payment.invoiceAmount,
+          bgColor: bg,
+        );
         _excelSetCell(
           paymentsSheet,
           row,
@@ -1314,7 +1367,13 @@ class PaymentReceivedController extends GetxController {
           bgColor: bg,
           fontColor: '2E7D32',
         );
-        _excelSetCell(paymentsSheet, row, 6, payment.paymentMethod, bgColor: bg);
+        _excelSetCell(
+          paymentsSheet,
+          row,
+          6,
+          payment.paymentMethod,
+          bgColor: bg,
+        );
         _excelSetCell(
           paymentsSheet,
           row,
@@ -1358,7 +1417,18 @@ class PaymentReceivedController extends GetxController {
         fontColor: '2E7D32',
       );
 
-      final colWidths = [15.0, 12.0, 25.0, 15.0, 15.0, 15.0, 15.0, 15.0, 20.0, 30.0];
+      final colWidths = [
+        15.0,
+        12.0,
+        25.0,
+        15.0,
+        15.0,
+        15.0,
+        15.0,
+        15.0,
+        20.0,
+        30.0,
+      ];
       for (int i = 0; i < colWidths.length; i++) {
         paymentsSheet.setColumnWidth(i, colWidths[i]);
       }
@@ -1478,13 +1548,17 @@ class Payment {
     return Payment(
       id: json['id']?.toString() ?? json['_id']?.toString() ?? '',
       paymentNumber: json['paymentNumber'] ?? '',
-      paymentDate: json['paymentDate'] != null ? DateTime.parse(json['paymentDate']) : DateTime.now(),
-      customerId: json['customerId'] is Map 
-          ? (json['customerId']['id'] ?? json['customerId']['_id'] ?? '').toString()
+      paymentDate: json['paymentDate'] != null
+          ? DateTime.parse(json['paymentDate'])
+          : DateTime.now(),
+      customerId: json['customerId'] is Map
+          ? (json['customerId']['id'] ?? json['customerId']['_id'] ?? '')
+                .toString()
           : json['customerId']?.toString() ?? '',
       customerName: json['customerName'] ?? '',
       invoiceId: json['invoiceId'] is Map
-          ? (json['invoiceId']['id'] ?? json['invoiceId']['_id'] ?? '').toString()
+          ? (json['invoiceId']['id'] ?? json['invoiceId']['_id'] ?? '')
+                .toString()
           : json['invoiceId']?.toString() ?? '',
       invoiceNumber: json['invoiceNumber'] ?? '',
       invoiceAmount: safeToDouble(json['invoiceAmount']),
@@ -1495,7 +1569,9 @@ class Payment {
       bankAccountName: json['bankAccountName'] ?? '',
       notes: json['notes'] ?? '',
       status: json['status'] ?? '',
-      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : DateTime.now(),
     );
   }
 }
@@ -1587,8 +1663,12 @@ class InvoiceForPayment {
     return InvoiceForPayment(
       id: json['id']?.toString() ?? '',
       invoiceNumber: json['invoiceNumber'] ?? '',
-      date: json['date'] != null ? DateTime.parse(json['date']) : DateTime.now(),
-      dueDate: json['dueDate'] != null ? DateTime.parse(json['dueDate']) : DateTime.now(),
+      date: json['date'] != null
+          ? DateTime.parse(json['date'])
+          : DateTime.now(),
+      dueDate: json['dueDate'] != null
+          ? DateTime.parse(json['dueDate'])
+          : DateTime.now(),
       totalAmount: safeToDouble(json['totalAmount']),
       paidAmount: safeToDouble(json['paidAmount']),
       outstanding: safeToDouble(json['outstanding']),

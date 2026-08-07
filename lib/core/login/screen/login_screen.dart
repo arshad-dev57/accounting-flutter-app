@@ -1,8 +1,8 @@
 // lib/core/login/screen/login_screen.dart
 
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/responsive_utils.dart';
-import 'package:LedgerPro_app/core/Register/Views/register_screen.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
+import 'package:BisonsTechs_app/core/Register/Views/register_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -141,7 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(width: 12),
                           const Text(
-                            'LedgerPro',
+                            'BisonsTechs',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 22,
@@ -252,11 +252,12 @@ class _LoginScreenState extends State<LoginScreen> {
         if (!isWeb)
           Row(
             children: [
-          
               const Expanded(
                 child: Center(
                   child: Padding(
-                    padding: EdgeInsets.only(right: 48.0), // Balance the back button
+                    padding: EdgeInsets.only(
+                      right: 48.0,
+                    ), // Balance the back button
                     child: Text(
                       'Log in',
                       style: TextStyle(
@@ -273,7 +274,7 @@ class _LoginScreenState extends State<LoginScreen> {
         if (!isWeb) const SizedBox(height: 32),
 
         Text(
-          'Welcome back! Log in to your\nLedgerPro account',
+          'Welcome back! Log in to your\nBisonsTechs account',
           style: TextStyle(
             fontSize: isTablet || isWeb ? 28 : 24,
             fontWeight: FontWeight.bold,
@@ -284,45 +285,53 @@ class _LoginScreenState extends State<LoginScreen> {
 
         const SizedBox(height: 32),
 
-        Obx(() => _buildTextField(
-              controller: controller.emailController,
-              onChanged: (_) => controller.clearEmailError(),
-              keyboardType: TextInputType.emailAddress,
-              labelText: 'Email',
-              errorText: controller.emailError.value.isEmpty ? null : controller.emailError.value,
-              textInputAction: TextInputAction.next,
-            )),
+        Obx(
+          () => _buildTextField(
+            controller: controller.emailController,
+            onChanged: (_) => controller.clearEmailError(),
+            keyboardType: TextInputType.emailAddress,
+            labelText: 'Email',
+            errorText: controller.emailError.value.isEmpty
+                ? null
+                : controller.emailError.value,
+            textInputAction: TextInputAction.next,
+          ),
+        ),
 
         const SizedBox(height: 16),
 
         // Password TextField
-        Obx(() => _buildTextField(
-              controller: controller.passwordController,
-              onChanged: (_) => controller.clearPasswordError(),
-              obscureText: !controller.isPasswordVisible.value,
-              labelText: 'Password',
-              suffixWidget: TextButton(
-                onPressed: () => controller.isPasswordVisible.toggle(),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: Text(
-                  controller.isPasswordVisible.value ? 'Hide' : 'Show',
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.w600,
-                    decoration: TextDecoration.underline,
-                  ),
+        Obx(
+          () => _buildTextField(
+            controller: controller.passwordController,
+            onChanged: (_) => controller.clearPasswordError(),
+            obscureText: !controller.isPasswordVisible.value,
+            labelText: 'Password',
+            suffixWidget: TextButton(
+              onPressed: () => controller.isPasswordVisible.toggle(),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(
+                controller.isPasswordVisible.value ? 'Hide' : 'Show',
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.w600,
+                  decoration: TextDecoration.underline,
                 ),
               ),
-              errorText: controller.passwordError.value.isEmpty ? null : controller.passwordError.value,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) {
-                if (!controller.isLoading.value) controller.login();
-              },
-            )),
+            ),
+            errorText: controller.passwordError.value.isEmpty
+                ? null
+                : controller.passwordError.value,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) {
+              if (!controller.isLoading.value) controller.login();
+            },
+          ),
+        ),
 
         const SizedBox(height: 12),
 
@@ -350,42 +359,46 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: 24),
 
         // Sign In button
-        Obx(() => SizedBox(
-              width: double.infinity,
-              height: 54, // Large button
-              child: ElevatedButton(
-                onPressed: controller.isLoading.value ? null : () async => await controller.login(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kPrimary,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shadowColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28), // Fully rounded
-                  ),
+        Obx(
+          () => SizedBox(
+            width: double.infinity,
+            height: 54, // Large button
+            child: ElevatedButton(
+              onPressed: controller.isLoading.value
+                  ? null
+                  : () async => await controller.login(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kPrimary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shadowColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28), // Fully rounded
                 ),
-                child: controller.isLoading.value
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text(
-                        'Log in',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
               ),
-            )),
+              child: controller.isLoading.value
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text(
+                      'Log in',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+            ),
+          ),
+        ),
 
         const SizedBox(height: 32),
 
-          Row(
+        Row(
           children: [
             Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
             Padding(
@@ -430,7 +443,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             GestureDetector(
-              onTap: () => Get.to(() =>  RegistrationScreen()),
+              onTap: () => Get.to(() => RegistrationScreen()),
               child: Text(
                 'Sign up',
                 style: TextStyle(
@@ -494,18 +507,21 @@ class _LoginScreenState extends State<LoginScreen> {
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       onSubmitted: onSubmitted,
-      style: const TextStyle(fontSize: 16, color: Colors.black, fontWeight: FontWeight.w500),
+      style: const TextStyle(
+        fontSize: 16,
+        color: Colors.black,
+        fontWeight: FontWeight.w500,
+      ),
       decoration: InputDecoration(
         labelText: labelText,
-        labelStyle: TextStyle(
-          color: Colors.grey.shade600,
-          fontSize: 14,
-        ),
+        labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 14),
         floatingLabelBehavior: FloatingLabelBehavior.auto,
-        suffixIcon: suffixWidget != null ? Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [suffixWidget],
-        ) : null,
+        suffixIcon: suffixWidget != null
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [suffixWidget],
+              )
+            : null,
         filled: false,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
@@ -563,7 +579,11 @@ class _LoginScreenState extends State<LoginScreen> {
               alignment: Alignment.centerLeft,
               child: Padding(
                 padding: const EdgeInsets.only(left: 20.0),
-                child: Icon(icon, color: iconColor ?? Colors.black, size: iconSize),
+                child: Icon(
+                  icon,
+                  color: iconColor ?? Colors.black,
+                  size: iconSize,
+                ),
               ),
             ),
             Center(
