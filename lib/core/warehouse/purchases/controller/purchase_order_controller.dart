@@ -37,9 +37,9 @@ class PurchaseOrderController extends GetxController {
 
   final List<String> filters = [
     'all',
-    'Draft',
-    'Sent',
     'Approved',
+    'Partially Received',
+    'Received',
     'Cancelled',
   ];
 
@@ -296,7 +296,8 @@ class PurchaseOrderController extends GetxController {
   void filterOrders(String filter) {
     print('🟣 [PurchaseOrderController] filterOrders called with: $filter');
     selectedFilter.value = filter;
-    applyLocalFilters();
+    statusFilter.value = filter;
+    fetchOrders(resetPage: true);
   }
 
   void searchOrders(String query) {
@@ -786,7 +787,7 @@ class PurchaseOrderController extends GetxController {
         'termsConditions': termsConditionsController.text.trim().isEmpty
             ? null
             : termsConditionsController.text.trim(),
-        'status': 'Draft',
+        'status': 'Approved',
       };
 
       print('🔵 [PurchaseOrderController] Submitting purchase order payload');
@@ -1049,6 +1050,10 @@ class PurchaseOrderController extends GetxController {
         return Colors.blue;
       case 'Approved':
         return Colors.green;
+      case 'Partially Received':
+        return Colors.teal;
+      case 'Received':
+        return Colors.indigo;
       case 'Cancelled':
         return Colors.red;
       default:
@@ -1064,6 +1069,10 @@ class PurchaseOrderController extends GetxController {
         return 'Sent';
       case 'Approved':
         return 'Approved';
+      case 'Partially Received':
+        return 'Partially Received';
+      case 'Received':
+        return 'Received';
       case 'Cancelled':
         return 'Cancelled';
       default:

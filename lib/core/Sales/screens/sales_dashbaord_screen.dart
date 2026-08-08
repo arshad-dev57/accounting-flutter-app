@@ -1,8 +1,3 @@
-// lib/core/warehouse/sales/screen/sales_dashboard_screen.dart
-//
-// Redesigned to exactly match DashboardScreen's white theme, palette, and
-// component patterns from dashboard_screen.dart
-
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
@@ -16,7 +11,6 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
-// ─── White theme palette (identical to DashboardScreen) ───────────────────
 const _kPageBg = Color(0xFFF5F6FA);
 const _kCardBg = Color(0xFFFFFFFF);
 const _kCardBorder = Color(0xFFEEEFF4);
@@ -26,7 +20,6 @@ const _kTextMuted = Color(0xFFB0B4C8);
 const _kAppBarBg = Color(0xFFF7F9FC);
 const _kChipBg = Color(0xFFF0F2F8);
 
-// Semantic colours — same as DashboardScreen
 const _kPrimaryBg = Color(0xFFE6EEF5);
 const _kGreen = Color(0xFF22A869);
 const _kGreenBg = Color(0xFFEAF7F1);

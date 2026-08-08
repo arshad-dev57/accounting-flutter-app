@@ -527,11 +527,13 @@ class PurchasePaymentController extends GetxController {
                 Map<String, dynamic>.from(e),
               ),
             )
+            .where((invoice) => invoice.outstanding > 0)
             .toList();
 
-        // Auto-select all invoices
+        // Auto-select only payable (Posted / Partially Paid) invoices
         selectedInvoices.clear();
         for (var invoice in availableInvoices) {
+          if (!invoice.payable) continue;
           invoice.isSelected = true;
           invoice.amountToPay = invoice.outstanding;
           selectedInvoices.add(invoice);
@@ -540,9 +542,20 @@ class PurchasePaymentController extends GetxController {
         // Update amount
         amountController.text = selectedTotalAmount.toStringAsFixed(2);
 
+        final draftCount =
+            availableInvoices.where((i) => i.isDraft).length;
         print(
-          '🔵 [PurchasePaymentController] Found ${availableInvoices.length} invoices for supplier',
+          '🔵 [PurchasePaymentController] Found ${availableInvoices.length} invoices (${selectedInvoices.length} payable, $draftCount draft)',
         );
+
+        if (availableInvoices.isNotEmpty && selectedInvoices.isEmpty) {
+          Get.snackbar(
+            'No Payable Invoices',
+            'No unpaid posted invoices found for this supplier.',
+            snackPosition: SnackPosition.BOTTOM,
+            duration: const Duration(seconds: 3),
+          );
+        }
       } else {
         print('❌ [PurchasePaymentController] No invoices found');
         availableInvoices.clear();
@@ -563,9 +576,19 @@ class PurchasePaymentController extends GetxController {
   void toggleInvoiceSelection(PurchaseInvoiceForPayment invoice) {
     print('🔵 [PurchasePaymentController] toggleInvoiceSelection called');
 
+    if (!invoice.payable) {
+      Get.snackbar(
+        'Post Invoice First',
+        '${invoice.invoiceNumber} is still Draft. Post it in Purchase Invoices before paying.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
     final index = selectedInvoices.indexWhere((inv) => inv.id == invoice.id);
     if (index != -1) {
       selectedInvoices.removeAt(index);
+      invoice.isSelected = false;
     } else {
       invoice.isSelected = true;
       invoice.amountToPay = invoice.outstanding;
@@ -907,6 +930,7 @@ class PurchaseInvoiceForPayment {
   final String invoiceStatus;
   final String paymentStatus;
   final String? supplierInvoiceNo;
+  final bool payable;
   bool isSelected;
   double amountToPay;
 
@@ -921,6 +945,7 @@ class PurchaseInvoiceForPayment {
     required this.invoiceStatus,
     required this.paymentStatus,
     this.supplierInvoiceNo,
+    this.payable = true,
     this.isSelected = false,
     this.amountToPay = 0,
   });
@@ -929,7 +954,16 @@ class PurchaseInvoiceForPayment {
     return DateTime.now().isAfter(dueDate) && outstanding > 0;
   }
 
+  bool get isDraft => invoiceStatus == 'Draft';
+
   factory PurchaseInvoiceForPayment.fromJson(Map<String, dynamic> json) {
+    final status = json['invoiceStatus'] ?? '';
+    final outstanding = (json['outstanding'] as num?)?.toDouble() ?? 0;
+    final payableFlag = json['payable'];
+    final payable = payableFlag is bool
+        ? payableFlag
+        : (status == 'Posted' || status == 'Partially Paid') && outstanding > 0;
+
     return PurchaseInvoiceForPayment(
       id: json['id'] ?? '',
       invoiceNumber: json['invoiceNumber'] ?? '',
@@ -941,10 +975,11 @@ class PurchaseInvoiceForPayment {
           : DateTime.now(),
       grandTotal: (json['grandTotal'] as num?)?.toDouble() ?? 0,
       paidAmount: (json['paidAmount'] as num?)?.toDouble() ?? 0,
-      outstanding: (json['outstanding'] as num?)?.toDouble() ?? 0,
-      invoiceStatus: json['invoiceStatus'] ?? '',
+      outstanding: outstanding,
+      invoiceStatus: status,
       paymentStatus: json['paymentStatus'] ?? '',
       supplierInvoiceNo: json['supplierInvoiceNo'],
+      payable: payable,
       isSelected: json['isSelected'] ?? false,
       amountToPay: (json['amountToPay'] as num?)?.toDouble() ?? 0,
     );

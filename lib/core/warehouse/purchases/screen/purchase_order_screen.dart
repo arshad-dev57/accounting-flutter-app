@@ -63,11 +63,15 @@ class PurchaseOrderScreen extends StatelessWidget {
           ],
         );
       }),
-      floatingActionButton: FloatingActionButton(
-        onPressed: controller.openCreateWizard,
-        backgroundColor: kPrimary,
-        elevation: 2,
-        child: const Icon(Icons.add, color: Colors.black, size: 24),
+      floatingActionButton: Obx(
+        () => controller.showCreateWizard.value
+            ? const SizedBox.shrink()
+            : FloatingActionButton(
+                onPressed: controller.openCreateWizard,
+                backgroundColor: kPrimary,
+                elevation: 2,
+                child: const Icon(Icons.add, color: Colors.black, size: 24),
+              ),
       ),
     );
   }
@@ -111,26 +115,32 @@ class PurchaseOrderScreen extends StatelessWidget {
                     ),
                   ),
                   Obx(
-                    () => Row(
-                      children: [
-                        _compactKpi(
-                          'Draft',
-                          controller.statusCounts.value.draft.toString(),
-                          Colors.orange.shade800,
+                    () => Flexible(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _compactKpi(
+                              'Approved',
+                              controller.statusCounts.value.approved.toString(),
+                              Colors.green.shade800,
+                            ),
+                            const SizedBox(width: 6),
+                            _compactKpi(
+                              'Partial',
+                              controller.statusCounts.value.partiallyReceived
+                                  .toString(),
+                              Colors.teal.shade800,
+                            ),
+                            const SizedBox(width: 6),
+                            _compactKpi(
+                              'Received',
+                              controller.statusCounts.value.received.toString(),
+                              Colors.indigo.shade800,
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 6),
-                        _compactKpi(
-                          'Sent',
-                          controller.statusCounts.value.sent.toString(),
-                          Colors.blue.shade800,
-                        ),
-                        const SizedBox(width: 6),
-                        _compactKpi(
-                          'Approved',
-                          controller.statusCounts.value.approved.toString(),
-                          Colors.green.shade800,
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -183,19 +193,19 @@ class PurchaseOrderScreen extends StatelessWidget {
                       () => controller.filterOrders('all'),
                     ),
                     _filterChip(
-                      'Draft',
-                      controller.selectedFilter.value == 'Draft',
-                      () => controller.filterOrders('Draft'),
-                    ),
-                    _filterChip(
-                      'Sent',
-                      controller.selectedFilter.value == 'Sent',
-                      () => controller.filterOrders('Sent'),
-                    ),
-                    _filterChip(
                       'Approved',
                       controller.selectedFilter.value == 'Approved',
                       () => controller.filterOrders('Approved'),
+                    ),
+                    _filterChip(
+                      'Partial',
+                      controller.selectedFilter.value == 'Partially Received',
+                      () => controller.filterOrders('Partially Received'),
+                    ),
+                    _filterChip(
+                      'Received',
+                      controller.selectedFilter.value == 'Received',
+                      () => controller.filterOrders('Received'),
                     ),
                     _filterChip(
                       'Cancelled',
@@ -1133,116 +1143,120 @@ class _CreateOrderWizard extends StatelessWidget {
   // ─── NAVIGATION BUTTONS ───────────────────────────────────────
 
   Widget _buildNavButtons(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          if (controller.wizardStep.value > 0)
-            OutlinedButton(
-              onPressed: controller.previousStep,
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                side: BorderSide(color: Colors.grey.shade300),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.arrow_back, size: 16, color: kSubText),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Back',
-                    style: TextStyle(
-                      color: kSubText,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
+    final step = controller.wizardStep.value;
+    final canGoBack = step > 0;
+    final isLast = step >= 2;
+
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
             ),
-          const Spacer(),
-          if (controller.wizardStep.value < 2)
-            ElevatedButton(
-              onPressed: controller.nextStep,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kPrimary,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 28,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                elevation: 0,
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    'Next',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w700,
-                    ),
+          ],
+        ),
+        child: Row(
+          children: [
+            if (canGoBack)
+              OutlinedButton(
+                onPressed: controller.previousStep,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
                   ),
-                  const SizedBox(width: 4),
-                  Icon(Icons.arrow_forward, size: 16, color: Colors.black),
-                ],
-              ),
-            )
-          else
-            ElevatedButton(
-              onPressed: controller.isSubmitting.value
-                  ? null
-                  : controller.createOrder,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kPrimary,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 28,
-                  vertical: 14,
+                  minimumSize: const Size(0, 44),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  side: BorderSide(color: Colors.grey.shade300),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                elevation: 0,
-              ),
-              child: controller.isSubmitting.value
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.black,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.arrow_back, size: 16, color: kSubText),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Back',
+                      style: TextStyle(
+                        color: kSubText,
+                        fontWeight: FontWeight.w600,
                       ),
-                    )
-                  : Row(
-                      children: [
-                        Icon(Icons.check, size: 18, color: Colors.black),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Create Order',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
                     ),
+                  ],
+                ),
+              ),
+            if (canGoBack) const SizedBox(width: 10),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: isLast
+                    ? (controller.isSubmitting.value
+                          ? null
+                          : controller.createOrder)
+                    : controller.nextStep,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kPrimary,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                  minimumSize: const Size(0, 44),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 0,
+                ),
+                child: controller.isSubmitting.value && isLast
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.black,
+                        ),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (isLast) ...[
+                            const Icon(
+                              Icons.check,
+                              size: 18,
+                              color: Colors.black,
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          Flexible(
+                            child: Text(
+                              isLast ? 'Create Order' : 'Next',
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          if (!isLast) ...[
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.arrow_forward,
+                              size: 16,
+                              color: Colors.black,
+                            ),
+                          ],
+                        ],
+                      ),
+              ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1598,6 +1612,10 @@ class _OrderDetailSheetState extends State<_OrderDetailSheet> {
         return Colors.blue;
       case 'Approved':
         return Colors.green;
+      case 'Partially Received':
+        return Colors.teal;
+      case 'Received':
+        return Colors.indigo;
       case 'Cancelled':
         return Colors.red;
       default:
@@ -1734,6 +1752,10 @@ class _OrderListView extends StatelessWidget {
         return Colors.blue;
       case 'Approved':
         return Colors.green;
+      case 'Partially Received':
+        return Colors.teal;
+      case 'Received':
+        return Colors.indigo;
       case 'Cancelled':
         return Colors.red;
       default:

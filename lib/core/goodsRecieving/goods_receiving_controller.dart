@@ -37,7 +37,6 @@ class GoodsReceivingController extends GetxController {
 
   final List<String> filters = [
     'all',
-    'Draft',
     'Partially Received',
     'Fully Received',
   ];
@@ -255,7 +254,8 @@ class GoodsReceivingController extends GetxController {
   void filterGRNs(String filter) {
     print('🟣 [GoodsReceivingController] filterGRNs called with: $filter');
     selectedFilter.value = filter;
-    applyLocalFilters();
+    statusFilter.value = filter;
+    fetchGRNs(resetPage: true);
   }
 
   void searchGRNs(String query) {
@@ -362,6 +362,7 @@ class GoodsReceivingController extends GetxController {
     print('🟢 [GoodsReceivingController] openCreateWizard called');
     _resetWizard();
     showCreateWizard.value = true;
+    searchOrders('');
     print(
       '🟢 [GoodsReceivingController] showCreateWizard: ${showCreateWizard.value}',
     );
@@ -397,21 +398,15 @@ class GoodsReceivingController extends GetxController {
   Future<void> searchOrders(String query) async {
     print('🔵 [GoodsReceivingController] searchOrders called with: "$query"');
 
-    if (query.trim().length < 2) {
-      print('🔵 [GoodsReceivingController] Query too short, clearing results');
-      orderSearchResults.clear();
-      return;
-    }
-
     try {
       isSearchingOrders.value = true;
       final encoded = Uri.encodeComponent(query.trim());
       print(
-        '🔵 [GoodsReceivingController] API Request: GET /api/purchase/goods-receiving/available-orders?search=$encoded&limit=10',
+        '🔵 [GoodsReceivingController] API Request: GET /api/purchase/goods-receiving/available-orders?search=$encoded&limit=20',
       );
 
       final response = await _api.get(
-        '/api/purchase/goods-receiving/available-orders?search=$encoded&limit=10',
+        '/api/purchase/goods-receiving/available-orders?search=$encoded&limit=20',
         requiresAuth: true,
       );
 
@@ -597,7 +592,7 @@ class GoodsReceivingController extends GetxController {
             ? null
             : notesController.text.trim(),
         'items': items,
-        'status': 'Draft',
+        'status': 'Confirmed',
       };
 
       print('🔵 [GoodsReceivingController] Submitting GRN payload');

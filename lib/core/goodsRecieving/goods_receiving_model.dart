@@ -52,7 +52,7 @@ class GoodsReceivingModel {
   bool get isPartiallyReceived => status == 'Partially Received';
   bool get isFullyReceived => status == 'Fully Received';
   
-  bool get canConfirm => isDraft || isPartiallyReceived;
+  bool get canConfirm => isDraft && confirmedAt == null;
   bool get canEdit => isDraft && confirmedAt == null;
   bool get canDelete => isDraft && confirmedAt == null;
   bool get isConfirmed => confirmedAt != null;

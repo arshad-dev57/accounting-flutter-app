@@ -1,5 +1,3 @@
-// lib/core/warehouse/dashboard/warehouse_dashboard.dart
-
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/Notifications/screens/notification_screen.dart';
 import 'package:BisonsTechs_app/core/warehouse/dashboard/warehouse_dashboard_controller.dart';
@@ -10,7 +8,6 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
-// ─── White theme palette (matches DashboardScreen exactly) ────────────────
 const _kPageBg = Color(0xFFF5F6FA);
 const _kCardBg = Color(0xFFFFFFFF);
 const _kCardBorder = Color(0xFFEEEFF4);
@@ -1216,7 +1213,6 @@ class _WarehouseDashboardState extends State<WarehouseDashboard> {
     );
   }
 
-  // ─── Recent Activities ────────────────────────────────────────────────────
   Widget _buildRecentActivities() {
     final activities = _controller.recentActivities;
     final shown = activities.length > 6 ? activities.sublist(0, 6) : activities;
@@ -1346,10 +1342,6 @@ class _WarehouseDashboardState extends State<WarehouseDashboard> {
   }
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// SHARED SECTION CARD (matches _SectionCard in DashboardScreen)
-// ════════════════════════════════════════════════════════════════════════════
-
 class _SectionCard extends StatelessWidget {
   final String title;
   final Widget? trailing;
@@ -1390,10 +1382,6 @@ class _SectionCard extends StatelessWidget {
     );
   }
 }
-
-// ════════════════════════════════════════════════════════════════════════════
-// KPI CARD (matches _KpiCard in DashboardScreen exactly)
-// ════════════════════════════════════════════════════════════════════════════
 
 class _KpiItem {
   final String label;

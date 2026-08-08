@@ -41,9 +41,8 @@ class PurchaseInvoiceController extends GetxController {
 
   final List<String> filters = [
     'all',
-    'Draft',
-    'Posted',
-    'Partially Paid',
+    'Unpaid',
+    'Partial',
     'Paid',
     'Cancelled',
   ];
@@ -273,9 +272,18 @@ class PurchaseInvoiceController extends GetxController {
 
     final list = invoices.toList();
     final filtered = list.where((item) {
-      // Status filter
-      if (selectedFilter.value != 'all' &&
-          item.invoiceStatus != selectedFilter.value) {
+      // Payment / cancel filters
+      if (selectedFilter.value == 'Unpaid' && item.paymentStatus != 'Unpaid') {
+        return false;
+      }
+      if (selectedFilter.value == 'Partial' && item.paymentStatus != 'Partial') {
+        return false;
+      }
+      if (selectedFilter.value == 'Paid' && item.paymentStatus != 'Paid') {
+        return false;
+      }
+      if (selectedFilter.value == 'Cancelled' &&
+          item.invoiceStatus != 'Cancelled') {
         return false;
       }
       // Search filter
@@ -300,7 +308,18 @@ class PurchaseInvoiceController extends GetxController {
   void filterInvoices(String filter) {
     print('🟣 [PurchaseInvoiceController] filterInvoices called with: $filter');
     selectedFilter.value = filter;
-    applyLocalFilters();
+    // Payment states use paymentStatus; Cancelled uses invoiceStatus
+    if (filter == 'Unpaid' || filter == 'Partial' || filter == 'Paid') {
+      statusFilter.value = 'all';
+      paymentFilter.value = filter;
+    } else if (filter == 'Cancelled') {
+      statusFilter.value = 'Cancelled';
+      paymentFilter.value = 'all';
+    } else {
+      statusFilter.value = 'all';
+      paymentFilter.value = 'all';
+    }
+    fetchInvoices(resetPage: true);
   }
 
   void searchInvoices(String query) {
@@ -412,6 +431,7 @@ class PurchaseInvoiceController extends GetxController {
     print('🟢 [PurchaseInvoiceController] openCreateWizard called');
     _resetWizard();
     showCreateWizard.value = true;
+    searchSource('');
     print(
       '🟢 [PurchaseInvoiceController] showCreateWizard: ${showCreateWizard.value}',
     );
@@ -456,23 +476,20 @@ class PurchaseInvoiceController extends GetxController {
     sourceResults.clear();
     selectedSource.value = null;
     lineDrafts.clear();
+    // Load recent available sources (GRN optional for PO invoices)
+    searchSource('');
   }
 
   Future<void> searchSource(String query) async {
     print('🔵 [PurchaseInvoiceController] searchSource called with: "$query"');
 
-    if (query.trim().length < 2) {
-      print('🔵 [PurchaseInvoiceController] Query too short, clearing results');
-      sourceResults.clear();
-      return;
-    }
-
     try {
       isSearchingSource.value = true;
-      final encoded = Uri.encodeComponent(query.trim());
+      final trimmed = query.trim();
+      final encoded = Uri.encodeComponent(trimmed);
       final endpoint = sourceType.value == 'grn'
-          ? '/api/purchase/invoices/available-grns?search=$encoded&limit=10'
-          : '/api/purchase/invoices/available-pos?search=$encoded&limit=10';
+          ? '/api/purchase/invoices/available-grns?search=$encoded&limit=20'
+          : '/api/purchase/invoices/available-pos?search=$encoded&limit=20';
 
       print('🔵 [PurchaseInvoiceController] API Request: GET $endpoint');
 
@@ -506,25 +523,50 @@ class PurchaseInvoiceController extends GetxController {
         : source['orderNumber'];
     print('🔵 [PurchaseInvoiceController] Selected source: $displayName');
 
+    if (source['hasInvoice'] == true) {
+      Get.snackbar(
+        'Already Invoiced',
+        'This ${sourceType.value == 'grn' ? 'GRN' : 'PO'} already has invoice(s).',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
     selectedSource.value = source;
     sourceResults.clear();
     sourceSearchController.text = displayName ?? '';
 
-    // Create line drafts from source items
+    // Line drafts from source items (PO ordered qty or GRN received qty)
     final items = source['items'] as List? ?? [];
     lineDrafts.value = items.map((item) {
+      final qty =
+          item['receivingQuantity'] ??
+          item['quantity'] ??
+          0;
       return PurchaseInvoiceLineDraft(
         productId: item['productId'] ?? '',
         productName: item['productName'] ?? '',
         sku: item['sku'] ?? '',
-        quantity: item['quantity'] ?? item['receivingQuantity'] ?? 0,
+        quantity: qty is int ? qty : (qty as num).toInt(),
         unitPrice:
-            item['unitPrice']?.toDouble() ?? item['costPrice']?.toDouble() ?? 0,
-        discount: item['discount']?.toDouble() ?? 0,
-        taxRate: item['taxRate']?.toDouble() ?? 0,
+            (item['unitPrice'] as num?)?.toDouble() ??
+            (item['costPrice'] as num?)?.toDouble() ??
+            0,
+        discount: (item['discount'] as num?)?.toDouble() ?? 0,
+        taxRate: (item['taxRate'] as num?)?.toDouble() ?? 0,
         notes: item['notes'],
       );
-    }).toList();
+    }).where((line) => line.quantity > 0).toList();
+
+    if (lineDrafts.isEmpty) {
+      Get.snackbar(
+        'No Items',
+        'No quantities available to invoice for this source.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      selectedSource.value = null;
+      return;
+    }
 
     print(
       '🔵 [PurchaseInvoiceController] Created ${lineDrafts.length} line drafts',

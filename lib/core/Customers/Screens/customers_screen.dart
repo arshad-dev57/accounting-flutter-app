@@ -860,8 +860,6 @@ class CustomersScreen extends StatelessWidget {
     );
   }
 
-  // ==================== WEB TABLE ====================
-
   Widget _buildWebCustomersTable(
     CustomerController controller,
     BuildContext context,
