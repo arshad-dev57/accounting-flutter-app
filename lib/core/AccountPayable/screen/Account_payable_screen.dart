@@ -62,7 +62,7 @@ class AccountsPayableScreen extends StatelessWidget {
           onPressed: () => _showAddBillDialog(controller, context),
           backgroundColor: kPrimary,
           elevation: 0,
-          child: const Icon(Icons.add, color: Colors.black, size: 24),
+          child: const Icon(Icons.add, color: Colors.white, size: 24),
         ),
       ),
     );
@@ -89,7 +89,7 @@ class AccountsPayableScreen extends StatelessWidget {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   const SizedBox(width: 8),
@@ -102,7 +102,7 @@ class AccountsPayableScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
-                            color: Colors.black,
+                            color: Colors.white,
                           ),
                         ),
                         Obx(
@@ -110,7 +110,7 @@ class AccountsPayableScreen extends StatelessWidget {
                             '${controller.bills.length} bills',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.black.withOpacity(0.55),
+                              color: Colors.white.withOpacity(0.55),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -124,13 +124,13 @@ class AccountsPayableScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 18,
-                        color: Colors.black.withOpacity(0.65),
+                        color: Colors.white.withOpacity(0.65),
                       ),
                     ),
                   ),
@@ -141,13 +141,13 @@ class AccountsPayableScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.download_outlined,
                         size: 18,
-                        color: Colors.black.withOpacity(0.65),
+                        color: Colors.white.withOpacity(0.65),
                       ),
                     ),
                   ),
@@ -177,7 +177,7 @@ class AccountsPayableScreen extends StatelessWidget {
                         onChanged: (value) => controller.searchBills(value),
                         style: const TextStyle(
                           fontSize: 13,
-                          color: Colors.black87,
+                          color: Colors.white,
                         ),
                         decoration: InputDecoration(
                           hintText: 'Search bills...',
@@ -220,7 +220,7 @@ class AccountsPayableScreen extends StatelessWidget {
                           icon: const Icon(Icons.arrow_drop_down, size: 20),
                           style: const TextStyle(
                             fontSize: 12,
-                            color: Colors.black87,
+                            color: Colors.black,
                           ),
                           underline: const SizedBox.shrink(),
                           items: ['All', 'Unpaid', 'Paid', 'Overdue', 'Partial']
@@ -415,7 +415,7 @@ class AccountsPayableScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black,
+                    color: Colors.white,
                   ),
                 ),
               ),
@@ -1033,7 +1033,7 @@ class AccountsPayableScreen extends StatelessWidget {
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
-                                        color: Colors.black,
+                                        color: Colors.white,
                                       ),
                                     ),
                             ),
@@ -1950,7 +1950,7 @@ class AccountsPayableScreen extends StatelessWidget {
             border: Border.all(color: kPrimary.withOpacity(0.3)),
           ),
           child: IconButton(
-            icon: const Icon(Icons.add, color: Colors.black, size: 20),
+            icon: const Icon(Icons.add, color: Colors.white, size: 20),
             onPressed: () async {
               Navigator.pop(context);
               await Get.to(() => SuppliersScreen());

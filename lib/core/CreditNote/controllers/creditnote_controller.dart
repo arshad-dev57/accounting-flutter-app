@@ -597,7 +597,7 @@ class CreditNoteController extends GetxController {
                       ),
                       child: const Icon(
                         Icons.note_add_outlined,
-                        color: Colors.black,
+                        color: Colors.white,
                         size: 22,
                       ),
                     ),
@@ -1273,7 +1273,7 @@ class CreditNoteController extends GetxController {
                                     strokeWidth: 2,
                                     valueColor:
                                         const AlwaysStoppedAnimation<Color>(
-                                          Colors.black,
+                                          Colors.white,
                                         ),
                                   ),
                                 )
@@ -1282,7 +1282,7 @@ class CreditNoteController extends GetxController {
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w700,
-                                    color: Colors.black,
+                                    color: Colors.white,
                                   ),
                                 ),
                         ),
@@ -1359,7 +1359,7 @@ class CreditNoteController extends GetxController {
                       ),
                       child: const Icon(
                         Icons.check_circle_outline,
-                        color: Colors.black,
+                        color: Colors.white,
                         size: 22,
                       ),
                     ),
@@ -1665,7 +1665,7 @@ class CreditNoteController extends GetxController {
                                     strokeWidth: 2,
                                     valueColor:
                                         const AlwaysStoppedAnimation<Color>(
-                                          Colors.black,
+                                          Colors.white,
                                         ),
                                   ),
                                 )
@@ -1674,7 +1674,7 @@ class CreditNoteController extends GetxController {
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w700,
-                                    color: Colors.black,
+                                    color: Colors.white,
                                   ),
                                 ),
                         ),
@@ -1877,14 +1877,14 @@ class CreditNoteController extends GetxController {
                                   icon: const Icon(
                                     Icons.check_circle,
                                     size: 16,
-                                    color: Colors.black,
+                                    color: Colors.white,
                                   ),
                                   label: const Text(
                                     'Apply',
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
-                                      color: Colors.black,
+                                      color: Colors.white,
                                     ),
                                   ),
                                   style: ElevatedButton.styleFrom(

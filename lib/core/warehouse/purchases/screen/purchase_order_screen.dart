@@ -18,23 +18,42 @@ class PurchaseOrderScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: kBgLight,
       appBar: AppBar(
-        title: const Text(
-          'Purchase Orders',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: Colors.black,
-          ),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.shopping_bag_outlined,
+                size: 16,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'Purchase Orders',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
         backgroundColor: kPrimary,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Get.back(),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: Colors.black),
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
             onPressed: controller.refreshOrders,
           ),
         ],
@@ -70,7 +89,7 @@ class PurchaseOrderScreen extends StatelessWidget {
                 onPressed: controller.openCreateWizard,
                 backgroundColor: kPrimary,
                 elevation: 2,
-                child: const Icon(Icons.add, color: Colors.black, size: 24),
+                child: const Icon(Icons.add, color: Colors.white, size: 24),
               ),
       ),
     );
@@ -88,6 +107,20 @@ class PurchaseOrderScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
               child: Row(
                 children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: const Icon(
+                      Icons.shopping_bag_outlined,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,7 +130,7 @@ class PurchaseOrderScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
-                            color: Colors.black,
+                            color: Colors.white,
                             letterSpacing: -0.3,
                           ),
                         ),
@@ -106,7 +139,7 @@ class PurchaseOrderScreen extends StatelessWidget {
                             '${controller.totalRecords.value} orders',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.black.withOpacity(0.55),
+                              color: Colors.white.withOpacity(0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -123,20 +156,20 @@ class PurchaseOrderScreen extends StatelessWidget {
                             _compactKpi(
                               'Approved',
                               controller.statusCounts.value.approved.toString(),
-                              Colors.green.shade800,
+                              Colors.green.shade200,
                             ),
                             const SizedBox(width: 6),
                             _compactKpi(
                               'Partial',
                               controller.statusCounts.value.partiallyReceived
                                   .toString(),
-                              Colors.teal.shade800,
+                              Colors.teal.shade200,
                             ),
                             const SizedBox(width: 6),
                             _compactKpi(
                               'Received',
                               controller.statusCounts.value.received.toString(),
-                              Colors.indigo.shade800,
+                              Colors.indigo.shade200,
                             ),
                           ],
                         ),
@@ -150,13 +183,13 @@ class PurchaseOrderScreen extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(9),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 17,
-                        color: Colors.black.withOpacity(0.65),
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ),
@@ -238,7 +271,7 @@ class PurchaseOrderScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.white.withOpacity(0.7),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -255,10 +288,10 @@ class PurchaseOrderScreen extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
-            color: selected ? Colors.black : Colors.white.withOpacity(0.18),
+            color: selected ? Colors.white : Colors.white.withOpacity(0.18),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: selected ? Colors.black : Colors.white.withOpacity(0.4),
+              color: selected ? Colors.white : Colors.white.withOpacity(0.4),
             ),
           ),
           child: Text(
@@ -266,7 +299,7 @@ class PurchaseOrderScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: selected ? Colors.white : Colors.black87,
+              color: selected ? kPrimary : Colors.white,
             ),
           ),
         ),
@@ -403,17 +436,36 @@ class _CreateOrderWizard extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: kPrimary,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
         leading: IconButton(
           onPressed: onCancel,
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
         ),
-        title: const Text(
-          'Create Purchase Order',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: Colors.black,
-          ),
+        title: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.shopping_bag_outlined,
+                size: 16,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'Create Purchase Order',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4),
@@ -447,7 +499,9 @@ class _CreateOrderWizard extends StatelessWidget {
               height: 4,
               margin: EdgeInsets.only(right: i < 2 ? 6 : 0),
               decoration: BoxDecoration(
-                color: active ? kPrimary : Colors.grey.shade300,
+                color: active
+                    ? Colors.white
+                    : Colors.white.withOpacity(0.25),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -506,7 +560,7 @@ class _CreateOrderWizard extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             child: IconButton(
-              icon: const Icon(Icons.add, color: Colors.black, size: 22),
+              icon: const Icon(Icons.add, color: Colors.white, size: 22),
               onPressed: () {
                 Get.to(() => const SuppliersScreen())?.then((_) {
                   controller.supplierSearchResults.clear();
@@ -611,7 +665,7 @@ class _CreateOrderWizard extends StatelessWidget {
                     color: kPrimary,
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Icon(Icons.add, color: Colors.black, size: 16),
+                  child: const Icon(Icons.add, color: Colors.white, size: 16),
                 ),
                 onTap: () => controller.addProductToOrder(product),
               );
@@ -1108,7 +1162,7 @@ class _CreateOrderWizard extends StatelessWidget {
               color: kPrimary,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(Icons.check, color: Colors.black, size: 20),
+            child: Icon(Icons.check, color: Colors.white, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1218,7 +1272,7 @@ class _CreateOrderWizard extends StatelessWidget {
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.black,
+                          color: Colors.white,
                         ),
                       )
                     : Row(
@@ -1229,7 +1283,7 @@ class _CreateOrderWizard extends StatelessWidget {
                             const Icon(
                               Icons.check,
                               size: 18,
-                              color: Colors.black,
+                              color: Colors.white,
                             ),
                             const SizedBox(width: 6),
                           ],
@@ -1238,7 +1292,7 @@ class _CreateOrderWizard extends StatelessWidget {
                               isLast ? 'Create Order' : 'Next',
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                color: Colors.black,
+                                color: Colors.white,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -1248,7 +1302,7 @@ class _CreateOrderWizard extends StatelessWidget {
                             const Icon(
                               Icons.arrow_forward,
                               size: 16,
-                              color: Colors.black,
+                              color: Colors.white,
                             ),
                           ],
                         ],
@@ -1812,12 +1866,12 @@ class _OrderListView extends StatelessWidget {
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: onCreate,
-                icon: const Icon(Icons.add, size: 16, color: Colors.black),
+                icon: const Icon(Icons.add, size: 16, color: Colors.white),
                 label: const Text(
                   'Create Order',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.black,
+                    color: Colors.white,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

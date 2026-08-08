@@ -50,9 +50,23 @@ class CategoriesScreen extends StatelessWidget {
                 children: [
                   GestureDetector(
                     onTap: () => Get.back(),
-                    child: const Icon(Icons.arrow_back, color: Colors.black),
+                    child: const Icon(Icons.arrow_back, color: Colors.white),
                   ),
                   const SizedBox(width: 12),
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: const Icon(
+                      Icons.category_outlined,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,7 +76,7 @@ class CategoriesScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
-                            color: Colors.black,
+                            color: Colors.white,
                             letterSpacing: -0.3,
                           ),
                         ),
@@ -71,7 +85,7 @@ class CategoriesScreen extends StatelessWidget {
                             '${controller.totalCategories.value} categories • ${controller.totalSubCategories.value} sub-categories',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.black.withOpacity(0.55),
+                              color: Colors.white.withOpacity(0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -85,19 +99,19 @@ class CategoriesScreen extends StatelessWidget {
                         _compactKpi(
                           'Main',
                           controller.rootCategories.value.toString(),
-                          Colors.blue.shade800,
+                          Colors.white,
                         ),
                         const SizedBox(width: 10),
                         _compactKpi(
                           'Sub',
                           controller.totalSubCategories.value.toString(),
-                          Colors.purple.shade800,
+                          Colors.purple.shade200,
                         ),
                         const SizedBox(width: 10),
                         _compactKpi(
                           'Products',
                           controller.totalProducts.value.toString(),
-                          Colors.green.shade800,
+                          Colors.green.shade200,
                         ),
                       ],
                     ),
@@ -109,13 +123,13 @@ class CategoriesScreen extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(9),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 17,
-                        color: Colors.black.withOpacity(0.65),
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ),
@@ -148,7 +162,7 @@ class CategoriesScreen extends StatelessWidget {
               margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.12),
+                color: Colors.white.withOpacity(0.18),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: TabBar(
@@ -161,8 +175,8 @@ class CategoriesScreen extends StatelessWidget {
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
-                labelColor: Colors.black,
-                unselectedLabelColor: Colors.black.withOpacity(0.6),
+                labelColor: kPrimary,
+                unselectedLabelColor: Colors.white.withOpacity(0.7),
                 indicator: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(9),
@@ -264,7 +278,7 @@ class CategoriesScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.white.withOpacity(0.7),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -327,11 +341,11 @@ class _CategoriesTab extends StatelessWidget {
         onPressed: () => _showAddCategoryDialog(context, controller, null),
         backgroundColor: kPrimary,
         elevation: 2,
-        icon: const Icon(Icons.add, color: Colors.black, size: 20),
+        icon: const Icon(Icons.add, color: Colors.white, size: 20),
         label: const Text(
           'Add Category',
           style: TextStyle(
-            color: Colors.black,
+            color: Colors.white,
             fontWeight: FontWeight.w700,
             fontSize: 13,
           ),
@@ -483,11 +497,11 @@ class _SubCategoriesTabState extends State<_SubCategoriesTab> {
         },
         backgroundColor: kPrimary,
         elevation: 2,
-        icon: const Icon(Icons.add, color: Colors.black, size: 20),
+        icon: const Icon(Icons.add, color: Colors.white, size: 20),
         label: const Text(
           'Add Sub-Category',
           style: TextStyle(
-            color: Colors.black,
+            color: Colors.white,
             fontWeight: FontWeight.w700,
             fontSize: 13,
           ),
@@ -524,7 +538,7 @@ class _SubCategoriesTabState extends State<_SubCategoriesTab> {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: isSelected ? Colors.black : kSubText,
+              color: isSelected ? Colors.white : kSubText,
             ),
           ),
         ),
@@ -929,12 +943,12 @@ Widget _buildEmptyState(
           const SizedBox(height: 20),
           ElevatedButton.icon(
             onPressed: onAdd,
-            icon: const Icon(Icons.add, size: 16, color: Colors.black),
+            icon: const Icon(Icons.add, size: 16, color: Colors.white),
             label: const Text(
               'Add Now',
               style: TextStyle(
                 fontSize: 13,
-                color: Colors.black,
+                color: Colors.white,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -1103,7 +1117,7 @@ void _showAddCategoryDialog(
                     'Save Category',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.black,
+                      color: Colors.white,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -1269,7 +1283,7 @@ void _showAddSubCategoryDialog(
                       'Add Sub-Category',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.black,
+                        color: Colors.white,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -1731,7 +1745,7 @@ void _showEditCategoryDialog(
                     'Update Category',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.black,
+                      color: Colors.white,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -1959,7 +1973,7 @@ Widget _loadingIndicator() {
   return const SizedBox(
     height: 16,
     width: 16,
-    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
   );
 }
 

@@ -208,7 +208,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
           elevation: 0,
           child: const Icon(
             Icons.download_outlined,
-            color: Colors.black,
+            color: Colors.white,
             size: 24,
           ),
         ),
@@ -234,7 +234,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   const SizedBox(width: 8),
@@ -247,14 +247,14 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
-                            color: Colors.black,
+                            color: Colors.white,
                           ),
                         ),
                         Text(
                           '${_customers.length} customers',
                           style: TextStyle(
                             fontSize: 11,
-                            color: Colors.black.withOpacity(0.55),
+                            color: Colors.white.withOpacity(0.7),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -267,13 +267,13 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 18,
-                        color: Colors.black.withOpacity(0.65),
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ),
@@ -284,13 +284,13 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.download_outlined,
                         size: 18,
-                        color: Colors.black.withOpacity(0.65),
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ),
@@ -808,14 +808,14 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                         icon: const Icon(
                           Icons.payment,
                           size: 14,
-                          color: Colors.black,
+                          color: Colors.white,
                         ),
                         label: const Text(
                           'Pay',
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: Colors.black,
+                            color: Colors.white,
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
@@ -1157,14 +1157,14 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                                 icon: const Icon(
                                   Icons.payment,
                                   size: 16,
-                                  color: Colors.black,
+                                  color: Colors.white,
                                 ),
                                 label: const Text(
                                   'Record Payment',
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700,
-                                    color: Colors.black,
+                                    color: Colors.white,
                                   ),
                                 ),
                                 style: ElevatedButton.styleFrom(

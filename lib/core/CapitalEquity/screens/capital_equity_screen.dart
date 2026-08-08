@@ -75,7 +75,7 @@ class CapitalEquityScreen extends StatelessWidget {
           },
           backgroundColor: kPrimary,
           elevation: 0,
-          child: const Icon(Icons.add, color: Colors.black, size: 24),
+          child: const Icon(Icons.add, color: Colors.white, size: 24),
         ),
       ),
     );
@@ -99,7 +99,7 @@ class CapitalEquityScreen extends StatelessWidget {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   const SizedBox(width: 8),
@@ -112,7 +112,7 @@ class CapitalEquityScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
-                            color: Colors.black,
+                            color: Colors.white,
                           ),
                         ),
                         Obx(
@@ -120,7 +120,7 @@ class CapitalEquityScreen extends StatelessWidget {
                             '${controller.equityAccounts.length} accounts',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.black.withOpacity(0.55),
+                              color: Colors.white.withOpacity(0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -138,13 +138,13 @@ class CapitalEquityScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 18,
-                        color: Colors.black.withOpacity(0.65),
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ),
@@ -155,13 +155,13 @@ class CapitalEquityScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.download_outlined,
                         size: 18,
-                        color: Colors.black.withOpacity(0.65),
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ),
@@ -437,7 +437,7 @@ class CapitalEquityScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black,
+                    color: Colors.white,
                   ),
                 ),
               ),
@@ -649,14 +649,14 @@ class CapitalEquityScreen extends StatelessWidget {
                           icon: const Icon(
                             Icons.add_circle,
                             size: 14,
-                            color: Colors.black,
+                            color: Colors.white,
                           ),
                           label: const Text(
                             'Add Capital',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
-                              color: Colors.black,
+                              color: Colors.white,
                             ),
                           ),
                           style: ElevatedButton.styleFrom(
@@ -678,14 +678,14 @@ class CapitalEquityScreen extends StatelessWidget {
                           icon: const Icon(
                             Icons.remove_circle,
                             size: 14,
-                            color: Colors.black,
+                            color: Colors.white,
                           ),
                           label: const Text(
                             'Draw',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
-                              color: Colors.black,
+                              color: Colors.white,
                             ),
                           ),
                           style: ElevatedButton.styleFrom(

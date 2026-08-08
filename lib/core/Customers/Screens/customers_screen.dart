@@ -52,7 +52,7 @@ class CustomersScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddCustomerDialog(controller, context),
         backgroundColor: kPrimary,
-        child: const Icon(Icons.add, color: Colors.black87),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -62,27 +62,46 @@ class CustomersScreen extends StatelessWidget {
     CustomerController controller,
   ) {
     return AppBar(
-      title: const Text(
-        'Customers',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w800,
-          color: Colors.black87,
-        ),
+      iconTheme: const IconThemeData(color: Colors.white),
+      title: Row(
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.people_outline,
+              size: 16,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(width: 10),
+          const Text(
+            'Customers',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
       backgroundColor: kPrimary,
       elevation: 0,
       actions: [
         IconButton(
-          icon: const Icon(Icons.search, color: Colors.black87),
+          icon: const Icon(Icons.search, color: Colors.white),
           onPressed: () => _showMobileSearch(context, controller),
         ),
         IconButton(
-          icon: const Icon(Icons.filter_alt_outlined, color: Colors.black87),
+          icon: const Icon(Icons.filter_alt_outlined, color: Colors.white),
           onPressed: () => _showFilterDialog(controller, context),
         ),
         IconButton(
-          icon: const Icon(Icons.download_outlined, color: Colors.black87),
+          icon: const Icon(Icons.download_outlined, color: Colors.white),
           onPressed: () => controller.exportCustomers(),
         ),
       ],
@@ -279,7 +298,7 @@ class CustomersScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: Colors.white,
                   ),
                 ),
               ),
@@ -595,12 +614,26 @@ class CustomersScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.people_outline,
+              size: 16,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(width: 10),
           const Text(
             'Customers',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: Colors.black87,
+              color: Colors.white,
             ),
           ),
           const Expanded(child: SizedBox()),
@@ -613,14 +646,17 @@ class CustomersScreen extends StatelessWidget {
               cursorColor: Colors.black54,
               decoration: InputDecoration(
                 hintText: 'Search customers…',
-                hintStyle: const TextStyle(color: Colors.black45, fontSize: 13),
-                prefixIcon: const Icon(
+                hintStyle: TextStyle(
+                  color: Colors.grey.shade500,
+                  fontSize: 13,
+                ),
+                prefixIcon: Icon(
                   Icons.search,
                   size: 16,
-                  color: Colors.black45,
+                  color: Colors.grey.shade500,
                 ),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.35),
+                fillColor: Colors.white,
                 contentPadding: const EdgeInsets.symmetric(
                   vertical: 0,
                   horizontal: 12,
@@ -631,7 +667,7 @@ class CustomersScreen extends StatelessWidget {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(6),
-                  borderSide: const BorderSide(color: Colors.black26),
+                  borderSide: BorderSide(color: Colors.white.withOpacity(0.5)),
                 ),
               ),
             ),
@@ -639,20 +675,20 @@ class CustomersScreen extends StatelessWidget {
           const SizedBox(width: 12),
           ElevatedButton.icon(
             onPressed: () => _showFilterDialog(controller, context),
-            icon: const Icon(Icons.tune, size: 15, color: Colors.black87),
+            icon: const Icon(Icons.tune, size: 15, color: Colors.white),
             label: const Text(
               'Filter',
-              style: TextStyle(fontSize: 13, color: Colors.black87),
+              style: TextStyle(fontSize: 13, color: Colors.white),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white.withOpacity(0.4),
+              backgroundColor: Colors.white.withOpacity(0.18),
               elevation: 0,
               minimumSize: const Size(0, 34),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               padding: const EdgeInsets.symmetric(horizontal: 14),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(6),
-                side: const BorderSide(color: Colors.black26),
+                side: BorderSide(color: Colors.white.withOpacity(0.35)),
               ),
             ),
           ),
@@ -662,41 +698,41 @@ class CustomersScreen extends StatelessWidget {
             icon: const Icon(
               Icons.download_outlined,
               size: 15,
-              color: Colors.black87,
+              color: Colors.white,
             ),
             label: const Text(
               'Export',
-              style: TextStyle(fontSize: 13, color: Colors.black87),
+              style: TextStyle(fontSize: 13, color: Colors.white),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white.withOpacity(0.4),
+              backgroundColor: Colors.white.withOpacity(0.18),
               elevation: 0,
               minimumSize: const Size(0, 34),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               padding: const EdgeInsets.symmetric(horizontal: 14),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(6),
-                side: const BorderSide(color: Colors.black26),
+                side: BorderSide(color: Colors.white.withOpacity(0.35)),
               ),
             ),
           ),
           const SizedBox(width: 8),
           ElevatedButton.icon(
             onPressed: () => _showAddCustomerDialog(controller, context),
-            icon: const Icon(Icons.add, size: 16, color: Colors.black87),
+            icon: const Icon(Icons.add, size: 16, color: Colors.white),
             label: const Text(
               'Add Customer',
-              style: TextStyle(fontSize: 13, color: Colors.black87),
+              style: TextStyle(fontSize: 13, color: Colors.white),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white.withOpacity(0.4),
+              backgroundColor: Colors.white.withOpacity(0.18),
               elevation: 0,
               minimumSize: const Size(0, 34),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               padding: const EdgeInsets.symmetric(horizontal: 14),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(6),
-                side: const BorderSide(color: Colors.black26),
+                side: BorderSide(color: Colors.white.withOpacity(0.35)),
               ),
             ),
           ),
@@ -900,7 +936,7 @@ class CustomersScreen extends StatelessWidget {
                   ),
                   child: const Text(
                     '+ Add Customer',
-                    style: TextStyle(fontSize: 13, color: Colors.black87),
+                    style: TextStyle(fontSize: 13, color: Colors.white),
                   ),
                 ),
               ),
@@ -1665,7 +1701,7 @@ class CustomersScreen extends StatelessWidget {
                                 width: 20,
                                 height: 20,
                                 child: LoadingAnimationWidget.waveDots(
-                                  color: Colors.black87,
+                                  color: Colors.white,
                                   size: 20,
                                 ),
                               )
@@ -1673,7 +1709,7 @@ class CustomersScreen extends StatelessWidget {
                                 'Add Customer',
                                 style: TextStyle(
                                   fontSize: isWeb ? 13 : 14,
-                                  color: Colors.black87,
+                                  color: Colors.white,
                                 ),
                               ),
                       ),
@@ -1938,7 +1974,7 @@ class CustomersScreen extends StatelessWidget {
                                   width: 20,
                                   height: 20,
                                   child: LoadingAnimationWidget.waveDots(
-                                    color: Colors.black87,
+                                    color: Colors.white,
                                     size: 20,
                                   ),
                                 )
@@ -1946,7 +1982,7 @@ class CustomersScreen extends StatelessWidget {
                                   'Update Customer',
                                   style: TextStyle(
                                     fontSize: isWeb ? 13 : 14,
-                                    color: Colors.black87,
+                                    color: Colors.white,
                                   ),
                                 ),
                         ),

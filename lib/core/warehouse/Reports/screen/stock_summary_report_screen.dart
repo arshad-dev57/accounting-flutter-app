@@ -3,7 +3,6 @@
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/core/warehouse/Reports/controller/stock_summary_controller.dart';
-import 'package:BisonsTechs_app/core/warehouse/widgets/drawer_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
@@ -14,39 +13,48 @@ class StockSummaryReportScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(StockSummaryController());
-    final isMobile = ResponsiveUtils.isMobile(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
 
     return Scaffold(
-      drawer: (isMobile || isTablet) ? const WarehouseDrawer() : null,
       backgroundColor: kBg,
       appBar: AppBar(
-        title: const Text(
-          'Stock Summary Report',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: Colors.black,
-          ),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.assessment_outlined,
+                size: 16,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'Stock Summary Report',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
         backgroundColor: kPrimary,
         elevation: 0,
-        leading: (isMobile || isTablet)
-            ? Builder(
-                builder: (context) => IconButton(
-                  icon: const Icon(Icons.menu, color: Colors.black),
-                  onPressed: () => Scaffold.of(context).openDrawer(),
-                ),
-              )
-            : IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.black),
-                onPressed: () => Get.back(),
-              ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Get.back(),
+        ),
         actions: [
           IconButton(
             icon: const Icon(
               Icons.picture_as_pdf_outlined,
-              color: Colors.black,
+              color: Colors.white,
             ),
             onPressed: () => controller.exportToPdf(),
             tooltip: 'Download PDF',

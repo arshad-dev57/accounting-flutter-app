@@ -100,6 +100,15 @@ class CurrencyController extends GetxController {
         );
         return;
       }
+      // Keep any code/symbol saved from currency_picker (not in local list)
+      if (savedSymbol != null && savedSymbol.isNotEmpty) {
+        currencyCode.value = savedCode;
+        currencySymbol.value = savedSymbol;
+        print(
+          '✅ [CurrencyController] Loaded custom from Prefs: $savedCode ($savedSymbol)',
+        );
+        return;
+      }
     }
 
     final defaultCurrency = findByCode(defaultCode)!;
@@ -154,25 +163,29 @@ class CurrencyController extends GetxController {
     }
   }
 
-  Future<void> setCurrency(String code) async {
+  Future<void> setCurrency(String code, {String? symbol}) async {
     print('🔄 [CurrencyController] setCurrency called with: $code');
 
     final currency = findByCode(code);
-    if (currency == null) {
+    final resolvedSymbol = (symbol != null && symbol.isNotEmpty)
+        ? symbol
+        : currency?.symbol;
+
+    if (resolvedSymbol == null || resolvedSymbol.isEmpty) {
       print('❌ [CurrencyController] Currency not found: $code');
       return;
     }
 
     print(
-      '📦 [CurrencyController] Found Currency: ${currency.code} (${currency.symbol})',
+      '📦 [CurrencyController] Found Currency: $code ($resolvedSymbol)',
     );
 
-    currencyCode.value = currency.code;
-    currencySymbol.value = currency.symbol;
+    currencyCode.value = code;
+    currencySymbol.value = resolvedSymbol;
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(prefsCodeKey, currency.code);
-    await prefs.setString(prefsSymbolKey, currency.symbol);
+    await prefs.setString(prefsCodeKey, code);
+    await prefs.setString(prefsSymbolKey, resolvedSymbol);
     update();
 
     try {
@@ -182,8 +195,8 @@ class CurrencyController extends GetxController {
       final response = await api.put(
         '/api/users/currency',
         body: {
-          'currencyCode': currency.code,
-          'currencySymbol': currency.symbol,
+          'currencyCode': code,
+          'currencySymbol': resolvedSymbol,
         },
       );
 

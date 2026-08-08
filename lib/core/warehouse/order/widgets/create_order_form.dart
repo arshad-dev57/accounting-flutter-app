@@ -461,7 +461,7 @@ class CreateOrderForm extends StatelessWidget {
                       child: const Text(
                         'Add Item',
                         style: TextStyle(
-                          color: Colors.black,
+                          color: Colors.white,
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
                         ),
@@ -559,28 +559,44 @@ class CreateOrderForm extends StatelessWidget {
 
   Widget _header() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: kCardBg,
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.withOpacity(0.15)),
+      color: kPrimary,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: const Icon(
+                  Icons.add_shopping_cart,
+                  size: 18,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  'Create New Order',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: onCancel,
+                icon: const Icon(Icons.close, size: 22, color: Colors.white),
+              ),
+            ],
+          ),
         ),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.add_shopping_cart, color: kPrimary),
-          const SizedBox(width: 8),
-          const Expanded(
-            child: Text(
-              'Create New Order',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-            ),
-          ),
-          IconButton(
-            onPressed: onCancel,
-            icon: const Icon(Icons.close, size: 22),
-          ),
-        ],
       ),
     );
   }
@@ -629,13 +645,13 @@ class CreateOrderForm extends StatelessWidget {
                         height: 18,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.black,
+                          color: Colors.white,
                         ),
                       )
                     : const Text(
                         'Create Order',
                         style: TextStyle(
-                          color: Colors.black,
+                          color: Colors.white,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                         ),

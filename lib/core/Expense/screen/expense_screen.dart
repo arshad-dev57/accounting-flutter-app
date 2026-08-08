@@ -60,7 +60,7 @@ class ExpenseScreen extends StatelessWidget {
         onPressed: () => _showAddExpenseDialog(controller, context),
         backgroundColor: kPrimary,
         elevation: 0,
-        child: const Icon(Icons.add, color: Colors.black, size: 24),
+        child: const Icon(Icons.add, color: Colors.white, size: 24),
       ),
     );
   }
@@ -83,7 +83,7 @@ class ExpenseScreen extends StatelessWidget {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   const SizedBox(width: 8),
@@ -96,7 +96,7 @@ class ExpenseScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
-                            color: Colors.black,
+                            color: Colors.white,
                           ),
                         ),
                         Obx(
@@ -104,7 +104,7 @@ class ExpenseScreen extends StatelessWidget {
                             '${controller.expenses.length} entries',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.black.withOpacity(0.55),
+                              color: Colors.white.withOpacity(0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -118,13 +118,13 @@ class ExpenseScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 18,
-                        color: Colors.black.withOpacity(0.65),
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ),
@@ -135,13 +135,13 @@ class ExpenseScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.download_outlined,
                         size: 18,
-                        color: Colors.black.withOpacity(0.65),
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ),
@@ -213,7 +213,7 @@ class ExpenseScreen extends StatelessWidget {
                           icon: const Icon(Icons.arrow_drop_down, size: 18),
                           style: const TextStyle(
                             fontSize: 12,
-                            color: Colors.black87,
+                            color: Colors.black,
                           ),
                           underline: const SizedBox.shrink(),
                           items: ['All Types', ...controller.expenseTypes].map((
@@ -708,7 +708,7 @@ class ExpenseScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: Colors.black,
+              color: Colors.white,
             ),
           ),
           const Spacer(),
@@ -717,18 +717,18 @@ class ExpenseScreen extends StatelessWidget {
             height: 34,
             child: TextField(
               controller: controller.searchController,
-              style: const TextStyle(fontSize: 13, color: Colors.black87),
-              cursorColor: Colors.black,
+              style: const TextStyle(fontSize: 13, color: Colors.white),
+              cursorColor: Colors.white,
               decoration: InputDecoration(
                 hintText: 'Search expenses...',
                 hintStyle: TextStyle(
-                  color: Colors.black.withOpacity(0.45),
+                  color: Colors.white.withOpacity(0.7),
                   fontSize: 13,
                 ),
                 prefixIcon: Icon(
                   Icons.search,
                   size: 16,
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.white.withOpacity(0.7),
                 ),
                 filled: true,
                 fillColor: Colors.white.withOpacity(0.3),
@@ -748,7 +748,7 @@ class ExpenseScreen extends StatelessWidget {
             width: 130,
             height: 34,
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.white.withOpacity(0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: DropdownButtonHideUnderline(
@@ -760,11 +760,11 @@ class ExpenseScreen extends StatelessWidget {
                   icon: Icon(
                     Icons.arrow_drop_down,
                     size: 20,
-                    color: Colors.black.withOpacity(0.6),
+                    color: Colors.white.withOpacity(0.85),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   isExpanded: true,
-                  style: const TextStyle(fontSize: 13, color: Colors.black87),
+                  style: const TextStyle(fontSize: 13, color: Colors.white),
                   dropdownColor: kCardBg,
                   items: ['All Types', ...controller.expenseTypes].map((f) {
                     return DropdownMenuItem(
@@ -808,19 +808,19 @@ class ExpenseScreen extends StatelessWidget {
         height: 34,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.1),
+          color: Colors.white.withOpacity(0.15),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.black.withOpacity(0.15)),
+          border: Border.all(color: Colors.white.withOpacity(0.2)),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 15, color: Colors.black.withOpacity(0.65)),
+            Icon(icon, size: 15, color: Colors.white.withOpacity(0.9)),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
                 fontSize: 13,
-                color: Colors.black.withOpacity(0.75),
+                color: Colors.white.withOpacity(0.9),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1985,7 +1985,7 @@ class ExpenseScreen extends StatelessWidget {
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
-                                        color: Colors.black,
+                                        color: Colors.white,
                                       ),
                                     ),
                             ),

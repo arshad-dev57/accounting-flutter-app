@@ -1,7 +1,4 @@
-// lib/core/purchasedashboard/purchase_dashboard_screen.dart
-//
-// Redesigned to exactly match DashboardScreen's white theme, palette, and
-// component patterns from dashboard_screen.dart
+import 'dart:io';
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
@@ -44,53 +41,27 @@ const _kHeroBgEnd = Color(0xFFD6E4F0);
 const _kHeroBorder = Color(0xFFB8CFE0);
 const _kHeroIcon = Color(0xFFC5D8E8);
 
-class PurchaseDashboardScreen extends StatefulWidget {
+class PurchaseDashboardScreen extends GetView<PurchaseController> {
   const PurchaseDashboardScreen({super.key});
 
   @override
-  State<PurchaseDashboardScreen> createState() =>
-      _PurchaseDashboardScreenState();
-}
-
-class _PurchaseDashboardScreenState extends State<PurchaseDashboardScreen> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  late final PurchaseController _controller;
-
-  String _selectedTimePeriod = 'This Month';
-  final List<String> _timePeriods = [
-    'Today',
-    'Last Week',
-    'This Month',
-    'Last Month',
-    'This Quarter',
-    'This Year',
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = Get.put(PurchaseController());
-  }
-
-  @override
   Widget build(BuildContext context) {
+    Get.put(PurchaseController());
     final isMobile = MediaQuery.of(context).size.width < 600;
     final isTablet = !isMobile;
 
     return Scaffold(
-      key: _scaffoldKey,
       backgroundColor: _kPageBg,
       appBar: _buildAppBar(isMobile),
       drawer: PurchaseDrawer(currentRoute: '/warehouse/purchase'),
       body: Obx(() {
-        if (_controller.isLoading.value &&
-            _controller.dashboard.value == null) {
+        if (controller.isLoading.value && controller.dashboard.value == null) {
           return _buildShimmer();
         }
         return RefreshIndicator(
           color: kPrimary,
           backgroundColor: _kCardBg,
-          onRefresh: _controller.refreshDashboard,
+          onRefresh: controller.refreshDashboard,
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
             physics: const AlwaysScrollableScrollPhysics(),
@@ -145,34 +116,87 @@ class _PurchaseDashboardScreenState extends State<PurchaseDashboardScreen> {
               ),
             )
           : null,
-      title: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              color: kPrimary,
-              borderRadius: BorderRadius.circular(8),
+      title: Obx(() {
+        final logo = controller.businessLogo.value;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            logo.isNotEmpty
+                ? Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: logo.startsWith('http')
+                          ? Image.network(
+                              logo,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 30,
+                                  height: 30,
+                                  decoration: BoxDecoration(
+                                    color: kPrimary,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.shopping_bag_outlined,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                                );
+                              },
+                            )
+                          : Image.file(
+                              File(logo),
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 30,
+                                  height: 30,
+                                  decoration: BoxDecoration(
+                                    color: kPrimary,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.shopping_bag_outlined,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  )
+                : Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: kPrimary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.shopping_bag_outlined,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+            const SizedBox(width: 8),
+            const Text(
+              'Purchase',
+              style: TextStyle(
+                color: _kTextPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.3,
+              ),
             ),
-            child: const Icon(
-              Icons.shopping_bag_outlined,
-              size: 16,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(width: 8),
-          const Text(
-            'Purchase',
-            style: TextStyle(
-              color: _kTextPrimary,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.3,
-            ),
-          ),
-        ],
-      ),
+          ],
+        );
+      }),
       actions: [
         IconButton(
           icon: const Icon(
@@ -253,7 +277,7 @@ class _PurchaseDashboardScreenState extends State<PurchaseDashboardScreen> {
   // ─── Hero Card (same structure as DashboardScreen hero) ──────────────────
   Widget _buildHeroCard() {
     return Obx(() {
-      final data = _controller.dashboard.value;
+      final data = controller.dashboard.value;
       final fmt = Get.find<CurrencyController>().formatAmount;
 
       final totalSpend = data?.invoices.totalSpend ?? 0.0;
@@ -279,138 +303,164 @@ class _PurchaseDashboardScreenState extends State<PurchaseDashboardScreen> {
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            Row(
+            if (controller.businessLogo.value.isNotEmpty)
+              Positioned.fill(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: Opacity(
+                    opacity: 0.05,
+                    child: controller.businessLogo.value.startsWith('http')
+                        ? Image.network(
+                            controller.businessLogo.value,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const SizedBox.shrink(),
+                          )
+                        : Image.file(
+                            File(controller.businessLogo.value),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const SizedBox.shrink(),
+                          ),
+                  ),
+                ),
+              ),
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: _kPrimaryBg,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.shopping_bag_outlined,
-                              size: 14,
-                              color: kPrimary,
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: _kPrimaryBg,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.shopping_bag_outlined,
+                                  size: 14,
+                                  color: kPrimary,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Total Spend · ${controller.selectedTimePeriodLabel.value}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: _kTextSub,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            fmt(totalSpend),
+                            style: const TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w800,
+                              color: _kTextPrimary,
+                              letterSpacing: -0.5,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(height: 4),
                           Text(
-                            'Total Spend · $_selectedTimePeriod',
+                            '${fmt(paidAmount)} paid · ${fmt(outstanding)} outstanding',
                             style: const TextStyle(
                               fontSize: 11,
                               color: _kTextSub,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _kPrimaryBg,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.receipt_long_outlined,
+                                  size: 10,
+                                  color: kPrimary,
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  '$totalOrders purchase order${totalOrders == 1 ? '' : 's'}',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: kPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 10),
-                      Text(
-                        fmt(totalSpend),
-                        style: const TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: _kTextPrimary,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${fmt(paidAmount)} paid · ${fmt(outstanding)} outstanding',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: _kTextSub,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
+                    ),
+                    GestureDetector(
+                      onTap: controller.refreshDashboard,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: _kPrimaryBg,
-                          borderRadius: BorderRadius.circular(20),
+                          color: _kHeroIcon,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: _kHeroBorder),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.receipt_long_outlined,
-                              size: 10,
-                              color: kPrimary,
-                            ),
-                            const SizedBox(width: 3),
-                            Text(
-                              '$totalOrders purchase order${totalOrders == 1 ? '' : 's'}',
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: kPrimary,
-                              ),
-                            ),
-                          ],
+                        child: const Icon(
+                          Icons.refresh_rounded,
+                          size: 16,
+                          color: _kTextSub,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                GestureDetector(
-                  onTap: _controller.refreshDashboard,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _kHeroIcon,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: _kHeroBorder),
                     ),
-                    child: const Icon(
-                      Icons.refresh_rounded,
-                      size: 16,
-                      color: _kTextSub,
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Container(height: 0.5, color: _kCardBorder),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    _heroStat(
+                      'Orders',
+                      '$totalOrders',
+                      Icons.receipt_long_outlined,
+                      kPrimary,
+                      _kPrimaryBg,
                     ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Container(height: 0.5, color: _kCardBorder),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                _heroStat(
-                  'Orders',
-                  '$totalOrders',
-                  Icons.receipt_long_outlined,
-                  kPrimary,
-                  _kPrimaryBg,
-                ),
-                _heroDivider(),
-                _heroStat(
-                  'Paid',
-                  fmt(paidAmount),
-                  Icons.check_circle_outline_rounded,
-                  _kGreen,
-                  _kGreenBg,
-                ),
-                _heroDivider(),
-                _heroStat(
-                  'Outstanding',
-                  fmt(outstanding),
-                  Icons.schedule_rounded,
-                  _kOrange,
-                  _kOrangeBg,
+                    _heroDivider(),
+                    _heroStat(
+                      'Paid',
+                      fmt(paidAmount),
+                      Icons.check_circle_outline_rounded,
+                      _kGreen,
+                      _kGreenBg,
+                    ),
+                    _heroDivider(),
+                    _heroStat(
+                      'Outstanding',
+                      fmt(outstanding),
+                      Icons.schedule_rounded,
+                      _kOrange,
+                      _kOrangeBg,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -467,66 +517,47 @@ class _PurchaseDashboardScreenState extends State<PurchaseDashboardScreen> {
 
   // ─── Period Chips (identical to DashboardScreen) ──────────────────────────
   Widget _buildPeriodChips() {
-    return SizedBox(
-      height: 34,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: _timePeriods.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (_, i) {
-          final period = _timePeriods[i];
-          final isActive = period == _selectedTimePeriod;
-          return GestureDetector(
-            onTap: () {
-              setState(() => _selectedTimePeriod = period);
-              _controller.setPeriod(_mapPeriod(period));
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                color: isActive ? kPrimary : _kChipBg,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                period,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: isActive ? Colors.white : _kTextSub,
+    return Obx(() {
+      final selected = controller.selectedTimePeriodLabel.value;
+      return SizedBox(
+        height: 34,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: PurchaseController.timePeriodLabels.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          itemBuilder: (_, i) {
+            final period = PurchaseController.timePeriodLabels[i];
+            final isActive = period == selected;
+            return GestureDetector(
+              onTap: () => controller.selectTimePeriod(period),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: isActive ? kPrimary : _kChipBg,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  period,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: isActive ? Colors.white : _kTextSub,
+                  ),
                 ),
               ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  String _mapPeriod(String label) {
-    switch (label) {
-      case 'Today':
-        return 'today';
-      case 'Last Week':
-        return 'week';
-      case 'This Month':
-        return 'month';
-      case 'Last Month':
-        return 'last_month';
-      case 'This Quarter':
-        return 'quarter';
-      case 'This Year':
-        return 'year';
-      default:
-        return 'month';
-    }
+            );
+          },
+        ),
+      );
+    });
   }
 
   // ─── KPI Grid (same card style as DashboardScreen _KpiCard) ──────────────
   Widget _buildKpiGrid(bool isTablet) {
     return Obx(() {
-      final data = _controller.dashboard.value;
+      final data = controller.dashboard.value;
       final fmt = Get.find<CurrencyController>().formatAmount;
 
       final kpis = [
@@ -586,7 +617,7 @@ class _PurchaseDashboardScreenState extends State<PurchaseDashboardScreen> {
   // ─── Financial Overview bars (same as DashboardScreen _buildFinancialOverview)
   Widget _buildFinancialOverview() {
     return Obx(() {
-      final data = _controller.dashboard.value;
+      final data = controller.dashboard.value;
       final fmt = Get.find<CurrencyController>().formatAmount;
 
       final totalSpend = data?.invoices.totalSpend ?? 0.0;
@@ -659,7 +690,7 @@ class _PurchaseDashboardScreenState extends State<PurchaseDashboardScreen> {
       return _SectionCard(
         title: 'Purchase overview',
         trailing: Text(
-          _selectedTimePeriod,
+          controller.selectedTimePeriodLabel.value,
           style: const TextStyle(fontSize: 12, color: _kTextSub),
         ),
         child: Column(children: bars.map((b) => _buildBar(b, maxVal)).toList()),
@@ -752,7 +783,7 @@ class _PurchaseDashboardScreenState extends State<PurchaseDashboardScreen> {
   // ─── Spend Trend Chart (wrapped in SectionCard matching dashboard style) ──
   Widget _buildSpendTrendCard() {
     return Obx(() {
-      final trend = _controller.spendTrend;
+      final trend = controller.spendTrend;
 
       final List<double> invoiceData = [];
       final List<double> orderData = [];
@@ -899,7 +930,7 @@ class _PurchaseDashboardScreenState extends State<PurchaseDashboardScreen> {
   // ─── Order Status Pie Chart ───────────────────────────────────────────────
   Widget _buildOrderStatusCard() {
     return Obx(() {
-      final statuses = _controller.orderStatuses
+      final statuses = controller.orderStatuses
           .where((s) => s.count > 0)
           .toList();
 
@@ -1028,7 +1059,7 @@ class _PurchaseDashboardScreenState extends State<PurchaseDashboardScreen> {
   // ─── Purchase Health (bar rows, same style as _buildKpiSources) ──────────
   Widget _buildPurchaseHealth() {
     return Obx(() {
-      final data = _controller.dashboard.value;
+      final data = controller.dashboard.value;
 
       final items = [
         (
@@ -1174,9 +1205,9 @@ class _PurchaseDashboardScreenState extends State<PurchaseDashboardScreen> {
   // ─── Recent Activity (same transaction tile style as DashboardScreen) ─────
   Widget _buildRecentActivity() {
     return Obx(() {
-      final shown = _controller.activities.length > 5
-          ? _controller.activities.sublist(0, 5)
-          : _controller.activities.toList();
+      final shown = controller.activities.length > 5
+          ? controller.activities.sublist(0, 5)
+          : controller.activities.toList();
 
       if (shown.isEmpty) return const SizedBox.shrink();
 

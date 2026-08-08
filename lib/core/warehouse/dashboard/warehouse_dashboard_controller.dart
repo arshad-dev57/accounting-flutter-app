@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class WarehouseDashboardController extends GetxController {
   final ApiClient _apiClient = Get.find<ApiClient>();
@@ -17,6 +20,7 @@ class WarehouseDashboardController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxBool isRefreshing = false.obs;
   final RxString error = ''.obs;
+  final RxString businessLogo = ''.obs;
 
   // Dashboard Metrics
   final RxInt totalProducts = 0.obs;
@@ -31,11 +35,18 @@ class WarehouseDashboardController extends GetxController {
   final RxDouble todayRevenue = 0.0.obs;
   final RxInt totalOrders = 0.obs;
 
-  // Period Filter
-  final RxString selectedPeriod =
-      'week'.obs; // today | week | month | year | custom
+  // Period Filter — today | week | month | year | custom
+  final RxString selectedPeriod = 'today'.obs;
+  final RxString selectedPeriodLabel = 'Today'.obs;
   final Rx<DateTime?> customStartDate = Rx<DateTime?>(null);
   final Rx<DateTime?> customEndDate = Rx<DateTime?>(null);
+
+  static const periodLabels = [
+    'Today',
+    'This Week',
+    'This Month',
+    'This Year',
+  ];
 
   // Chart Data
   final RxList<Map<String, dynamic>> stockMovementChart =
@@ -99,10 +110,33 @@ class WarehouseDashboardController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    loadBusinessLogo();
     loadDashboardData();
     ever(currentRoute, (route) {
       _updateSelectedIndex(route);
     });
+  }
+
+  Future<void> loadBusinessLogo() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userDataString = prefs.getString('user_data');
+
+      if (userDataString != null) {
+        final userData = json.decode(userDataString) as Map<String, dynamic>;
+        final businessDetails =
+            userData['businessDetails'] as Map<String, dynamic>?;
+
+        if (businessDetails != null && businessDetails['logo'] != null) {
+          final logo = businessDetails['logo'] as String;
+          if (logo.isNotEmpty) {
+            businessLogo.value = logo;
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ [WarehouseDashboardController] Error loading business logo: $e');
+    }
   }
 
   // ─── Currency Helper ──────────────────────────────────────────────
@@ -115,6 +149,28 @@ class WarehouseDashboardController extends GetxController {
   }
 
   // ─── Period Filter ────────────────────────────────────────
+  String mapPeriodLabel(String label) {
+    switch (label) {
+      case 'Today':
+        return 'today';
+      case 'This Week':
+        return 'week';
+      case 'This Month':
+        return 'month';
+      case 'This Year':
+        return 'year';
+      case 'Custom':
+        return 'custom';
+      default:
+        return 'today';
+    }
+  }
+
+  Future<void> selectPeriodLabel(String label) async {
+    selectedPeriodLabel.value = label;
+    await applyPeriodFilter(mapPeriodLabel(label));
+  }
+
   Future<void> applyPeriodFilter(
     String period, {
     DateTime? start,
@@ -122,11 +178,13 @@ class WarehouseDashboardController extends GetxController {
   }) async {
     selectedPeriod.value = period;
     if (period == 'custom') {
+      selectedPeriodLabel.value = 'Custom';
       customStartDate.value = start;
       customEndDate.value = end;
     } else {
       customStartDate.value = null;
       customEndDate.value = null;
+      selectedPeriodLabel.value = getPeriodLabel();
     }
     await loadDashboardData();
   }
@@ -415,7 +473,7 @@ class WarehouseDashboardController extends GetxController {
         }
         return 'Custom';
       default:
-        return 'This Week';
+        return 'Today';
     }
   }
 }

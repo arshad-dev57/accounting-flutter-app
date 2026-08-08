@@ -1,5 +1,7 @@
+import 'dart:io';
+
 import 'package:BisonsTechs_app/Services/permission_service.dart';
-import 'package:BisonsTechs_app/Utils/colors.dart'; 
+import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
@@ -66,110 +68,35 @@ const _kRedBg = Color(0xFFFEF2F2);
 const _kPurple = Color(0xFF7C3AED);
 const _kPurpleBg = Color(0xFFF5F0FF);
 
-// Hero card — light tint of brand primary (#014582)
 const _kHeroBg = Color(0xFFE6EEF5);
 const _kHeroBgEnd = Color(0xFFD6E4F0);
 const _kHeroBorder = Color(0xFFB8CFE0);
 const _kHeroIcon = Color(0xFFC5D8E8);
-const _kChipBg = Color(0xFFF0F2F8); // unselected chip background
+const _kChipBg = Color(0xFFF0F2F8);
 const _kAppBarBg = Color(0xFFF7F9FC);
 
-class DashboardScreen extends StatefulWidget {
+class DashboardScreen extends GetView<DashboardController> {
   const DashboardScreen({super.key});
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
-}
-
-class _DashboardScreenState extends State<DashboardScreen> {
-  int _currentTab = 0;
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
-  late final DashboardController _controller;
-  late final SubscriptionController _subscriptionController;
-
-  final List<String> _timePeriods = [
-    'Today',
-    'Last Week',
-    'This Month',
-    'Last Month',
-    'This Quarter',
-    'This Year',
-    'Custom',
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = Get.put(DashboardController());
-    _subscriptionController = Get.find<SubscriptionController>();
-
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) _checkSubscriptionPeriodically();
-    });
-  }
-
-  void _checkSubscriptionPeriodically() {
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) _checkAndHandleExpiry();
-    });
-    Future.delayed(const Duration(minutes: 5), () {
-      if (mounted) _checkSubscriptionPeriodically();
-    });
-  }
-
-  Future<void> _checkAndHandleExpiry() async {
-    await _subscriptionController.checkSubscriptionStatus();
-    if (!_subscriptionController.hasActiveSubscription.value &&
-        _subscriptionController.subscriptionStatus.value == 'expired') {
-      _showExpiredDialog();
-    }
-  }
-
-  void _showExpiredDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Subscription expired'),
-        content: Text(
-          _subscriptionController.trialDaysRemaining.value > 0
-              ? 'Your free trial has ended. Subscribe to continue.'
-              : 'Your subscription has expired. Renew to continue.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Get.to(() => const SelectPlanScreen());
-            },
-            child: const Text('Subscribe now'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
+    Get.put(DashboardController());
     final isMobile = ResponsiveUtils.isMobile(context);
     final isTablet = MediaQuery.of(context).size.width >= 600;
 
     return Scaffold(
-      key: _scaffoldKey,
       backgroundColor: _kPageBg,
       appBar: _buildAppBar(isMobile),
       body: Obx(() {
-        if (_controller.isLoading.value && _controller.chartData.isEmpty) {
+        if (controller.isLoading.value && controller.chartData.isEmpty) {
           return _buildShimmer();
         }
         return RefreshIndicator(
           color: kPrimary,
           backgroundColor: _kCardBg,
           onRefresh: () async {
-            await _subscriptionController.checkSubscriptionStatus();
-            _controller.loadDashboardData();
+            await Get.find<SubscriptionController>().checkSubscriptionStatus();
+            controller.loadDashboardData();
           },
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
@@ -189,11 +116,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 16),
                 _buildExpenseCategoriesCard(),
                 const SizedBox(height: 16),
-                _buildKpiSources(),
-                const SizedBox(height: 16),
+
                 _buildRecentTransactions(),
-                const SizedBox(height: 16),
-                _buildQuickActions(),
               ],
             ),
           ),
@@ -226,34 +150,87 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             )
           : null,
-      title: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              color: kPrimary,
-              borderRadius: BorderRadius.circular(8),
+      title: Obx(() {
+        final logo = controller.businessLogo.value;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            logo.isNotEmpty
+                ? Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: logo.startsWith('http')
+                          ? Image.network(
+                              logo,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 30,
+                                  height: 30,
+                                  decoration: BoxDecoration(
+                                    color: kPrimary,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.account_balance_rounded,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                                );
+                              },
+                            )
+                          : Image.file(
+                              File(logo),
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 30,
+                                  height: 30,
+                                  decoration: BoxDecoration(
+                                    color: kPrimary,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.account_balance_rounded,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  )
+                : Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: kPrimary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.account_balance_rounded,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+            const SizedBox(width: 8),
+            const Text(
+              'BisonsTechs',
+              style: TextStyle(
+                color: _kTextPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.3,
+              ),
             ),
-            child: const Icon(
-              Icons.account_balance_rounded,
-              size: 16,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(width: 8),
-          const Text(
-            'BisonsTechs',
-            style: TextStyle(
-              color: _kTextPrimary,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.3,
-            ),
-          ),
-        ],
-      ),
+          ],
+        );
+      }),
       actions: [
         IconButton(
           icon: const Icon(
@@ -317,9 +294,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(height: 16),
             // Transactions card
             _shimmerBox(height: 220, radius: 16),
-            const SizedBox(height: 16),
-            // Quick actions card
-            _shimmerBox(height: 100, radius: 16),
           ],
         ),
       ),
@@ -357,155 +331,181 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            Row(
+            if (controller.businessLogo.value.isNotEmpty)
+              Positioned.fill(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: Opacity(
+                    opacity: 0.05,
+                    child: controller.businessLogo.value.startsWith('http')
+                        ? Image.network(
+                            controller.businessLogo.value,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const SizedBox.shrink(),
+                          )
+                        : Image.file(
+                            File(controller.businessLogo.value),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const SizedBox.shrink(),
+                          ),
+                  ),
+                ),
+              ),
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Left: label + big value
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Left: label + big value
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: _kPrimaryBg,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.account_balance_wallet_rounded,
-                              size: 14,
-                              color: kPrimary,
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: _kPrimaryBg,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.account_balance_wallet_rounded,
+                                  size: 14,
+                                  color: kPrimary,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Obx(
+                                () => Text(
+                                  'Net Profit · ${controller.periodLabel}',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: _kTextSub,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            controller.netProfitFormatted.value,
+                            style: TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w800,
+                              color: controller.netProfit.value >= 0
+                                  ? _kTextPrimary
+                                  : _kRed,
+                              letterSpacing: -0.5,
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Obx(
-                            () => Text(
-                              'Net Profit · ${_controller.periodLabel}',
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: _kTextSub,
-                                fontWeight: FontWeight.w500,
-                              ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${controller.totalRevenueFormatted.value} − ${controller.totalExpensesFormatted.value}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: _kTextSub,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: controller.netProfit.value >= 0
+                                  ? _kGreenBg
+                                  : _kRedBg,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  controller.netProfit.value >= 0
+                                      ? Icons.arrow_upward_rounded
+                                      : Icons.arrow_downward_rounded,
+                                  size: 10,
+                                  color: controller.netProfit.value >= 0
+                                      ? _kGreen
+                                      : _kRed,
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  controller.netProfit.value >= 0
+                                      ? '${controller.profitMargin.value.abs().toStringAsFixed(1)}% margin'
+                                      : 'Expenses exceed revenue',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: controller.netProfit.value >= 0
+                                        ? _kGreen
+                                        : _kRed,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
-                      Text(
-                        _controller.netProfitFormatted.value,
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: _controller.netProfit.value >= 0
-                              ? _kTextPrimary
-                              : _kRed,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${_controller.totalRevenueFormatted.value} − ${_controller.totalPurchasesFormatted.value} − ${_controller.totalExpensesFormatted.value}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: _kTextSub,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
+                    ),
+                    // Refresh button
+                    GestureDetector(
+                      onTap: () => controller.refreshData(),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: _controller.netProfit.value >= 0
-                              ? _kGreenBg
-                              : _kRedBg,
-                          borderRadius: BorderRadius.circular(20),
+                          color: _kHeroIcon,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: _kHeroBorder),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              _controller.netProfit.value >= 0
-                                  ? Icons.arrow_upward_rounded
-                                  : Icons.arrow_downward_rounded,
-                              size: 10,
-                              color: _controller.netProfit.value >= 0
-                                  ? _kGreen
-                                  : _kRed,
-                            ),
-                            const SizedBox(width: 3),
-                            Text(
-                              _controller.netProfit.value >= 0
-                                  ? '${_controller.profitMargin.value.abs().toStringAsFixed(1)}% margin'
-                                  : 'Expenses exceed revenue',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: _controller.netProfit.value >= 0
-                                    ? _kGreen
-                                    : _kRed,
-                              ),
-                            ),
-                          ],
+                        child: const Icon(
+                          Icons.refresh_rounded,
+                          size: 16,
+                          color: _kTextSub,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                // Refresh button
-                GestureDetector(
-                  onTap: () => _controller.refreshData(),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _kHeroIcon,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: _kHeroBorder),
                     ),
-                    child: const Icon(
-                      Icons.refresh_rounded,
-                      size: 16,
-                      color: _kTextSub,
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Container(height: 0.5, color: _kCardBorder),
+                const SizedBox(height: 14),
+                // Bottom 3 stats — accounting balances (not Sales/Purchase ops)
+                Row(
+                  children: [
+                    _heroStat(
+                      'Revenue',
+                      controller.totalRevenueFormatted.value,
+                      Icons.trending_up_rounded,
+                      _kGreen,
+                      _kGreenBg,
                     ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Container(height: 0.5, color: _kCardBorder),
-            const SizedBox(height: 14),
-            // Bottom 3 stats — accounting balances (not Sales/Purchase ops)
-            Row(
-              children: [
-                _heroStat(
-                  'Revenue',
-                  _controller.totalRevenueFormatted.value,
-                  Icons.trending_up_rounded,
-                  _kGreen,
-                  _kGreenBg,
-                ),
-                _heroDivider(),
-                _heroStat(
-                  'Bank Balance',
-                  _controller.totalBankBalanceFormatted.value,
-                  Icons.account_balance_rounded,
-                  kPrimary,
-                  _kPrimaryBg,
-                ),
-                _heroDivider(),
-                _heroStat(
-                  'Payables',
-                  _controller.payablesFormatted.value,
-                  Icons.receipt_long_rounded,
-                  _kRed,
-                  _kRedBg,
+                    _heroDivider(),
+                    _heroStat(
+                      'Bank Balance',
+                      controller.totalBankBalanceFormatted.value,
+                      Icons.account_balance_rounded,
+                      kPrimary,
+                      _kPrimaryBg,
+                    ),
+                    _heroDivider(),
+                    _heroStat(
+                      'Payables',
+                      controller.payablesFormatted.value,
+                      Icons.receipt_long_rounded,
+                      _kRed,
+                      _kRedBg,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -564,18 +564,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // ─── Period Chips ─────────────────────────────────────────────────────────
   Widget _buildPeriodChips() {
     return Obx(() {
-      final selected = _controller.selectedTimePeriod.value;
+      final selected = controller.selectedTimePeriod.value;
       return SizedBox(
         height: 34,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
-          itemCount: _timePeriods.length,
+          itemCount: DashboardController.timePeriodLabels.length,
           separatorBuilder: (_, __) => const SizedBox(width: 8),
           itemBuilder: (_, i) {
-            final period = _timePeriods[i];
+            final period = DashboardController.timePeriodLabels[i];
             final isActive = period == selected;
             final label = period == 'Custom' && isActive
-                ? _controller.periodLabel
+                ? controller.periodLabel
                 : period;
             return GestureDetector(
               onTap: () async {
@@ -583,7 +583,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   await _pickCustomDateRange();
                   return;
                 }
-                await _controller.loadDashboardData(timePeriod: period);
+                await controller.loadDashboardData(timePeriod: period);
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
@@ -612,13 +612,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _pickCustomDateRange() async {
     final now = DateTime.now();
     final initialStart =
-        _controller.customStartDate.value ?? DateTime(now.year, now.month, 1);
+        controller.customStartDate.value ?? DateTime(now.year, now.month, 1);
     final initialEnd =
-        _controller.customEndDate.value ??
+        controller.customEndDate.value ??
         DateTime(now.year, now.month, now.day);
 
     final range = await showDateRangePicker(
-      context: context,
+      context: Get.context!,
       firstDate: DateTime(now.year - 5),
       lastDate: DateTime(now.year + 1, 12, 31),
       initialDateRange: DateTimeRange(start: initialStart, end: initialEnd),
@@ -639,7 +639,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     if (range == null) return;
 
-    await _controller.loadDashboardData(
+    await controller.loadDashboardData(
       timePeriod: 'Custom',
       customStart: range.start,
       customEnd: range.end,
@@ -652,43 +652,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final kpis = [
         _KpiItem(
           label: 'Revenue',
-          value: _controller.totalRevenueFormatted.value,
+          value: controller.totalRevenueFormatted.value,
           icon: Icons.trending_up_rounded,
           iconBg: _kGreenBg,
           iconColor: _kGreen,
-          trend: _controller.formatTrend(_controller.revenueChange.value),
-          trendUp: _controller.isRevenuePositive.value,
+          trend: controller.formatTrend(controller.revenueChange.value),
+          trendUp: controller.isRevenuePositive.value,
         ),
         _KpiItem(
           label: 'Expenses',
-          value: _controller.totalExpensesFormatted.value,
+          value: controller.totalExpensesFormatted.value,
           icon: Icons.trending_down_rounded,
           iconBg: _kRedBg,
           iconColor: _kRed,
-          trend: _controller.formatTrend(_controller.expenseChange.value),
-          trendUp: _controller.isExpensePositive.value,
+          trend: controller.formatTrend(controller.expenseChange.value),
+          trendUp: controller.isExpensePositive.value,
         ),
         _KpiItem(
           label: 'Bank Balance',
-          value: _controller.totalBankBalanceFormatted.value,
+          value: controller.totalBankBalanceFormatted.value,
           icon: Icons.account_balance_rounded,
           iconBg: _kPrimaryBg,
           iconColor: kPrimary,
-          trend: _controller.bankAccountsCount.value > 0
-              ? '${_controller.bankAccountsCount.value} accounts'
+          trend: controller.bankAccountsCount.value > 0
+              ? '${controller.bankAccountsCount.value} accounts'
               : 'No accounts',
-          trendUp: _controller.isCashPositive.value,
+          trendUp: controller.isCashPositive.value,
         ),
         _KpiItem(
           label: 'Receivables',
-          value: _controller.outstandingFormatted.value,
+          value: controller.outstandingFormatted.value,
           icon: Icons.hourglass_empty_rounded,
           iconBg: _kOrangeBg,
           iconColor: _kOrange,
-          trend: _controller.outstandingCount.value > 0
-              ? '${_controller.outstandingCount.value} open'
+          trend: controller.outstandingCount.value > 0
+              ? '${controller.outstandingCount.value} open'
               : 'Clear',
-          trendUp: _controller.outstanding.value <= 0,
+          trendUp: controller.outstanding.value <= 0,
         ),
       ];
 
@@ -711,89 +711,89 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildFinancialOverview() {
     return Obx(() {
       final maxVal = [
-        _controller.totalRevenue.value,
-        _controller.totalSales.value,
-        _controller.totalPurchases.value,
-        _controller.totalExpenses.value,
-        _controller.totalBankBalance.value,
-        _controller.outstanding.value,
-        _controller.payables.value,
-        _controller.netProfit.value.abs(),
+        controller.totalRevenue.value,
+        controller.totalSales.value,
+        controller.totalPurchases.value,
+        controller.totalExpenses.value,
+        controller.totalBankBalance.value,
+        controller.outstanding.value,
+        controller.payables.value,
+        controller.netProfit.value.abs(),
       ].fold<double>(0, (a, b) => b > a ? b : a);
 
       final bars = [
         _BarItem(
           'Revenue',
-          _controller.totalRevenueFormatted.value,
-          _controller.totalRevenue.value,
+          controller.totalRevenueFormatted.value,
+          controller.totalRevenue.value,
           _kGreen,
           _kGreenBg,
           'Sales + Income − Credit Notes',
         ),
         _BarItem(
           'Sales',
-          _controller.totalSalesFormatted.value,
-          _controller.totalSales.value,
+          controller.totalSalesFormatted.value,
+          controller.totalSales.value,
           kPrimary,
           _kPrimaryBg,
-          _controller.salesCount.value > 0
-              ? '${_controller.salesCount.value} invoice(s) · Paid amount'
+          controller.salesCount.value > 0
+              ? '${controller.salesCount.value} invoice(s) · Paid amount'
               : 'Warehouse Invoices Paid (Sales)',
         ),
         _BarItem(
           'Purchases',
-          _controller.totalPurchasesFormatted.value,
-          _controller.totalPurchases.value,
+          controller.totalPurchasesFormatted.value,
+          controller.totalPurchases.value,
           _kOrange,
           _kOrangeBg,
           'Purchase invoices (period)',
         ),
         _BarItem(
           'Expenses',
-          _controller.totalExpensesFormatted.value,
-          _controller.totalExpenses.value,
+          controller.totalExpensesFormatted.value,
+          controller.totalExpenses.value,
           _kRed,
           _kRedBg,
           'Expense screen Posted (period)',
         ),
         _BarItem(
           'Bank Balance',
-          _controller.totalBankBalanceFormatted.value,
-          _controller.totalBankBalance.value,
+          controller.totalBankBalanceFormatted.value,
+          controller.totalBankBalance.value,
           kPrimary,
           _kPrimaryBg,
           'Bank Accounts',
         ),
         _BarItem(
           'Receivables',
-          _controller.outstandingFormatted.value,
-          _controller.outstanding.value,
+          controller.outstandingFormatted.value,
+          controller.outstanding.value,
           _kOrange,
           _kOrangeBg,
           'Sales invoices outstanding',
         ),
         _BarItem(
           'Payables',
-          _controller.payablesFormatted.value,
-          _controller.payables.value,
+          controller.payablesFormatted.value,
+          controller.payables.value,
           _kOrange,
           _kOrangeBg,
           'Bills + Purchase invoices',
         ),
         _BarItem(
           'Net Profit',
-          _controller.netProfitFormatted.value,
-          _controller.netProfit.value.abs(),
-          _controller.netProfit.value >= 0 ? _kGreen : _kRed,
-          _controller.netProfit.value >= 0 ? _kGreenBg : _kRedBg,
-          'Revenue − Purchases − Expenses',
+          controller.netProfitFormatted.value,
+          controller.netProfit.value.abs(),
+          controller.netProfit.value >= 0 ? _kGreen : _kRed,
+          controller.netProfit.value >= 0 ? _kGreenBg : _kRedBg,
+          'Revenue − Expenses',
         ),
       ];
 
       return _SectionCard(
         title: 'Financial overview',
         trailing: Text(
-          _controller.periodLabel,
+          controller.periodLabel,
           style: const TextStyle(fontSize: 12, color: _kTextSub),
         ),
         child: Column(children: bars.map((b) => _buildBar(b, maxVal)).toList()),
@@ -886,7 +886,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // ─── Revenue / Expenses trend (same chart style as Purchase dashboard) ───
   Widget _buildRevenueTrendCard() {
     return Obx(() {
-      final rows = _controller.chartData;
+      final rows = controller.chartData;
       final List<double> revenueData = [];
       final List<double> expenseData = [];
       final List<String> labels = [];
@@ -925,7 +925,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              _controller.periodLabel,
+              controller.periodLabel,
               style: const TextStyle(fontSize: 11, color: _kTextSub),
             ),
             const SizedBox(width: 10),
@@ -1048,7 +1048,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // ─── Expense categories pie (same style as Purchase order-status chart) ──
   Widget _buildExpenseCategoriesCard() {
     return Obx(() {
-      final cats = _controller.expenseCategories
+      final cats = controller.expenseCategories
           .where((c) => _asChartDouble(c['amount']) > 0)
           .toList();
 
@@ -1071,8 +1071,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         title: 'Expenses by category',
         trailing: Text(
           cats.isEmpty
-              ? 'No data · ${_controller.periodLabel}'
-              : '${cats.length} types · ${_controller.periodLabel}',
+              ? 'No data · ${controller.periodLabel}'
+              : '${cats.length} types · ${controller.periodLabel}',
           style: const TextStyle(fontSize: 12, color: _kTextSub),
         ),
         child: SizedBox(
@@ -1192,7 +1192,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ('Purchases', 'Purchase invoices in selected period'),
       ('Revenue', 'Sales invoiced + Income − Credit Notes (period)'),
       ('Expenses', 'Expense screen Posted in selected period'),
-      ('Net Profit', 'Revenue − Purchases − Expenses (period)'),
+      (
+        'Net Profit',
+        'Revenue − Expenses (period; purchases already in expenses)',
+      ),
       ('Bank Balance', 'Bank Accounts (active, current balance)'),
       ('Receivables', 'Sales invoices outstanding (current)'),
       ('Payables', 'Bills + Purchase invoices outstanding (current)'),
@@ -1246,10 +1249,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildRecentTransactions() {
     return Obx(() {
-      if (_controller.recentTransactions.isEmpty)
-        return const SizedBox.shrink();
+      if (controller.recentTransactions.isEmpty) return const SizedBox.shrink();
 
-      final recent = _controller.recentTransactions.take(4).toList();
+      final recent = controller.recentTransactions.take(4).toList();
 
       return _SectionCard(
         title: 'Recent activity',
@@ -1392,7 +1394,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Icons.receipt_long_rounded,
         kPrimary,
         _kPrimaryBg,
-        () => setState(() => _currentTab = 2),
+        () => Get.to(() => const WarehouseInvoiceScreen()),
       ),
       _QuickAction(
         'Customer',
@@ -1875,19 +1877,49 @@ class _DrawerHeader extends StatelessWidget {
           const SizedBox(height: 14),
           Row(
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.account_balance_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
+              Obx(() {
+                final logo = controller.businessLogo.value;
+                return Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: logo.isNotEmpty
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: logo.startsWith('http')
+                              ? Image.network(
+                                  logo,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Icon(
+                                      Icons.account_balance_rounded,
+                                      color: Colors.white,
+                                      size: 20,
+                                    );
+                                  },
+                                )
+                              : Image.file(
+                                  File(logo),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Icon(
+                                      Icons.account_balance_rounded,
+                                      color: Colors.white,
+                                      size: 20,
+                                    );
+                                  },
+                                ),
+                        )
+                      : const Icon(
+                          Icons.account_balance_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                );
+              }),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(

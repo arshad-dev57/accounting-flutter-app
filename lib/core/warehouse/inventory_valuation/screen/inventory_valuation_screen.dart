@@ -1,10 +1,8 @@
 // lib/core/warehouse/inventory/screen/inventory_valuation_screen.dart
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
-import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/core/warehouse/inventory_valuation/controller/inventory_valuation_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/inventory_valuation/model/inventory_valuation_model.dart';
-import 'package:BisonsTechs_app/core/warehouse/widgets/drawer_widget.dart';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -17,36 +15,46 @@ class InventoryValuationScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.put(InventoryValuationController());
 
-    final isMobile = ResponsiveUtils.isMobile(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
-    final isWeb = ResponsiveUtils.isWeb(context);
-
     return Scaffold(
       backgroundColor: kBg,
       appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text(
-          'Inventory Valuation',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: Colors.black,
-          ),
+        iconTheme: const IconThemeData(color: Colors.white),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Get.back(),
+        ),
+        title: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.account_balance_wallet_outlined,
+                size: 16,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'Inventory Valuation',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
         backgroundColor: kPrimary,
         elevation: 0,
 
         actions: [
           IconButton(
-            icon: const Icon(Icons.search, color: Colors.black),
-            onPressed: () => _showSearchDialog(context, controller),
-          ),
-          IconButton(
-            icon: const Icon(Icons.filter_list, color: Colors.black),
-            onPressed: () => _showFilterDialog(context, controller),
-          ),
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.black),
+            icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: () => controller.refreshData(),
           ),
         ],
@@ -60,7 +68,65 @@ class InventoryValuationScreen extends StatelessWidget {
             ),
           );
         }
-        return _buildResponsiveLayout(context, controller);
+        return Column(
+          children: [
+            _buildSearchAndFilterBar(controller),
+            Expanded(child: _buildResponsiveLayout(context, controller)),
+          ],
+        );
+      }),
+    );
+  }
+
+  Widget _buildSearchAndFilterBar(InventoryValuationController controller) {
+    return Container(
+      color: kCardBg,
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      child: Obx(() {
+        final categories = ['all', ...controller.categories];
+        final selected = categories.contains(controller.selectedCategory.value)
+            ? controller.selectedCategory.value
+            : 'all';
+        return Container(
+          height: 40,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: selected,
+              isExpanded: true,
+              isDense: true,
+              icon: Icon(
+                Icons.keyboard_arrow_down_rounded,
+                size: 18,
+                color: Colors.grey.shade600,
+              ),
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+              items: categories
+                  .map(
+                    (c) => DropdownMenuItem(
+                      value: c,
+                      child: Text(
+                        c == 'all' ? 'All Categories' : c,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (v) {
+                if (v != null) controller.filterByCategory(v);
+              },
+            ),
+          ),
+        );
       }),
     );
   }
@@ -94,8 +160,6 @@ class InventoryValuationScreen extends StatelessWidget {
         children: [
           _buildSummaryCards(controller, isMobile: true),
           const SizedBox(height: 12),
-          _buildCategoryChips(controller),
-          const SizedBox(height: 12),
           _buildMobileItemList(controller),
           const SizedBox(height: 12),
           _buildCategoryBreakdown(controller),
@@ -122,8 +186,6 @@ class InventoryValuationScreen extends StatelessWidget {
             child: Column(
               children: [
                 _buildSummaryCards(controller, isMobile: false),
-                const SizedBox(height: 12),
-                _buildCategoryChips(controller),
                 const SizedBox(height: 12),
                 _buildTabletItemList(controller),
               ],
@@ -159,8 +221,6 @@ class InventoryValuationScreen extends StatelessWidget {
             child: Column(
               children: [
                 _buildSummaryCards(controller, isMobile: false),
-                const SizedBox(height: 12),
-                _buildCategoryChips(controller),
                 const SizedBox(height: 12),
                 Expanded(child: _buildWebTable(controller)),
               ],
@@ -330,54 +390,6 @@ class InventoryValuationScreen extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  // CATEGORY CHIPS
-  // ═══════════════════════════════════════════════════════════════
-
-  Widget _buildCategoryChips(InventoryValuationController controller) {
-    return Obx(() {
-      final allCategories = ['all', ...controller.categories];
-      return SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: allCategories.map((category) {
-            final isSelected = controller.selectedCategory.value == category;
-            final label = category == 'all' ? 'All' : category;
-            return Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: FilterChip(
-                label: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: isSelected
-                        ? FontWeight.w600
-                        : FontWeight.normal,
-                  ),
-                ),
-                selected: isSelected,
-                onSelected: (_) => controller.filterByCategory(category),
-                backgroundColor: kBg,
-                selectedColor: kPrimary.withOpacity(0.15),
-                labelStyle: TextStyle(color: isSelected ? kPrimary : kSubText),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 2,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: isSelected
-                      ? BorderSide(color: kPrimary.withOpacity(0.3))
-                      : BorderSide(color: Colors.grey.withOpacity(0.15)),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      );
-    });
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -1089,114 +1101,6 @@ class InventoryValuationScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  // DIALOGS
-  // ═══════════════════════════════════════════════════════════════
-
-  void _showSearchDialog(
-    BuildContext context,
-    InventoryValuationController controller,
-  ) {
-    final searchController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(
-          'Search Products',
-          style: TextStyle(color: Colors.black),
-        ),
-        content: TextField(
-          controller: searchController,
-          autofocus: true,
-          style: const TextStyle(color: Colors.black),
-          decoration: const InputDecoration(
-            hintText: 'Product name or SKU...',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.search),
-          ),
-          onSubmitted: (v) {
-            controller.searchProducts(v);
-            Navigator.pop(context);
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Colors.black)),
-          ),
-          TextButton(
-            onPressed: () {
-              controller.searchProducts(searchController.text);
-              Navigator.pop(context);
-            },
-            child: const Text('Search', style: TextStyle(color: Colors.black)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showFilterDialog(
-    BuildContext context,
-    InventoryValuationController controller,
-  ) {
-    final categories = ['all', ...controller.categories];
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(
-          'Filter by Category',
-          style: TextStyle(color: Colors.black),
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: categories.map((category) {
-              final label = category == 'all' ? 'All' : category;
-              return ListTile(
-                title: Text(
-                  label,
-                  style: TextStyle(
-                    color: controller.selectedCategory.value == category
-                        ? kPrimary
-                        : Colors.black,
-                    fontWeight: controller.selectedCategory.value == category
-                        ? FontWeight.w600
-                        : FontWeight.normal,
-                  ),
-                ),
-                leading: Obx(
-                  () => Radio<String>(
-                    value: category,
-                    groupValue: controller.selectedCategory.value,
-                    activeColor: kPrimary,
-                    onChanged: (v) {
-                      if (v != null) {
-                        controller.filterByCategory(v);
-                        Navigator.pop(context);
-                      }
-                    },
-                  ),
-                ),
-                onTap: () {
-                  controller.filterByCategory(category);
-                  Navigator.pop(context);
-                },
-              );
-            }).toList(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close', style: TextStyle(color: Colors.black)),
-          ),
-        ],
       ),
     );
   }

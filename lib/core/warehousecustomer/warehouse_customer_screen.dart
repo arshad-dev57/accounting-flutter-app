@@ -18,23 +18,42 @@ class WarehouseCustomerScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: kBgLight,
       appBar: AppBar(
-        title: const Text(
-          'Customers',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: Colors.black,
-          ),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.people_outline,
+                size: 16,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'Customers',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
         backgroundColor: kPrimary,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Get.back(),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: Colors.black),
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
             onPressed: controller.refreshCustomers,
           ),
         ],
@@ -70,7 +89,11 @@ class WarehouseCustomerScreen extends StatelessWidget {
                 onPressed: controller.openCreateForm,
                 backgroundColor: kPrimary,
                 elevation: 2,
-                child: const Icon(Icons.person_add, color: Colors.black, size: 24),
+                child: const Icon(
+                  Icons.person_add,
+                  color: Colors.white,
+                  size: 24,
+                ),
               ),
       ),
     );
@@ -79,149 +102,159 @@ class WarehouseCustomerScreen extends StatelessWidget {
   Widget _buildTopHeader(WarehouseCustomerController controller) {
     return Container(
       color: kPrimary,
-      child: SafeArea(
-        bottom: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+            child: Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: const Icon(
+                    Icons.people_outline,
+                    size: 18,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Customers',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      Obx(
+                        () => Text(
+                          '${controller.totalRecords.value} customers',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.white.withOpacity(0.7),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Obx(
+                  () => Row(
+                    children: [
+                      _compactKpi(
+                        'Active',
+                        controller.stats.value?.activeCount.toString() ?? '0',
+                        Colors.green.shade200,
+                      ),
+                      const SizedBox(width: 8),
+                      _compactKpi(
+                        'Inactive',
+                        controller.stats.value?.inactiveCount.toString() ??
+                            '0',
+                        Colors.white70,
+                      ),
+                      const SizedBox(width: 8),
+                      _compactKpi(
+                        'New',
+                        controller.stats.value?.newThisMonth.toString() ?? '0',
+                        Colors.lightBlue.shade100,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: controller.refreshCustomers,
+                  child: Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: Icon(
+                      Icons.refresh_rounded,
+                      size: 17,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+            child: Container(
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: _SearchField(controller: controller),
+            ),
+          ),
+          Obx(
+            () => SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
               child: Row(
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Customers',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.black,
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-                        Obx(
-                          () => Text(
-                            '${controller.totalRecords.value} customers',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.black.withOpacity(0.55),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                  // Status Filters
+                  _filterChip(
+                    'All',
+                    controller.selectedStatus.value == 'all',
+                    () => controller.filterByStatus('all'),
                   ),
-                  Obx(
-                    () => Row(
-                      children: [
-                        _compactKpi(
-                          'Active',
-                          controller.stats.value?.activeCount.toString() ?? '0',
-                          Colors.green.shade800,
-                        ),
-                        const SizedBox(width: 8),
-                        _compactKpi(
-                          'Inactive',
-                          controller.stats.value?.inactiveCount.toString() ??
-                              '0',
-                          Colors.grey.shade800,
-                        ),
-                        const SizedBox(width: 8),
-                        _compactKpi(
-                          'New',
-                          controller.stats.value?.newThisMonth.toString() ??
-                              '0',
-                          Colors.blue.shade800,
-                        ),
-                      ],
-                    ),
+                  _filterChip(
+                    'Active',
+                    controller.selectedStatus.value == 'Active',
+                    () => controller.filterByStatus('Active'),
                   ),
-                  const SizedBox(width: 10),
-                  GestureDetector(
-                    onTap: controller.refreshCustomers,
-                    child: Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(9),
-                      ),
-                      child: Icon(
-                        Icons.refresh_rounded,
-                        size: 17,
-                        color: Colors.black.withOpacity(0.65),
-                      ),
-                    ),
+                  _filterChip(
+                    'Inactive',
+                    controller.selectedStatus.value == 'Inactive',
+                    () => controller.filterByStatus('Inactive'),
+                  ),
+                  const SizedBox(width: 8),
+                  // Type Filters
+                  _filterChip(
+                    'Individual',
+                    controller.selectedType.value == 'Individual',
+                    () => controller.filterByType('Individual'),
+                  ),
+                  _filterChip(
+                    'Business',
+                    controller.selectedType.value == 'Business',
+                    () => controller.filterByType('Business'),
+                  ),
+                  _filterChip(
+                    'Wholesale',
+                    controller.selectedType.value == 'Wholesale',
+                    () => controller.filterByType('Wholesale'),
                   ),
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-              child: Container(
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: _SearchField(controller: controller),
-              ),
-            ),
-            Obx(
-              () => SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-                child: Row(
-                  children: [
-                    // Status Filters
-                    _filterChip(
-                      'All',
-                      controller.selectedStatus.value == 'all',
-                      () => controller.filterByStatus('all'),
-                    ),
-                    _filterChip(
-                      'Active',
-                      controller.selectedStatus.value == 'Active',
-                      () => controller.filterByStatus('Active'),
-                    ),
-                    _filterChip(
-                      'Inactive',
-                      controller.selectedStatus.value == 'Inactive',
-                      () => controller.filterByStatus('Inactive'),
-                    ),
-                    const SizedBox(width: 8),
-                    // Type Filters
-                    _filterChip(
-                      'Individual',
-                      controller.selectedType.value == 'Individual',
-                      () => controller.filterByType('Individual'),
-                    ),
-                    _filterChip(
-                      'Business',
-                      controller.selectedType.value == 'Business',
-                      () => controller.filterByType('Business'),
-                    ),
-                    _filterChip(
-                      'Wholesale',
-                      controller.selectedType.value == 'Wholesale',
-                      () => controller.filterByType('Wholesale'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -242,7 +275,7 @@ class WarehouseCustomerScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.white.withOpacity(0.7),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -259,10 +292,10 @@ class WarehouseCustomerScreen extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
-            color: selected ? Colors.black : Colors.white.withOpacity(0.18),
+            color: selected ? Colors.white : Colors.white.withOpacity(0.18),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: selected ? Colors.black : Colors.white.withOpacity(0.4),
+              color: selected ? Colors.white : Colors.white.withOpacity(0.4),
             ),
           ),
           child: Text(
@@ -270,7 +303,7 @@ class WarehouseCustomerScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: selected ? Colors.white : Colors.black87,
+              color: selected ? kPrimary : Colors.white,
             ),
           ),
         ),
@@ -402,17 +435,36 @@ class _CreateCustomerForm extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: kPrimary,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
         leading: IconButton(
           onPressed: onCancel,
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
         ),
-        title: const Text(
-          'Add Customer',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: Colors.black,
-          ),
+        title: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.person_add_alt_1_outlined,
+                size: 16,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'Add Customer',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
       ),
       body: Obx(() {
@@ -706,14 +758,14 @@ class _CreateCustomerForm extends StatelessWidget {
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.black,
+                          color: Colors.white,
                         ),
                       )
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.save, color: Colors.black, size: 18),
+                          const Icon(Icons.save, color: Colors.white, size: 18),
                           const SizedBox(width: 6),
                           const Flexible(
                             child: Text(
@@ -721,7 +773,7 @@ class _CreateCustomerForm extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.black,
+                                color: Colors.white,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -1404,14 +1456,14 @@ class _EditCustomerFormState extends State<_EditCustomerForm> {
                                 width: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Colors.black,
+                                  color: Colors.white,
                                 ),
                               )
                             : const Text(
                                 'Update',
                                 style: TextStyle(
                                   fontSize: 14,
-                                  color: Colors.black,
+                                  color: Colors.white,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -1513,13 +1565,13 @@ class _CustomerListView extends StatelessWidget {
                 icon: const Icon(
                   Icons.person_add,
                   size: 16,
-                  color: Colors.black,
+                  color: Colors.white,
                 ),
                 label: const Text(
                   'Add Customer',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.black,
+                    color: Colors.white,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

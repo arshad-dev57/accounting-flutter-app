@@ -17,7 +17,6 @@ class StockMovementDetailSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final typeColor = controller.getTypeColor(movement.type);
     final boxSummary = movement.stockDetails?.boxSummary;
 
     return DraggableScrollableSheet(
@@ -31,70 +30,91 @@ class StockMovementDetailSheet extends StatelessWidget {
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
           ),
-          child: ListView(
-            controller: scrollController,
-            padding: const EdgeInsets.all(20),
+          child: Column(
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: typeColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 16, 8, 16),
+                decoration: const BoxDecoration(
+                  color: kPrimary,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        controller.getTypeIcon(movement.type),
+                        color: Colors.white,
+                      ),
                     ),
-                    child: Icon(
-                      controller.getTypeIcon(movement.type),
-                      color: typeColor,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          movement.productName,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            movement.productName,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                        Text(
-                          movement.getTypeLabel(),
-                          style: TextStyle(
-                            color: typeColor,
-                            fontWeight: FontWeight.w600,
+                          Text(
+                            movement.getTypeLabel(),
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.85),
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  IconButton(onPressed: onClose, icon: const Icon(Icons.close)),
-                ],
+                    IconButton(
+                      onPressed: onClose,
+                      icon: const Icon(Icons.close, color: Colors.white),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
-              _row(
-                'Quantity',
-                '${movement.type == 'stock_in' ? '+' : '-'}${movement.quantity}',
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.all(20),
+                  children: [
+                    _row(
+                      'Quantity',
+                      '${movement.type == 'stock_in' ? '+' : '-'}${movement.quantity}',
+                    ),
+                    _row(
+                      'Stock',
+                      '${movement.previousStock} → ${movement.newStock}',
+                    ),
+                    _row('Status', movement.status),
+                    if (boxSummary != null) _row('Box Details', boxSummary),
+                    if (movement.reason.isNotEmpty)
+                      _row('Reason', movement.reason),
+                    if (movement.supplierName != null &&
+                        movement.supplierName!.isNotEmpty)
+                      _row('Supplier', movement.supplierName!),
+                    if (movement.customerName != null &&
+                        movement.customerName!.isNotEmpty)
+                      _row('Customer', movement.customerName!),
+                    if (movement.reference != null &&
+                        movement.reference!.isNotEmpty)
+                      _row('Reference', movement.reference!),
+                    if (movement.notes != null && movement.notes!.isNotEmpty)
+                      _row('Notes', movement.notes!),
+                    _row('Date', controller.formatDate(movement.createdAt)),
+                    if (movement.createdBy != null)
+                      _row('By', movement.createdBy!.name),
+                  ],
+                ),
               ),
-              _row('Stock', '${movement.previousStock} → ${movement.newStock}'),
-              _row('Status', movement.status),
-              if (boxSummary != null) _row('Box Details', boxSummary),
-              if (movement.reason.isNotEmpty) _row('Reason', movement.reason),
-              if (movement.supplierName != null &&
-                  movement.supplierName!.isNotEmpty)
-                _row('Supplier', movement.supplierName!),
-              if (movement.customerName != null &&
-                  movement.customerName!.isNotEmpty)
-                _row('Customer', movement.customerName!),
-              if (movement.reference != null && movement.reference!.isNotEmpty)
-                _row('Reference', movement.reference!),
-              if (movement.notes != null && movement.notes!.isNotEmpty)
-                _row('Notes', movement.notes!),
-              _row('Date', controller.formatDate(movement.createdAt)),
-              if (movement.createdBy != null)
-                _row('By', movement.createdBy!.name),
             ],
           ),
         );

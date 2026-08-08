@@ -31,9 +31,6 @@ const _productTabs = [
   _ProductTab('Custom', Icons.tune_outlined),
 ];
 
-// ═══════════════════════════════════════════════════════════════
-// PRODUCTS SCREEN
-// ═══════════════════════════════════════════════════════════════
 class ProductsScreen extends StatefulWidget {
   const ProductsScreen({super.key});
 
@@ -169,7 +166,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
         onPressed: () => _openProductPage(context, controller),
         backgroundColor: kPrimary,
         elevation: 2,
-        child: const Icon(Icons.add, color: Colors.black, size: 24),
+        child: const Icon(Icons.add, color: Colors.white, size: 24),
       ),
     );
   }
@@ -187,9 +184,23 @@ class _ProductsScreenState extends State<ProductsScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: const Icon(
+                      Icons.inventory_2_outlined,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,7 +210,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
-                            color: Colors.black,
+                            color: Colors.white,
                             letterSpacing: -0.3,
                           ),
                         ),
@@ -208,7 +219,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                             '${controller.totalProducts.value} items in inventory',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.black.withOpacity(0.55),
+                              color: Colors.white.withOpacity(0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -222,19 +233,19 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         _compactKpi(
                           'Stock',
                           controller.inStockCount.value.toString(),
-                          Colors.green.shade800,
+                          Colors.white,
                         ),
                         const SizedBox(width: 10),
                         _compactKpi(
                           'Low',
                           controller.lowStockCount.value.toString(),
-                          Colors.orange.shade800,
+                          Colors.orange.shade200,
                         ),
                         const SizedBox(width: 10),
                         _compactKpi(
                           'Out',
                           controller.outOfStockCount.value.toString(),
-                          Colors.red.shade700,
+                          Colors.red.shade200,
                         ),
                       ],
                     ),
@@ -246,13 +257,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(9),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 17,
-                        color: Colors.black.withOpacity(0.65),
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ),
@@ -353,12 +364,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? Colors.black
+                                ? Colors.white
                                 : Colors.white.withOpacity(0.18),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color: isSelected
-                                  ? Colors.black
+                                  ? Colors.white
                                   : Colors.white.withOpacity(0.4),
                             ),
                           ),
@@ -367,7 +378,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              color: isSelected ? Colors.white : Colors.black87,
+                              color: isSelected ? kPrimary : Colors.white,
                             ),
                           ),
                         ),
@@ -399,7 +410,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.white.withOpacity(0.7),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -662,7 +673,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.black,
+                                  color: Colors.white,
                                 ),
                               ),
                             ),
@@ -2931,13 +2942,32 @@ class _AddProductPageState extends State<_AddProductPage> {
       appBar: AppBar(
         backgroundColor: kPrimary,
         elevation: 0,
-        title: Text(
-          _isEditing ? 'Edit Product' : 'Add New Product',
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Colors.black,
-          ),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                _isEditing ? Icons.edit_outlined : Icons.add_box_outlined,
+                size: 16,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              _isEditing ? 'Edit Product' : 'Add New Product',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
         actions: [
           _saving
@@ -2948,7 +2978,7 @@ class _AddProductPageState extends State<_AddProductPage> {
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.black,
+                      color: Colors.white,
                     ),
                   ),
                 )
@@ -2959,7 +2989,7 @@ class _AddProductPageState extends State<_AddProductPage> {
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: Colors.black,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -2994,7 +3024,7 @@ class _AddProductPageState extends State<_AddProductPage> {
                             Icon(
                               tab.icon,
                               size: 13,
-                              color: active ? Colors.black : kSubText,
+                              color: active ? Colors.white : kSubText,
                             ),
                             const SizedBox(width: 5),
                             Text(
@@ -3004,7 +3034,7 @@ class _AddProductPageState extends State<_AddProductPage> {
                                 fontWeight: active
                                     ? FontWeight.w700
                                     : FontWeight.w500,
-                                color: active ? Colors.black : kSubText,
+                                color: active ? Colors.white : kSubText,
                               ),
                             ),
                           ],
@@ -3217,12 +3247,12 @@ class _MobileProductsListState extends State<_MobileProductsList> {
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: widget.onAddProduct,
-                icon: const Icon(Icons.add, size: 16, color: Colors.black),
+                icon: const Icon(Icons.add, size: 16, color: Colors.white),
                 label: const Text(
                   'Add Product',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.black,
+                    color: Colors.white,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

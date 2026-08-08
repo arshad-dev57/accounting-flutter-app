@@ -610,13 +610,31 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
     return Scaffold(
       backgroundColor: kBg,
       appBar: AppBar(
-        title: const Text(
-          'Invoices',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: Colors.white,
-          ),
+        title: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.receipt_long_outlined,
+                size: 16,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'Invoices',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
         backgroundColor: kPrimary,
         elevation: 0,
@@ -678,19 +696,40 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
     return Scaffold(
       backgroundColor: kBg,
       appBar: AppBar(
-        title: Text(
-          invoice.invoiceNumber,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
+        title: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.receipt_outlined,
+                size: 16,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Flexible(
+              child: Text(
+                invoice.invoiceNumber,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
         backgroundColor: kPrimary,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => controller.selectedInvoice.value = null,
         ),
         actions: [
@@ -1812,23 +1851,51 @@ class _CreateWarehouseInvoiceFormState
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Header
-          Row(
-            children: [
-              IconButton(
-                onPressed: widget.onCancel,
-                icon: const Icon(Icons.arrow_back),
-                style: IconButton.styleFrom(backgroundColor: kCardBg),
-              ),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text(
-                  'Create Invoice',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+          Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: kPrimary,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                IconButton(
+                  onPressed: widget.onCancel,
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white.withOpacity(0.15),
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.receipt_long_outlined,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'Create Invoice',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 0),
 
           // From order banner
           if (_draft.sourceOrderNumber != null)
@@ -2038,7 +2105,7 @@ class _CreateWarehouseInvoiceFormState
                       ),
                       child: const Icon(
                         Icons.add,
-                        color: Colors.black,
+                        color: Colors.white,
                         size: 22,
                       ),
                     ),

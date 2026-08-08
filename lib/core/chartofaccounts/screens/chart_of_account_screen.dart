@@ -71,7 +71,7 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
         onPressed: () => _showAddAccountDialog(context, controller),
         backgroundColor: kPrimary,
         elevation: 2,
-        child: const Icon(Icons.add, color: Colors.black, size: 24),
+        child: const Icon(Icons.add, color: Colors.white, size: 24),
       ),
     );
   }
@@ -90,7 +90,7 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   const SizedBox(width: 8),
@@ -103,7 +103,7 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
-                            color: Colors.black,
+                            color: Colors.white,
                           ),
                         ),
                         Obx(
@@ -111,7 +111,7 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                             '${controller.totalItems.value} accounts',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.black.withOpacity(0.55),
+                              color: Colors.white.withOpacity(0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -144,13 +144,13 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                               width: 36,
                               height: 36,
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.1),
+                                color: Colors.white.withOpacity(0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
                                 Icons.refresh_rounded,
                                 size: 18,
-                                color: Colors.black.withOpacity(0.65),
+                                color: Colors.white.withOpacity(0.9),
                               ),
                             ),
                           ),
@@ -247,12 +247,12 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                               ),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? Colors.black
+                                    ? Colors.white
                                     : Colors.white.withOpacity(0.18),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
                                   color: isSelected
-                                      ? Colors.black
+                                      ? Colors.white
                                       : Colors.white.withOpacity(0.4),
                                 ),
                               ),
@@ -262,8 +262,8 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
                                   color: isSelected
-                                      ? Colors.white
-                                      : Colors.black87,
+                                    ? kPrimary
+                                    : Colors.white,
                                 ),
                               ),
                             ),

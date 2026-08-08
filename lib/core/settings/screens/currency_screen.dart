@@ -2,6 +2,7 @@ import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:currency_picker/currency_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -17,28 +18,55 @@ class CurrencyScreen extends StatefulWidget {
 class _CurrencyScreenState extends State<CurrencyScreen> {
   final CurrencyController _currencyController = Get.find<CurrencyController>();
   final TextEditingController _searchController = TextEditingController();
+  final CurrencyService _currencyService = CurrencyService();
 
-  List<AppCurrency> _filteredCurrencies = [];
+  static const List<String> _favoriteCodes = [
+    'USD',
+    'EUR',
+    'GBP',
+    'PKR',
+    'SAR',
+    'AED',
+  ];
+
+  late final List<Currency> _allCurrencies;
+  late final List<Currency> _favoriteCurrencies;
+  List<Currency> _filteredCurrencies = [];
 
   @override
   void initState() {
     super.initState();
-    _filteredCurrencies = CurrencyController.currencies;
+    _allCurrencies = _currencyService.getAll();
+    _favoriteCurrencies = _currencyService.findCurrenciesByCode(_favoriteCodes);
+    _filteredCurrencies = List<Currency>.from(_allCurrencies);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _filterCurrencies(String query) {
-    final lowerQuery = query.toLowerCase();
+    final lowerQuery = query.toLowerCase().trim();
     setState(() {
-      _filteredCurrencies = CurrencyController.currencies.where((currency) {
-        return currency.name.toLowerCase().contains(lowerQuery) ||
-            currency.code.toLowerCase().contains(lowerQuery) ||
-            currency.symbol.toLowerCase().contains(lowerQuery);
-      }).toList();
+      if (lowerQuery.isEmpty) {
+        _filteredCurrencies = List<Currency>.from(_allCurrencies);
+      } else {
+        _filteredCurrencies = _allCurrencies.where((currency) {
+          return currency.name.toLowerCase().contains(lowerQuery) ||
+              currency.code.toLowerCase().contains(lowerQuery) ||
+              currency.symbol.toLowerCase().contains(lowerQuery);
+        }).toList();
+      }
     });
   }
 
-  void _onCurrencySelected(AppCurrency currency) async {
-    await _currencyController.setCurrency(currency.code);
+  void _onCurrencySelected(Currency currency) async {
+    await _currencyController.setCurrency(
+      currency.code,
+      symbol: currency.symbol,
+    );
     AppSnackbar.success(
       Colors.green,
       'Currency Updated',
@@ -134,7 +162,6 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
   }
 
   Widget _buildHeader({required bool isWeb}) {
-    // Determine if we should show a back button based on whether we are on a screen with a drawer/sidebar or popped onto the stack
     final showBackBtn = Navigator.canPop(context) && !isWeb;
 
     return Container(
@@ -207,34 +234,37 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
     return TextField(
       controller: _searchController,
       onChanged: _filterCurrencies,
-      style: TextStyle(fontSize: 15, color: kText, fontWeight: FontWeight.w500),
+      style: const TextStyle(
+        fontSize: 14,
+        color: Color(0xFF2D3748),
+        fontWeight: FontWeight.w500,
+      ),
       decoration: InputDecoration(
-        hintText: 'Search by currency name, code, or symbol...',
-        hintStyle: TextStyle(color: kSubText.withOpacity(0.7)),
-        prefixIcon: Padding(
-          padding: const EdgeInsets.all(14.0),
-          child: Iconify(Mdi.magnify, color: kSubText, size: 20),
-        ),
+        hintText: 'Search currency',
+        hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+        prefixIcon: Icon(Icons.search, color: Colors.grey.shade500),
         filled: true,
-        fillColor: kBg,
-        contentPadding: const EdgeInsets.symmetric(vertical: 16),
+        fillColor: Colors.grey.shade50,
+        contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: kBorder),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.grey.shade300),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: kBorder),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.grey.shade300),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: kPrimary, width: 1.5),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: kPrimary, width: 2),
         ),
       ),
     );
   }
 
   Widget _buildCurrencyList() {
+    final isSearching = _searchController.text.trim().isNotEmpty;
+
     if (_filteredCurrencies.isEmpty) {
       return Center(
         child: Column(
@@ -259,102 +289,123 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
       );
     }
 
-    return ListView.separated(
+    return ListView(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: _filteredCurrencies.length,
-      separatorBuilder: (context, index) =>
-          Divider(height: 1, thickness: 1, color: kBorder),
-      itemBuilder: (context, index) {
-        final currency = _filteredCurrencies[index];
-        return Obx(() {
-          final isSelected =
-              _currencyController.currencyCode.value == currency.code;
+      children: [
+        if (!isSearching && _favoriteCurrencies.isNotEmpty) ...[
+          ..._favoriteCurrencies.map(_buildCurrencyRow),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.0),
+            child: Divider(thickness: 1),
+          ),
+        ],
+        ..._filteredCurrencies.map(_buildCurrencyRow),
+      ],
+    );
+  }
 
-          return Material(
-            color: isSelected ? kPrimary.withOpacity(0.05) : Colors.transparent,
-            child: InkWell(
-              onTap: () => _onCurrencySelected(currency),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: isSelected ? kPrimary.withOpacity(0.15) : kBg,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isSelected ? kPrimary : kBorder,
-                        ),
-                      ),
-                      child: Text(
-                        currency.symbol,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: isSelected ? kPrimary : kText,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            currency.name,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: isSelected
-                                  ? FontWeight.w700
-                                  : FontWeight.w600,
-                              color: isSelected ? kPrimaryDark : kText,
+  /// Matches register `showCurrencyPicker` list row:
+  /// flag | CODE + name | symbol
+  Widget _buildCurrencyRow(Currency currency) {
+    return Obx(() {
+      final isSelected =
+          _currencyController.currencyCode.value == currency.code;
+
+      return Material(
+        color: isSelected ? kPrimary.withOpacity(0.05) : Colors.transparent,
+        child: InkWell(
+          onTap: () => _onCurrencySelected(currency),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 9.0, horizontal: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 15),
+                      _flagWidget(currency),
+                      const SizedBox(width: 15),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              currency.code,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: isSelected
+                                    ? kPrimaryDark
+                                    : const Color(0xFF2D3748),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            currency.code,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: kSubText,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (isSelected)
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: kPrimary,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: kPrimary.withOpacity(0.4),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
+                            Text(
+                              currency.name,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
-                        child: const Iconify(
-                          Mdi.check,
-                          color: Colors.white,
-                          size: 16,
-                        ),
                       ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Text(
+                    currency.symbol,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected ? kPrimary : const Color(0xFF2D3748),
+                    ),
+                  ),
+                ),
+                if (isSelected)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: kPrimary,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: kPrimary.withOpacity(0.4),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Iconify(
+                        Mdi.check,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+              ],
             ),
-          );
-        });
-      },
-    );
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _flagWidget(Currency currency) {
+    try {
+      if (currency.flag != null && !currency.isFlagImage) {
+        return Text(
+          CurrencyUtils.currencyToEmoji(currency),
+          style: const TextStyle(fontSize: 26),
+        );
+      }
+    } catch (_) {}
+
+    return Icon(Icons.flag_outlined, size: 24, color: Colors.grey.shade400);
   }
 }

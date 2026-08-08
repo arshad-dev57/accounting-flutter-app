@@ -65,7 +65,7 @@ class JournalEntriesScreen extends StatelessWidget {
           onPressed: () => _showAddJournalEntryDialog(context, controller),
           backgroundColor: kPrimary,
           elevation: 0,
-          child: const Icon(Icons.add, color: Colors.black, size: 24),
+          child: const Icon(Icons.add, color: Colors.white, size: 24),
         ),
       ),
     );
@@ -98,7 +98,7 @@ class JournalEntriesScreen extends StatelessWidget {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   const SizedBox(width: 8),
@@ -111,7 +111,7 @@ class JournalEntriesScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
-                            color: Colors.black,
+                            color: Colors.white,
                           ),
                         ),
                         Obx(
@@ -119,7 +119,7 @@ class JournalEntriesScreen extends StatelessWidget {
                             '${controller.totalEntries.value} entries',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.black.withOpacity(0.55),
+                              color: Colors.white.withOpacity(0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -133,13 +133,13 @@ class JournalEntriesScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 18,
-                        color: Colors.black.withOpacity(0.65),
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ),
@@ -150,13 +150,13 @@ class JournalEntriesScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.download_outlined,
                         size: 18,
-                        color: Colors.black.withOpacity(0.65),
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ),
@@ -238,12 +238,12 @@ class JournalEntriesScreen extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? Colors.black
+                                ? Colors.white
                                 : Colors.white.withOpacity(0.18),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color: isSelected
-                                  ? Colors.black
+                                  ? Colors.white
                                   : Colors.white.withOpacity(0.4),
                             ),
                           ),
@@ -252,7 +252,7 @@ class JournalEntriesScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              color: isSelected ? Colors.white : Colors.black87,
+                              color: isSelected ? kPrimary : Colors.white,
                             ),
                           ),
                         ),
@@ -276,7 +276,7 @@ class JournalEntriesScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: kPrimary.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.black.withOpacity(0.2)),
+                      border: Border.all(color: Colors.white.withOpacity(0.25)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -286,14 +286,14 @@ class JournalEntriesScreen extends StatelessWidget {
                             Icon(
                               Icons.date_range,
                               size: 16,
-                              color: Colors.black87,
+                              color: Colors.white,
                             ),
                             const SizedBox(width: 8),
                             Text(
                               '${DateFormat('MMM dd, yyyy').format(range.start)} - ${DateFormat('MMM dd, yyyy').format(range.end)}',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.black87,
+                                color: Colors.white,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -304,7 +304,7 @@ class JournalEntriesScreen extends StatelessWidget {
                           child: Icon(
                             Icons.close,
                             size: 16,
-                            color: Colors.black87,
+                            color: Colors.white,
                           ),
                         ),
                       ],
@@ -1961,7 +1961,7 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
-                              color: Colors.black,
+                              color: Colors.white,
                             ),
                           ),
                   ),

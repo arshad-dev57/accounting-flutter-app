@@ -20,18 +20,37 @@ class SalesReturnScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: kBgLight,
       appBar: AppBar(
-        title: const Text(
-          'Sales Return',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: Colors.black,
-          ),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.assignment_return_outlined,
+                size: 16,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'Sales Return',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
         backgroundColor: kPrimary,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Get.back(),
         ),
       ),
@@ -63,7 +82,7 @@ class SalesReturnScreen extends StatelessWidget {
         onPressed: controller.openCreateWizard,
         backgroundColor: kPrimary,
         elevation: 2,
-        child: const Icon(Icons.add, color: Colors.black, size: 24),
+        child: const Icon(Icons.add, color: Colors.white, size: 24),
       ),
     );
   }
@@ -71,139 +90,150 @@ class SalesReturnScreen extends StatelessWidget {
   Widget _buildTopHeader(SalesReturnController controller) {
     return Container(
       color: kPrimary,
-      child: SafeArea(
-        bottom: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+            child: Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: const Icon(
+                    Icons.assignment_return_outlined,
+                    size: 18,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Sales Return',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      Obx(
+                        () => Text(
+                          '${controller.totalRecords.value} returns',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.white.withOpacity(0.7),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Obx(
+                  () => Row(
+                    children: [
+                      _compactKpi(
+                        'Pending',
+                        controller.stats.value.pending.toString(),
+                        Colors.orange.shade200,
+                      ),
+                      const SizedBox(width: 10),
+                      _compactKpi(
+                        'Approved',
+                        controller.stats.value.approved.toString(),
+                        Colors.green.shade200,
+                      ),
+                      const SizedBox(width: 10),
+                      _compactKpi(
+                        'Rejected',
+                        controller.stats.value.rejected.toString(),
+                        Colors.red.shade200,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: controller.refreshReturns,
+                  child: Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: Icon(
+                      Icons.refresh_rounded,
+                      size: 17,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+            child: Container(
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: _SearchField(controller: controller),
+            ),
+          ),
+          Obx(
+            () => SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
               child: Row(
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Sales Return',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.black,
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-                        Obx(
-                          () => Text(
-                            '${controller.totalRecords.value} returns',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.black.withOpacity(0.55),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                  _filterChip(
+                    'All',
+                    controller.selectedFilter.value == 'all',
+                    () => controller.filterReturns('all'),
                   ),
-                  Obx(
-                    () => Row(
-                      children: [
-                        _compactKpi(
-                          'Pending',
-                          controller.stats.value.pending.toString(),
-                          Colors.orange.shade800,
-                        ),
-                        const SizedBox(width: 10),
-                        _compactKpi(
-                          'Approved',
-                          controller.stats.value.approved.toString(),
-                          Colors.green.shade800,
-                        ),
-                        const SizedBox(width: 10),
-                        _compactKpi(
-                          'Rejected',
-                          controller.stats.value.rejected.toString(),
-                          Colors.red.shade700,
-                        ),
-                      ],
-                    ),
+                  _filterChip(
+                    'Pending',
+                    controller.selectedFilter.value == 'Pending',
+                    () => controller.filterReturns('Pending'),
                   ),
-                  const SizedBox(width: 10),
-                  GestureDetector(
-                    onTap: controller.refreshReturns,
-                    child: Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(9),
-                      ),
-                      child: Icon(
-                        Icons.refresh_rounded,
-                        size: 17,
-                        color: Colors.black.withOpacity(0.65),
-                      ),
-                    ),
+                  _filterChip(
+                    'Approved',
+                    controller.selectedFilter.value == 'Approved',
+                    () => controller.filterReturns('Approved'),
+                  ),
+                  _filterChip(
+                    'Completed',
+                    controller.selectedFilter.value == 'Completed',
+                    () => controller.filterReturns('Completed'),
+                  ),
+                  _filterChip(
+                    'Rejected',
+                    controller.selectedFilter.value == 'Rejected',
+                    () => controller.filterReturns('Rejected'),
                   ),
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-              child: Container(
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: _SearchField(controller: controller),
-              ),
-            ),
-            Obx(
-              () => SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-                child: Row(
-                  children: [
-                    _filterChip(
-                      'All',
-                      controller.selectedFilter.value == 'all',
-                      () => controller.filterReturns('all'),
-                    ),
-                    _filterChip(
-                      'Pending',
-                      controller.selectedFilter.value == 'Pending',
-                      () => controller.filterReturns('Pending'),
-                    ),
-                    _filterChip(
-                      'Approved',
-                      controller.selectedFilter.value == 'Approved',
-                      () => controller.filterReturns('Approved'),
-                    ),
-                    _filterChip(
-                      'Completed',
-                      controller.selectedFilter.value == 'Completed',
-                      () => controller.filterReturns('Completed'),
-                    ),
-                    _filterChip(
-                      'Rejected',
-                      controller.selectedFilter.value == 'Rejected',
-                      () => controller.filterReturns('Rejected'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -224,7 +254,7 @@ class SalesReturnScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.white.withOpacity(0.7),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -241,10 +271,10 @@ class SalesReturnScreen extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
-            color: selected ? Colors.black : Colors.white.withOpacity(0.18),
+            color: selected ? Colors.white : Colors.white.withOpacity(0.18),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: selected ? Colors.black : Colors.white.withOpacity(0.4),
+              color: selected ? Colors.white : Colors.white.withOpacity(0.4),
             ),
           ),
           child: Text(
@@ -252,7 +282,7 @@ class SalesReturnScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: selected ? Colors.white : Colors.black87,
+              color: selected ? kPrimary : Colors.white,
             ),
           ),
         ),
@@ -387,17 +417,36 @@ class _CreateReturnWizard extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: kPrimary,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
         leading: IconButton(
           onPressed: onCancel,
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
         ),
-        title: const Text(
-          'Create Return',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: Colors.black,
-          ),
+        title: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.assignment_return_outlined,
+                size: 16,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'Create Return',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4),
@@ -431,7 +480,9 @@ class _CreateReturnWizard extends StatelessWidget {
               height: 4,
               margin: EdgeInsets.only(right: i < 2 ? 6 : 0),
               decoration: BoxDecoration(
-                color: active ? kPrimary : Colors.grey.shade300,
+                color: active
+                    ? Colors.white
+                    : Colors.white.withOpacity(0.25),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -746,7 +797,7 @@ class _CreateReturnWizard extends StatelessWidget {
               child: const Text(
                 'Next',
                 style: TextStyle(
-                  color: Colors.black,
+                  color: Colors.white,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -773,13 +824,13 @@ class _CreateReturnWizard extends StatelessWidget {
                       width: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.black,
+                        color: Colors.white,
                       ),
                     )
                   : const Text(
                       'Submit Return',
                       style: TextStyle(
-                        color: Colors.black,
+                        color: Colors.white,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -1272,12 +1323,12 @@ class _ReturnListView extends StatelessWidget {
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: onCreate,
-                icon: const Icon(Icons.add, size: 16, color: Colors.black),
+                icon: const Icon(Icons.add, size: 16, color: Colors.white),
                 label: const Text(
                   'Create Return',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.black,
+                    color: Colors.white,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

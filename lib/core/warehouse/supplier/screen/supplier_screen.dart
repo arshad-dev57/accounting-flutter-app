@@ -49,7 +49,7 @@ class SuppliersScreen extends StatelessWidget {
         onPressed: () => _showAddSupplierDialog(context, controller),
         backgroundColor: kPrimary,
         elevation: 2,
-        child: const Icon(Icons.add, color: Colors.black, size: 24),
+        child: const Icon(Icons.add, color: Colors.white, size: 24),
       ),
     );
   }
@@ -76,8 +76,22 @@ class SuppliersScreen extends StatelessWidget {
                     },
                     child: Icon(
                       Icons.arrow_back,
-                      color: Colors.black,
+                      color: Colors.white,
                       size: 24,
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: const Icon(
+                      Icons.storefront_outlined,
+                      size: 18,
+                      color: Colors.white,
                     ),
                   ),
                   SizedBox(width: 10),
@@ -90,7 +104,7 @@ class SuppliersScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
-                            color: Colors.black,
+                            color: Colors.white,
                             letterSpacing: -0.3,
                           ),
                         ),
@@ -99,7 +113,7 @@ class SuppliersScreen extends StatelessWidget {
                             '${controller.totalSuppliers.value} suppliers',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.black.withOpacity(0.55),
+                              color: Colors.white.withOpacity(0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -114,13 +128,13 @@ class SuppliersScreen extends StatelessWidget {
                         _compactKpi(
                           'Active',
                           controller.activeCount.value.toString(),
-                          Colors.green.shade800,
+                          Colors.green.shade200,
                         ),
                         const SizedBox(width: 10),
                         _compactKpi(
                           'Inactive',
                           controller.inactiveCount.value.toString(),
-                          Colors.red.shade700,
+                          Colors.red.shade200,
                         ),
                       ],
                     ),
@@ -132,13 +146,13 @@ class SuppliersScreen extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(9),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 17,
-                        color: Colors.black.withOpacity(0.65),
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ),
@@ -185,12 +199,12 @@ class SuppliersScreen extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? Colors.black
+                                ? Colors.white
                                 : Colors.white.withOpacity(0.18),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color: isSelected
-                                  ? Colors.black
+                                  ? Colors.white
                                   : Colors.white.withOpacity(0.4),
                             ),
                           ),
@@ -199,7 +213,7 @@ class SuppliersScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              color: isSelected ? Colors.white : Colors.black87,
+                              color: isSelected ? kPrimary : Colors.white,
                             ),
                           ),
                         ),
@@ -231,7 +245,7 @@ class SuppliersScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.white.withOpacity(0.7),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -413,7 +427,7 @@ class SuppliersScreen extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.black,
+                                  color: Colors.white,
                                 ),
                               ),
                             ),
@@ -705,14 +719,14 @@ class SuppliersScreen extends StatelessWidget {
                         width: 16,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.black,
+                          color: Colors.white,
                         ),
                       )
                     : const Text(
                         'Save Supplier',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.black,
+                          color: Colors.white,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -995,14 +1009,14 @@ class SuppliersScreen extends StatelessWidget {
                         width: 16,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.black,
+                          color: Colors.white,
                         ),
                       )
                     : const Text(
                         'Update Supplier',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.black,
+                          color: Colors.white,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -1291,12 +1305,12 @@ class _MobileSuppliersListState extends State<_MobileSuppliersList> {
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: widget.onAddSupplier,
-                icon: const Icon(Icons.add, size: 16, color: Colors.black),
+                icon: const Icon(Icons.add, size: 16, color: Colors.white),
                 label: const Text(
                   'Add Supplier',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.black,
+                    color: Colors.white,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

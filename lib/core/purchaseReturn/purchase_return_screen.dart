@@ -17,23 +17,42 @@ class PurchaseReturnScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: kBgLight,
       appBar: AppBar(
-        title: const Text(
-          'Purchase Returns',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: Colors.black,
-          ),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.assignment_return_outlined,
+                size: 16,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'Purchase Returns',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
         backgroundColor: kPrimary,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Get.back(),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: Colors.black),
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
             onPressed: controller.refreshReturns,
           ),
         ],
@@ -71,7 +90,7 @@ class PurchaseReturnScreen extends StatelessWidget {
                 elevation: 2,
                 child: const Icon(
                   Icons.assignment_return,
-                  color: Colors.black,
+                  color: Colors.white,
                   size: 24,
                 ),
               ),
@@ -91,6 +110,20 @@ class PurchaseReturnScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
               child: Row(
                 children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: const Icon(
+                      Icons.assignment_return_outlined,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,7 +133,7 @@ class PurchaseReturnScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
-                            color: Colors.black,
+                            color: Colors.white,
                             letterSpacing: -0.3,
                           ),
                         ),
@@ -109,7 +142,7 @@ class PurchaseReturnScreen extends StatelessWidget {
                             '${controller.totalRecords.value} returns',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.black.withOpacity(0.55),
+                              color: Colors.white.withOpacity(0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -129,7 +162,7 @@ class PurchaseReturnScreen extends StatelessWidget {
                               controller.formatCurrency(
                                 controller.stats.value.todayAmount,
                               ),
-                              Colors.green.shade800,
+                              Colors.green.shade200,
                             ),
                             const SizedBox(width: 8),
                             _compactKpi(
@@ -137,13 +170,13 @@ class PurchaseReturnScreen extends StatelessWidget {
                               controller.formatCurrency(
                                 controller.stats.value.monthAmount,
                               ),
-                              Colors.blue.shade800,
+                              Colors.lightBlue.shade100,
                             ),
                             const SizedBox(width: 8),
                             _compactKpi(
                               'Processed',
                               controller.stats.value.draftCount.toString(),
-                              Colors.green.shade800,
+                              Colors.green.shade200,
                             ),
                           ],
                         ),
@@ -157,13 +190,13 @@ class PurchaseReturnScreen extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(9),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 17,
-                        color: Colors.black.withOpacity(0.65),
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ),
@@ -235,7 +268,7 @@ class PurchaseReturnScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.white.withOpacity(0.7),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -252,10 +285,10 @@ class PurchaseReturnScreen extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
-            color: selected ? Colors.black : Colors.white.withOpacity(0.18),
+            color: selected ? Colors.white : Colors.white.withOpacity(0.18),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: selected ? Colors.black : Colors.white.withOpacity(0.4),
+              color: selected ? Colors.white : Colors.white.withOpacity(0.4),
             ),
           ),
           child: Text(
@@ -263,7 +296,7 @@ class PurchaseReturnScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: selected ? Colors.white : Colors.black87,
+              color: selected ? kPrimary : Colors.white,
             ),
           ),
         ),
@@ -400,17 +433,36 @@ class _CreateReturnForm extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: kPrimary,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
         leading: IconButton(
           onPressed: onCancel,
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
         ),
-        title: const Text(
-          'Create Purchase Return',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: Colors.black,
-          ),
+        title: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.assignment_return_outlined,
+                size: 16,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'Create Purchase Return',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
       ),
       body: Obx(() {
@@ -1070,14 +1122,14 @@ class _CreateReturnForm extends StatelessWidget {
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.black,
+                          color: Colors.white,
                         ),
                       )
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.save, color: Colors.black, size: 18),
+                          const Icon(Icons.save, color: Colors.white, size: 18),
                           const SizedBox(width: 6),
                           const Flexible(
                             child: Text(
@@ -1085,7 +1137,7 @@ class _CreateReturnForm extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.black,
+                                color: Colors.white,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -1515,7 +1567,7 @@ class _ReturnDetailSheetState extends State<_ReturnDetailSheet> {
                       'Process Return',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
-                        color: Colors.black,
+                        color: Colors.white,
                       ),
                     ),
                   ),
@@ -1753,13 +1805,13 @@ class _ReturnListView extends StatelessWidget {
                 icon: const Icon(
                   Icons.assignment_return,
                   size: 16,
-                  color: Colors.black,
+                  color: Colors.white,
                 ),
                 label: const Text(
                   'Create Return',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.black,
+                    color: Colors.white,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

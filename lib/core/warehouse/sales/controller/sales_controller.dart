@@ -1,13 +1,18 @@
+import 'dart:convert';
+
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/core/warehouse/sales/model/sales_dashboard_model.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SalesController extends GetxController {
   final ApiClient _api = Get.find<ApiClient>();
 
   final RxBool isLoading = false.obs;
-  final RxString period = 'month'.obs;
-  final RxString selectedPeriod = 'month'.obs;
+  final RxString period = 'today'.obs;
+  final RxString selectedPeriod = 'today'.obs;
+  final RxString selectedTimePeriodLabel = 'Today'.obs;
+  final RxString businessLogo = ''.obs;
   final Rx<SalesDashboardModel?> dashboard = Rx<SalesDashboardModel?>(null);
 
   // Custom date range
@@ -17,10 +22,42 @@ class SalesController extends GetxController {
 
   static const periods = ['today', 'week', 'month', 'year'];
 
+  static const timePeriodLabels = [
+    'Today',
+    'Last Week',
+    'This Month',
+    'Last Month',
+    'This Quarter',
+    'This Year',
+  ];
+
   @override
   void onInit() {
     super.onInit();
+    loadBusinessLogo();
     fetchDashboard();
+  }
+
+  Future<void> loadBusinessLogo() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userDataString = prefs.getString('user_data');
+
+      if (userDataString != null) {
+        final userData = json.decode(userDataString) as Map<String, dynamic>;
+        final businessDetails =
+            userData['businessDetails'] as Map<String, dynamic>?;
+
+        if (businessDetails != null && businessDetails['logo'] != null) {
+          final logo = businessDetails['logo'] as String;
+          if (logo.isNotEmpty) {
+            businessLogo.value = logo;
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ [SalesController] Error loading business logo: $e');
+    }
   }
 
   Future<void> fetchDashboard() async {
@@ -125,12 +162,37 @@ class SalesController extends GetxController {
     fetchDashboard();
   }
 
+  void selectTimePeriod(String label) {
+    selectedTimePeriodLabel.value = label;
+    applyPeriodFilter(_mapPeriod(label));
+  }
+
+  String _mapPeriod(String label) {
+    switch (label) {
+      case 'Today':
+        return 'today';
+      case 'Last Week':
+        return 'week';
+      case 'This Month':
+        return 'month';
+      case 'Last Month':
+        return 'month';
+      case 'This Quarter':
+        return 'year';
+      case 'This Year':
+        return 'year';
+      default:
+        return 'today';
+    }
+  }
+
   void setCustomDateRange(DateTime start, DateTime end) {
     startDate.value = start;
     endDate.value = end;
     useCustomDateRange.value = true;
     selectedPeriod.value = 'custom';
     period.value = 'custom';
+    selectedTimePeriodLabel.value = 'Custom';
     fetchDashboard();
   }
 
@@ -138,8 +200,9 @@ class SalesController extends GetxController {
     startDate.value = null;
     endDate.value = null;
     useCustomDateRange.value = false;
-    selectedPeriod.value = 'month';
-    period.value = 'month';
+    selectedPeriod.value = 'today';
+    period.value = 'today';
+    selectedTimePeriodLabel.value = 'Today';
     fetchDashboard();
   }
 

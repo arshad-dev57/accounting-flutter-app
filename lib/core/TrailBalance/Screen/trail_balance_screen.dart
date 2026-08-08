@@ -68,16 +68,15 @@ class TrialBalanceScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // AppBar
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () => Navigator.of(context).pop(),
+                    visualDensity: VisualDensity.compact,
                   ),
-                  const SizedBox(width: 8),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,9 +84,9 @@ class TrialBalanceScreen extends StatelessWidget {
                         const Text(
                           'Trial Balance',
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: 18,
                             fontWeight: FontWeight.w800,
-                            color: Colors.black,
+                            color: Colors.white,
                           ),
                         ),
                         Obx(
@@ -95,7 +94,7 @@ class TrialBalanceScreen extends StatelessWidget {
                             '${controller.totalAccounts.value} accounts',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.black.withOpacity(0.55),
+                              color: Colors.white.withOpacity(0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -103,138 +102,190 @@ class TrialBalanceScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  GestureDetector(
-                    onTap: controller.fetchTrialBalance,
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.refresh_rounded,
-                        size: 18,
-                        color: Colors.black.withOpacity(0.65),
-                      ),
-                    ),
+                  _headerIconBtn(
+                    Icons.refresh_rounded,
+                    controller.fetchTrialBalance,
                   ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () => _showExportOptions(controller, context),
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.download_outlined,
-                        size: 18,
-                        color: Colors.black.withOpacity(0.65),
-                      ),
-                    ),
+                  const SizedBox(width: 6),
+                  _headerIconBtn(
+                    Icons.download_outlined,
+                    () => _showExportOptions(controller, context),
                   ),
                 ],
               ),
             ),
-            // Search & Filters
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
               child: Column(
                 children: [
-                  // Fiscal Year Selector
-                  Obx(
-                    () => Container(
-                      height: 40,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: _whiteField(
+                          height: 36,
+                          child: Obx(
+                            () => DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                hint: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.account_balance,
+                                      size: 14,
+                                      color: kPrimary,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    const Text(
+                                      'Fiscal Year',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.black54,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                value: fiscalYearController
+                                    .selectedFiscalYear
+                                    .value
+                                    ?.id,
+                                icon: const Icon(
+                                  Icons.arrow_drop_down,
+                                  size: 18,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                ),
+                                isExpanded: true,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.black87,
+                                ),
+                                items: fiscalYearController.fiscalYears.map((
+                                  year,
+                                ) {
+                                  return DropdownMenuItem<String>(
+                                    value: year.id,
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          year.isOpen
+                                              ? Icons.lock_open
+                                              : Icons.lock,
+                                          size: 13,
+                                          color: year.isOpen
+                                              ? kSuccess
+                                              : kDanger,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Expanded(
+                                          child: Text(
+                                            year.name,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(fontSize: 12),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (value) {
+                                  if (value == null) return;
+                                  final selectedYear = fiscalYearController
+                                      .fiscalYears
+                                      .firstWhere((y) => y.id == value);
+                                  fiscalYearController.selectFiscalYear(
+                                    selectedYear,
+                                  );
+                                },
+                              ),
+                            ),
                           ),
-                        ],
+                        ),
                       ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          hint: Row(
-                            children: [
-                              Icon(
-                                Icons.account_balance,
-                                size: 16,
-                                color: kPrimary,
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 2,
+                        child: GestureDetector(
+                          onTap: () => _selectDateRange(controller, context),
+                          child: _whiteField(
+                            height: 36,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
                               ),
-                              const SizedBox(width: 8),
-                              const Text(
-                                'Select Fiscal Year',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ],
-                          ),
-                          value:
-                              fiscalYearController.selectedFiscalYear.value?.id,
-                          icon: const Icon(Icons.arrow_drop_down, size: 20),
-                          padding: EdgeInsets.zero,
-                          isExpanded: true,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.black87,
-                          ),
-                          items: fiscalYearController.fiscalYears.map((year) {
-                            return DropdownMenuItem<String>(
-                              value: year.id,
                               child: Row(
                                 children: [
                                   Icon(
-                                    year.isOpen ? Icons.lock_open : Icons.lock,
+                                    Icons.date_range,
                                     size: 14,
-                                    color: year.isOpen ? kSuccess : kDanger,
+                                    color: kPrimary,
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: 6),
                                   Expanded(
-                                    child: Text(
-                                      year.name,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 12),
+                                    child: Obx(
+                                      () => Text(
+                                        controller.selectedDateRange.value !=
+                                                null
+                                            ? '${DateFormat('dd/MM').format(controller.selectedDateRange.value!.start)}-${DateFormat('dd/MM').format(controller.selectedDateRange.value!.end)}'
+                                            : 'Date',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color:
+                                              controller
+                                                      .selectedDateRange
+                                                      .value !=
+                                                  null
+                                              ? Colors.black87
+                                              : Colors.grey.shade500,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            if (value != null) {
-                              final selectedYear = fiscalYearController
-                                  .fiscalYears
-                                  .firstWhere((y) => y.id == value);
-                              fiscalYearController.selectFiscalYear(
-                                selectedYear,
-                              );
-                            }
-                          },
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      _whiteField(
+                        height: 36,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8, right: 2),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Zero',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey.shade700,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Obx(
+                                () => Transform.scale(
+                                  scale: 0.75,
+                                  child: Switch(
+                                    value: controller.showZeroBalance.value,
+                                    onChanged: controller.toggleZeroBalance,
+                                    activeColor: kPrimary,
+                                    materialTapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
-                  Container(
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
+                  _whiteField(
+                    height: 36,
                     child: TextField(
                       onChanged: controller.searchAccounts,
                       style: const TextStyle(
@@ -253,6 +304,7 @@ class TrialBalanceScreen extends StatelessWidget {
                           color: kPrimary,
                         ),
                         border: InputBorder.none,
+                        isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: 10,
                         ),
@@ -260,167 +312,59 @@ class TrialBalanceScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  // Filter Chips
                   Obx(
-                    () => SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children:
-                            [
-                              'All',
-                              'Assets',
-                              'Liabilities',
-                              'Equity',
-                              'Income',
-                              'Expenses',
-                            ].map((filter) {
-                              final isSelected =
-                                  controller.selectedFilter.value == filter;
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 6),
-                                child: GestureDetector(
-                                  onTap: () => controller.changeFilter(filter),
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 180),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 5,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? Colors.black
-                                          : Colors.white.withOpacity(0.18),
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(
-                                        color: isSelected
-                                            ? Colors.black
-                                            : Colors.white.withOpacity(0.4),
-                                      ),
-                                    ),
-                                    child: Text(
-                                      filter,
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                        color: isSelected
-                                            ? Colors.white
-                                            : Colors.black87,
-                                      ),
-                                    ),
+                    () => SizedBox(
+                      height: 30,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          'All',
+                          'Assets',
+                          'Liabilities',
+                          'Equity',
+                          'Income',
+                          'Expenses',
+                        ].map((filter) {
+                          final isSelected =
+                              controller.selectedFilter.value == filter;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 6),
+                            child: GestureDetector(
+                              onTap: () => controller.changeFilter(filter),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 180),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.white.withOpacity(0.18),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? Colors.white
+                                        : Colors.white.withOpacity(0.4),
                                   ),
                                 ),
-                              );
-                            }).toList(),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  filter,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: isSelected
+                                        ? kPrimary
+                                        : Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  // Date Range & Zero Balance Toggle
-                  Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => _selectDateRange(controller, context),
-                          child: Container(
-                            height: 36,
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.06),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.date_range,
-                                  size: 14,
-                                  color: kPrimary,
-                                ),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Obx(
-                                    () => Text(
-                                      controller.selectedDateRange.value != null
-                                          ? '${DateFormat('dd/MM/yy').format(controller.selectedDateRange.value!.start)} - ${DateFormat('dd/MM/yy').format(controller.selectedDateRange.value!.end)}'
-                                          : 'Select Date Range',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color:
-                                            controller
-                                                    .selectedDateRange
-                                                    .value !=
-                                                null
-                                            ? Colors.black87
-                                            : Colors.grey.shade400,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ),
-                                Icon(
-                                  Icons.arrow_drop_down,
-                                  size: 18,
-                                  color: Colors.grey.shade400,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        height: 36,
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.06),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.visibility_outlined,
-                              size: 14,
-                              color: Colors.grey.shade600,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Zero',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey.shade600,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            Obx(
-                              () => Switch(
-                                value: controller.showZeroBalance.value,
-                                onChanged: (value) =>
-                                    controller.toggleZeroBalance(value),
-                                activeColor: kPrimary,
-                                materialTapTargetSize:
-                                    MaterialTapTargetSize.shrinkWrap,
-                                splashRadius: 0,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ),
@@ -431,75 +375,118 @@ class TrialBalanceScreen extends StatelessWidget {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // PROFESSIONAL SUMMARY CARDS — Vertical stacked layout
-  // ═══════════════════════════════════════════════════════════════
-
-  Widget _buildSummaryCards(TrialBalanceController controller) {
-    return Obx(
-      () => Padding(
-        padding: const EdgeInsets.only(top: 10),
-        child: Column(
-          children: [
-            // Top row: Debit & Credit side by side
-            Row(
-              children: [
-                Expanded(
-                  child: _buildDebitCreditCard(
-                    label: 'Total Debit',
-                    amount: _formatAmount(controller.totalDebit.value),
-                    icon: Icons.arrow_circle_up_rounded,
-                    accentColor: kSuccess,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _buildDebitCreditCard(
-                    label: 'Total Credit',
-                    amount: _formatAmount(controller.totalCredit.value),
-                    icon: Icons.arrow_circle_down_rounded,
-                    accentColor: kDanger,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            // Bottom: Difference full width
-            _buildDifferenceCard(controller),
-          ],
+  Widget _headerIconBtn(IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(8),
         ),
+        child: Icon(icon, size: 17, color: Colors.white.withOpacity(0.9)),
       ),
     );
   }
 
-  Widget _buildDebitCreditCard({
-    required String label,
-    required String amount,
-    required IconData icon,
-    required Color accentColor,
+  Widget _whiteField({required double height, required Widget child}) {
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // SUMMARY KPIs — compact horizontal strip
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildSummaryCards(TrialBalanceController controller) {
+    return Obx(() {
+      final isBalanced = controller.isBalanced.value;
+      final diff = controller.difference.value;
+      final balanceColor = isBalanced ? kSuccess : kWarning;
+
+      return Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: SizedBox(
+          height: 52,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: [
+              _summaryChip(
+                'Debit',
+                _formatAmount(controller.totalDebit.value),
+                kSuccess,
+                Icons.arrow_circle_up_rounded,
+              ),
+              const SizedBox(width: 8),
+              _summaryChip(
+                'Credit',
+                _formatAmount(controller.totalCredit.value),
+                kDanger,
+                Icons.arrow_circle_down_rounded,
+              ),
+              const SizedBox(width: 8),
+              _summaryChip(
+                isBalanced ? 'Balanced' : 'Difference',
+                isBalanced ? 'OK' : _formatAmount(diff.abs()),
+                balanceColor,
+                isBalanced
+                    ? Icons.check_circle_outline_rounded
+                    : Icons.warning_amber_rounded,
+                width: 140,
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _summaryChip(
+    String label,
+    String amount,
+    Color accentColor,
+    IconData icon, {
+    double width = 132,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      width: width,
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: kCardBg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: accentColor.withOpacity(0.18), width: 1.2),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: accentColor.withOpacity(0.2)),
       ),
       child: Row(
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 28,
+            height: 28,
             decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
+              color: accentColor.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, size: 20, color: accentColor),
+            child: Icon(icon, size: 15, color: accentColor),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   label,
@@ -507,111 +494,24 @@ class TrialBalanceScreen extends StatelessWidget {
                     fontSize: 10,
                     color: kSubText,
                     fontWeight: FontWeight.w600,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  amount,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: accentColor,
-                    letterSpacing: -0.4,
+                    height: 1.1,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDifferenceCard(TrialBalanceController controller) {
-    final isBalanced = controller.isBalanced.value;
-    final diff = controller.difference.value;
-    final color = isBalanced ? kSuccess : kWarning;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.06),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.22), width: 1.2),
-      ),
-      child: Row(
-        children: [
-          // Left: icon + label
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              isBalanced
-                  ? Icons.check_circle_outline_rounded
-                  : Icons.warning_amber_rounded,
-              size: 20,
-              color: color,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isBalanced ? 'Balanced' : 'Out of Balance',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: color,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.3,
-                  ),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  'Difference: ${_formatAmount(diff.abs())}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: kText,
-                    letterSpacing: -0.2,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          // Right: status pill
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: color.withOpacity(0.3)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  isBalanced ? Icons.done_all : Icons.sync_problem_rounded,
-                  size: 12,
-                  color: color,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  isBalanced ? '✓ OK' : 'Review',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: color,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    amount,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: accentColor,
+                      height: 1.1,
+                    ),
+                    maxLines: 1,
                   ),
                 ),
               ],

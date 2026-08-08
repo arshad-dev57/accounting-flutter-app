@@ -1569,7 +1569,7 @@ class LoanController extends GetxController {
                           ),
                           child: const Icon(
                             Icons.calculate,
-                            color: Colors.black,
+                            color: Colors.white,
                             size: 22,
                           ),
                         ),
@@ -1761,7 +1761,7 @@ class LoanController extends GetxController {
                                   strokeWidth: 2,
                                   valueColor:
                                       const AlwaysStoppedAnimation<Color>(
-                                        Colors.black,
+                                        Colors.white,
                                       ),
                                 ),
                               )
@@ -1770,7 +1770,7 @@ class LoanController extends GetxController {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.black,
+                                  color: Colors.white,
                                 ),
                               ),
                       ),
@@ -2065,7 +2065,7 @@ class LoanController extends GetxController {
                           ),
                           child: const Icon(
                             Icons.payment,
-                            color: Colors.black,
+                            color: Colors.white,
                             size: 22,
                           ),
                         ),
@@ -2258,7 +2258,7 @@ class LoanController extends GetxController {
                                         strokeWidth: 2,
                                         valueColor:
                                             const AlwaysStoppedAnimation<Color>(
-                                              Colors.black,
+                                              Colors.white,
                                             ),
                                       ),
                                     )
@@ -2267,7 +2267,7 @@ class LoanController extends GetxController {
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
-                                        color: Colors.black,
+                                        color: Colors.white,
                                       ),
                                     ),
                             ),
@@ -2352,7 +2352,7 @@ class LoanController extends GetxController {
                           ),
                           child: const Icon(
                             Icons.credit_card,
-                            color: Colors.black,
+                            color: Colors.white,
                             size: 22,
                           ),
                         ),
@@ -2568,7 +2568,7 @@ class LoanController extends GetxController {
                                         strokeWidth: 2,
                                         valueColor:
                                             AlwaysStoppedAnimation<Color>(
-                                              Colors.black,
+                                              Colors.white,
                                             ),
                                       ),
                                     )
@@ -2577,7 +2577,7 @@ class LoanController extends GetxController {
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
-                                        color: Colors.black,
+                                        color: Colors.white,
                                       ),
                                     ),
                             ),

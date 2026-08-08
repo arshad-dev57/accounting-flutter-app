@@ -1726,7 +1726,7 @@ class FixedAssetController extends GetxController {
                         ),
                         child: const Icon(
                           Icons.inventory_2_outlined,
-                          color: Colors.black,
+                          color: Colors.white,
                           size: 22,
                         ),
                       ),
@@ -1929,7 +1929,7 @@ class FixedAssetController extends GetxController {
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
                                       valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.black,
+                                        Colors.white,
                                       ),
                                     ),
                                   )
@@ -1938,7 +1938,7 @@ class FixedAssetController extends GetxController {
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w700,
-                                      color: Colors.black,
+                                      color: Colors.white,
                                     ),
                                   ),
                           ),
@@ -2014,7 +2014,7 @@ class FixedAssetController extends GetxController {
                         ),
                         child: const Icon(
                           Icons.edit,
-                          color: Colors.black,
+                          color: Colors.white,
                           size: 22,
                         ),
                       ),
@@ -2224,7 +2224,7 @@ class FixedAssetController extends GetxController {
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
                                       valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.black,
+                                        Colors.white,
                                       ),
                                     ),
                                   )
@@ -2233,7 +2233,7 @@ class FixedAssetController extends GetxController {
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w700,
-                                      color: Colors.black,
+                                      color: Colors.white,
                                     ),
                                   ),
                           ),
@@ -2284,7 +2284,7 @@ class FixedAssetController extends GetxController {
                         ),
                         child: const Icon(
                           Icons.delete_outline,
-                          color: Colors.black,
+                          color: Colors.white,
                           size: 22,
                         ),
                       ),
@@ -2435,7 +2435,7 @@ class FixedAssetController extends GetxController {
                                       strokeWidth: 2,
                                       valueColor:
                                           const AlwaysStoppedAnimation<Color>(
-                                            Colors.black,
+                                            Colors.white,
                                           ),
                                     ),
                                   )
@@ -2444,7 +2444,7 @@ class FixedAssetController extends GetxController {
                                     style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w700,
-                                      color: Colors.black,
+                                      color: Colors.white,
                                     ),
                                   ),
                           ),
@@ -2739,14 +2739,14 @@ class FixedAssetController extends GetxController {
                                   icon: const Icon(
                                     Icons.delete_outline,
                                     size: 16,
-                                    color: Colors.black,
+                                    color: Colors.white,
                                   ),
                                   label: const Text(
                                     'Dispose',
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
-                                      color: Colors.black,
+                                      color: Colors.white,
                                     ),
                                   ),
                                   style: ElevatedButton.styleFrom(

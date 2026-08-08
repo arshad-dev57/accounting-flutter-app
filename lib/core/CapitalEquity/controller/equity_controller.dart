@@ -1627,7 +1627,7 @@ class EquityController extends GetxController {
                           ),
                           child: const Icon(
                             Icons.add_circle,
-                            color: Colors.black,
+                            color: Colors.white,
                             size: 22,
                           ),
                         ),
@@ -1795,7 +1795,7 @@ class EquityController extends GetxController {
                                         strokeWidth: 2,
                                         valueColor:
                                             const AlwaysStoppedAnimation<Color>(
-                                              Colors.black,
+                                              Colors.white,
                                             ),
                                       ),
                                     )
@@ -1804,7 +1804,7 @@ class EquityController extends GetxController {
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
-                                        color: Colors.black,
+                                        color: Colors.white,
                                       ),
                                     ),
                             ),
@@ -1875,7 +1875,7 @@ class EquityController extends GetxController {
                           ),
                           child: const Icon(
                             Icons.remove_circle,
-                            color: Colors.black,
+                            color: Colors.white,
                             size: 22,
                           ),
                         ),
@@ -2043,7 +2043,7 @@ class EquityController extends GetxController {
                                         strokeWidth: 2,
                                         valueColor:
                                             const AlwaysStoppedAnimation<Color>(
-                                              Colors.black,
+                                              Colors.white,
                                             ),
                                       ),
                                     )
@@ -2052,7 +2052,7 @@ class EquityController extends GetxController {
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
-                                        color: Colors.black,
+                                        color: Colors.white,
                                       ),
                                     ),
                             ),
@@ -2124,7 +2124,7 @@ class EquityController extends GetxController {
                           ),
                           child: const Icon(
                             Icons.add_task,
-                            color: Colors.black,
+                            color: Colors.white,
                             size: 22,
                           ),
                         ),
@@ -2323,7 +2323,7 @@ class EquityController extends GetxController {
                                         strokeWidth: 2,
                                         valueColor:
                                             const AlwaysStoppedAnimation<Color>(
-                                              Colors.black,
+                                              Colors.white,
                                             ),
                                       ),
                                     )
@@ -2332,7 +2332,7 @@ class EquityController extends GetxController {
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
-                                        color: Colors.black,
+                                        color: Colors.white,
                                       ),
                                     ),
                             ),

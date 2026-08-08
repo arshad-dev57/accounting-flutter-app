@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -47,6 +50,7 @@ class DashboardController extends GetxController {
   var dailyProfit = 0.0.obs;
   var companyName = ''.obs;
   var userEmail = ''.obs;
+  final RxString businessLogo = ''.obs;
 
   var currentRoute = 'dashboard'.obs;
   var currentScreen = Rx<Widget?>(null);
@@ -115,15 +119,28 @@ class DashboardController extends GetxController {
 
   final ApiClient _api = Get.find<ApiClient>();
 
-  var selectedTimePeriod = 'This Month'.obs;
+  var selectedTimePeriod = 'Today'.obs;
   final Rx<DateTime?> customStartDate = Rx<DateTime?>(null);
   final Rx<DateTime?> customEndDate = Rx<DateTime?>(null);
+  bool _subscriptionWatchStarted = false;
+
+  static const timePeriodLabels = [
+    'Today',
+    'Last Week',
+    'This Month',
+    'Last Month',
+    'This Quarter',
+    'This Year',
+    'Custom',
+  ];
 
   @override
   void onInit() {
     super.onInit();
     loadUserData();
+    loadBusinessLogo();
     loadDashboardData();
+    ensureSubscriptionWatch();
   }
 
   Future<void> loadUserData() async {
@@ -141,6 +158,76 @@ class DashboardController extends GetxController {
       companyName.value = 'User';
       userEmail.value = '';
     }
+  }
+
+  Future<void> loadBusinessLogo() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userDataString = prefs.getString('user_data');
+
+      if (userDataString != null) {
+        final userData = json.decode(userDataString) as Map<String, dynamic>;
+        final businessDetails =
+            userData['businessDetails'] as Map<String, dynamic>?;
+
+        if (businessDetails != null && businessDetails['logo'] != null) {
+          final logo = businessDetails['logo'] as String;
+          if (logo.isNotEmpty) {
+            businessLogo.value = logo;
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ [DashboardController] Error loading business logo: $e');
+    }
+  }
+
+  void ensureSubscriptionWatch() {
+    if (_subscriptionWatchStarted) return;
+    _subscriptionWatchStarted = true;
+    Future.delayed(const Duration(seconds: 2), _subscriptionCheckLoop);
+  }
+
+  Future<void> _subscriptionCheckLoop() async {
+    if (isClosed) return;
+    try {
+      if (!Get.isRegistered<SubscriptionController>()) return;
+      final sub = Get.find<SubscriptionController>();
+      await sub.checkSubscriptionStatus();
+      if (!sub.hasActiveSubscription.value &&
+          sub.subscriptionStatus.value == 'expired') {
+        _showExpiredDialog(sub);
+      }
+    } catch (_) {}
+    if (isClosed) return;
+    Future.delayed(const Duration(minutes: 5), _subscriptionCheckLoop);
+  }
+
+  void _showExpiredDialog(SubscriptionController sub) {
+    final ctx = Get.context;
+    if (ctx == null) return;
+    showDialog(
+      context: ctx,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Subscription expired'),
+        content: Text(
+          sub.trialDaysRemaining.value > 0
+              ? 'Your free trial has ended. Subscribe to continue.'
+              : 'Your subscription has expired. Renew to continue.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Get.to(() => const SelectPlanScreen());
+            },
+            child: const Text('Subscribe now'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> loadDashboardData({
@@ -223,8 +310,8 @@ class DashboardController extends GetxController {
         break;
 
       default:
-        startDate = DateTime(now.year, now.month, 1);
-        endDate = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+        startDate = DateTime(now.year, now.month, now.day);
+        break;
     }
 
     return {
@@ -364,7 +451,7 @@ class DashboardController extends GetxController {
           netProfitData['isPositive'] ?? (netProfit.value >= 0);
     } else {
       netProfit.value =
-          totalRevenue.value - totalPurchases.value - totalExpenses.value;
+          totalRevenue.value - totalExpenses.value;
       profitMargin.value = totalRevenue.value > 0
           ? (netProfit.value / totalRevenue.value) * 100
           : 0.0;

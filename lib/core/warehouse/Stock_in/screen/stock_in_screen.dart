@@ -56,8 +56,22 @@ class StockScreen extends StatelessWidget {
                 children: [
                   IconButton(
                     onPressed: () => Get.back(),
-                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
                   ),
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: const Icon(
+                      Icons.swap_horiz_outlined,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,7 +81,7 @@ class StockScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
-                            color: Colors.black,
+                            color: Colors.white,
                             letterSpacing: -0.3,
                           ),
                         ),
@@ -76,7 +90,7 @@ class StockScreen extends StatelessWidget {
                             '${controller.totalRecords.value} movements',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.black.withOpacity(0.55),
+                              color: Colors.white.withOpacity(0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -90,19 +104,19 @@ class StockScreen extends StatelessWidget {
                         _compactKpi(
                           'In',
                           controller.totalInCount.value.toString(),
-                          Colors.green.shade800,
+                          Colors.green.shade200,
                         ),
                         const SizedBox(width: 10),
                         _compactKpi(
                           'Out',
                           controller.totalOutCount.value.toString(),
-                          Colors.red.shade800,
+                          Colors.red.shade200,
                         ),
                         const SizedBox(width: 10),
                         _compactKpi(
                           'Today',
                           controller.todayCount.value.toString(),
-                          Colors.blue.shade800,
+                          Colors.white,
                         ),
                       ],
                     ),
@@ -114,13 +128,13 @@ class StockScreen extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(9),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 17,
-                        color: Colors.black.withOpacity(0.65),
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ),
@@ -192,7 +206,7 @@ class StockScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.white.withOpacity(0.7),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -209,10 +223,10 @@ class StockScreen extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
-            color: selected ? Colors.black : Colors.white.withOpacity(0.18),
+            color: selected ? Colors.white : Colors.white.withOpacity(0.18),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: selected ? Colors.black : Colors.white.withOpacity(0.4),
+              color: selected ? Colors.white : Colors.white.withOpacity(0.4),
             ),
           ),
           child: Text(
@@ -220,7 +234,7 @@ class StockScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: selected ? Colors.white : Colors.black87,
+              color: selected ? kPrimary : Colors.white,
             ),
           ),
         ),
@@ -337,41 +351,10 @@ class StockScreen extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => DraggableScrollableSheet(
-        initialChildSize: 0.78,
-        minChildSize: 0.4,
-        maxChildSize: 0.93,
-        expand: false,
-        builder: (_, scrollCtrl) => Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: Column(
-            children: [
-              Container(
-                margin: const EdgeInsets.only(top: 12),
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: scrollCtrl,
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                  child: StockMovementDetailSheet(
-                    controller: controller,
-                    movement: movement,
-                    onClose: () => Navigator.pop(context),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+      builder: (_) => StockMovementDetailSheet(
+        controller: controller,
+        movement: movement,
+        onClose: () => Navigator.pop(context),
       ),
     );
   }

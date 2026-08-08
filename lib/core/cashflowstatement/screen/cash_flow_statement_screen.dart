@@ -127,7 +127,7 @@ class CashFlowStatementScreen extends StatelessWidget {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   const SizedBox(width: 8),
@@ -140,7 +140,7 @@ class CashFlowStatementScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
-                            color: Colors.black,
+                            color: Colors.white,
                           ),
                         ),
                         Obx(
@@ -148,7 +148,7 @@ class CashFlowStatementScreen extends StatelessWidget {
                             controller.periodText.value,
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.black.withOpacity(0.55),
+                              color: Colors.white.withOpacity(0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -162,13 +162,13 @@ class CashFlowStatementScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 18,
-                        color: Colors.black.withOpacity(0.65),
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ),
@@ -179,13 +179,13 @@ class CashFlowStatementScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.download_outlined,
                         size: 18,
-                        color: Colors.black.withOpacity(0.65),
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ),
@@ -943,10 +943,10 @@ class CashFlowStatementScreen extends StatelessWidget {
         Expanded(
           child: ElevatedButton.icon(
             onPressed: () => controller.printReport(),
-            icon: Icon(Icons.print_outlined, size: 16, color: Colors.black),
+            icon: Icon(Icons.print_outlined, size: 16, color: Colors.white),
             label: Text(
               'Print',
-              style: TextStyle(fontSize: 12, color: Colors.black),
+              style: TextStyle(fontSize: 12, color: Colors.white),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: kPrimary,
@@ -999,7 +999,7 @@ class CashFlowStatementScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black,
+                  color: Colors.white,
                 ),
               ),
             ),

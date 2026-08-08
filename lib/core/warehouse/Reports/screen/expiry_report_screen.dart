@@ -4,7 +4,6 @@ import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/core/warehouse/Reports/controller/expiry_report_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/products/model/product_model.dart';
-import 'package:BisonsTechs_app/core/warehouse/widgets/drawer_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
@@ -15,26 +14,42 @@ class ExpiryReportScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(ExpiryReportController());
-    final isMobile = ResponsiveUtils.isMobile(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
 
     return Scaffold(
-      drawer: (isMobile || isTablet) ? const WarehouseDrawer() : null,
       backgroundColor: kBg,
       appBar: AppBar(
-        title: const Text(
-          'Expiry Report',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: Colors.black,
-          ),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.event_busy_outlined,
+                size: 16,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'Expiry Report',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
         actions: [
           IconButton(
             icon: const Icon(
               Icons.picture_as_pdf_outlined,
-              color: Colors.black,
+              color: Colors.white,
             ),
             onPressed: () => controller.exportToPdf(),
             tooltip: 'Download PDF',
@@ -42,17 +57,10 @@ class ExpiryReportScreen extends StatelessWidget {
         ],
         backgroundColor: kPrimary,
         elevation: 0,
-        leading: (isMobile || isTablet)
-            ? Builder(
-                builder: (context) => IconButton(
-                  icon: const Icon(Icons.menu, color: Colors.black),
-                  onPressed: () => Scaffold.of(context).openDrawer(),
-                ),
-              )
-            : IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.black),
-                onPressed: () => Get.back(),
-              ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Get.back(),
+        ),
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
@@ -303,12 +311,17 @@ class ExpiryReportScreen extends StatelessWidget {
           children: [
             Container(
               color: kCardBg,
-              padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16),
+              width: double.infinity,
               child: TabBar(
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
                 labelColor: kPrimary,
                 unselectedLabelColor: kSubText,
                 indicatorColor: kPrimary,
                 indicatorSize: TabBarIndicatorSize.label,
+                labelPadding: EdgeInsets.symmetric(
+                  horizontal: isMobile ? 14 : 20,
+                ),
                 labelStyle: TextStyle(
                   fontSize: isMobile ? 12 : 14,
                   fontWeight: FontWeight.w600,
@@ -318,40 +331,22 @@ class ExpiryReportScreen extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
                 tabs: [
-                  Tab(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.warning_amber_rounded,
-                          size: isMobile ? 16 : 18,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Expiring Soon (${controller.expiringSoonCount.value})',
-                        ),
-                      ],
-                    ),
+                  _buildExpiryTab(
+                    icon: Icons.warning_amber_rounded,
+                    label: isMobile ? 'Soon' : 'Expiring Soon',
+                    count: controller.expiringSoonCount.value,
+                    isMobile: isMobile,
                   ),
-                  Tab(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.cancel_outlined, size: isMobile ? 16 : 18),
-                        const SizedBox(width: 6),
-                        Text('Expired (${controller.expiredCount.value})'),
-                      ],
-                    ),
+                  _buildExpiryTab(
+                    icon: Icons.cancel_outlined,
+                    label: 'Expired',
+                    count: controller.expiredCount.value,
+                    isMobile: isMobile,
                   ),
-                  Tab(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.list_alt_outlined, size: isMobile ? 16 : 18),
-                        const SizedBox(width: 6),
-                        Text('All'),
-                      ],
-                    ),
+                  _buildExpiryTab(
+                    icon: Icons.list_alt_outlined,
+                    label: 'All',
+                    isMobile: isMobile,
                   ),
                 ],
               ),
@@ -367,6 +362,25 @@ class ExpiryReportScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Tab _buildExpiryTab({
+    required IconData icon,
+    required String label,
+    required bool isMobile,
+    int? count,
+  }) {
+    final text = count != null ? '$label ($count)' : label;
+    return Tab(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: isMobile ? 14 : 16),
+          SizedBox(width: isMobile ? 4 : 6),
+          Text(text),
+        ],
       ),
     );
   }

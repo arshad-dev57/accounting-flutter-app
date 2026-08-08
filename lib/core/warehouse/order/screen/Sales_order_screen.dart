@@ -44,7 +44,7 @@ class SalesOrdersScreen extends StatelessWidget {
         onPressed: controller.openCreateForm,
         backgroundColor: kPrimary,
         elevation: 2,
-        child: const Icon(Icons.add, color: Colors.black, size: 24),
+        child: const Icon(Icons.add, color: Colors.white, size: 24),
       ),
     );
   }
@@ -66,9 +66,23 @@ class SalesOrdersScreen extends StatelessWidget {
                 children: [
                   GestureDetector(
                     onTap: () => Get.back(),
-                    child: Icon(
+                    child: const Icon(
                       Icons.arrow_back,
-                      color: Colors.black.withOpacity(0.65),
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: const Icon(
+                      Icons.shopping_cart_outlined,
+                      size: 18,
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -81,7 +95,7 @@ class SalesOrdersScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
-                            color: Colors.black,
+                            color: Colors.white,
                             letterSpacing: -0.3,
                           ),
                         ),
@@ -90,7 +104,7 @@ class SalesOrdersScreen extends StatelessWidget {
                             '${controller.totalRecords.value} orders',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.black.withOpacity(0.55),
+                              color: Colors.white.withOpacity(0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -105,25 +119,25 @@ class SalesOrdersScreen extends StatelessWidget {
                         _compactKpi(
                           'Pending',
                           controller.kpiPending.value.toString(),
-                          Colors.orange.shade800,
+                          Colors.orange.shade200,
                         ),
                         const SizedBox(width: 12),
                         _compactKpi(
                           'Processing',
                           controller.kpiProcessing.value.toString(),
-                          Colors.blue.shade800,
+                          Colors.lightBlue.shade100,
                         ),
                         const SizedBox(width: 12),
                         _compactKpi(
                           'Paid',
                           controller.kpiPaid.value.toString(),
-                          Colors.green.shade800,
+                          Colors.green.shade200,
                         ),
                         const SizedBox(width: 12),
                         _compactKpi(
                           'Done',
                           controller.kpiDelivered.value.toString(),
-                          Colors.teal.shade800,
+                          Colors.teal.shade100,
                         ),
                       ],
                     ),
@@ -135,13 +149,13 @@ class SalesOrdersScreen extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(9),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 17,
-                        color: Colors.black.withOpacity(0.65),
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ),
@@ -294,7 +308,7 @@ class SalesOrdersScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.white.withOpacity(0.7),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -350,12 +364,12 @@ class SalesOrdersScreen extends StatelessWidget {
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: controller.openCreateForm,
-                icon: const Icon(Icons.add, size: 16, color: Colors.black),
+                icon: const Icon(Icons.add, size: 16, color: Colors.white),
                 label: const Text(
                   'Create Order',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.black,
+                    color: Colors.white,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

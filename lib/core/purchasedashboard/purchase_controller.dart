@@ -1,15 +1,20 @@
 // lib/core/purchasedashboard/purchase_controller.dart
 
+import 'dart:convert';
+
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/core/purchasedashboard/purchase_dashboard_model.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PurchaseController extends GetxController {
   final ApiClient _api = Get.find<ApiClient>();
 
   // ─── STATE ────────────────────────────────────────────────────────────────
   final RxBool isLoading = false.obs;
-  final RxString period = 'month'.obs;
+  final RxString period = 'today'.obs;
+  final RxString selectedTimePeriodLabel = 'Today'.obs;
+  final RxString businessLogo = ''.obs;
 
   final Rx<PurchaseDashboardModel?> dashboard = Rx<PurchaseDashboardModel?>(
     null,
@@ -32,22 +37,80 @@ class PurchaseController extends GetxController {
     'year',
   ];
 
+  static const timePeriodLabels = [
+    'Today',
+    'Last Week',
+    'This Month',
+    'Last Month',
+    'This Quarter',
+    'This Year',
+  ];
+
   @override
   void onInit() {
     super.onInit();
+    loadBusinessLogo();
     fetchDashboard();
+  }
+
+  Future<void> loadBusinessLogo() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userDataString = prefs.getString('user_data');
+
+      if (userDataString != null) {
+        final userData = json.decode(userDataString) as Map<String, dynamic>;
+        final businessDetails =
+            userData['businessDetails'] as Map<String, dynamic>?;
+
+        if (businessDetails != null && businessDetails['logo'] != null) {
+          final logo = businessDetails['logo'] as String;
+          if (logo.isNotEmpty) {
+            businessLogo.value = logo;
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ [PurchaseController] Error loading business logo: $e');
+    }
   }
 
   // ─── PERIOD ───────────────────────────────────────────────────────────────
 
+  String mapPeriod(String label) {
+    switch (label) {
+      case 'Today':
+        return 'today';
+      case 'Last Week':
+        return 'week';
+      case 'This Month':
+        return 'month';
+      case 'Last Month':
+        return 'last_month';
+      case 'This Quarter':
+        return 'quarter';
+      case 'This Year':
+        return 'year';
+      default:
+        return 'today';
+    }
+  }
+
+  void selectTimePeriod(String label) {
+    selectedTimePeriodLabel.value = label;
+    setPeriod(mapPeriod(label));
+  }
+
   void setPeriod(String p, {DateTime? start, DateTime? end}) {
     period.value = p;
     if (p == 'custom') {
+      selectedTimePeriodLabel.value = 'Custom';
       customStart.value = start;
       customEnd.value = end;
     } else {
       customStart.value = null;
       customEnd.value = null;
+      selectedTimePeriodLabel.value = getPeriodLabel();
     }
     fetchDashboard();
   }
@@ -70,7 +133,7 @@ class PurchaseController extends GetxController {
       case 'today':
         return 'Today';
       case 'week':
-        return 'This Week';
+        return 'Last Week';
       case 'month':
         return 'This Month';
       case 'last_month':
@@ -87,7 +150,7 @@ class PurchaseController extends GetxController {
         }
         return 'Custom';
       default:
-        return 'This Month';
+        return 'Today';
     }
   }
 

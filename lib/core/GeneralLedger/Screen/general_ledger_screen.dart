@@ -104,6 +104,7 @@ class GeneralLedgerScreen extends StatelessWidget {
     GeneralLedgerController controller,
   ) {
     return AppBar(
+      iconTheme: const IconThemeData(color: Colors.white),
       title: const Text(
         'General Ledger',
         style: TextStyle(
@@ -142,102 +143,73 @@ class GeneralLedgerScreen extends StatelessWidget {
     ];
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       color: kCardBg,
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            height: 45,
-            decoration: BoxDecoration(
-              color: kBg,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: kBorder),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: Obx(
-                () => DropdownButton<String>(
-                  value: controller.selectedAccount.value,
-                  icon: const Icon(Icons.arrow_drop_down, size: 24),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  isExpanded: true,
-                  style: TextStyle(fontSize: 13, color: kText),
-                  items: [
-                    const DropdownMenuItem(
-                      value: 'All Accounts',
-                      child: Text('All Accounts'),
-                    ),
-                    ...controller.accountSummaries.map((account) {
-                      return DropdownMenuItem(
-                        value: account.accountName,
-                        child: Text(
-                          account.accountName,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      );
-                    }).toList(),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) controller.changeAccount(value);
-                  },
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
-                child: Container(
-                  height: 45,
-                  decoration: BoxDecoration(
-                    color: kBg,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: kBorder),
-                  ),
-                  child: TextField(
-                    onChanged: (value) => controller.searchEntries(value),
-                    style: const TextStyle(fontSize: 13),
-                    decoration: InputDecoration(
-                      hintText: 'Search...',
-                      hintStyle: TextStyle(fontSize: 12, color: kSubText),
-                      prefixIcon: Icon(Icons.search, size: 20, color: kSubText),
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                flex: 3,
+                child: _compactField(
+                  height: 36,
+                  child: DropdownButtonHideUnderline(
+                    child: Obx(
+                      () => DropdownButton<String>(
+                        value: controller.selectedAccount.value,
+                        icon: const Icon(Icons.arrow_drop_down, size: 18),
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        isExpanded: true,
+                        style: TextStyle(fontSize: 12, color: kText),
+                        items: [
+                          const DropdownMenuItem(
+                            value: 'All Accounts',
+                            child: Text('All Accounts'),
+                          ),
+                          ...controller.accountSummaries.map((account) {
+                            return DropdownMenuItem(
+                              value: account.accountName,
+                              child: Text(
+                                account.accountName,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) controller.changeAccount(value);
+                        },
+                      ),
                     ),
                   ),
                 ),
               ),
               const SizedBox(width: 8),
-              SizedBox(
-                width: 130,
-                height: 45,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: kBg,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: kBorder),
-                  ),
+              Expanded(
+                flex: 2,
+                child: _compactField(
+                  height: 36,
                   child: DropdownButtonHideUnderline(
                     child: Obx(
                       () => DropdownButton<String>(
                         value: controller.selectedFilter.value,
-                        icon: const Icon(Icons.arrow_drop_down, size: 24),
+                        icon: const Icon(Icons.arrow_drop_down, size: 18),
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         isExpanded: true,
                         style: TextStyle(fontSize: 12, color: kText),
                         items: filterOptions.map((filter) {
                           return DropdownMenuItem(
                             value: filter,
-                            child: Text(filter),
+                            child: Text(filter, overflow: TextOverflow.ellipsis),
                           );
                         }).toList(),
                         onChanged: (value) {
-                          if (value != null) {
-                            if (value == 'Custom Range') {
-                              _selectDateRange(controller, context);
-                            } else {
-                              controller.changeFilter(value);
-                            }
+                          if (value == null) return;
+                          if (value == 'Custom Range') {
+                            _selectDateRange(controller, context);
+                          } else {
+                            controller.changeFilter(value);
                           }
                         },
                       ),
@@ -247,151 +219,72 @@ class GeneralLedgerScreen extends StatelessWidget {
               ),
             ],
           ),
-          Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Obx(
-                    () => GestureDetector(
-                      onTap: () => controller.toggleDebitFilter(),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        decoration: BoxDecoration(
-                          color: controller.showOnlyDebit.value
-                              ? kSuccess.withOpacity(0.2)
-                              : kBg,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: controller.showOnlyDebit.value
-                                ? kSuccess
-                                : kBorder,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.trending_up,
-                              size: 16,
-                              color: controller.showOnlyDebit.value
-                                  ? kSuccess
-                                  : kSubText,
-                            ),
-                            const SizedBox(width: 4),
-                            Flexible(
-                              child: Text(
-                                'Debit',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: controller.showOnlyDebit.value
-                                      ? FontWeight.w600
-                                      : FontWeight.w400,
-                                  color: controller.showOnlyDebit.value
-                                      ? kSuccess
-                                      : kSubText,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Obx(
-                    () => GestureDetector(
-                      onTap: () => controller.toggleCreditFilter(),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        decoration: BoxDecoration(
-                          color: controller.showOnlyCredit.value
-                              ? kDanger.withOpacity(0.2)
-                              : kBg,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: controller.showOnlyCredit.value
-                                ? kDanger
-                                : kBorder,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.trending_down,
-                              size: 16,
-                              color: controller.showOnlyCredit.value
-                                  ? kDanger
-                                  : kSubText,
-                            ),
-                            const SizedBox(width: 4),
-                            Flexible(
-                              child: Text(
-                                'Credit',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: controller.showOnlyCredit.value
-                                      ? FontWeight.w600
-                                      : FontWeight.w400,
-                                  color: controller.showOnlyCredit.value
-                                      ? kDanger
-                                      : kSubText,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+          const SizedBox(height: 8),
+          _compactField(
+            height: 36,
+            child: TextField(
+              onChanged: (value) => controller.searchEntries(value),
+              style: const TextStyle(fontSize: 13),
+              decoration: InputDecoration(
+                hintText: 'Search entries...',
+                hintStyle: TextStyle(fontSize: 12, color: kSubText),
+                prefixIcon: Icon(Icons.search, size: 18, color: kSubText),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+              ),
             ),
           ),
           Obx(() {
-            if (controller.selectedDateRange.value != null) {
-              final range = controller.selectedDateRange.value!;
-              return Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '${DateFormat('dd MMM yyyy').format(range.start)} - ${DateFormat('dd MMM yyyy').format(range.end)}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: kPrimary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () => controller.setDateRange(null),
-                        child: Icon(Icons.close, size: 18, color: kPrimary),
-                      ),
-                    ],
-                  ),
+            final range = controller.selectedDateRange.value;
+            if (range == null) return const SizedBox.shrink();
+            return Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: kPrimary.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              );
-            }
-            return const SizedBox.shrink();
+                child: Row(
+                  children: [
+                    Icon(Icons.date_range, size: 14, color: kPrimary),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        '${DateFormat('dd MMM yyyy').format(range.start)} – ${DateFormat('dd MMM yyyy').format(range.end)}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: kPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => controller.setDateRange(null),
+                      child: Icon(Icons.close, size: 16, color: kPrimary),
+                    ),
+                  ],
+                ),
+              ),
+            );
           }),
         ],
       ),
+    );
+  }
+
+  Widget _compactField({required double height, required Widget child}) {
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        color: kBg,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: kBorder),
+      ),
+      child: child,
     );
   }
 
@@ -405,86 +298,54 @@ class GeneralLedgerScreen extends StatelessWidget {
       final entries = controller.filteredLedgerEntries;
       final isAllAccounts = controller.isAllAccountsSelected;
 
-      // For single account - get closing balance from entries
       double closingBalance = 0.0;
       if (!isAllAccounts && entries.isNotEmpty) {
         closingBalance = entries.last.balance;
       }
 
-      return Container(
-        height: 110,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          itemCount: isAllAccounts ? 4 : 4,
-          separatorBuilder: (_, __) => const SizedBox(width: 10),
-          itemBuilder: (context, index) {
-            if (isAllAccounts) {
-              switch (index) {
-                case 0:
-                  return _buildMobileKpiCard(
-                    'Total Debit',
-                    _formatAmount(summary['totalDebit']),
-                    kSuccess,
-                    Icons.trending_up,
-                  );
-                case 1:
-                  return _buildMobileKpiCard(
-                    'Total Credit',
-                    _formatAmount(summary['totalCredit']),
-                    kDanger,
-                    Icons.trending_down,
-                  );
-                case 2:
-                  return _buildMobileTrialBalanceCard(
-                    summary['isBalanced'],
-                    summary['netDifference'],
-                  );
-                case 3:
-                  return _buildMobileKpiCard(
-                    'Entries',
-                    '${entries.length}',
-                    kPrimary,
-                    Icons.receipt,
-                  );
-                default:
-                  return const SizedBox.shrink();
-              }
-            } else {
-              switch (index) {
-                case 0:
-                  return _buildMobileKpiCard(
-                    'Total Debit',
-                    _formatAmount(summary['totalDebit']),
-                    kSuccess,
-                    Icons.trending_up,
-                  );
-                case 1:
-                  return _buildMobileKpiCard(
-                    'Total Credit',
-                    _formatAmount(summary['totalCredit']),
-                    kDanger,
-                    Icons.trending_down,
-                  );
-                case 2:
-                  return _buildMobileKpiCard(
-                    'Closing Balance',
-                    _formatAmount(closingBalance),
-                    closingBalance >= 0 ? kSuccess : kDanger,
-                    Icons.account_balance,
-                  );
-                case 3:
-                  return _buildMobileKpiCard(
-                    'Entries',
-                    '${entries.length}',
-                    kPrimary,
-                    Icons.receipt,
-                  );
-                default:
-                  return const SizedBox.shrink();
-              }
-            }
-          },
+      final cards = <Widget>[
+        _buildMobileKpiCard(
+          'Debit',
+          _formatAmount(summary['totalDebit']),
+          kSuccess,
+          Icons.trending_up,
+        ),
+        _buildMobileKpiCard(
+          'Credit',
+          _formatAmount(summary['totalCredit']),
+          kDanger,
+          Icons.trending_down,
+        ),
+        if (isAllAccounts)
+          _buildMobileTrialBalanceCard(
+            summary['isBalanced'],
+            summary['netDifference'],
+          )
+        else
+          _buildMobileKpiCard(
+            'Balance',
+            _formatAmount(closingBalance),
+            closingBalance >= 0 ? kSuccess : kDanger,
+            Icons.account_balance,
+          ),
+        _buildMobileKpiCard(
+          'Entries',
+          '${entries.length}',
+          kPrimary,
+          Icons.receipt,
+        ),
+      ];
+
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
+        child: SizedBox(
+          height: 52,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: cards.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (_, i) => cards[i],
+          ),
         ),
       );
     });
@@ -497,44 +358,58 @@ class GeneralLedgerScreen extends StatelessWidget {
     IconData icon,
   ) {
     return Container(
-      width: 130,
-      padding: const EdgeInsets.all(12),
+      width: 132,
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: kCardBg,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: kBorder.withOpacity(0.7)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Icon(icon, size: 14, color: color),
-              const SizedBox(width: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: kSubText,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 14, color: color),
           ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: color,
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: kSubText,
+                    fontWeight: FontWeight.w500,
+                    height: 1.1,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: color,
+                      height: 1.1,
+                    ),
+                    maxLines: 1,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -547,58 +422,64 @@ class GeneralLedgerScreen extends StatelessWidget {
     final statusIcon = isBalanced
         ? Icons.check_circle
         : Icons.warning_amber_rounded;
-    final statusText = isBalanced ? '✓ Balanced' : '⚠ Not Balanced';
+    final statusText = isBalanced ? 'Balanced' : 'Unbalanced';
     final subtitle = isBalanced
-        ? 'Assets = Liabilities + Equity'
-        : 'Diff: ${_formatAmount(netDifference.abs())}';
+        ? 'OK'
+        : _formatAmount(netDifference.abs());
 
     return Container(
-      width: 150,
-      padding: const EdgeInsets.all(12),
+      width: 140,
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: kCardBg,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: kBorder.withOpacity(0.7)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Icon(statusIcon, size: 14, color: statusColor),
-              const SizedBox(width: 4),
-              Text(
-                'Trial Balance',
-                style: TextStyle(
-                  fontSize: 10,
-                  color: kSubText,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            statusText,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: statusColor,
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: statusColor.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(8),
             ),
+            child: Icon(statusIcon, size: 14, color: statusColor),
           ),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 9,
-              color: statusColor.withOpacity(0.7),
-              fontWeight: FontWeight.w500,
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Trial Balance',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: kSubText,
+                    fontWeight: FontWeight.w500,
+                    height: 1.1,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '$statusText · $subtitle',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: statusColor,
+                      height: 1.1,
+                    ),
+                    maxLines: 1,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -885,7 +766,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                   value: controller.selectedAccount.value,
                   icon: Icon(
                     Icons.arrow_drop_down,
-                    color: Colors.black45,
+                    color: Colors.white70,
                     size: 20,
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -897,7 +778,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                       value: 'All Accounts',
                       child: Text(
                         'All Accounts',
-                        style: TextStyle(color: Colors.black45),
+                        style: TextStyle(color: Colors.black87),
                       ),
                     ),
                     ...controller.accountSummaries.map((account) {
@@ -928,7 +809,7 @@ class GeneralLedgerScreen extends StatelessWidget {
               cursorColor: Colors.white,
               decoration: InputDecoration(
                 hintText: 'Search entries...',
-                hintStyle: TextStyle(color: Colors.black45, fontSize: 13),
+                hintStyle: TextStyle(color: Colors.white70, fontSize: 13),
                 prefixIcon: Icon(
                   Icons.search,
                   size: 16,
@@ -972,11 +853,11 @@ class GeneralLedgerScreen extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, size: 15, color: Colors.black45),
+            Icon(icon, size: 15, color: Colors.white70),
             const SizedBox(width: 6),
             Text(
               label,
-              style: const TextStyle(fontSize: 13, color: Colors.black45),
+              style: const TextStyle(fontSize: 13, color: Colors.white70),
             ),
           ],
         ),
@@ -1101,17 +982,17 @@ class GeneralLedgerScreen extends StatelessWidget {
     IconData icon,
   ) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
       child: Row(
         children: [
           Container(
-            width: 34,
-            height: 34,
+            width: 30,
+            height: 30,
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, size: 16, color: color),
+            child: Icon(icon, size: 14, color: color),
           ),
           const SizedBox(width: 10),
           Column(
@@ -1130,7 +1011,7 @@ class GeneralLedgerScreen extends StatelessWidget {
               Text(
                 value,
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
                   color: color,
                 ),
@@ -1153,12 +1034,12 @@ class GeneralLedgerScreen extends StatelessWidget {
         : 'Diff: ${_formatAmount(netDifference.abs())}';
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
       child: Row(
         children: [
           Container(
-            width: 34,
-            height: 34,
+            width: 30,
+            height: 30,
             decoration: BoxDecoration(
               color: statusColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),

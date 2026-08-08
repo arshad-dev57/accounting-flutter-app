@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:convert';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/Notifications/screens/notification_screen.dart';
 import 'package:BisonsTechs_app/core/warehouse/dashboard/warehouse_dashboard_controller.dart';
@@ -8,7 +7,6 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 
 const _kPageBg = Color(0xFFF5F6FA);
@@ -37,76 +35,26 @@ const _kHeroBorder = Color(0xFFB8CFE0);
 const _kHeroIcon = Color(0xFFC5D8E8);
 const _kPrimaryBg = Color(0xFFE6EEF5);
 
-// ─── Root widget ──────────────────────────────────────────────────────────
-class WarehouseDashboard extends StatefulWidget {
+class WarehouseDashboard extends GetView<WarehouseDashboardController> {
   const WarehouseDashboard({super.key});
 
   @override
-  State<WarehouseDashboard> createState() => _WarehouseDashboardState();
-}
-
-class _WarehouseDashboardState extends State<WarehouseDashboard> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  late final WarehouseDashboardController _controller;
-
-  String _selectedPeriod = 'This Month';
-  final List<String> _periods = [
-    'Today',
-    'This Week',
-    'This Month',
-    'This Year',
-  ];
-  
-  String _businessLogo = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = Get.put(WarehouseDashboardController());
-    _loadBusinessLogo();
-  }
-  
-  Future<void> _loadBusinessLogo() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final userDataString = prefs.getString('user_data');
-      
-      if (userDataString != null) {
-        final userData = json.decode(userDataString) as Map<String, dynamic>;
-        final businessDetails = userData['businessDetails'] as Map<String, dynamic>?;
-        
-        if (businessDetails != null && businessDetails['logo'] != null) {
-          final logo = businessDetails['logo'] as String;
-          if (logo.isNotEmpty) {
-            setState(() {
-              _businessLogo = logo;
-            });
-            print('✅ [WarehouseDashboard] Business logo loaded: $logo');
-          }
-        }
-      }
-    } catch (e) {
-      print('❌ [WarehouseDashboard] Error loading business logo: $e');
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
+    Get.put(WarehouseDashboardController());
     final isTablet = MediaQuery.of(context).size.width >= 600;
 
     return Scaffold(
-      key: _scaffoldKey,
       backgroundColor: _kPageBg,
       drawer: const WarehouseDrawer(),
       appBar: _buildAppBar(),
       body: Obx(() {
-        if (_controller.isLoading.value) {
+        if (controller.isLoading.value) {
           return _buildShimmer();
         }
         return RefreshIndicator(
           color: kPrimary,
           backgroundColor: _kCardBg,
-          onRefresh: _controller.refreshDashboard,
+          onRefresh: controller.refreshDashboard,
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
             physics: const AlwaysScrollableScrollPhysics(),
@@ -153,84 +101,87 @@ class _WarehouseDashboardState extends State<WarehouseDashboard> {
           onPressed: () => Scaffold.of(ctx).openDrawer(),
         ),
       ),
-      title: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _businessLogo.isNotEmpty
-              ? Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
+      title: Obx(() {
+        final logo = controller.businessLogo.value;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            logo.isNotEmpty
+                ? Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: logo.startsWith('http')
+                          ? Image.network(
+                              logo,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 30,
+                                  height: 30,
+                                  decoration: BoxDecoration(
+                                    color: kPrimary,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.warehouse_rounded,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                                );
+                              },
+                            )
+                          : Image.file(
+                              File(logo),
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 30,
+                                  height: 30,
+                                  decoration: BoxDecoration(
+                                    color: kPrimary,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(
+                                    Icons.warehouse_rounded,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  )
+                : Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: kPrimary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.warehouse_rounded,
+                      size: 16,
+                      color: Colors.white,
+                    ),
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: _businessLogo.startsWith('http')
-                        ? Image.network(
-                            _businessLogo,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                width: 30,
-                                height: 30,
-                                decoration: BoxDecoration(
-                                  color: kPrimary,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(
-                                  Icons.warehouse_rounded,
-                                  size: 16,
-                                  color: Colors.white,
-                                ),
-                              );
-                            },
-                          )
-                        : Image.file(
-                            File(_businessLogo),
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                width: 30,
-                                height: 30,
-                                decoration: BoxDecoration(
-                                  color: kPrimary,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(
-                                  Icons.warehouse_rounded,
-                                  size: 16,
-                                  color: Colors.white,
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-                )
-              : Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: kPrimary,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.warehouse_rounded,
-                    size: 16,
-                    color: Colors.white,
-                  ),
-                ),
-          const SizedBox(width: 8),
-          const Text(
-            'Inventory',
-            style: TextStyle(
-              color: _kTextPrimary,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.3,
+            const SizedBox(width: 8),
+            const Text(
+              'Inventory',
+              style: TextStyle(
+                color: _kTextPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.3,
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        );
+      }),
       actions: [
         IconButton(
           icon: const Icon(
@@ -310,28 +261,47 @@ class _WarehouseDashboardState extends State<WarehouseDashboard> {
 
   // ─── Hero Card ────────────────────────────────────────────────────────────
   Widget _buildHeroCard() {
-    return _HeroCardWrapper(controller: _controller, selectedPeriod: _selectedPeriod);
+    return const _HeroCardWrapper();
   }
 
   // ─── Period Chips ─────────────────────────────────────────────────────────
   Widget _buildPeriodChips() {
-    return SizedBox(
-      height: 34,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: _periods.length + 1, // +1 for custom
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (_, i) {
-          if (i < _periods.length) {
-            final period = _periods[i];
-            final isActive = period == _selectedPeriod;
+    return Obx(() {
+      final selected = controller.selectedPeriodLabel.value;
+      return SizedBox(
+        height: 34,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: WarehouseDashboardController.periodLabels.length + 1,
+          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          itemBuilder: (_, i) {
+            if (i < WarehouseDashboardController.periodLabels.length) {
+              final period = WarehouseDashboardController.periodLabels[i];
+              final isActive = period == selected;
+              return GestureDetector(
+                onTap: () => controller.selectPeriodLabel(period),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  decoration: BoxDecoration(
+                    color: isActive ? kPrimary : _kChipBg,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    period,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isActive ? Colors.white : _kTextSub,
+                    ),
+                  ),
+                ),
+              );
+            }
+            final isActive = selected == 'Custom';
             return GestureDetector(
-              onTap: () {
-                setState(() => _selectedPeriod = period);
-                _controller.applyPeriodFilter(
-                  period.toLowerCase().replaceAll(' ', '_'),
-                );
-              },
+              onTap: () => _pickCustomDateRange(),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
                 padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -340,53 +310,31 @@ class _WarehouseDashboardState extends State<WarehouseDashboard> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 alignment: Alignment.center,
-                child: Text(
-                  period,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: isActive ? Colors.white : _kTextSub,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.date_range_rounded,
+                      size: 13,
+                      color: isActive ? Colors.white : _kTextSub,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      'Custom',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: isActive ? Colors.white : _kTextSub,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );
-          }
-          // Custom date button
-          final isActive = _selectedPeriod == 'Custom';
-          return GestureDetector(
-            onTap: () => _pickCustomDateRange(),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                color: isActive ? kPrimary : _kChipBg,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              alignment: Alignment.center,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.date_range_rounded,
-                    size: 13,
-                    color: isActive ? Colors.white : _kTextSub,
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    'Custom',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: isActive ? Colors.white : _kTextSub,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
+          },
+        ),
+      );
+    });
   }
 
   Future<void> _pickCustomDateRange() async {
@@ -411,8 +359,7 @@ class _WarehouseDashboardState extends State<WarehouseDashboard> {
       ),
     );
     if (picked != null) {
-      setState(() => _selectedPeriod = 'Custom');
-      _controller.applyPeriodFilter(
+      await controller.applyPeriodFilter(
         'custom',
         start: picked.start,
         end: picked.end,
@@ -426,7 +373,7 @@ class _WarehouseDashboardState extends State<WarehouseDashboard> {
       final kpis = [
         _KpiItem(
           label: 'Total Products',
-          value: '${_controller.totalProducts.value}',
+          value: '${controller.totalProducts.value}',
           icon: Icons.inventory_2_outlined,
           iconBg: _kPrimaryBg,
           iconColor: kPrimary,
@@ -435,7 +382,7 @@ class _WarehouseDashboardState extends State<WarehouseDashboard> {
         ),
         _KpiItem(
           label: 'Stock Value',
-          value: _controller.formatCurrency(_controller.totalStockValue.value),
+          value: controller.formatCurrency(controller.totalStockValue.value),
           icon: Icons.account_balance_wallet_outlined,
           iconBg: _kGreenBg,
           iconColor: _kGreen,
@@ -444,17 +391,17 @@ class _WarehouseDashboardState extends State<WarehouseDashboard> {
         ),
         _KpiItem(
           label: 'Low Stock',
-          value: '${_controller.lowStockCount.value}',
+          value: '${controller.lowStockCount.value}',
           icon: Icons.warning_amber_rounded,
           iconBg: _kOrangeBg,
           iconColor: _kOrange,
-          trend: _controller.lowStockCount.value > 0 ? 'Alert' : 'Clear',
-          trendUp: _controller.lowStockCount.value == 0,
+          trend: controller.lowStockCount.value > 0 ? 'Alert' : 'Clear',
+          trendUp: controller.lowStockCount.value == 0,
         ),
         _KpiItem(
           label: "Today's Movements",
           value:
-              '${_controller.todayStockIn.value + _controller.todayStockOut.value}',
+              '${controller.todayStockIn.value + controller.todayStockOut.value}',
           icon: Icons.sync_alt_rounded,
           iconBg: _kPurpleBg,
           iconColor: _kPurple,
@@ -484,16 +431,16 @@ class _WarehouseDashboardState extends State<WarehouseDashboard> {
       final bars = [
         _BarItem(
           'Total Products',
-          '${_controller.totalProducts.value}',
-          _controller.totalProducts.value.toDouble(),
+          '${controller.totalProducts.value}',
+          controller.totalProducts.value.toDouble(),
           kPrimary,
           _kPrimaryBg,
           'All active inventory items',
         ),
         _BarItem(
           'In Stock',
-          '${_controller.totalProducts.value - _controller.outOfStockCount.value}',
-          (_controller.totalProducts.value - _controller.outOfStockCount.value)
+          '${controller.totalProducts.value - controller.outOfStockCount.value}',
+          (controller.totalProducts.value - controller.outOfStockCount.value)
               .toDouble(),
           _kGreen,
           _kGreenBg,
@@ -501,32 +448,32 @@ class _WarehouseDashboardState extends State<WarehouseDashboard> {
         ),
         _BarItem(
           'Low Stock',
-          '${_controller.lowStockCount.value}',
-          _controller.lowStockCount.value.toDouble(),
+          '${controller.lowStockCount.value}',
+          controller.lowStockCount.value.toDouble(),
           _kOrange,
           _kOrangeBg,
           'Below minimum threshold',
         ),
         _BarItem(
           'Out of Stock',
-          '${_controller.outOfStockCount.value}',
-          _controller.outOfStockCount.value.toDouble(),
+          '${controller.outOfStockCount.value}',
+          controller.outOfStockCount.value.toDouble(),
           _kRed,
           _kRedBg,
           'Zero quantity items',
         ),
         _BarItem(
           'Overstock',
-          '${_controller.overstockCount.value}',
-          _controller.overstockCount.value.toDouble(),
+          '${controller.overstockCount.value}',
+          controller.overstockCount.value.toDouble(),
           _kPurple,
           _kPurpleBg,
           'Above maximum threshold',
         ),
         _BarItem(
           'Expiring Soon',
-          '${_controller.expiringCount.value}',
-          _controller.expiringCount.value.toDouble(),
+          '${controller.expiringCount.value}',
+          controller.expiringCount.value.toDouble(),
           _kRed,
           _kRedBg,
           'Expiry within 30 days',
@@ -541,7 +488,7 @@ class _WarehouseDashboardState extends State<WarehouseDashboard> {
       return _SectionCard(
         title: 'Stock overview',
         trailing: Text(
-          _selectedPeriod,
+          controller.selectedPeriodLabel.value,
           style: const TextStyle(fontSize: 12, color: _kTextSub),
         ),
         child: Column(children: bars.map((b) => _buildBar(b, maxVal)).toList()),
@@ -633,7 +580,7 @@ class _WarehouseDashboardState extends State<WarehouseDashboard> {
 
   // ─── Stock Trend Chart ────────────────────────────────────────────────────
   Widget _buildStockTrendCard() {
-    final chartData = _controller.stockMovementChart;
+    final chartData = controller.stockMovementChart;
 
     final List<double> inData = [];
     final List<double> outData = [];
@@ -794,7 +741,7 @@ class _WarehouseDashboardState extends State<WarehouseDashboard> {
 
   // ─── Category Distribution ────────────────────────────────────────────────
   Widget _buildCategoryDistributionCard() {
-    final categories = _controller.categoryDistribution;
+    final categories = controller.categoryDistribution;
     final hasData =
         categories.isNotEmpty &&
         categories.any((c) => (c['productCount'] ?? 0) > 0);
@@ -929,25 +876,25 @@ class _WarehouseDashboardState extends State<WarehouseDashboard> {
       final items = [
         _HealthEntry(
           'Low Stock',
-          _controller.lowStockCount.value,
+          controller.lowStockCount.value,
           Icons.warning_amber_rounded,
           _kOrange,
         ),
         _HealthEntry(
           'Out of Stock',
-          _controller.outOfStockCount.value,
+          controller.outOfStockCount.value,
           Icons.block,
           _kRed,
         ),
         _HealthEntry(
           'Expiring Soon',
-          _controller.expiringCount.value,
+          controller.expiringCount.value,
           Icons.event_outlined,
           _kRed,
         ),
         _HealthEntry(
           'Overstock',
-          _controller.overstockCount.value,
+          controller.overstockCount.value,
           Icons.inventory_rounded,
           _kPurple,
         ),
@@ -1080,7 +1027,7 @@ class _WarehouseDashboardState extends State<WarehouseDashboard> {
   }
 
   Widget _buildRecentActivities() {
-    final activities = _controller.recentActivities;
+    final activities = controller.recentActivities;
     final shown = activities.length > 6 ? activities.sublist(0, 6) : activities;
 
     return _SectionCard(
@@ -1209,52 +1156,14 @@ class _WarehouseDashboardState extends State<WarehouseDashboard> {
 }
 
 // ─── Hero Card Wrapper ─────────────────────────────────────────────────────
-class _HeroCardWrapper extends StatefulWidget {
-  final WarehouseDashboardController controller;
-  final String selectedPeriod;
-  
-  const _HeroCardWrapper({required this.controller, required this.selectedPeriod});
-
-  @override
-  State<_HeroCardWrapper> createState() => _HeroCardWrapperState();
-}
-
-class _HeroCardWrapperState extends State<_HeroCardWrapper> {
-  String _businessLogo = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _loadBusinessLogo();
-  }
-
-  Future<void> _loadBusinessLogo() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final userDataString = prefs.getString('user_data');
-      
-      if (userDataString != null) {
-        final userData = json.decode(userDataString) as Map<String, dynamic>;
-        final businessDetails = userData['businessDetails'] as Map<String, dynamic>?;
-        
-        if (businessDetails != null && businessDetails['logo'] != null) {
-          final logo = businessDetails['logo'] as String;
-          if (logo.isNotEmpty) {
-            setState(() {
-              _businessLogo = logo;
-            });
-          }
-        }
-      }
-    } catch (e) {
-      print('❌ [_HeroCardWrapper] Error loading business logo: $e');
-    }
-  }
+class _HeroCardWrapper extends GetView<WarehouseDashboardController> {
+  const _HeroCardWrapper();
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => Container(
+    return Obx(() {
+      final logo = controller.businessLogo.value;
+      return Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
@@ -1274,25 +1183,25 @@ class _HeroCardWrapperState extends State<_HeroCardWrapper> {
         ),
         child: Stack(
           children: [
-            // Business logo background
-            if (_businessLogo.isNotEmpty)
+            if (logo.isNotEmpty)
               Positioned.fill(
                 child: Opacity(
                   opacity: 0.05,
-                  child: _businessLogo.startsWith('http')
+                  child: logo.startsWith('http')
                       ? Image.network(
-                          _businessLogo,
+                          logo,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                          errorBuilder: (context, error, stackTrace) =>
+                              const SizedBox.shrink(),
                         )
                       : Image.file(
-                          File(_businessLogo),
+                          File(logo),
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                          errorBuilder: (context, error, stackTrace) =>
+                              const SizedBox.shrink(),
                         ),
                 ),
               ),
-            // Card content
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1319,7 +1228,7 @@ class _HeroCardWrapperState extends State<_HeroCardWrapper> {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                'Stock Overview · ${widget.selectedPeriod}',
+                                'Stock Overview · ${controller.selectedPeriodLabel.value}',
                                 style: const TextStyle(
                                   fontSize: 11,
                                   color: _kTextSub,
@@ -1330,8 +1239,8 @@ class _HeroCardWrapperState extends State<_HeroCardWrapper> {
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            widget.controller.formatCurrency(
-                              widget.controller.totalStockValue.value,
+                            controller.formatCurrency(
+                              controller.totalStockValue.value,
                             ),
                             style: const TextStyle(
                               fontSize: 26,
@@ -1342,7 +1251,7 @@ class _HeroCardWrapperState extends State<_HeroCardWrapper> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${widget.controller.totalProducts.value} products · ${widget.controller.lowStockCount.value} low stock',
+                            '${controller.totalProducts.value} products · ${controller.lowStockCount.value} low stock',
                             style: const TextStyle(
                               fontSize: 11,
                               color: _kTextSub,
@@ -1356,7 +1265,7 @@ class _HeroCardWrapperState extends State<_HeroCardWrapper> {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: widget.controller.lowStockCount.value > 0
+                              color: controller.lowStockCount.value > 0
                                   ? _kOrangeBg
                                   : _kGreenBg,
                               borderRadius: BorderRadius.circular(20),
@@ -1365,23 +1274,23 @@ class _HeroCardWrapperState extends State<_HeroCardWrapper> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  widget.controller.lowStockCount.value > 0
+                                  controller.lowStockCount.value > 0
                                       ? Icons.warning_amber_rounded
                                       : Icons.check_circle_outline_rounded,
                                   size: 10,
-                                  color: widget.controller.lowStockCount.value > 0
+                                  color: controller.lowStockCount.value > 0
                                       ? _kOrange
                                       : _kGreen,
                                 ),
                                 const SizedBox(width: 3),
                                 Text(
-                                  widget.controller.lowStockCount.value > 0
-                                      ? '${widget.controller.lowStockCount.value} items need restocking'
+                                  controller.lowStockCount.value > 0
+                                      ? '${controller.lowStockCount.value} items need restocking'
                                       : 'All stock levels healthy',
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
-                                    color: widget.controller.lowStockCount.value > 0
+                                    color: controller.lowStockCount.value > 0
                                         ? _kOrange
                                         : _kGreen,
                                   ),
@@ -1393,7 +1302,7 @@ class _HeroCardWrapperState extends State<_HeroCardWrapper> {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => widget.controller.refreshDashboard(),
+                      onTap: () => controller.refreshDashboard(),
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
@@ -1417,7 +1326,7 @@ class _HeroCardWrapperState extends State<_HeroCardWrapper> {
                   children: [
                     _heroStatHero(
                       'Stock In Today',
-                      '${widget.controller.todayStockIn.value}',
+                      '${controller.todayStockIn.value}',
                       Icons.arrow_downward_rounded,
                       _kGreen,
                       _kGreenBg,
@@ -1425,7 +1334,7 @@ class _HeroCardWrapperState extends State<_HeroCardWrapper> {
                     _heroDividerHero(),
                     _heroStatHero(
                       'Stock Out Today',
-                      '${widget.controller.todayStockOut.value}',
+                      '${controller.todayStockOut.value}',
                       Icons.arrow_upward_rounded,
                       _kRed,
                       _kRedBg,
@@ -1433,7 +1342,7 @@ class _HeroCardWrapperState extends State<_HeroCardWrapper> {
                     _heroDividerHero(),
                     _heroStatHero(
                       'Low Stock',
-                      '${widget.controller.lowStockCount.value}',
+                      '${controller.lowStockCount.value}',
                       Icons.warning_amber_rounded,
                       _kOrange,
                       _kOrangeBg,
@@ -1444,11 +1353,10 @@ class _HeroCardWrapperState extends State<_HeroCardWrapper> {
             ),
           ],
         ),
-      ),
-    );
+      );
+    });
   }
 
-  // ─── Helper Functions for _HeroCardWrapperState ───────────────────────────
   Widget _heroStatHero(
     String label,
     String value,

@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
@@ -154,12 +157,49 @@ class PurchaseDrawer extends StatelessWidget {
 // Purchase-specific Header
 // ══════════════════════════════════════════════════════════════════
 
-class _PurchaseDrawerHeader extends StatelessWidget {
+class _PurchaseDrawerHeader extends StatefulWidget {
+  @override
+  State<_PurchaseDrawerHeader> createState() => _PurchaseDrawerHeaderState();
+}
+
+class _PurchaseDrawerHeaderState extends State<_PurchaseDrawerHeader> {
+  String _businessLogo = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBusinessLogo();
+  }
+
+  Future<void> _loadBusinessLogo() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userDataString = prefs.getString('user_data');
+
+      if (userDataString != null) {
+        final userData = json.decode(userDataString) as Map<String, dynamic>;
+        final businessDetails =
+            userData['businessDetails'] as Map<String, dynamic>?;
+
+        if (businessDetails != null && businessDetails['logo'] != null) {
+          final logo = businessDetails['logo'] as String;
+          if (logo.isNotEmpty) {
+            setState(() {
+              _businessLogo = logo;
+            });
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ [PurchaseDrawerHeader] Error loading business logo: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(color: kPrimary),
+      decoration: const BoxDecoration(color: kPrimary),
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 16,
         left: 16,
@@ -174,13 +214,13 @@ class _PurchaseDrawerHeader extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.08),
+                color: Colors.white.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
                 Icons.arrow_back_rounded,
                 size: 16,
-                color: Colors.black87,
+                color: Colors.white,
               ),
             ),
           ),
@@ -191,16 +231,47 @@ class _PurchaseDrawerHeader extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.12),
+                  color: Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Center(
-                  child: Icon(
-                    Icons.shopping_bag_rounded,
-                    color: Colors.black87,
-                    size: 22,
-                  ),
-                ),
+                child: _businessLogo.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: _businessLogo.startsWith('http')
+                            ? Image.network(
+                                _businessLogo,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Center(
+                                    child: Icon(
+                                      Icons.shopping_bag_rounded,
+                                      color: Colors.white,
+                                      size: 22,
+                                    ),
+                                  );
+                                },
+                              )
+                            : Image.file(
+                                File(_businessLogo),
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Center(
+                                    child: Icon(
+                                      Icons.shopping_bag_rounded,
+                                      color: Colors.white,
+                                      size: 22,
+                                    ),
+                                  );
+                                },
+                              ),
+                      )
+                    : const Center(
+                        child: Icon(
+                          Icons.shopping_bag_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                      ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -210,7 +281,7 @@ class _PurchaseDrawerHeader extends StatelessWidget {
                     const Text(
                       'moltechq',
                       style: TextStyle(
-                        color: Colors.black,
+                        color: Colors.white,
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.3,
@@ -221,7 +292,7 @@ class _PurchaseDrawerHeader extends StatelessWidget {
                     Text(
                       'Purchase Module',
                       style: TextStyle(
-                        color: Colors.black.withOpacity(0.55),
+                        color: Colors.white.withOpacity(0.7),
                         fontSize: 11,
                       ),
                     ),
@@ -234,16 +305,23 @@ class _PurchaseDrawerHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.white.withOpacity(0.12),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
-                Iconify(Mdi.shield_account, size: 14, color: Colors.black54),
+                Iconify(
+                  Mdi.shield_account,
+                  size: 14,
+                  color: Colors.white.withOpacity(0.7),
+                ),
                 const SizedBox(width: 6),
                 Text(
                   'Current Plan',
-                  style: TextStyle(fontSize: 11, color: Colors.black54),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.white.withOpacity(0.7),
+                  ),
                 ),
                 const Spacer(),
                 Container(

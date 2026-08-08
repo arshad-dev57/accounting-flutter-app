@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
@@ -20,18 +23,61 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
 
+class SalesDrawerController extends GetxController {
+  final RxString businessLogo = ''.obs;
+  final RxMap<String, bool> expandedSections = <String, bool>{}.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    loadBusinessLogo();
+  }
+
+  Future<void> loadBusinessLogo() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userDataString = prefs.getString('user_data');
+
+      if (userDataString != null) {
+        final userData = json.decode(userDataString) as Map<String, dynamic>;
+        final businessDetails =
+            userData['businessDetails'] as Map<String, dynamic>?;
+
+        if (businessDetails != null && businessDetails['logo'] != null) {
+          final logo = businessDetails['logo'] as String;
+          if (logo.isNotEmpty) {
+            businessLogo.value = logo;
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ [SalesDrawerController] Error loading business logo: $e');
+    }
+  }
+
+  void toggleSection(String title, {bool fallback = false}) {
+    final current = expandedSections[title] ?? fallback;
+    expandedSections[title] = !current;
+  }
+
+  bool isSectionExpanded(String title, {bool fallback = false}) =>
+      expandedSections[title] ?? fallback;
+}
+
 class SalesDrawer extends StatelessWidget {
   final String currentRoute;
   const SalesDrawer({super.key, required this.currentRoute});
 
   @override
   Widget build(BuildContext context) {
+    Get.put(SalesDrawerController());
+
     return Drawer(
       width: 272,
       backgroundColor: Colors.white,
       child: Column(
         children: [
-          _DrawerHeader(),
+          const _DrawerHeader(),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.only(top: 8, bottom: 8),
@@ -154,12 +200,14 @@ class SalesDrawer extends StatelessWidget {
   }
 }
 
-class _DrawerHeader extends StatelessWidget {
+class _DrawerHeader extends GetView<SalesDrawerController> {
+  const _DrawerHeader();
+
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(color: kPrimary),
+      decoration: const BoxDecoration(color: kPrimary),
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 16,
         left: 16,
@@ -169,40 +217,73 @@ class _DrawerHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Back button
           GestureDetector(
             onTap: () => Get.offAllNamed('/dashboard'),
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.08),
+                color: Colors.white.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
                 Icons.arrow_back_rounded,
                 size: 16,
-                color: Colors.black87,
+                color: Colors.white,
               ),
             ),
           ),
           const SizedBox(height: 14),
           Row(
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.trending_up_rounded,
-                    color: Colors.black87,
-                    size: 22,
+              Obx(() {
+                final logo = controller.businessLogo.value;
+                return Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                ),
-              ),
+                  child: logo.isNotEmpty
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: logo.startsWith('http')
+                              ? Image.network(
+                                  logo,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Center(
+                                      child: Icon(
+                                        Icons.trending_up_rounded,
+                                        color: Colors.white,
+                                        size: 22,
+                                      ),
+                                    );
+                                  },
+                                )
+                              : Image.file(
+                                  File(logo),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Center(
+                                      child: Icon(
+                                        Icons.trending_up_rounded,
+                                        color: Colors.white,
+                                        size: 22,
+                                      ),
+                                    );
+                                  },
+                                ),
+                        )
+                      : const Center(
+                          child: Icon(
+                            Icons.trending_up_rounded,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                        ),
+                );
+              }),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -211,7 +292,7 @@ class _DrawerHeader extends StatelessWidget {
                     const Text(
                       'moltechq',
                       style: TextStyle(
-                        color: Colors.black,
+                        color: Colors.white,
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.3,
@@ -222,7 +303,7 @@ class _DrawerHeader extends StatelessWidget {
                     Text(
                       'jhon@gmail.com',
                       style: TextStyle(
-                        color: Colors.black.withOpacity(0.55),
+                        color: Colors.white.withOpacity(0.7),
                         fontSize: 11,
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -236,16 +317,23 @@ class _DrawerHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.white.withOpacity(0.12),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
-                Iconify(Mdi.shield_account, size: 14, color: Colors.black54),
+                Iconify(
+                  Mdi.shield_account,
+                  size: 14,
+                  color: Colors.white.withOpacity(0.7),
+                ),
                 const SizedBox(width: 6),
                 Text(
                   'Current Plan',
-                  style: TextStyle(fontSize: 11, color: Colors.black54),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.white.withOpacity(0.7),
+                  ),
                 ),
                 const Spacer(),
                 Container(
@@ -296,7 +384,7 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-class _NavSection extends StatefulWidget {
+class _NavSection extends StatelessWidget {
   final String title;
   final String icon;
   final String currentRoute;
@@ -313,112 +401,109 @@ class _NavSection extends StatefulWidget {
     this.permissions,
   });
 
-  @override
-  State<_NavSection> createState() => _NavSectionState();
-}
+  bool _isActive(String routeKey) {
+    final r = currentRoute.toLowerCase();
+    if (routeKey.startsWith('__')) return false;
+    return r.contains(routeKey.toLowerCase());
+  }
 
-class _NavSectionState extends State<_NavSection> {
-  bool _expanded = false;
-  final PermissionService _permissionService = PermissionService.to;
-
-  bool get _hasActiveChild => widget.items.any((i) => _isActive(i.$3));
+  bool get _hasActiveChild => items.any((i) => _isActive(i.$3));
 
   List<(String, String, String)> get _filteredItems {
-    if (widget.module == null || widget.permissions == null) {
-      return widget.items;
+    final permissionService = PermissionService.to;
+    if (module == null || permissions == null) {
+      return items;
     }
 
-    final isAdmin = _permissionService.isAdmin;
-    if (isAdmin) return widget.items;
+    if (permissionService.isAdmin) return items;
 
     final filtered = <(String, String, String)>[];
-    for (int i = 0; i < widget.items.length; i++) {
-      final item = widget.items[i];
-      final permission = widget.permissions![i];
+    for (int i = 0; i < items.length; i++) {
+      final item = items[i];
+      final permission = permissions![i];
 
-      if (_permissionService.hasSubPageAccess(widget.module!, permission)) {
+      if (permissionService.hasSubPageAccess(module!, permission)) {
         filtered.add(item);
       }
     }
     return filtered;
   }
 
-  bool _isActive(String routeKey) {
-    final r = widget.currentRoute.toLowerCase();
-    if (routeKey.startsWith('__')) return false;
-    return r.contains(routeKey.toLowerCase());
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _expanded = _hasActiveChild;
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Header row
-        InkWell(
-          onTap: () => setState(() => _expanded = !_expanded),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Row(
-              children: [
-                Iconify(
-                  widget.icon,
-                  size: 18,
-                  color: _hasActiveChild ? kPrimary : Colors.grey.shade500,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    widget.title,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: _hasActiveChild
-                          ? FontWeight.w700
-                          : FontWeight.w600,
-                      color: _hasActiveChild ? Colors.black : Colors.black87,
+    final drawerController = Get.find<SalesDrawerController>();
+    final initiallyExpanded = _hasActiveChild;
+
+    return Obx(() {
+      final expanded = drawerController.isSectionExpanded(
+        title,
+        fallback: initiallyExpanded,
+      );
+
+      return Column(
+        children: [
+          InkWell(
+            onTap: () => drawerController.toggleSection(
+              title,
+              fallback: initiallyExpanded,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Row(
+                children: [
+                  Iconify(
+                    icon,
+                    size: 18,
+                    color: _hasActiveChild ? kPrimary : Colors.grey.shade500,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: _hasActiveChild
+                            ? FontWeight.w700
+                            : FontWeight.w600,
+                        color: _hasActiveChild ? Colors.black : Colors.black87,
+                      ),
                     ),
                   ),
-                ),
-                Icon(
-                  _expanded
-                      ? Icons.keyboard_arrow_up_rounded
-                      : Icons.keyboard_arrow_down_rounded,
-                  size: 18,
-                  color: Colors.grey.shade400,
-                ),
-              ],
+                  Icon(
+                    expanded
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    size: 18,
+                    color: Colors.grey.shade400,
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-        // Items
-        AnimatedCrossFade(
-          duration: const Duration(milliseconds: 200),
-          crossFadeState: _expanded
-              ? CrossFadeState.showFirst
-              : CrossFadeState.showSecond,
-          firstChild: Column(
-            children: _filteredItems.map((item) {
-              final isActive = _isActive(item.$3);
-              return _NavItem(
-                label: item.$1,
-                icon: item.$2,
-                isActive: isActive,
-                onTap: () {
-                  Navigator.pop(context);
-                  _navigate(item.$3, item.$1);
-                },
-              );
-            }).toList(),
+          AnimatedCrossFade(
+            duration: const Duration(milliseconds: 200),
+            crossFadeState: expanded
+                ? CrossFadeState.showFirst
+                : CrossFadeState.showSecond,
+            firstChild: Column(
+              children: _filteredItems.map((item) {
+                final isActive = _isActive(item.$3);
+                return _NavItem(
+                  label: item.$1,
+                  icon: item.$2,
+                  isActive: isActive,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _navigate(item.$3, item.$1);
+                  },
+                );
+              }).toList(),
+            ),
+            secondChild: const SizedBox.shrink(),
           ),
-          secondChild: const SizedBox.shrink(),
-        ),
-      ],
-    );
+        ],
+      );
+    });
   }
 
   void _navigate(String routeKey, String label) {

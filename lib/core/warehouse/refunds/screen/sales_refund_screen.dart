@@ -50,7 +50,7 @@ class SalesRefundsScreen extends StatelessWidget {
         onPressed: controller.openCreateForm,
         backgroundColor: kPrimary,
         elevation: 2,
-        child: const Icon(Icons.add, color: Colors.black, size: 24),
+        child: const Icon(Icons.add, color: Colors.white, size: 24),
       ),
     );
   }
@@ -73,14 +73,27 @@ class SalesRefundsScreen extends StatelessWidget {
                 children: [
                   GestureDetector(
                     onTap: () => Get.back(),
-                    child: Icon(
+                    child: const Icon(
                       Icons.arrow_back,
-                      size: 17,
-                      color: Colors.black.withOpacity(0.65),
+                      size: 20,
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(width: 10),
-
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: const Icon(
+                      Icons.money_off_csred_outlined,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,7 +103,7 @@ class SalesRefundsScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
-                            color: Colors.black,
+                            color: Colors.white,
                             letterSpacing: -0.3,
                           ),
                         ),
@@ -99,7 +112,7 @@ class SalesRefundsScreen extends StatelessWidget {
                             '${controller.totalRecords.value} refunds',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.black.withOpacity(0.55),
+                              color: Colors.white.withOpacity(0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -114,19 +127,19 @@ class SalesRefundsScreen extends StatelessWidget {
                         _compactKpi(
                           'Pending',
                           controller.stats.value.pending.toString(),
-                          Colors.orange.shade800,
+                          Colors.orange.shade200,
                         ),
                         const SizedBox(width: 10),
                         _compactKpi(
                           'Processing',
                           controller.stats.value.processing.toString(),
-                          Colors.blue.shade800,
+                          Colors.lightBlue.shade100,
                         ),
                         const SizedBox(width: 10),
                         _compactKpi(
                           'Completed',
                           controller.stats.value.completed.toString(),
-                          Colors.green.shade800,
+                          Colors.green.shade200,
                         ),
                       ],
                     ),
@@ -138,13 +151,13 @@ class SalesRefundsScreen extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(9),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 17,
-                        color: Colors.black.withOpacity(0.65),
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ),
@@ -233,7 +246,7 @@ class SalesRefundsScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.white.withOpacity(0.7),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -250,10 +263,10 @@ class SalesRefundsScreen extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
-            color: selected ? Colors.black : Colors.white.withOpacity(0.18),
+            color: selected ? Colors.white : Colors.white.withOpacity(0.18),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: selected ? Colors.black : Colors.white.withOpacity(0.4),
+              color: selected ? Colors.white : Colors.white.withOpacity(0.4),
             ),
           ),
           child: Text(
@@ -261,7 +274,7 @@ class SalesRefundsScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: selected ? Colors.white : Colors.black87,
+              color: selected ? kPrimary : Colors.white,
             ),
           ),
         ),
@@ -394,17 +407,36 @@ class _CreateRefundForm extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: kPrimary,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
         leading: IconButton(
           onPressed: onCancel,
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
         ),
-        title: const Text(
-          'Create Refund',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: Colors.black,
-          ),
+        title: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.money_off_csred_outlined,
+                size: 16,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'Create Refund',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
       ),
       body: SingleChildScrollView(
@@ -556,13 +588,13 @@ class _CreateRefundForm extends StatelessWidget {
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.black,
+                          color: Colors.white,
                         ),
                       )
                     : const Text(
                         'Submit Refund',
                         style: TextStyle(
-                          color: Colors.black,
+                          color: Colors.white,
                           fontWeight: FontWeight.w700,
                           fontSize: 14,
                         ),
@@ -985,12 +1017,12 @@ class _RefundListView extends StatelessWidget {
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: onCreate,
-                icon: const Icon(Icons.add, size: 16, color: Colors.black),
+                icon: const Icon(Icons.add, size: 16, color: Colors.white),
                 label: const Text(
                   'Create Refund',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.black,
+                    color: Colors.white,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

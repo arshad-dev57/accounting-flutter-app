@@ -19,23 +19,42 @@ class PurchasePaymentScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: kBgLight,
       appBar: AppBar(
-        title: const Text(
-          'Purchase Payments',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: Colors.black,
-          ),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.payments_outlined,
+                size: 16,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'Purchase Payments',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
         backgroundColor: kPrimary,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Get.back(),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: Colors.black),
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
             onPressed: controller.refreshPayments,
           ),
         ],
@@ -71,7 +90,7 @@ class PurchasePaymentScreen extends StatelessWidget {
                 onPressed: controller.openCreateForm,
                 backgroundColor: kPrimary,
                 elevation: 2,
-                child: const Icon(Icons.payment, color: Colors.black, size: 24),
+                child: const Icon(Icons.payment, color: Colors.white, size: 24),
               ),
       ),
     );
@@ -89,6 +108,20 @@ class PurchasePaymentScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
               child: Row(
                 children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: const Icon(
+                      Icons.payments_outlined,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,7 +131,7 @@ class PurchasePaymentScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
-                            color: Colors.black,
+                            color: Colors.white,
                             letterSpacing: -0.3,
                           ),
                         ),
@@ -107,7 +140,7 @@ class PurchasePaymentScreen extends StatelessWidget {
                             '${controller.totalRecords.value} payments',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.black.withOpacity(0.55),
+                              color: Colors.white.withOpacity(0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -126,7 +159,7 @@ class PurchasePaymentScreen extends StatelessWidget {
                               controller.formatCurrency(
                                 controller.stats.value.todayAmount,
                               ),
-                              Colors.green.shade800,
+                              Colors.green.shade200,
                             ),
                             const SizedBox(width: 8),
                             _compactKpi(
@@ -134,7 +167,7 @@ class PurchasePaymentScreen extends StatelessWidget {
                               controller.formatCurrency(
                                 controller.stats.value.monthAmount,
                               ),
-                              Colors.blue.shade800,
+                              Colors.lightBlue.shade100,
                             ),
                           ],
                         ),
@@ -148,13 +181,13 @@ class PurchasePaymentScreen extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(9),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 17,
-                        color: Colors.black.withOpacity(0.65),
+                        color: Colors.white.withOpacity(0.9),
                       ),
                     ),
                   ),
@@ -231,7 +264,7 @@ class PurchasePaymentScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.white.withOpacity(0.7),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -248,10 +281,10 @@ class PurchasePaymentScreen extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
-            color: selected ? Colors.black : Colors.white.withOpacity(0.18),
+            color: selected ? Colors.white : Colors.white.withOpacity(0.18),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: selected ? Colors.black : Colors.white.withOpacity(0.4),
+              color: selected ? Colors.white : Colors.white.withOpacity(0.4),
             ),
           ),
           child: Text(
@@ -259,7 +292,7 @@ class PurchasePaymentScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: selected ? Colors.white : Colors.black87,
+              color: selected ? kPrimary : Colors.white,
             ),
           ),
         ),
@@ -396,17 +429,36 @@ class _CreatePaymentForm extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: kPrimary,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
         leading: IconButton(
           onPressed: onCancel,
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
         ),
-        title: const Text(
-          'Make Payment',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: Colors.black,
-          ),
+        title: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.payment,
+                size: 16,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'Make Payment',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
       ),
       body: Obx(() {
@@ -1016,7 +1068,7 @@ class _CreatePaymentForm extends StatelessWidget {
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.black,
+                          color: Colors.white,
                         ),
                       )
                     : Row(
@@ -1025,7 +1077,7 @@ class _CreatePaymentForm extends StatelessWidget {
                         children: [
                           const Icon(
                             Icons.payment,
-                            color: Colors.black,
+                            color: Colors.white,
                             size: 18,
                           ),
                           const SizedBox(width: 6),
@@ -1035,7 +1087,7 @@ class _CreatePaymentForm extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.black,
+                                color: Colors.white,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -1528,12 +1580,12 @@ class _PaymentListView extends StatelessWidget {
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: onCreate,
-                icon: const Icon(Icons.payment, size: 16, color: Colors.black),
+                icon: const Icon(Icons.payment, size: 16, color: Colors.white),
                 label: const Text(
                   'Make Payment',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.black,
+                    color: Colors.white,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
