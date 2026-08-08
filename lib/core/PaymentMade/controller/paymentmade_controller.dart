@@ -1,13 +1,22 @@
 // core/paymentsMade/controller/payment_made_controller.dart
 // COMPLETE WITH LAZY LOADING & PAGINATION (NO WEB)
 
+import 'dart:io';
+
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:universal_html/html.dart' as html;
 
 class PaymentMadeController extends GetxController {
   // Observable variables
@@ -745,8 +754,7 @@ class PaymentMadeController extends GetxController {
                     bgColor: const Color(0xFFFFEBEE),
                     onTap: () {
                       Get.back();
-                      // TODO: Implement PDF export
-                      AppSnackbar.info('Export', 'PDF export coming soon');
+                      exportToPdf();
                     },
                   ),
                 ),
@@ -760,7 +768,6 @@ class PaymentMadeController extends GetxController {
                     bgColor: const Color(0xFFE8F5E9),
                     onTap: () {
                       Get.back();
-                      // TODO: Implement Excel export
                       AppSnackbar.info('Export', 'Excel export coming soon');
                     },
                   ),
@@ -820,6 +827,314 @@ class PaymentMadeController extends GetxController {
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> exportToPdf() async {
+    try {
+      if (!kIsWeb) {
+        Get.dialog(
+          Center(
+            child: Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                        color: kPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'Generating PDF...',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Please wait',
+                      style: TextStyle(fontSize: 12, color: kSubText),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          barrierDismissible: false,
+        );
+      }
+
+      final branding = await PdfBrandingBundle.load();
+      final pdf = pw.Document();
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(24),
+          header: (ctx) => branding.buildHeader(
+            reportTitle: 'Payments Made Report',
+          ),
+          footer: (ctx) => branding.buildFooter(ctx),
+          build: (ctx) => [
+            _pdfSummarySection(branding.accent),
+            pw.SizedBox(height: 16),
+            _pdfPaymentsSection(),
+            branding.buildSignatureBlock(),
+          ],
+        ),
+      );
+
+      final bytes = await pdf.save();
+      final fileName =
+          'payments_made_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+
+      if (kIsWeb) {
+        final blob = html.Blob([bytes], 'application/pdf');
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final anchor = html.AnchorElement(href: url)
+          ..setAttribute('download', fileName)
+          ..click();
+        html.Url.revokeObjectUrl(url);
+
+        if (Get.isDialogOpen ?? false) Get.back();
+        AppSnackbar.success(
+          Colors.green,
+          'Success',
+          '${payments.length} payments exported to PDF',
+        );
+      } else {
+        final dir = await getTemporaryDirectory();
+        final file = File('${dir.path}/$fileName');
+        await file.writeAsBytes(bytes);
+
+        if (Get.isDialogOpen ?? false) Get.back();
+        AppSnackbar.success(
+          Colors.green,
+          'Success',
+          '${payments.length} payments exported to PDF',
+        );
+        await OpenFile.open(file.path);
+      }
+    } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
+      AppSnackbar.error(Colors.red, 'Error', 'Failed to export PDF: $e');
+    }
+  }
+
+  pw.Widget _pdfSummarySection(PdfColor accent) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.all(12),
+      decoration: pw.BoxDecoration(
+        color: PdfColor(accent.red, accent.green, accent.blue, 0.06),
+        borderRadius: pw.BorderRadius.circular(8),
+        border: pw.Border.all(
+          color: PdfColor(accent.red, accent.green, accent.blue, 0.35),
+        ),
+      ),
+      child: pw.Column(
+        children: [
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
+            children: [
+              _pdfSummaryItem(
+                'Total Paid',
+                formatAmount(totalPaid.value),
+                PdfColors.red700,
+              ),
+              _pdfSummaryItem(
+                'This Month',
+                formatAmount(thisMonthTotal.value),
+                accent,
+              ),
+              _pdfSummaryItem(
+                'This Week',
+                formatAmount(thisWeekTotal.value),
+                accent,
+              ),
+              _pdfSummaryItem(
+                'Today',
+                formatAmount(todayTotal.value),
+                accent,
+              ),
+            ],
+          ),
+          pw.SizedBox(height: 8),
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
+            children: [
+              _pdfSummaryItem(
+                'Total Payments',
+                payments.length.toString(),
+                PdfColors.grey700,
+              ),
+              _pdfSummaryItem(
+                'Filter',
+                selectedFilter.value,
+                PdfColors.grey700,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _pdfSummaryItem(String label, String value, PdfColor color) {
+    return pw.Column(
+      children: [
+        pw.Text(
+          label,
+          style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+        ),
+        pw.SizedBox(height: 4),
+        pw.Text(
+          value,
+          style: pw.TextStyle(
+            fontSize: 11,
+            fontWeight: pw.FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  pw.Widget _pdfPaymentsSection() {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(
+          'Payment Details',
+          style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+        ),
+        pw.SizedBox(height: 8),
+        pw.Container(
+          padding: const pw.EdgeInsets.symmetric(vertical: 8),
+          decoration: const pw.BoxDecoration(
+            border: pw.Border(
+              bottom: pw.BorderSide(color: PdfColors.grey300, width: 1),
+            ),
+          ),
+          child: pw.Row(
+            children: [
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Payment #',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Date',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 3,
+                child: pw.Text(
+                  'Supplier',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Bill #',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Method',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Amount',
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        ),
+        ...payments.map(
+          (payment) => pw.Container(
+            padding: const pw.EdgeInsets.symmetric(vertical: 6),
+            decoration: const pw.BoxDecoration(
+              border: pw.Border(
+                bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.5),
+              ),
+            ),
+            child: pw.Row(
+              children: [
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Text(
+                    payment.paymentNumber,
+                    style: pw.TextStyle(fontSize: 9),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Text(
+                    DateFormat('dd/MM/yyyy').format(payment.paymentDate),
+                    style: pw.TextStyle(fontSize: 9),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 3,
+                  child: pw.Text(
+                    payment.supplierName,
+                    style: pw.TextStyle(fontSize: 9),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Text(
+                    payment.billNumber,
+                    style: pw.TextStyle(fontSize: 9),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Text(
+                    payment.paymentMethod,
+                    style: pw.TextStyle(fontSize: 9),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Text(
+                    formatAmount(payment.amount),
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(
+                      fontSize: 9,
+                      color: PdfColors.red700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 

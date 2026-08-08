@@ -16,6 +16,7 @@ import 'package:BisonsTechs_app/core/companyprofile/screen/company_profile_scree
 import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:BisonsTechs_app/core/settings/screens/currency_screen.dart';
+import 'package:BisonsTechs_app/core/settings/screens/pdf_report_settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -89,7 +90,10 @@ class PurchaseDrawer extends StatelessWidget {
                   title: 'Settings',
                   icon: Mdi.cog,
                   currentRoute: currentRoute,
-                  items: const [('Currency', Mdi.currency_usd, '__currency')],
+                  items: const [
+                    ('Currency', Mdi.currency_usd, '__currency'),
+                    ('PDF Reports', Mdi.file_pdf_box, '__pdf_report'),
+                  ],
                 ),
                 _NavSection(
                   title: 'My Account',
@@ -747,6 +751,9 @@ class _NavSectionState extends State<_NavSection> {
     switch (routeKey) {
       case '__currency':
         Get.to(() => const CurrencyScreen());
+        break;
+      case '__pdf_report':
+        Get.to(() => const PdfReportSettingsScreen());
         break;
       case '__profile':
         Get.to(() => const ProfileScreen());

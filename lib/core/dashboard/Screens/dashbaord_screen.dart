@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
-import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/core/About/about_app_screen.dart';
@@ -32,6 +31,7 @@ import 'package:BisonsTechs_app/core/cashflowstatement/screen/cash_flow_statemen
 import 'package:BisonsTechs_app/core/changepassword/screen/change_password_screen.dart';
 import 'package:BisonsTechs_app/core/chartofaccounts/screens/chart_of_account_screen.dart';
 import 'package:BisonsTechs_app/core/settings/screens/currency_screen.dart';
+import 'package:BisonsTechs_app/core/settings/screens/pdf_report_settings_screen.dart';
 import 'package:BisonsTechs_app/core/dashboard/controllers/dashboard_controller.dart';
 import 'package:BisonsTechs_app/core/journalEntries/Screens/journal_entries_screen.dart';
 import 'package:BisonsTechs_app/core/loanBorrowing/screen/_loan_borrowing_screen.dart';
@@ -646,7 +646,6 @@ class DashboardScreen extends GetView<DashboardController> {
     );
   }
 
-  // ─── KPI Grid ─────────────────────────────────────────────────────────────
   Widget _buildKpiGrid(bool isTablet) {
     return Obx(() {
       final kpis = [
@@ -1574,7 +1573,10 @@ class DashboardScreen extends GetView<DashboardController> {
                   icon: Mdi.cog,
                   module: 'accounting',
                   permissions: const ['currency'],
-                  items: const [('Currency', Mdi.currency_usd, 'currency')],
+                  items: const [
+                    ('Currency', Mdi.currency_usd, 'currency'),
+                    ('PDF Reports', Mdi.file_pdf_box, 'pdf_report'),
+                  ],
                 ),
                 _NavSection(
                   title: 'My Account',
@@ -2269,6 +2271,9 @@ class _NavItem extends StatelessWidget {
           break;
         case 'currency':
           Get.to(() => const CurrencyScreen());
+          break;
+        case 'pdf_report':
+          Get.to(() => const PdfReportSettingsScreen());
           break;
         case 'subscription':
           Get.to(() => const SelectPlanScreen());

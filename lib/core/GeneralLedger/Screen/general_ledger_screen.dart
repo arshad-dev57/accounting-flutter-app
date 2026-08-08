@@ -4,6 +4,7 @@ import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
 import 'package:BisonsTechs_app/core/GeneralLedger/Controller/general_ledger_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -2030,85 +2031,37 @@ class GeneralLedgerScreen extends StatelessWidget {
     final selectedAccount = controller.selectedAccount.value;
     final summary = controller.getCurrentSummary();
 
+    final branding = await PdfBrandingBundle.load();
+    final accent = branding.accent;
     final pdf = pw.Document();
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(24),
+        header: (ctx) => branding.buildHeader(
+          reportTitle: 'General Ledger Report',
+        ),
+        footer: (ctx) => branding.buildFooter(ctx),
         build: (ctx) => [
-          pw.Container(
-            padding: const pw.EdgeInsets.only(bottom: 12),
-            decoration: const pw.BoxDecoration(
-              border: pw.Border(
-                bottom: pw.BorderSide(color: PdfColors.grey300),
-              ),
-            ),
-            child: pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text(
-                      'General Ledger Report',
-                      style: pw.TextStyle(
-                        fontSize: 18,
-                        fontWeight: pw.FontWeight.bold,
-                        color: PdfColors.indigo800,
-                      ),
-                    ),
-                    pw.Text(
-                      'Generated: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now())}',
-                      style: const pw.TextStyle(
-                        fontSize: 9,
-                        color: PdfColors.grey600,
-                      ),
-                    ),
-                  ],
-                ),
-                pw.Container(
-                  padding: const pw.EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: pw.BoxDecoration(
-                    color: PdfColors.indigo800,
-                    borderRadius: pw.BorderRadius.circular(6),
-                  ),
-                  child: pw.Text(
-                    'BisonsTechs',
-                    style: pw.TextStyle(
-                      color: PdfColors.white,
-                      fontWeight: pw.FontWeight.bold,
-                      fontSize: 10,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          pw.SizedBox(height: 16),
           pw.Container(
             padding: const pw.EdgeInsets.all(12),
             decoration: pw.BoxDecoration(
-              color: PdfColors.indigo50,
+              color: PdfColor(accent.red, accent.green, accent.blue, 0.06),
               borderRadius: pw.BorderRadius.circular(8),
-              border: pw.Border.all(color: PdfColors.indigo200),
+              border: pw.Border.all(
+                color: PdfColor(accent.red, accent.green, accent.blue, 0.35),
+              ),
             ),
             child: pw.Column(
               children: [
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
                   children: [
-                    _pdfSummaryItem(
-                      'Account',
-                      selectedAccount,
-                      PdfColors.indigo700,
-                    ),
+                    _pdfSummaryItem('Account', selectedAccount, accent),
                     _pdfSummaryItem(
                       'Total Entries',
                       entries.length.toString(),
-                      PdfColors.indigo700,
+                      accent,
                     ),
                   ],
                 ),
@@ -2289,6 +2242,7 @@ class GeneralLedgerScreen extends StatelessWidget {
               ),
             ),
           ),
+          branding.buildSignatureBlock(),
         ],
       ),
     );
@@ -2310,6 +2264,12 @@ class GeneralLedgerScreen extends StatelessWidget {
       await file.writeAsBytes(bytes);
       await OpenFile.open(file.path);
     }
+
+    AppSnackbar.success(
+      Colors.green,
+      'Success',
+      '${entries.length} ledger entries exported to PDF',
+    );
   }
 
   pw.Widget _pdfSummaryItem(String label, String value, PdfColor color) {

@@ -2,6 +2,7 @@ import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
 import 'package:BisonsTechs_app/core/journalEntries/model/journal_entry_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -44,16 +45,19 @@ class JournalExportService {
         );
       }
 
+      final branding = await PdfBrandingBundle.load();
       final pdf = pw.Document();
 
       pdf.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(24),
-          header: (ctx) => _pdfHeader(),
-          footer: (ctx) => _pdfFooter(ctx),
+          header: (ctx) => branding.buildHeader(
+            reportTitle: 'Journal Entries Report',
+          ),
+          footer: (ctx) => branding.buildFooter(ctx),
           build: (ctx) => [
-            _pdfSummarySection(summary),
+            _pdfSummarySection(summary, branding.accent),
             pw.SizedBox(height: 8),
             pw.Text(
               'Total Entries Exported: ${entries.length}',
@@ -61,6 +65,7 @@ class JournalExportService {
             ),
             pw.SizedBox(height: 16),
             _pdfEntriesSection(entries),
+            branding.buildSignatureBlock(),
           ],
         ),
       );
@@ -112,88 +117,18 @@ class JournalExportService {
     }
   }
 
-  static pw.Widget _pdfHeader() {
-    return pw.Container(
-      padding: const pw.EdgeInsets.only(bottom: 12),
-      decoration: const pw.BoxDecoration(
-        border: pw.Border(
-          bottom: pw.BorderSide(color: PdfColors.grey300, width: 1),
-        ),
-      ),
-      child: pw.Row(
-        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-        children: [
-          pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Text(
-                'Journal Entries Report',
-                style: pw.TextStyle(
-                  fontSize: 18,
-                  fontWeight: pw.FontWeight.bold,
-                  color: PdfColors.indigo800,
-                ),
-              ),
-              pw.Text(
-                'Generated: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now())}',
-                style: const pw.TextStyle(
-                  fontSize: 9,
-                  color: PdfColors.grey600,
-                ),
-              ),
-            ],
-          ),
-          pw.Container(
-            padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: pw.BoxDecoration(
-              color: PdfColors.indigo800,
-              borderRadius: pw.BorderRadius.circular(6),
-            ),
-            child: pw.Text(
-              'BisonsTechs',
-              style: pw.TextStyle(
-                color: PdfColors.white,
-                fontWeight: pw.FontWeight.bold,
-                fontSize: 10,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static pw.Widget _pdfFooter(pw.Context ctx) {
-    return pw.Container(
-      padding: const pw.EdgeInsets.only(top: 8),
-      decoration: const pw.BoxDecoration(
-        border: pw.Border(
-          top: pw.BorderSide(color: PdfColors.grey300, width: 1),
-        ),
-      ),
-      child: pw.Row(
-        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-        children: [
-          pw.Text(
-            'Confidential - For Internal Use Only',
-            style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
-          ),
-          pw.Text(
-            'Page ${ctx.pageNumber} of ${ctx.pagesCount}',
-            style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static pw.Widget _pdfSummarySection(Map<String, dynamic> summary) {
+  static pw.Widget _pdfSummarySection(
+    Map<String, dynamic> summary,
+    PdfColor accent,
+  ) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(12),
       decoration: pw.BoxDecoration(
-        color: PdfColors.indigo50,
+        color: PdfColor(accent.red, accent.green, accent.blue, 0.06),
         borderRadius: pw.BorderRadius.circular(8),
-        border: pw.Border.all(color: PdfColors.indigo200),
+        border: pw.Border.all(
+          color: PdfColor(accent.red, accent.green, accent.blue, 0.35),
+        ),
       ),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
@@ -218,7 +153,7 @@ class JournalExportService {
           _pdfSummaryItem(
             'Posted',
             '${summary['postedCount'] ?? 0}',
-            PdfColors.indigo700,
+            accent,
           ),
           _pdfSummaryItem(
             'Draft',
