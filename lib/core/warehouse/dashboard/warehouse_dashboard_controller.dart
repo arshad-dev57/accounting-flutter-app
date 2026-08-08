@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 
 class WarehouseDashboardController extends GetxController {
   final ApiClient _apiClient = Get.find<ApiClient>();

@@ -1,5 +1,5 @@
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/core/warehouse/category/category_controller.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/warehouse/category/category_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
@@ -317,7 +317,8 @@ class _CategoriesTab extends StatelessWidget {
             return _CategoryCard(
               cat: cat,
               controller: controller,
-              onTap: () => _showCategoryDetails(context, cat, controller, index),
+              onTap: () =>
+                  _showCategoryDetails(context, cat, controller, index),
             );
           },
         );
@@ -385,15 +386,13 @@ class _SubCategoriesTabState extends State<_SubCategoriesTab> {
           );
         }
 
-        final subCats = controller.filteredCategories
-            .where((c) {
-              if (c['parentId'] == null) return false;
-              if (_selectedParentId != null && _selectedParentId != 'all') {
-                return c['parentId'] == _selectedParentId;
-              }
-              return true;
-            })
-            .toList();
+        final subCats = controller.filteredCategories.where((c) {
+          if (c['parentId'] == null) return false;
+          if (_selectedParentId != null && _selectedParentId != 'all') {
+            return c['parentId'] == _selectedParentId;
+          }
+          return true;
+        }).toList();
 
         return Column(
           children: [
@@ -441,7 +440,9 @@ class _SubCategoriesTabState extends State<_SubCategoriesTab> {
                   ? _buildEmptyState(
                       context,
                       icon: Icons.account_tree_outlined,
-                      title: _selectedParentId != null && _selectedParentId != 'all'
+                      title:
+                          _selectedParentId != null &&
+                              _selectedParentId != 'all'
                           ? 'No sub-categories in this category'
                           : 'No sub-categories yet',
                       subtitle: 'Tap + to add a sub-category under a parent',
@@ -617,7 +618,8 @@ class _CategoryCard extends StatelessWidget {
                             : 'No description',
                         style: TextStyle(
                           fontSize: 11,
-                          color: (cat['description'] != null &&
+                          color:
+                              (cat['description'] != null &&
                                   cat['description'] != '')
                               ? kSubText
                               : kSubText.withOpacity(0.5),
@@ -646,7 +648,11 @@ class _CategoryCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right, size: 18, color: Colors.grey.shade400),
+                Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: Colors.grey.shade400,
+                ),
               ],
             ),
           ),
@@ -804,7 +810,8 @@ class _SubCategoryCard extends StatelessWidget {
                             : 'No description',
                         style: TextStyle(
                           fontSize: 11,
-                          color: (cat['description'] != null &&
+                          color:
+                              (cat['description'] != null &&
                                   cat['description'] != '')
                               ? kSubText
                               : kSubText.withOpacity(0.5),
@@ -835,7 +842,11 @@ class _SubCategoryCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right, size: 18, color: Colors.grey.shade400),
+                Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: Colors.grey.shade400,
+                ),
               ],
             ),
           ),
@@ -989,7 +1000,10 @@ class _SearchFieldState extends State<_SearchField> {
               )
             : null,
         border: InputBorder.none,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 11,
+        ),
         isDense: true,
       ),
     );
@@ -1113,7 +1127,8 @@ void _showAddSubCategoryDialog(
   final formKey = GlobalKey<FormState>();
   final nameCtrl = TextEditingController();
   final descCtrl = TextEditingController();
-  String? selectedParentId = preSelectedParentId ?? 
+  String? selectedParentId =
+      preSelectedParentId ??
       (mainCats.isNotEmpty ? mainCats.first['id'] : null);
 
   showDialog(
@@ -1279,8 +1294,9 @@ void _showCategoryDetails(
   final color = controller.getCategoryColor(cat['level'] ?? 1);
   final productCount = cat['productCount'] ?? 0;
   final subCount = cat['subCategoryCount'] ?? 0;
-  final createdAt =
-      cat['createdAt'] != null ? DateTime.tryParse(cat['createdAt']) : null;
+  final createdAt = cat['createdAt'] != null
+      ? DateTime.tryParse(cat['createdAt'])
+      : null;
 
   showModalBottomSheet(
     context: context,
@@ -1361,7 +1377,10 @@ void _showCategoryDetails(
                     const SizedBox(height: 16),
                     Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
                     const SizedBox(height: 16),
-                    _detailRow('Description', cat['description'] ?? 'No description'),
+                    _detailRow(
+                      'Description',
+                      cat['description'] ?? 'No description',
+                    ),
                     _detailRow('Sub-Categories', '$subCount'),
                     _detailRow('Products', '$productCount items'),
                     _detailRow(
@@ -1441,12 +1460,15 @@ void _showSubCategoryDetails(
   final color = controller.getCategoryColor(cat['level'] ?? 2);
   final productCount = cat['productCount'] ?? 0;
   final subCount = cat['subCategoryCount'] ?? 0;
-  final createdAt =
-      cat['createdAt'] != null ? DateTime.tryParse(cat['createdAt']) : null;
-  final parentName = mainCats.firstWhere(
-    (c) => c['id'] == cat['parentId'],
-    orElse: () => {},
-  )['name'] ?? '';
+  final createdAt = cat['createdAt'] != null
+      ? DateTime.tryParse(cat['createdAt'])
+      : null;
+  final parentName =
+      mainCats.firstWhere(
+        (c) => c['id'] == cat['parentId'],
+        orElse: () => {},
+      )['name'] ??
+      '';
 
   showModalBottomSheet(
     context: context,
@@ -1544,7 +1566,10 @@ void _showSubCategoryDetails(
                     const SizedBox(height: 16),
                     Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
                     const SizedBox(height: 16),
-                    _detailRow('Description', cat['description'] ?? 'No description'),
+                    _detailRow(
+                      'Description',
+                      cat['description'] ?? 'No description',
+                    ),
                     _detailRow('Parent Category', parentName),
                     _detailRow('Nested Sub-Categories', '$subCount'),
                     _detailRow('Products', '$productCount items'),
@@ -1687,13 +1712,11 @@ void _showEditCategoryDialog(
                 ? null
                 : () async {
                     if (!formKey.currentState!.validate()) return;
-                    final ok = await controller.updateCategory(
-                      cat['id'] ?? '',
-                      {
-                        'name': nameCtrl.text.trim(),
-                        'description': descCtrl.text.trim(),
-                      },
-                    );
+                    final ok = await controller
+                        .updateCategory(cat['id'] ?? '', {
+                          'name': nameCtrl.text.trim(),
+                          'description': descCtrl.text.trim(),
+                        });
                     if (ok) {
                       Navigator.pop(context);
                       _snackSuccess('Category updated successfully');

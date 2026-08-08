@@ -1,57 +1,57 @@
 // lib/main.dart - COMPLETE FIXED
 
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/core/Onboarding/views/Onboarding_screen.dart';
-import 'package:LedgerPro_app/core/Register/Views/register_screen.dart';
-import 'package:LedgerPro_app/core/Sales/screens/sales_dashbaord_screen.dart';
-import 'package:LedgerPro_app/core/Splash/screen/splash_screen.dart';
-import 'package:LedgerPro_app/core/dashboard/Screens/dashbaord_screen.dart';
-import 'package:LedgerPro_app/core/dashboardSelection/screen/dashboard_selection.dart';
-import 'package:LedgerPro_app/core/goodsRecieving/goods_receiving_controller.dart';
-import 'package:LedgerPro_app/core/goodsRecieving/goods_receiving_screen.dart';
-import 'package:LedgerPro_app/core/login/screen/login_screen.dart';
-import 'package:LedgerPro_app/core/plans/controllers/subscription_controller.dart';
-import 'package:LedgerPro_app/core/plans/views/Subscription_plans.dart';
-import 'package:LedgerPro_app/core/plans/views/payment_cancel_screen.dart';
-import 'package:LedgerPro_app/core/plans/views/payment_sucess_screen.dart';
-import 'package:LedgerPro_app/core/purchaseInvoice/purchase_invoice_controller.dart';
-import 'package:LedgerPro_app/core/purchaseInvoice/purchase_invoice_screen.dart';
-import 'package:LedgerPro_app/core/purchasePaymentmade/purchase_payment_controller.dart';
-import 'package:LedgerPro_app/core/purchasePaymentmade/purchase_payment_screen.dart';
-import 'package:LedgerPro_app/core/purchaseReturn/purchase_return_controller.dart';
-import 'package:LedgerPro_app/core/purchaseReturn/purchase_return_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/Delievery/deleivery_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/Delievery/deleivery_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/Reports/screen/expiry_report_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/Reports/screen/low_stock_report_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/Reports/screen/stock_summary_report_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/Stock_in/screen/stock_in_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/category/category_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/dashboard/warehouse_dashboard_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/inventory_valuation/screen/inventory_valuation_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/invoice/screen/warehouse_invoice_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/order/screen/Sales_order_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/products/controller/product_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/products/screen/product_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/purchases/controller/purchase_order_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/purchases/screen/purchase_order_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/quotation/quotation_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/quotation/quotation_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/refunds/screen/sales_refund_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/reports/screen/reports_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/returns/screen/sales_return_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/salesInvoice/sales_invoice_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/salesInvoice/salesinvoice_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/salesPayment/sales_payment_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/salesPayment/sales_payment_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/supplier/controller/supplier_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/supplier/screen/supplier_screen.dart';
-import 'package:LedgerPro_app/core/warehousecustomer/warehouse_customer_controller.dart';
-import 'package:LedgerPro_app/core/warehousecustomer/warehouse_customer_screen.dart';
-import 'package:LedgerPro_app/core/Users/screen/user_list_screen.dart';
-import 'package:LedgerPro_app/core/Users/screen/user_form_screen.dart';
-import 'package:LedgerPro_app/core/Users/screen/access_management_screen.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/core/Onboarding/views/Onboarding_screen.dart';
+import 'package:BisonsTechs_app/core/Register/Views/register_screen.dart';
+import 'package:BisonsTechs_app/core/Sales/screens/sales_dashbaord_screen.dart';
+import 'package:BisonsTechs_app/core/Splash/screen/splash_screen.dart';
+import 'package:BisonsTechs_app/core/dashboard/Screens/dashbaord_screen.dart';
+import 'package:BisonsTechs_app/core/dashboardSelection/screen/dashboard_selection.dart';
+import 'package:BisonsTechs_app/core/goodsRecieving/goods_receiving_controller.dart';
+import 'package:BisonsTechs_app/core/goodsRecieving/goods_receiving_screen.dart';
+import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
+import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
+import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
+import 'package:BisonsTechs_app/core/plans/views/payment_cancel_screen.dart';
+import 'package:BisonsTechs_app/core/plans/views/payment_sucess_screen.dart';
+import 'package:BisonsTechs_app/core/purchaseInvoice/purchase_invoice_controller.dart';
+import 'package:BisonsTechs_app/core/purchaseInvoice/purchase_invoice_screen.dart';
+import 'package:BisonsTechs_app/core/purchasePaymentmade/purchase_payment_controller.dart';
+import 'package:BisonsTechs_app/core/purchasePaymentmade/purchase_payment_screen.dart';
+import 'package:BisonsTechs_app/core/purchaseReturn/purchase_return_controller.dart';
+import 'package:BisonsTechs_app/core/purchaseReturn/purchase_return_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/Delievery/deleivery_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/Delievery/deleivery_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/Reports/screen/expiry_report_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/Reports/screen/low_stock_report_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/Reports/screen/stock_summary_report_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/Stock_in/screen/stock_in_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/category/category_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/dashboard/warehouse_dashboard_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/inventory_valuation/screen/inventory_valuation_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/invoice/screen/warehouse_invoice_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/screen/Sales_order_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/products/controller/product_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/products/screen/product_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/purchases/controller/purchase_order_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/purchases/screen/purchase_order_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/quotation/quotation_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/quotation/quotation_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/refunds/screen/sales_refund_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/reports/screen/reports_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/returns/screen/sales_return_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/salesInvoice/sales_invoice_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/salesInvoice/salesinvoice_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/salesPayment/sales_payment_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/salesPayment/sales_payment_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/supplier/controller/supplier_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/supplier/screen/supplier_screen.dart';
+import 'package:BisonsTechs_app/core/warehousecustomer/warehouse_customer_controller.dart';
+import 'package:BisonsTechs_app/core/warehousecustomer/warehouse_customer_screen.dart';
+import 'package:BisonsTechs_app/core/Users/screen/user_list_screen.dart';
+import 'package:BisonsTechs_app/core/Users/screen/user_form_screen.dart';
+import 'package:BisonsTechs_app/core/Users/screen/access_management_screen.dart';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -60,10 +60,10 @@ import 'package:get/get.dart';
 import 'package:sizer/sizer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/Services/notification_Service.dart';
-import 'package:LedgerPro_app/Services/permission_service.dart';
-import 'package:LedgerPro_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Services/notification_Service.dart';
+import 'package:BisonsTechs_app/Services/permission_service.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
 
 class ThemeController extends GetxController {
   var isDarkMode = false.obs;
@@ -104,7 +104,7 @@ class MyApp extends StatelessWidget {
       builder: (context, orientation, deviceType) {
         return GetMaterialApp(
           debugShowCheckedModeBanner: false,
-          title: 'LedgerPro App',
+          title: 'BisonsTechs App',
           theme: _buildLightTheme(),
           darkTheme: _buildDarkTheme(),
           themeMode: Get.find<ThemeController>().isDarkMode.value
@@ -218,7 +218,7 @@ class MyApp extends StatelessWidget {
               name: '/warehouse/dashboard',
               page: () => WarehouseDashboard(),
             ),
-             GetPage(
+            GetPage(
               name: '/warehouse/invoices',
               page: () => const WarehouseInvoiceScreen(),
             ),
@@ -268,19 +268,19 @@ class MyApp extends StatelessWidget {
               name: '/warehouse/reports',
               page: () => const ReportsScreen(),
             ),
-              GetPage(
+            GetPage(
               name: '/warehouse/inventory',
               page: () => const InventoryValuationScreen(),
             ),
-               GetPage(
+            GetPage(
               name: '/warehouse/reports/stock-summary',
               page: () => const StockSummaryReportScreen(),
             ),
-               GetPage(
+            GetPage(
               name: '/warehouse/reports/low-stock',
               page: () => const LowStockReportScreen(),
             ),
-              GetPage(
+            GetPage(
               name: '/warehouse/reports/expiry',
               page: () => const ExpiryReportScreen(),
             ),
@@ -303,10 +303,7 @@ class MyApp extends StatelessWidget {
               page: () => const SalesRefundsScreen(),
             ),
             // ========== USER MANAGEMENT ROUTES ==========
-            GetPage(
-              name: '/admin/users',
-              page: () => const UserListScreen(),
-            ),
+            GetPage(name: '/admin/users', page: () => const UserListScreen()),
             GetPage(
               name: '/admin/users/add',
               page: () => const UserFormScreen(),

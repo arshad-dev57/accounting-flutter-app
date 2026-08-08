@@ -1,8 +1,8 @@
 // lib/core/warehouse/reports/screen/reports_screen.dart - UPDATED WITH GRID DESIGN (2 Columns)
 
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/responsive_utils.dart';
-import 'package:LedgerPro_app/core/warehouse/reports/controller/reports_controller.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
+import 'package:BisonsTechs_app/core/warehouse/reports/controller/reports_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
@@ -13,7 +13,6 @@ class ReportsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(ReportsController());
-
 
     return Scaffold(
       backgroundColor: kBg,
@@ -103,10 +102,7 @@ class ReportsScreen extends StatelessWidget {
               if (!isMobile)
                 Text(
                   '${reports.length} reports',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: kSubText,
-                  ),
+                  style: TextStyle(fontSize: 12, color: kSubText),
                 ),
             ],
           ),
@@ -161,10 +157,7 @@ class ReportsScreen extends StatelessWidget {
               padding: EdgeInsets.all(isMobile ? 12 : 14),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [
-                    color.withOpacity(0.15),
-                    color.withOpacity(0.05),
-                  ],
+                  colors: [color.withOpacity(0.15), color.withOpacity(0.05)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -192,19 +185,13 @@ class ReportsScreen extends StatelessWidget {
             Text(
               report['subtitle'] as String,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: isMobile ? 11 : 12,
-                color: kSubText,
-              ),
+              style: TextStyle(fontSize: isMobile ? 11 : 12, color: kSubText),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
             const Spacer(),
             Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: 2,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(4),
@@ -263,10 +250,7 @@ class ReportsScreen extends StatelessWidget {
               if (!isMobile)
                 Text(
                   '${recentReports.length} reports',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: kSubText,
-                  ),
+                  style: TextStyle(fontSize: 12, color: kSubText),
                 ),
             ],
           ),

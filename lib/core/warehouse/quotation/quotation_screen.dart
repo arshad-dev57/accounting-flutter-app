@@ -1,9 +1,9 @@
 // lib/core/warehouse/quotation/views/quotation_screen.dart
 
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/quotation/quotation_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/quotation/quotation_model.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/quotation/quotation_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/quotation/quotation_model.dart';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -99,26 +99,42 @@ class QuotationScreen extends StatelessWidget {
                             letterSpacing: -0.3,
                           ),
                         ),
-                        Obx(() => Text(
-                          '${controller.totalRecords.value} quotations',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.black.withOpacity(0.55),
-                            fontWeight: FontWeight.w500,
+                        Obx(
+                          () => Text(
+                            '${controller.totalRecords.value} quotations',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.black.withOpacity(0.55),
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        )),
+                        ),
                       ],
                     ),
                   ),
-                  Obx(() => Row(
-                    children: [
-                      _compactKpi('Draft', controller.stats.value.draft.toString(), Colors.orange.shade800),
-                      const SizedBox(width: 8),
-                      _compactKpi('Sent', controller.stats.value.sent.toString(), Colors.blue.shade800),
-                      const SizedBox(width: 8),
-                      _compactKpi('Converted', controller.stats.value.converted.toString(), Colors.purple.shade800),
-                    ],
-                  )),
+                  Obx(
+                    () => Row(
+                      children: [
+                        _compactKpi(
+                          'Draft',
+                          controller.stats.value.draft.toString(),
+                          Colors.orange.shade800,
+                        ),
+                        const SizedBox(width: 8),
+                        _compactKpi(
+                          'Sent',
+                          controller.stats.value.sent.toString(),
+                          Colors.blue.shade800,
+                        ),
+                        const SizedBox(width: 8),
+                        _compactKpi(
+                          'Converted',
+                          controller.stats.value.converted.toString(),
+                          Colors.purple.shade800,
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(width: 10),
                   GestureDetector(
                     onTap: controller.refreshQuotations,
@@ -129,7 +145,11 @@ class QuotationScreen extends StatelessWidget {
                         color: Colors.black.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(9),
                       ),
-                      child: Icon(Icons.refresh_rounded, size: 17, color: Colors.black.withOpacity(0.65)),
+                      child: Icon(
+                        Icons.refresh_rounded,
+                        size: 17,
+                        color: Colors.black.withOpacity(0.65),
+                      ),
                     ),
                   ),
                 ],
@@ -153,19 +173,41 @@ class QuotationScreen extends StatelessWidget {
                 child: _SearchField(controller: controller),
               ),
             ),
-            Obx(() => SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-              child: Row(
-                children: [
-                  _filterChip('All', controller.selectedFilter.value == 'all', () => controller.filterQuotations('all')),
-                  _filterChip('Draft', controller.selectedFilter.value == 'Draft', () => controller.filterQuotations('Draft')),
-                  _filterChip('Sent', controller.selectedFilter.value == 'Sent', () => controller.filterQuotations('Sent')),
-                  _filterChip('Accepted', controller.selectedFilter.value == 'Accepted', () => controller.filterQuotations('Accepted')),
-                  _filterChip('Converted', controller.selectedFilter.value == 'Converted', () => controller.filterQuotations('Converted')),
-                ],
+            Obx(
+              () => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                child: Row(
+                  children: [
+                    _filterChip(
+                      'All',
+                      controller.selectedFilter.value == 'all',
+                      () => controller.filterQuotations('all'),
+                    ),
+                    _filterChip(
+                      'Draft',
+                      controller.selectedFilter.value == 'Draft',
+                      () => controller.filterQuotations('Draft'),
+                    ),
+                    _filterChip(
+                      'Sent',
+                      controller.selectedFilter.value == 'Sent',
+                      () => controller.filterQuotations('Sent'),
+                    ),
+                    _filterChip(
+                      'Accepted',
+                      controller.selectedFilter.value == 'Accepted',
+                      () => controller.filterQuotations('Accepted'),
+                    ),
+                    _filterChip(
+                      'Converted',
+                      controller.selectedFilter.value == 'Converted',
+                      () => controller.filterQuotations('Converted'),
+                    ),
+                  ],
+                ),
               ),
-            )),
+            ),
           ],
         ),
       ),
@@ -176,8 +218,22 @@ class QuotationScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: color)),
-        Text(label, style: TextStyle(fontSize: 9, color: Colors.black.withOpacity(0.5), fontWeight: FontWeight.w600)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 9,
+            color: Colors.black.withOpacity(0.5),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
     );
   }
@@ -193,7 +249,9 @@ class QuotationScreen extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected ? Colors.black : Colors.white.withOpacity(0.18),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: selected ? Colors.black : Colors.white.withOpacity(0.4)),
+            border: Border.all(
+              color: selected ? Colors.black : Colors.white.withOpacity(0.4),
+            ),
           ),
           child: Text(
             label,
@@ -208,7 +266,11 @@ class QuotationScreen extends StatelessWidget {
     );
   }
 
-  void _showDetail(BuildContext context, QuotationController controller, QuotationModel item) {
+  void _showDetail(
+    BuildContext context,
+    QuotationController controller,
+    QuotationModel item,
+  ) {
     controller.selectQuotation(item);
     showModalBottomSheet(
       context: context,
@@ -281,7 +343,9 @@ class _SearchFieldState extends State<_SearchField> {
       controller: _searchCtrl,
       onChanged: (v) {
         setState(() {});
-        v.isEmpty ? widget.controller.clearSearch() : widget.controller.searchQuotations(v);
+        v.isEmpty
+            ? widget.controller.clearSearch()
+            : widget.controller.searchQuotations(v);
       },
       style: const TextStyle(fontSize: 13, color: Colors.black87),
       decoration: InputDecoration(
@@ -299,7 +363,10 @@ class _SearchFieldState extends State<_SearchField> {
               )
             : null,
         border: InputBorder.none,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 11,
+        ),
         isDense: true,
       ),
     );
@@ -412,7 +479,10 @@ class _CreateQuotationWizard extends StatelessWidget {
         onChanged: controller.searchCustomers,
       ),
       if (controller.isSearchingCustomers.value)
-        const Padding(padding: EdgeInsets.all(8), child: Center(child: CircularProgressIndicator())),
+        const Padding(
+          padding: EdgeInsets.all(8),
+          child: Center(child: CircularProgressIndicator()),
+        ),
       ...controller.customerSearchResults.map(_customerTile),
       if (controller.selectedCustomer.value != null)
         _selectedCustomerCard(controller.selectedCustomer.value!),
@@ -422,7 +492,10 @@ class _CreateQuotationWizard extends StatelessWidget {
   Widget _customerTile(Map<String, dynamic> customer) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      title: Text(customer['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600)),
+      title: Text(
+        customer['name'] ?? '',
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
       subtitle: Text(customer['email'] ?? customer['phone'] ?? ''),
       trailing: Icon(Icons.chevron_right, color: kSubText),
       onTap: () => controller.selectCustomer(customer),
@@ -441,7 +514,10 @@ class _CreateQuotationWizard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(customer['name'] ?? '', style: TextStyle(fontWeight: FontWeight.w700, color: kPrimary)),
+          Text(
+            customer['name'] ?? '',
+            style: TextStyle(fontWeight: FontWeight.w700, color: kPrimary),
+          ),
           if (customer['email'] != null) Text(customer['email']),
           if (customer['phone'] != null) Text(customer['phone']),
           if (customer['company'] != null) Text(customer['company']),
@@ -466,7 +542,10 @@ class _CreateQuotationWizard extends StatelessWidget {
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),
                 isDense: true,
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
               ),
               onChanged: controller.searchProducts,
             ),
@@ -496,7 +575,9 @@ class _CreateQuotationWizard extends StatelessWidget {
               return ListTile(
                 dense: true,
                 title: Text(product['name'] ?? ''),
-                subtitle: Text('SKU: ${product['sku']} • ${_format(product['sellingPrice']?.toDouble() ?? 0)}'),
+                subtitle: Text(
+                  'SKU: ${product['sku']} • ${_format(product['sellingPrice']?.toDouble() ?? 0)}',
+                ),
                 trailing: Icon(Icons.add_circle, color: kPrimary),
                 onTap: () => controller.addProductToQuotation(product),
               );
@@ -510,7 +591,11 @@ class _CreateQuotationWizard extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-                Icon(Icons.inventory_2_outlined, size: 48, color: kSubText.withOpacity(0.3)),
+                Icon(
+                  Icons.inventory_2_outlined,
+                  size: 48,
+                  color: kSubText.withOpacity(0.3),
+                ),
                 const SizedBox(height: 8),
                 Text('No items added yet', style: TextStyle(color: kSubText)),
               ],
@@ -533,14 +618,27 @@ class _CreateQuotationWizard extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(line.productName, style: const TextStyle(fontWeight: FontWeight.w600)),
-                            Text('SKU: ${line.sku}', style: TextStyle(fontSize: 11, color: kSubText)),
+                            Text(
+                              line.productName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              'SKU: ${line.sku}',
+                              style: TextStyle(fontSize: 11, color: kSubText),
+                            ),
                           ],
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.close, size: 18, color: Colors.red.shade400),
-                        onPressed: () => controller.removeProductFromQuotation(index),
+                        icon: Icon(
+                          Icons.close,
+                          size: 18,
+                          color: Colors.red.shade400,
+                        ),
+                        onPressed: () =>
+                            controller.removeProductFromQuotation(index),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                       ),
@@ -558,11 +656,17 @@ class _CreateQuotationWizard extends StatelessWidget {
                             labelText: 'Qty',
                             isDense: true,
                             border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 6,
+                            ),
                           ),
                           onChanged: (v) {
                             final q = int.tryParse(v) ?? 1;
-                            controller.updateProductQuantity(index, q.clamp(1, 9999));
+                            controller.updateProductQuantity(
+                              index,
+                              q.clamp(1, 9999),
+                            );
                           },
                         ),
                       ),
@@ -576,7 +680,10 @@ class _CreateQuotationWizard extends StatelessWidget {
                             labelText: 'Price',
                             isDense: true,
                             border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 6,
+                            ),
                           ),
                           onChanged: (v) {
                             final p = double.tryParse(v) ?? 0;
@@ -594,11 +701,17 @@ class _CreateQuotationWizard extends StatelessWidget {
                             labelText: 'Disc%',
                             isDense: true,
                             border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 6,
+                            ),
                           ),
                           onChanged: (v) {
                             final d = double.tryParse(v) ?? 0;
-                            controller.updateProductDiscount(index, d.clamp(0, 100));
+                            controller.updateProductDiscount(
+                              index,
+                              d.clamp(0, 100),
+                            );
                           },
                         ),
                       ),
@@ -612,11 +725,17 @@ class _CreateQuotationWizard extends StatelessWidget {
                             labelText: 'Tax%',
                             isDense: true,
                             border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 6,
+                            ),
                           ),
                           onChanged: (v) {
                             final t = double.tryParse(v) ?? 0;
-                            controller.updateProductTaxRate(index, t.clamp(0, 100));
+                            controller.updateProductTaxRate(
+                              index,
+                              t.clamp(0, 100),
+                            );
                           },
                         ),
                       ),
@@ -626,8 +745,17 @@ class _CreateQuotationWizard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Text('Line Total: ', style: TextStyle(fontSize: 12, color: kSubText)),
-                      Text(_format(line.lineTotal), style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                      Text(
+                        'Line Total: ',
+                        style: TextStyle(fontSize: 12, color: kSubText),
+                      ),
+                      Text(
+                        _format(line.lineTotal),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -638,11 +766,23 @@ class _CreateQuotationWizard extends StatelessWidget {
       if (controller.lineDrafts.isNotEmpty) ...[
         const Divider(),
         _summaryRow('Subtotal', _format(controller.selectedSubtotal)),
-        _summaryRow('Discount', '-${_format(controller.selectedTotalDiscount)}', color: Colors.red),
-        _summaryRow('Tax', _format(controller.selectedTotalTax), color: Colors.blue),
+        _summaryRow(
+          'Discount',
+          '-${_format(controller.selectedTotalDiscount)}',
+          color: Colors.red,
+        ),
+        _summaryRow(
+          'Tax',
+          _format(controller.selectedTotalTax),
+          color: Colors.blue,
+        ),
         _summaryRow('Total Items', controller.totalItems.toString()),
         const Divider(),
-        _summaryRow('Grand Total', _format(controller.selectedGrandTotal), bold: true),
+        _summaryRow(
+          'Grand Total',
+          _format(controller.selectedGrandTotal),
+          bold: true,
+        ),
       ],
     ]);
   }
@@ -718,16 +858,28 @@ class _CreateQuotationWizard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _summaryRow('Customer', controller.selectedCustomer.value?['name'] ?? ''),
+            _summaryRow(
+              'Customer',
+              controller.selectedCustomer.value?['name'] ?? '',
+            ),
             _summaryRow('Items', controller.totalItems.toString()),
-            _summaryRow('Grand Total', _format(controller.selectedGrandTotal), bold: true),
+            _summaryRow(
+              'Grand Total',
+              _format(controller.selectedGrandTotal),
+              bold: true,
+            ),
           ],
         ),
       ),
     ]);
   }
 
-  Widget _summaryRow(String label, String value, {bool bold = false, Color? color}) {
+  Widget _summaryRow(
+    String label,
+    String value, {
+    bool bold = false,
+    Color? color,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -798,7 +950,10 @@ class _CreateQuotationWizard extends StatelessWidget {
             OutlinedButton(
               onPressed: controller.previousStep,
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -812,20 +967,34 @@ class _CreateQuotationWizard extends StatelessWidget {
               onPressed: controller.nextStep,
               style: ElevatedButton.styleFrom(
                 backgroundColor: kPrimary,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
                 elevation: 0,
               ),
-              child: const Text('Next', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
+              child: const Text(
+                'Next',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             )
           else
             ElevatedButton(
-              onPressed: controller.isSubmitting.value ? null : controller.createQuotation,
+              onPressed: controller.isSubmitting.value
+                  ? null
+                  : controller.createQuotation,
               style: ElevatedButton.styleFrom(
                 backgroundColor: kPrimary,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -835,9 +1004,18 @@ class _CreateQuotationWizard extends StatelessWidget {
                   ? const SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.black,
+                      ),
                     )
-                  : const Text('Create Quotation', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
+                  : const Text(
+                      'Create Quotation',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
             ),
         ],
       ),
@@ -911,7 +1089,10 @@ class _QuotationDetailSheetState extends State<_QuotationDetailSheet> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final current = widget.controller.quotations.firstWhereOrNull((q) => q.id == widget.quotationItem.id) ??
+      final current =
+          widget.controller.quotations.firstWhereOrNull(
+            (q) => q.id == widget.quotationItem.id,
+          ) ??
           widget.quotationItem;
 
       return Column(
@@ -953,7 +1134,10 @@ class _QuotationDetailSheetState extends State<_QuotationDetailSheet> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: _statusColor(current.status).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
@@ -973,19 +1157,29 @@ class _QuotationDetailSheetState extends State<_QuotationDetailSheet> {
           Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
           const SizedBox(height: 16),
           _detailRow('Customer', current.customerName),
-          if (current.customerEmail != null && current.customerEmail!.isNotEmpty)
+          if (current.customerEmail != null &&
+              current.customerEmail!.isNotEmpty)
             _detailRow('Email', current.customerEmail!),
-          if (current.customerPhone != null && current.customerPhone!.isNotEmpty)
+          if (current.customerPhone != null &&
+              current.customerPhone!.isNotEmpty)
             _detailRow('Phone', current.customerPhone!),
-          if (current.customerCompany != null && current.customerCompany!.isNotEmpty)
+          if (current.customerCompany != null &&
+              current.customerCompany!.isNotEmpty)
             _detailRow('Company', current.customerCompany!),
-          _detailRow('Date', DateFormat('dd MMM yyyy').format(current.quotationDate)),
-          _detailRow('Valid Until', DateFormat('dd MMM yyyy').format(current.validUntil)),
+          _detailRow(
+            'Date',
+            DateFormat('dd MMM yyyy').format(current.quotationDate),
+          ),
+          _detailRow(
+            'Valid Until',
+            DateFormat('dd MMM yyyy').format(current.validUntil),
+          ),
           if (current.salesPerson != null && current.salesPerson!.isNotEmpty)
             _detailRow('Sales Person', current.salesPerson!),
           if (current.notes != null && current.notes!.isNotEmpty)
             _detailRow('Notes', current.notes!),
-          if (current.termsConditions != null && current.termsConditions!.isNotEmpty)
+          if (current.termsConditions != null &&
+              current.termsConditions!.isNotEmpty)
             _detailRow('Terms', current.termsConditions!),
           if (current.convertedOrder != null) ...[
             _detailRow('Converted Order', current.convertedOrder!.orderNumber),
@@ -999,10 +1193,7 @@ class _QuotationDetailSheetState extends State<_QuotationDetailSheet> {
             children: [
               const Text(
                 'Items',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                ),
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
               ),
               Text(
                 '${current.totalItems} items',
@@ -1011,48 +1202,50 @@ class _QuotationDetailSheetState extends State<_QuotationDetailSheet> {
             ],
           ),
           const SizedBox(height: 8),
-          ...current.items.map((item) => Container(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: Colors.grey.withOpacity(0.06)),
+          ...current.items.map(
+            (item) => Container(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: Colors.grey.withOpacity(0.06)),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.productName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                        Text(
+                          'Qty: ${item.quantity} × ${_format(item.unitPrice)}',
+                          style: TextStyle(fontSize: 11, color: kSubText),
+                        ),
+                        if (item.discount > 0)
+                          Text(
+                            'Disc: ${item.discount}% • Tax: ${item.taxRate}%',
+                            style: TextStyle(fontSize: 10, color: Colors.blue),
+                          ),
+                      ],
+                    ),
                   ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.productName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                            ),
-                          ),
-                          Text(
-                            'Qty: ${item.quantity} × ${_format(item.unitPrice)}',
-                            style: TextStyle(fontSize: 11, color: kSubText),
-                          ),
-                          if (item.discount > 0)
-                            Text(
-                              'Disc: ${item.discount}% • Tax: ${item.taxRate}%',
-                              style: TextStyle(fontSize: 10, color: Colors.blue),
-                            ),
-                        ],
-                      ),
+                  Text(
+                    _format(item.lineTotal),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
                     ),
-                    Text(
-                      _format(item.lineTotal),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              )),
+                  ),
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(12),
@@ -1064,11 +1257,23 @@ class _QuotationDetailSheetState extends State<_QuotationDetailSheet> {
               children: [
                 _summaryRow('Subtotal', _format(current.subtotal)),
                 if (current.totalDiscount > 0)
-                  _summaryRow('Discount', '-${_format(current.totalDiscount)}', color: Colors.red),
+                  _summaryRow(
+                    'Discount',
+                    '-${_format(current.totalDiscount)}',
+                    color: Colors.red,
+                  ),
                 if (current.totalTax > 0)
-                  _summaryRow('Tax', _format(current.totalTax), color: Colors.blue),
+                  _summaryRow(
+                    'Tax',
+                    _format(current.totalTax),
+                    color: Colors.blue,
+                  ),
                 const Divider(height: 12),
-                _summaryRow('Grand Total', _format(current.grandTotal), bold: true),
+                _summaryRow(
+                  'Grand Total',
+                  _format(current.grandTotal),
+                  bold: true,
+                ),
               ],
             ),
           ),
@@ -1082,7 +1287,9 @@ class _QuotationDetailSheetState extends State<_QuotationDetailSheet> {
                     onPressed: widget.controller.isSubmitting.value
                         ? null
                         : () async {
-                            final ok = await widget.controller.sendQuotation(current.id);
+                            final ok = await widget.controller.sendQuotation(
+                              current.id,
+                            );
                             if (ok) widget.onClose();
                           },
                     style: ElevatedButton.styleFrom(
@@ -1106,7 +1313,9 @@ class _QuotationDetailSheetState extends State<_QuotationDetailSheet> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () async {
-                      final ok = await widget.controller.deleteQuotation(current.id);
+                      final ok = await widget.controller.deleteQuotation(
+                        current.id,
+                      );
                       if (ok) widget.onClose();
                     },
                     style: OutlinedButton.styleFrom(
@@ -1134,7 +1343,9 @@ class _QuotationDetailSheetState extends State<_QuotationDetailSheet> {
               onPressed: widget.controller.isSubmitting.value
                   ? null
                   : () async {
-                      final ok = await widget.controller.convertToOrder(current.id);
+                      final ok = await widget.controller.convertToOrder(
+                        current.id,
+                      );
                       if (ok) widget.onClose();
                     },
               style: ElevatedButton.styleFrom(
@@ -1156,7 +1367,9 @@ class _QuotationDetailSheetState extends State<_QuotationDetailSheet> {
             ),
             const SizedBox(height: 10),
           ],
-          if (current.isSent && !current.isAccepted && !current.isConverted) ...[
+          if (current.isSent &&
+              !current.isAccepted &&
+              !current.isConverted) ...[
             Row(
               children: [
                 Expanded(
@@ -1164,7 +1377,8 @@ class _QuotationDetailSheetState extends State<_QuotationDetailSheet> {
                     onPressed: widget.controller.isSubmitting.value
                         ? null
                         : () async {
-                            final ok = await widget.controller.updateQuotationStatus(current.id, 'Accepted');
+                            final ok = await widget.controller
+                                .updateQuotationStatus(current.id, 'Accepted');
                             if (ok) widget.onClose();
                           },
                     style: ElevatedButton.styleFrom(
@@ -1190,7 +1404,8 @@ class _QuotationDetailSheetState extends State<_QuotationDetailSheet> {
                     onPressed: widget.controller.isSubmitting.value
                         ? null
                         : () async {
-                            final ok = await widget.controller.updateQuotationStatus(current.id, 'Rejected');
+                            final ok = await widget.controller
+                                .updateQuotationStatus(current.id, 'Rejected');
                             if (ok) widget.onClose();
                           },
                     style: OutlinedButton.styleFrom(
@@ -1225,10 +1440,7 @@ class _QuotationDetailSheetState extends State<_QuotationDetailSheet> {
             ),
             child: Text(
               'Close',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: kSubText,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w600, color: kSubText),
             ),
           ),
         ],
@@ -1268,7 +1480,12 @@ class _QuotationDetailSheetState extends State<_QuotationDetailSheet> {
     );
   }
 
-  Widget _summaryRow(String label, String value, {bool bold = false, Color? color}) {
+  Widget _summaryRow(
+    String label,
+    String value, {
+    bool bold = false,
+    Color? color,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -1407,7 +1624,10 @@ class _QuotationListView extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimary,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -1457,7 +1677,9 @@ class _QuotationListView extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
-                          item.isConverted ? Icons.check_circle : Icons.receipt_long,
+                          item.isConverted
+                              ? Icons.check_circle
+                              : Icons.receipt_long,
                           color: color,
                           size: 22,
                         ),
@@ -1480,10 +1702,7 @@ class _QuotationListView extends StatelessWidget {
                             const SizedBox(height: 3),
                             Text(
                               item.customerName,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: kText,
-                              ),
+                              style: TextStyle(fontSize: 12, color: kText),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -1548,7 +1767,9 @@ class _QuotationListView extends StatelessWidget {
                                   ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  DateFormat('dd MMM yyyy').format(item.quotationDate),
+                                  DateFormat(
+                                    'dd MMM yyyy',
+                                  ).format(item.quotationDate),
                                   style: TextStyle(
                                     fontSize: 9,
                                     color: kSubText,

@@ -1,4 +1,8 @@
-import 'package:LedgerPro_app/Utils/responsive_utils.dart';
+// lib/core/login/screen/login_otp_screen.dart
+// Redesigned to match login_screen.dart style exactly
+
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -56,14 +60,14 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
   }
 
   // ══════════════════════════════════════════════════
-  // WEB LAYOUT
+  // WEB LAYOUT — matches login_screen web layout
   // ══════════════════════════════════════════════════
   Widget _buildWebLayout(BuildContext context) {
     final screenH = MediaQuery.of(context).size.height;
 
     return Row(
       children: [
-        // ── LEFT PANEL — full-bleed image ──────────────
+        // ── LEFT PANEL — same as login screen ──────────
         Expanded(
           flex: 1,
           child: SizedBox(
@@ -71,48 +75,44 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                // Same Unsplash warehouse image as login screen
                 Image.network(
                   'https://images.unsplash.com/photo-1553413077-190dd305871c?w=900&q=80&fit=crop',
                   fit: BoxFit.cover,
                   loadingBuilder: (context, child, progress) {
                     if (progress == null) return child;
                     return Container(
-                      color: const Color(0xFF0A3D5C),
+                      color: kPrimaryDark,
                       child: const Center(
                         child: CircularProgressIndicator(
-                          color: Color(0xFF1AB4F5),
+                          color: kPrimary,
                           strokeWidth: 2,
                         ),
                       ),
                     );
                   },
                   errorBuilder: (context, _, __) => Container(
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [Color(0xFF0A3D5C), Color(0xFF0A7FA8)],
+                        colors: [kPrimaryDark, kPrimary],
                       ),
                     ),
                   ),
                 ),
-
-                // Dark gradient overlay
                 Container(
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [Color(0x66000000), Color(0xCC000000)],
+                      colors: [
+                        Colors.black.withOpacity(0.4),
+                        Colors.black.withOpacity(0.8),
+                      ],
                     ),
                   ),
                 ),
-
-                // Blue brand tint
-                Container(color: const Color(0xFF0A7FA8).withOpacity(0.25)),
-
-                // Branding content pinned to bottom-left
+                Container(color: kPrimary.withOpacity(0.25)),
                 Positioned(
                   left: 36,
                   right: 36,
@@ -121,14 +121,13 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Logo lockup
                       Row(
                         children: [
                           Container(
                             width: 44,
                             height: 44,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1AB4F5),
+                              color: kPrimary,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(
@@ -139,7 +138,7 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
                           ),
                           const SizedBox(width: 12),
                           const Text(
-                            'LedgerPro',
+                            'BisonsTechs',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 22,
@@ -150,8 +149,6 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
                         ],
                       ),
                       const SizedBox(height: 20),
-
-                      // Security-focused tagline for OTP screen
                       const Text(
                         'Your Security\nComes First',
                         style: TextStyle(
@@ -170,10 +167,7 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
                           height: 1.6,
                         ),
                       ),
-
                       const SizedBox(height: 24),
-
-                      // Security feature pills
                       Wrap(
                         spacing: 10,
                         runSpacing: 10,
@@ -242,168 +236,103 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
   }
 
   // ══════════════════════════════════════════════════
-  // SHARED OTP FORM
+  // SHARED OTP FORM — styled like login form
   // ══════════════════════════════════════════════════
   Widget _buildOtpForm(BuildContext context) {
-    final bool isMobile = ResponsiveUtils.isMobile(context);
-    final bool isTablet = ResponsiveUtils.isTablet(context);
     final bool isWeb = ResponsiveUtils.isWeb(context);
+    final bool isTablet = ResponsiveUtils.isTablet(context);
 
-    // ── Pinput themes ──────────────────────────────
+    // Pinput themes — matches login field borders
     final defaultTheme = PinTheme(
       width: 52,
       height: 58,
       textStyle: const TextStyle(
         fontSize: 22,
         fontWeight: FontWeight.bold,
-        color: Color(0xFF1A1A2E),
+        color: Colors.black,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F8FC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!, width: 1),
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade400, width: 1),
       ),
     );
 
     final focusedTheme = defaultTheme.copyWith(
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF8FF),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF1AB4F5), width: 2),
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: kPrimary, width: 2),
       ),
     );
 
     final errorTheme = defaultTheme.copyWith(
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF5F5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red.shade300, width: 1.5),
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: kDanger, width: 1.5),
       ),
     );
 
     final submittedTheme = defaultTheme.copyWith(
       decoration: BoxDecoration(
-        color: const Color(0xFFEFF8FF),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF1AB4F5), width: 1.5),
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: kPrimary, width: 1.5),
       ),
     );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Back button — mobile/tablet only
+        // ── Top bar — mobile only, same as login ──────
         if (!isWeb)
-          IconButton(
-            padding: EdgeInsets.zero,
-            icon: Icon(
-              Icons.arrow_back,
-              color: const Color(0xFF1AB4F5),
-              size: isMobile ? 24 : 20,
-            ),
-            onPressed: () => Get.back(),
-          ),
-        if (!isWeb) const SizedBox(height: 16),
-
-        // Logo — mobile/tablet only
-        if (!isWeb)
-          Center(
-            child: Column(
-              children: [
-                Container(
-                  width: ResponsiveUtils.getLogoSize(context),
-                  height: ResponsiveUtils.getLogoSize(context),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF1AB4F5), Color(0xFF0D8CBF)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(
-                      ResponsiveUtils.getLogoSize(context) * 0.22,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF1AB4F5).withOpacity(0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 6),
+          Row(
+            children: [
+              const Expanded(
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.only(right: 48.0),
+                    child: Text(
+                      'Verify OTP',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
                       ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.account_balance,
-                    color: Colors.white,
-                    size: ResponsiveUtils.getLogoSize(context) * 0.5,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  'LedgerPro',
-                  style: TextStyle(
-                    fontSize: isTablet ? 18 : 16,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF1AB4F5),
-                    letterSpacing: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 20),
-              ],
-            ),
-          ),
-
-        // Shield icon
-        Center(
-          child: Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: const Color(0xFF1AB4F5).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFF1AB4F5).withOpacity(0.3),
-                width: 1.5,
               ),
-            ),
-            child: const Icon(
-              Icons.security_rounded,
-              color: Color(0xFF1AB4F5),
-              size: 36,
-            ),
+            ],
+          ),
+        if (!isWeb) const SizedBox(height: 32),
+
+        // ── Heading — same font/style as login "Welcome back" ──
+        Text(
+          'Enter the code sent\nto your email',
+          style: TextStyle(
+            fontSize: isTablet || isWeb ? 28 : 24,
+            fontWeight: FontWeight.bold,
+            color: kTextLight,
+            height: 1.2,
           ),
         ),
+        const SizedBox(height: 8),
 
-        const SizedBox(height: 20),
-
-        // Heading
-        Center(
-          child: Column(
+        // Email hint line
+        RichText(
+          text: TextSpan(
+            text: 'A 6-digit code was sent to ',
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             children: [
-              Text(
-                'Verify Your Identity',
+              TextSpan(
+                text: widget.email,
                 style: TextStyle(
-                  fontSize: ResponsiveUtils.getHeadingFontSize(context),
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1A1A2E),
+                  color: kPrimary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'A 6-digit security code was sent to',
-                style: TextStyle(
-                  fontSize: ResponsiveUtils.getSubheadingFontSize(context),
-                  color: Colors.grey[500],
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                widget.email,
-                style: TextStyle(
-                  fontSize: ResponsiveUtils.getSubheadingFontSize(context),
-                  color: const Color(0xFF1AB4F5),
-                  fontWeight: FontWeight.w700,
-                ),
-                textAlign: TextAlign.center,
               ),
             ],
           ),
@@ -411,62 +340,60 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
 
         const SizedBox(height: 32),
 
-        // OTP label
+        // ── OTP label — same as login field labels ────
         Text(
-          'Enter Verification Code',
+          'Verification Code',
           style: TextStyle(
-            fontSize: ResponsiveUtils.getSubheadingFontSize(context),
+            fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF1A1A2E),
+            color: Colors.grey.shade600,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
 
-        // ── Pinput ──────────────────────────────────
+        // ── Pinput ────────────────────────────────────
         Obx(() {
           final hasError = controller.otpError.value.isNotEmpty;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Pinput(
-                  length: 6,
-                  controller: controller.pinController,
-                  focusNode: controller.pinFocusNode,
-                  defaultPinTheme: defaultTheme,
-                  focusedPinTheme: focusedTheme,
-                  errorPinTheme: errorTheme,
-                  submittedPinTheme: submittedTheme,
-                  pinAnimationType: PinAnimationType.slide,
-                  hapticFeedbackType: HapticFeedbackType.lightImpact,
-                  forceErrorState: hasError,
-                  errorText: null,
-                  closeKeyboardWhenCompleted: true,
-                  onCompleted: (pin) => controller.verifyOtp(pin: pin),
-                  onChanged: (_) {
-                    if (controller.otpError.value.isNotEmpty) {
-                      controller.otpError.value = '';
-                    }
-                  },
-                ),
+              Pinput(
+                length: 6,
+                controller: controller.pinController,
+                focusNode: controller.pinFocusNode,
+                defaultPinTheme: defaultTheme,
+                focusedPinTheme: focusedTheme,
+                errorPinTheme: errorTheme,
+                submittedPinTheme: submittedTheme,
+                pinAnimationType: PinAnimationType.slide,
+                hapticFeedbackType: HapticFeedbackType.lightImpact,
+                forceErrorState: hasError,
+                errorText: null,
+                closeKeyboardWhenCompleted: true,
+                separatorBuilder: (i) => const SizedBox(width: 8),
+                onCompleted: (pin) => controller.verifyOtp(pin: pin),
+                onChanged: (_) {
+                  if (controller.otpError.value.isNotEmpty) {
+                    controller.otpError.value = '';
+                  }
+                },
               ),
 
-              // Error message
+              // Error — same red style as login field errors
               if (hasError)
                 Padding(
-                  padding: const EdgeInsets.only(top: 12),
+                  padding: const EdgeInsets.only(top: 8),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Icon(
                         Icons.error_outline_rounded,
-                        color: Colors.red,
-                        size: 15,
+                        color: kDanger,
+                        size: 14,
                       ),
                       const SizedBox(width: 6),
                       Text(
                         controller.otpError.value,
-                        style: const TextStyle(color: Colors.red, fontSize: 13),
+                        style: const TextStyle(color: kDanger, fontSize: 13),
                       ),
                     ],
                   ),
@@ -475,24 +402,24 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
           );
         }),
 
-        const SizedBox(height: 32),
+        const SizedBox(height: 24),
 
-        // Verify button
+        // ── Verify button — same pill style as login "Log in" button ──
         Obx(
           () => SizedBox(
             width: double.infinity,
-            height: ResponsiveUtils.getButtonHeight(context),
+            height: 54,
             child: ElevatedButton(
               onPressed: controller.isLoading.value
                   ? null
                   : () => controller.verifyOtp(),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1AB4F5),
+                backgroundColor: kPrimary,
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shadowColor: Colors.transparent,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(28),
                 ),
               ),
               child: controller.isLoading.value
@@ -515,51 +442,87 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
           ),
         ),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: 32),
 
-        // Security note
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.grey[50],
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[200]!),
+        // ── Divider — same as login ───────────────────
+        Row(
+          children: [
+            Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                'or',
+                style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+              ),
+            ),
+            Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
+          ],
+        ),
+
+        const SizedBox(height: 24),
+
+        // ── Resend code button — same outlined style as social buttons ──
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: OutlinedButton(
+            onPressed: () {
+              // TODO: resend OTP logic
+            },
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: Colors.grey.shade400, width: 1),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+              ),
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+              padding: EdgeInsets.zero,
+            ),
+            child: const Text(
+              'Resend Code',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.shield_outlined, color: Colors.grey[400], size: 18),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'LedgerPro will never ask for your OTP via phone or chat. If you didn\'t attempt to login, please secure your account immediately.',
-                  style: TextStyle(
-                    color: Colors.grey[500],
-                    fontSize: 12,
-                    height: 1.6,
-                  ),
+        ),
+
+        const SizedBox(height: 32),
+
+        // ── Bottom hint — same style as login "Don't have an account?" ──
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Wrong email? ',
+              style: TextStyle(
+                color: Colors.grey.shade700,
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            GestureDetector(
+              onTap: () => Get.back(),
+              child: Text(
+                'Go back',
+                style: TextStyle(
+                  color: kPrimary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
 
-        const SizedBox(height: 16),
-
-        Center(
-          child: Text(
-            'Can\'t find the email? Check your spam folder.',
-            style: TextStyle(color: Colors.grey[400], fontSize: 12),
-          ),
-        ),
-
-        const SizedBox(height: 16),
+        const SizedBox(height: 32),
       ],
     );
   }
 
-  // ── Helpers ────────────────────────────────────────────────
-
+  // ── Helpers ──────────────────────────────────────
   Widget _featurePill(IconData icon, String label) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),

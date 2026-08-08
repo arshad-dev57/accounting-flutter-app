@@ -1,6 +1,6 @@
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/core/warehouse/order/controller/order_customer_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/order/model/customer_model.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/controller/order_customer_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/model/customer_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
@@ -21,7 +21,10 @@ class _CustomerPickerSheetState extends State<CustomerPickerSheet> {
   @override
   void initState() {
     super.initState();
-    customerController = Get.put(OrderCustomerController(), tag: 'order_customer_picker');
+    customerController = Get.put(
+      OrderCustomerController(),
+      tag: 'order_customer_picker',
+    );
     customerController.resetAndLoad();
     _scrollController.addListener(_onScroll);
   }
@@ -43,7 +46,9 @@ class _CustomerPickerSheetState extends State<CustomerPickerSheet> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: SizedBox(
         height: MediaQuery.of(context).size.height * 0.75,
         child: Column(
@@ -55,10 +60,18 @@ class _CustomerPickerSheetState extends State<CustomerPickerSheet> {
                   const Icon(Icons.person_search, color: kPrimary),
                   const SizedBox(width: 8),
                   const Expanded(
-                    child: Text('Select Customer',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                    child: Text(
+                      'Select Customer',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
-                  IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
                 ],
               ),
             ),
@@ -68,7 +81,9 @@ class _CustomerPickerSheetState extends State<CustomerPickerSheet> {
                 decoration: InputDecoration(
                   hintText: 'Search by name, email or phone...',
                   prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
                 onChanged: customerController.onSearchChanged,
               ),
@@ -79,13 +94,19 @@ class _CustomerPickerSheetState extends State<CustomerPickerSheet> {
                 if (customerController.isLoading.value &&
                     customerController.customers.isEmpty) {
                   return Center(
-                    child: LoadingAnimationWidget.discreteCircle(color: kPrimary, size: 32),
+                    child: LoadingAnimationWidget.discreteCircle(
+                      color: kPrimary,
+                      size: 32,
+                    ),
                   );
                 }
 
                 if (customerController.customers.isEmpty) {
                   return Center(
-                    child: Text('No customers found', style: TextStyle(color: kSubText)),
+                    child: Text(
+                      'No customers found',
+                      style: TextStyle(color: kSubText),
+                    ),
                   );
                 }
 
@@ -97,7 +118,9 @@ class _CustomerPickerSheetState extends State<CustomerPickerSheet> {
                       if (customerController.isLoadingMore.value) {
                         return const Padding(
                           padding: EdgeInsets.all(16),
-                          child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                          child: Center(
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
                         );
                       }
                       return const SizedBox(height: 16);
@@ -111,16 +134,25 @@ class _CustomerPickerSheetState extends State<CustomerPickerSheet> {
                           customer.name.isNotEmpty
                               ? customer.name[0].toUpperCase()
                               : '?',
-                          style: TextStyle(color: kPrimary, fontWeight: FontWeight.w700),
+                          style: TextStyle(
+                            color: kPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
-                      title: Text(customer.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      title: Text(
+                        customer.name,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
                       subtitle: Text(
                         [
-                          customer.email,
-                          customer.phone,
-                          customer.customerNumber,
-                        ].whereType<String>().where((e) => e.isNotEmpty).join(' • '),
+                              customer.email,
+                              customer.phone,
+                              customer.customerNumber,
+                            ]
+                            .whereType<String>()
+                            .where((e) => e.isNotEmpty)
+                            .join(' • '),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),

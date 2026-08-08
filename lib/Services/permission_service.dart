@@ -111,7 +111,7 @@ class PermissionService extends GetxController {
         );
         user.value = userData;
         print('🔍 [PermissionService] User data loaded: ${userData.fullName}');
-        print('🔍 [PermissionService] User role: ${userData.role}');
+        print('🔍 [PermissionService] User role: "${userData.role}" | isAdmin: $isAdmin');
         print('🔍 [PermissionService] Permissions count: ${userData.permissions.length}');
       } else {
         print('⚠️ [PermissionService] No user data found in SharedPreferences');
@@ -145,7 +145,10 @@ class PermissionService extends GetxController {
     }
   }
 
-  bool get isAdmin => user.value?.role == 'admin';
+  bool get isAdmin {
+    final role = user.value?.role.toLowerCase().trim() ?? '';
+    return role == 'admin' || role == 'owner' || role == 'superadmin';
+  }
 
   bool hasPermission(String page) {
     if (user.value == null) return false;

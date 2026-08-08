@@ -1,12 +1,12 @@
 // lib/core/changepassword/controller/change_password_controller.dart
 
 import 'dart:convert';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/login/screen/login_screen.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:LedgerPro_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
 
 class ChangePasswordController extends GetxController {
   // Observable variables

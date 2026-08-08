@@ -1,6 +1,6 @@
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/core/warehouse/order/model/order_model.dart';
-import 'package:LedgerPro_app/core/warehouse/refunds/controller/sales_refund_controller.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/model/order_model.dart';
+import 'package:BisonsTechs_app/core/warehouse/refunds/controller/sales_refund_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -24,8 +24,14 @@ class CreateRefundForm extends StatelessWidget {
           children: [
             Row(
               children: [
-                IconButton(onPressed: onCancel, icon: const Icon(Icons.arrow_back)),
-                const Text('Create Refund', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                IconButton(
+                  onPressed: onCancel,
+                  icon: const Icon(Icons.arrow_back),
+                ),
+                const Text(
+                  'Create Refund',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -55,7 +61,9 @@ class CreateRefundForm extends StatelessWidget {
             _section('Refund Details', [
               TextField(
                 controller: controller.amountController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: 'Refund Amount *',
                   border: OutlineInputBorder(),
@@ -64,12 +72,16 @@ class CreateRefundForm extends StatelessWidget {
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 value: controller.refundMethod.value,
-                decoration: const InputDecoration(labelText: 'Refund Method', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                  labelText: 'Refund Method',
+                  border: OutlineInputBorder(),
+                ),
                 items: SalesRefundController.methodOptions
                     .where((m) => m != 'all')
                     .map((m) => DropdownMenuItem(value: m, child: Text(m)))
                     .toList(),
-                onChanged: (v) => controller.refundMethod.value = v ?? 'Original Payment',
+                onChanged: (v) =>
+                    controller.refundMethod.value = v ?? 'Original Payment',
               ),
               const SizedBox(height: 12),
               TextField(
@@ -93,17 +105,26 @@ class CreateRefundForm extends StatelessWidget {
                 const SizedBox(height: 12),
                 TextField(
                   controller: controller.bankNameController,
-                  decoration: const InputDecoration(labelText: 'Bank Name *', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Bank Name *',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: controller.accountNumberController,
-                  decoration: const InputDecoration(labelText: 'Account Number *', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Account Number *',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: controller.accountHolderController,
-                  decoration: const InputDecoration(labelText: 'Account Holder *', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(
+                    labelText: 'Account Holder *',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
               ],
               const SizedBox(height: 12),
@@ -117,7 +138,9 @@ class CreateRefundForm extends StatelessWidget {
             ]),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: controller.isSubmitting.value ? null : controller.createRefund,
+              onPressed: controller.isSubmitting.value
+                  ? null
+                  : controller.createRefund,
               style: ElevatedButton.styleFrom(
                 backgroundColor: kPrimary,
                 padding: const EdgeInsets.symmetric(vertical: 14),
@@ -126,9 +149,18 @@ class CreateRefundForm extends StatelessWidget {
                   ? const SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.black,
+                      ),
                     )
-                  : const Text('Submit Refund', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
+                  : const Text(
+                      'Submit Refund',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
             ),
           ],
         ),
@@ -147,7 +179,10 @@ class CreateRefundForm extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+          Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+          ),
           const SizedBox(height: 12),
           ...children,
         ],
@@ -158,8 +193,13 @@ class CreateRefundForm extends StatelessWidget {
   Widget _orderTile(OrderModel order) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      title: Text(order.orderNumber, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text('${order.customerName} • ${order.grandTotal.toStringAsFixed(2)}'),
+      title: Text(
+        order.orderNumber,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
+      subtitle: Text(
+        '${order.customerName} • ${order.grandTotal.toStringAsFixed(2)}',
+      ),
       trailing: const Icon(Icons.chevron_right),
       onTap: () => controller.selectOrderForRefund(order),
     );
@@ -176,7 +216,10 @@ class CreateRefundForm extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(order.orderNumber, style: TextStyle(fontWeight: FontWeight.w700, color: kPrimary)),
+          Text(
+            order.orderNumber,
+            style: TextStyle(fontWeight: FontWeight.w700, color: kPrimary),
+          ),
           Text(order.customerName),
           Text('Total: ${order.grandTotal.toStringAsFixed(2)}'),
         ],

@@ -1,6 +1,6 @@
 {
-    "name": "LedgerPro_app",
-    "short_name": "LedgerPro_app",
+    "name": "BisonsTechs_app",
+    "short_name": "BisonsTechs_app",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

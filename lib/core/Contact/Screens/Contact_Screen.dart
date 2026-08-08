@@ -1,5 +1,5 @@
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/core/dashboard/Screens/dashbaord_screen.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/dashboard/Screens/dashbaord_screen.dart';
 import 'package:flutter/material.dart';
 
 class ContactScreen extends StatefulWidget {
@@ -11,11 +11,12 @@ class ContactScreen extends StatefulWidget {
 
 class _ContactScreenState extends State<ContactScreen> {
   final TextEditingController _contactNameController = TextEditingController();
-  final TextEditingController _accountNumberController = TextEditingController();
+  final TextEditingController _accountNumberController =
+      TextEditingController();
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-    final List<Map<String, TextEditingController>> _phoneNumbers = [];
+  final List<Map<String, TextEditingController>> _phoneNumbers = [];
   final List<Map<String, TextEditingController>> _addresses = [];
   final List<TextEditingController> _notes = [];
 
@@ -83,19 +84,19 @@ class _ContactScreenState extends State<ContactScreen> {
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
-    
+
     for (var phone in _phoneNumbers) {
       phone['number']?.dispose();
     }
-    
+
     for (var address in _addresses) {
       address['address']?.dispose();
     }
-    
+
     for (var note in _notes) {
       note.dispose();
     }
-    
+
     super.dispose();
   }
 
@@ -113,10 +114,10 @@ class _ContactScreenState extends State<ContactScreen> {
       backgroundColor: Colors.white,
       elevation: 0,
       leading: IconButton(
-        icon:  Icon(Icons.arrow_back, color: kText),
+        icon: Icon(Icons.arrow_back, color: kText),
         onPressed: () => Navigator.pop(context),
       ),
-      title:  Text(
+      title: Text(
         'Contact',
         style: TextStyle(
           color: kText,
@@ -132,12 +133,9 @@ class _ContactScreenState extends State<ContactScreen> {
             foregroundColor: kPrimary,
             padding: const EdgeInsets.symmetric(horizontal: 16),
           ),
-          child:Text(
+          child: Text(
             'Save',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ),
       ],
@@ -154,27 +152,27 @@ class _ContactScreenState extends State<ContactScreen> {
           // Contact Name Section
           _buildContactNameSection(),
           const SizedBox(height: 12),
-          
+
           // Account Number Section
           _buildAccountNumberSection(),
           const SizedBox(height: 12),
-          
+
           // Primary Person Section
           _buildPrimaryPersonSection(),
           const SizedBox(height: 12),
-          
+
           // Email Address Section
           _buildEmailSection(),
           const SizedBox(height: 12),
-          
+
           // Phone Numbers Section
           _buildPhoneNumbersSection(),
           const SizedBox(height: 12),
-          
+
           // Addresses Section
           _buildAddressesSection(),
           const SizedBox(height: 12),
-          
+
           // Notes Section
           _buildNotesSection(),
           const SizedBox(height: 20),
@@ -193,7 +191,7 @@ class _ContactScreenState extends State<ContactScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-           Text(
+          Text(
             'What is the contact\'s name',
             style: TextStyle(
               fontSize: 14,
@@ -212,8 +210,15 @@ class _ContactScreenState extends State<ContactScreen> {
               controller: _contactNameController,
               decoration: InputDecoration(
                 hintText: 'Enter contact name',
-                hintStyle: TextStyle(color: kSubText.withOpacity(0.5), fontSize: 14),
-                prefixIcon: Icon(Icons.person_outline, color: kSubText, size: 20),
+                hintStyle: TextStyle(
+                  color: kSubText.withOpacity(0.5),
+                  fontSize: 14,
+                ),
+                prefixIcon: Icon(
+                  Icons.person_outline,
+                  color: kSubText,
+                  size: 20,
+                ),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 14),
               ),
@@ -234,7 +239,7 @@ class _ContactScreenState extends State<ContactScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-           Text(
+          Text(
             'ACCOUNT NUMBER',
             style: TextStyle(
               fontSize: 14,
@@ -253,8 +258,15 @@ class _ContactScreenState extends State<ContactScreen> {
               controller: _accountNumberController,
               decoration: InputDecoration(
                 hintText: 'Enter an account number',
-                hintStyle: TextStyle(color: kSubText.withOpacity(0.5), fontSize: 14),
-                prefixIcon: Icon(Icons.account_balance_outlined, color: kSubText, size: 20),
+                hintStyle: TextStyle(
+                  color: kSubText.withOpacity(0.5),
+                  fontSize: 14,
+                ),
+                prefixIcon: Icon(
+                  Icons.account_balance_outlined,
+                  color: kSubText,
+                  size: 20,
+                ),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 14),
               ),
@@ -271,11 +283,11 @@ class _ContactScreenState extends State<ContactScreen> {
   Widget _buildPrimaryPersonSection() {
     return Container(
       color: Colors.white,
-      padding:  EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-           Text(
+          Text(
             'PRIMARY PERSON',
             style: TextStyle(
               fontSize: 14,
@@ -316,13 +328,7 @@ class _ContactScreenState extends State<ContactScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: kSubText,
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 12, color: kSubText)),
         const SizedBox(height: 4),
         Container(
           decoration: BoxDecoration(
@@ -334,7 +340,10 @@ class _ContactScreenState extends State<ContactScreen> {
             controller: controller,
             decoration: InputDecoration(
               hintText: 'Enter $label',
-              hintStyle: TextStyle(color: kSubText.withOpacity(0.5), fontSize: 13),
+              hintStyle: TextStyle(
+                color: kSubText.withOpacity(0.5),
+                fontSize: 13,
+              ),
               prefixIcon: Icon(icon, color: kSubText, size: 18),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(vertical: 12),
@@ -352,7 +361,7 @@ class _ContactScreenState extends State<ContactScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-           Text(
+          Text(
             'Email Address',
             style: TextStyle(
               fontSize: 14,
@@ -372,8 +381,15 @@ class _ContactScreenState extends State<ContactScreen> {
               keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
                 hintText: 'Enter email address',
-                hintStyle: TextStyle(color: kSubText.withOpacity(0.5), fontSize: 14),
-                prefixIcon: Icon(Icons.email_outlined, color: kSubText, size: 20),
+                hintStyle: TextStyle(
+                  color: kSubText.withOpacity(0.5),
+                  fontSize: 14,
+                ),
+                prefixIcon: Icon(
+                  Icons.email_outlined,
+                  color: kSubText,
+                  size: 20,
+                ),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 14),
               ),
@@ -391,7 +407,7 @@ class _ContactScreenState extends State<ContactScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-           Text(
+          Text(
             'NUMBER',
             style: TextStyle(
               fontSize: 14,
@@ -400,7 +416,7 @@ class _ContactScreenState extends State<ContactScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          
+
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -410,7 +426,7 @@ class _ContactScreenState extends State<ContactScreen> {
               return _buildPhoneNumberTile(index);
             },
           ),
-          
+
           const SizedBox(height: 8),
           TextButton.icon(
             onPressed: _addNewPhoneNumber,
@@ -480,8 +496,15 @@ class _ContactScreenState extends State<ContactScreen> {
               keyboardType: TextInputType.phone,
               decoration: InputDecoration(
                 hintText: 'Enter phone number',
-                hintStyle: TextStyle(color: kSubText.withOpacity(0.5), fontSize: 13),
-                prefixIcon: Icon(Icons.phone_outlined, color: kSubText, size: 18),
+                hintStyle: TextStyle(
+                  color: kSubText.withOpacity(0.5),
+                  fontSize: 13,
+                ),
+                prefixIcon: Icon(
+                  Icons.phone_outlined,
+                  color: kSubText,
+                  size: 18,
+                ),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 12),
               ),
@@ -507,7 +530,7 @@ class _ContactScreenState extends State<ContactScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-           Text(
+          Text(
             'ADDRESS',
             style: TextStyle(
               fontSize: 14,
@@ -516,7 +539,7 @@ class _ContactScreenState extends State<ContactScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          
+
           // List of addresses
           ListView.separated(
             shrinkWrap: true,
@@ -527,9 +550,9 @@ class _ContactScreenState extends State<ContactScreen> {
               return _buildAddressTile(index);
             },
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           // Add new address button
           TextButton.icon(
             onPressed: _addNewAddress,
@@ -608,7 +631,10 @@ class _ContactScreenState extends State<ContactScreen> {
             minLines: 2,
             decoration: InputDecoration(
               hintText: 'Enter full address',
-              hintStyle: TextStyle(color: kSubText.withOpacity(0.5), fontSize: 13),
+              hintStyle: TextStyle(
+                color: kSubText.withOpacity(0.5),
+                fontSize: 13,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(color: kBorder),
@@ -639,7 +665,7 @@ class _ContactScreenState extends State<ContactScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-           Text(
+          Text(
             'NOTE',
             style: TextStyle(
               fontSize: 14,
@@ -648,7 +674,7 @@ class _ContactScreenState extends State<ContactScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          
+
           // List of notes
           ListView.separated(
             shrinkWrap: true,
@@ -659,9 +685,9 @@ class _ContactScreenState extends State<ContactScreen> {
               return _buildNoteTile(index);
             },
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           // Add new note button
           TextButton.icon(
             onPressed: _addNewNote,
@@ -699,10 +725,20 @@ class _ContactScreenState extends State<ContactScreen> {
               minLines: 2,
               decoration: InputDecoration(
                 hintText: 'Enter note',
-                hintStyle: TextStyle(color: kSubText.withOpacity(0.5), fontSize: 13),
-                prefixIcon: Icon(Icons.note_outlined, color: kSubText, size: 18),
+                hintStyle: TextStyle(
+                  color: kSubText.withOpacity(0.5),
+                  fontSize: 13,
+                ),
+                prefixIcon: Icon(
+                  Icons.note_outlined,
+                  color: kSubText,
+                  size: 18,
+                ),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
               ),
             ),
           ),
@@ -774,12 +810,10 @@ class _ContactScreenState extends State<ContactScreen> {
         content: Text('Contact saved successfully'),
         backgroundColor: Colors.green,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
-    
+
     Navigator.pop(context);
   }
 
@@ -793,9 +827,7 @@ class _ContactScreenState extends State<ContactScreen> {
         content: Text(message),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }

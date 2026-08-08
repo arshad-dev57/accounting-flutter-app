@@ -1,5 +1,5 @@
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/core/Users/controller/user_management_controller.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/Users/controller/user_management_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -9,10 +9,12 @@ class EnhancedAccessManagementScreen extends StatefulWidget {
   const EnhancedAccessManagementScreen({super.key, this.userId});
 
   @override
-  State<EnhancedAccessManagementScreen> createState() => _EnhancedAccessManagementScreenState();
+  State<EnhancedAccessManagementScreen> createState() =>
+      _EnhancedAccessManagementScreenState();
 }
 
-class _EnhancedAccessManagementScreenState extends State<EnhancedAccessManagementScreen> {
+class _EnhancedAccessManagementScreenState
+    extends State<EnhancedAccessManagementScreen> {
   late final UserManagementController _controller;
   User? _selectedUser;
   String? _selectedModule;
@@ -30,7 +32,9 @@ class _EnhancedAccessManagementScreenState extends State<EnhancedAccessManagemen
     if (widget.userId == null || widget.userId!.isEmpty) {
       return;
     }
-    _selectedUser = _controller.users.firstWhereOrNull((u) => u.id == widget.userId);
+    _selectedUser = _controller.users.firstWhereOrNull(
+      (u) => u.id == widget.userId,
+    );
     if (_selectedUser != null) {
       _controller.initializeModulePermissions(_selectedUser!);
     }
@@ -129,7 +133,7 @@ class _EnhancedAccessManagementScreenState extends State<EnhancedAccessManagemen
             itemBuilder: (context, index) {
               final config = UserManagementController.moduleConfigs[index];
               final modulePerm = _controller.modulePermissions[config.module];
-              
+
               return _ModulePermissionCard(
                 config: config,
                 permission: modulePerm,
@@ -169,7 +173,7 @@ class _EnhancedAccessManagementScreenState extends State<EnhancedAccessManagemen
             itemBuilder: (context, index) {
               final subPage = config.subPages[index];
               final perm = subPages?[subPage.page];
-              
+
               return _SubPagePermissionCard(
                 subPage: subPage,
                 permission: perm,
@@ -203,7 +207,10 @@ class _EnhancedAccessManagementScreenState extends State<EnhancedAccessManagemen
             backgroundColor: kPrimary,
             child: Text(
               _selectedUser!.fullName[0].toUpperCase(),
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -222,10 +229,7 @@ class _EnhancedAccessManagementScreenState extends State<EnhancedAccessManagemen
                 const SizedBox(height: 4),
                 Text(
                   _selectedUser!.email,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 4),
                 Row(
@@ -283,10 +287,7 @@ class _EnhancedAccessManagementScreenState extends State<EnhancedAccessManagemen
                 const SizedBox(height: 4),
                 Text(
                   'Configure sub-page access permissions',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ],
             ),
@@ -346,10 +347,7 @@ class _ModulePermissionCard extends StatelessWidget {
         ),
         subtitle: Text(
           '${config.subPages.length} sub-pages',
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[500],
-          ),
+          style: TextStyle(fontSize: 12, color: Colors.grey[500]),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -359,11 +357,7 @@ class _ModulePermissionCard extends StatelessWidget {
               onChanged: onAccessChanged,
               activeColor: kPrimary,
             ),
-            if (hasAccess)
-              Icon(
-                Icons.chevron_right,
-                color: Colors.grey[400],
-              ),
+            if (hasAccess) Icon(Icons.chevron_right, color: Colors.grey[400]),
           ],
         ),
         onTap: hasAccess ? onTap : null,

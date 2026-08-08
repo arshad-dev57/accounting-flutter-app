@@ -1,11 +1,11 @@
 // lib/core/warehouse/delivery/views/delivery_screen.dart
 
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/Utils/responsive_utils.dart';
-import 'package:LedgerPro_app/core/warehouse/Delievery/deleivery_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/Delievery/deleivery_model.dart';
-import 'package:LedgerPro_app/widgets/sales_drawer.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
+import 'package:BisonsTechs_app/core/warehouse/Delievery/deleivery_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/Delievery/deleivery_model.dart';
+import 'package:BisonsTechs_app/widgets/sales_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -22,7 +22,9 @@ class DeliveryScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: kBgLight,
-      drawer: isMobile ? const SalesDrawer(currentRoute: '/sales/delivery') : null,
+      drawer: isMobile
+          ? const SalesDrawer(currentRoute: '/sales/delivery')
+          : null,
       appBar: AppBar(
         title: const Text(
           'Deliveries',
@@ -34,12 +36,10 @@ class DeliveryScreen extends StatelessWidget {
         ),
         backgroundColor: kPrimary,
         elevation: 0,
-        leading: 
-           
-             IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.black),
-                onPressed: () => Get.back(),
-              ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Get.back(),
+        ),
         actions: [
           // Refresh Button
           IconButton(
@@ -106,26 +106,42 @@ class DeliveryScreen extends StatelessWidget {
                             letterSpacing: -0.3,
                           ),
                         ),
-                        Obx(() => Text(
-                          '${controller.totalRecords.value} deliveries',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.black.withOpacity(0.55),
-                            fontWeight: FontWeight.w500,
+                        Obx(
+                          () => Text(
+                            '${controller.totalRecords.value} deliveries',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.black.withOpacity(0.55),
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        )),
+                        ),
                       ],
                     ),
                   ),
-                  Obx(() => Row(
-                    children: [
-                      _compactKpi('Pending', controller.stats.value.pending.toString(), Colors.orange.shade800),
-                      const SizedBox(width: 10),
-                      _compactKpi('Partial', controller.stats.value.partiallyDelivered.toString(), Colors.blue.shade800),
-                      const SizedBox(width: 10),
-                      _compactKpi('Delivered', controller.stats.value.delivered.toString(), Colors.green.shade800),
-                    ],
-                  )),
+                  Obx(
+                    () => Row(
+                      children: [
+                        _compactKpi(
+                          'Pending',
+                          controller.stats.value.pending.toString(),
+                          Colors.orange.shade800,
+                        ),
+                        const SizedBox(width: 10),
+                        _compactKpi(
+                          'Partial',
+                          controller.stats.value.partiallyDelivered.toString(),
+                          Colors.blue.shade800,
+                        ),
+                        const SizedBox(width: 10),
+                        _compactKpi(
+                          'Delivered',
+                          controller.stats.value.delivered.toString(),
+                          Colors.green.shade800,
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -147,18 +163,36 @@ class DeliveryScreen extends StatelessWidget {
                 child: _SearchField(controller: controller),
               ),
             ),
-            Obx(() => SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-              child: Row(
-                children: [
-                  _filterChip('All', controller.selectedFilter.value == 'all', () => controller.filterDeliveries('all')),
-                  _filterChip('Pending', controller.selectedFilter.value == 'Pending', () => controller.filterDeliveries('Pending')),
-                  _filterChip('Partially', controller.selectedFilter.value == 'Partially Delivered', () => controller.filterDeliveries('Partially Delivered')),
-                  _filterChip('Delivered', controller.selectedFilter.value == 'Delivered', () => controller.filterDeliveries('Delivered')),
-                ],
+            Obx(
+              () => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                child: Row(
+                  children: [
+                    _filterChip(
+                      'All',
+                      controller.selectedFilter.value == 'all',
+                      () => controller.filterDeliveries('all'),
+                    ),
+                    _filterChip(
+                      'Pending',
+                      controller.selectedFilter.value == 'Pending',
+                      () => controller.filterDeliveries('Pending'),
+                    ),
+                    _filterChip(
+                      'Partially',
+                      controller.selectedFilter.value == 'Partially Delivered',
+                      () => controller.filterDeliveries('Partially Delivered'),
+                    ),
+                    _filterChip(
+                      'Delivered',
+                      controller.selectedFilter.value == 'Delivered',
+                      () => controller.filterDeliveries('Delivered'),
+                    ),
+                  ],
+                ),
               ),
-            )),
+            ),
           ],
         ),
       ),
@@ -169,8 +203,22 @@ class DeliveryScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: color)),
-        Text(label, style: TextStyle(fontSize: 9, color: Colors.black.withOpacity(0.5), fontWeight: FontWeight.w600)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 9,
+            color: Colors.black.withOpacity(0.5),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
     );
   }
@@ -186,7 +234,9 @@ class DeliveryScreen extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected ? Colors.black : Colors.white.withOpacity(0.18),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: selected ? Colors.black : Colors.white.withOpacity(0.4)),
+            border: Border.all(
+              color: selected ? Colors.black : Colors.white.withOpacity(0.4),
+            ),
           ),
           child: Text(
             label,
@@ -201,7 +251,11 @@ class DeliveryScreen extends StatelessWidget {
     );
   }
 
-  void _showDetail(BuildContext context, DeliveryController controller, DeliveryModel item) {
+  void _showDetail(
+    BuildContext context,
+    DeliveryController controller,
+    DeliveryModel item,
+  ) {
     controller.selectDelivery(item);
     showModalBottomSheet(
       context: context,
@@ -274,7 +328,9 @@ class _SearchFieldState extends State<_SearchField> {
       controller: _searchCtrl,
       onChanged: (v) {
         setState(() {});
-        v.isEmpty ? widget.controller.clearSearch() : widget.controller.searchDeliveries(v);
+        v.isEmpty
+            ? widget.controller.clearSearch()
+            : widget.controller.searchDeliveries(v);
       },
       style: const TextStyle(fontSize: 13, color: Colors.black87),
       decoration: InputDecoration(
@@ -292,7 +348,10 @@ class _SearchFieldState extends State<_SearchField> {
               )
             : null,
         border: InputBorder.none,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 11,
+        ),
         isDense: true,
       ),
     );
@@ -399,7 +458,10 @@ class _CreateDeliveryWizard extends StatelessWidget {
         onChanged: controller.searchOrders,
       ),
       if (controller.isSearchingOrders.value)
-        const Padding(padding: EdgeInsets.all(8), child: Center(child: CircularProgressIndicator())),
+        const Padding(
+          padding: EdgeInsets.all(8),
+          child: Center(child: CircularProgressIndicator()),
+        ),
       ...controller.orderSearchResults.map(_orderTile),
       if (controller.selectedOrder.value != null)
         _selectedOrderCard(controller.selectedOrder.value!),
@@ -424,15 +486,21 @@ class _CreateDeliveryWizard extends StatelessWidget {
                     onChanged: (v) {
                       line.selected.value = v ?? false;
                     },
-                    title: Text(line.productName, style: const TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Text('SKU: ${line.sku} • Qty ordered: ${line.orderQuantity}'),
+                    title: Text(
+                      line.productName,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Text(
+                      'SKU: ${line.sku} • Qty ordered: ${line.orderQuantity}',
+                    ),
                   ),
                   if (line.selected.value) ...[
                     Row(
                       children: [
                         Expanded(
                           child: TextFormField(
-                            initialValue: line.deliveryQuantity.value.toString(),
+                            initialValue: line.deliveryQuantity.value
+                                .toString(),
                             keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
                               labelText: 'Delivery Qty',
@@ -441,14 +509,20 @@ class _CreateDeliveryWizard extends StatelessWidget {
                             ),
                             onChanged: (v) {
                               final q = int.tryParse(v) ?? 1;
-                              line.deliveryQuantity.value = q.clamp(1, line.remainingQuantity);
+                              line.deliveryQuantity.value = q.clamp(
+                                1,
+                                line.remainingQuantity,
+                              );
                             },
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
                               border: Border.all(color: Colors.grey.shade300),
                               borderRadius: BorderRadius.circular(8),
@@ -458,7 +532,10 @@ class _CreateDeliveryWizard extends StatelessWidget {
                               children: [
                                 Text(
                                   'Remaining',
-                                  style: TextStyle(fontSize: 11, color: kSubText),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: kSubText,
+                                  ),
                                 ),
                                 Text(
                                   '${line.remainingQuantity}',
@@ -544,9 +621,18 @@ class _CreateDeliveryWizard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _summaryRow('Total Items', controller.totalDeliveryQuantity.toString()),
-            _summaryRow('Order #', controller.selectedOrder.value?.orderNumber ?? ''),
-            _summaryRow('Customer', controller.selectedOrder.value?.customerName ?? ''),
+            _summaryRow(
+              'Total Items',
+              controller.totalDeliveryQuantity.toString(),
+            ),
+            _summaryRow(
+              'Order #',
+              controller.selectedOrder.value?.orderNumber ?? '',
+            ),
+            _summaryRow(
+              'Customer',
+              controller.selectedOrder.value?.customerName ?? '',
+            ),
           ],
         ),
       ),
@@ -560,10 +646,13 @@ class _CreateDeliveryWizard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: TextStyle(color: kSubText)),
-          Text(value, style: TextStyle(
-            fontWeight: bold ? FontWeight.w800 : FontWeight.w500,
-            color: bold ? kPrimary : kText,
-          )),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: bold ? FontWeight.w800 : FontWeight.w500,
+              color: bold ? kPrimary : kText,
+            ),
+          ),
         ],
       ),
     );
@@ -588,7 +677,10 @@ class _CreateDeliveryWizard extends StatelessWidget {
             OutlinedButton(
               onPressed: controller.previousStep,
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -602,20 +694,34 @@ class _CreateDeliveryWizard extends StatelessWidget {
               onPressed: controller.nextStep,
               style: ElevatedButton.styleFrom(
                 backgroundColor: kPrimary,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
                 elevation: 0,
               ),
-              child: const Text('Next', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
+              child: const Text(
+                'Next',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             )
           else
             ElevatedButton(
-              onPressed: controller.isSubmitting.value ? null : controller.createDelivery,
+              onPressed: controller.isSubmitting.value
+                  ? null
+                  : controller.createDelivery,
               style: ElevatedButton.styleFrom(
                 backgroundColor: kPrimary,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -625,9 +731,18 @@ class _CreateDeliveryWizard extends StatelessWidget {
                   ? const SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.black,
+                      ),
                     )
-                  : const Text('Create Delivery', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
+                  : const Text(
+                      'Create Delivery',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
             ),
         ],
       ),
@@ -670,8 +785,13 @@ class _CreateDeliveryWizard extends StatelessWidget {
   Widget _orderTile(OrderForDelivery order) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      title: Text(order.orderNumber, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text('${order.customerName} • ${order.items.length} items available'),
+      title: Text(
+        order.orderNumber,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
+      subtitle: Text(
+        '${order.customerName} • ${order.items.length} items available',
+      ),
       trailing: Icon(Icons.chevron_right, color: kSubText),
       onTap: () => controller.selectOrderForDelivery(order),
     );
@@ -689,7 +809,10 @@ class _CreateDeliveryWizard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(order.orderNumber, style: TextStyle(fontWeight: FontWeight.w700, color: kPrimary)),
+          Text(
+            order.orderNumber,
+            style: TextStyle(fontWeight: FontWeight.w700, color: kPrimary),
+          ),
           Text(order.customerName),
           Text('${order.items.length} items available for delivery'),
         ],
@@ -697,7 +820,6 @@ class _CreateDeliveryWizard extends StatelessWidget {
     );
   }
 }
-
 
 class _DeliveryDetailSheet extends StatelessWidget {
   final DeliveryController controller;
@@ -729,7 +851,10 @@ class _DeliveryDetailSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final current = controller.deliveries.firstWhereOrNull((d) => d.id == deliveryItem.id) ??
+      final current =
+          controller.deliveries.firstWhereOrNull(
+            (d) => d.id == deliveryItem.id,
+          ) ??
           deliveryItem;
 
       return Column(
@@ -744,7 +869,11 @@ class _DeliveryDetailSheet extends StatelessWidget {
                   color: _statusColor(current.deliveryStatus).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(Icons.local_shipping, color: _statusColor(current.deliveryStatus), size: 24),
+                child: Icon(
+                  Icons.local_shipping,
+                  color: _statusColor(current.deliveryStatus),
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -767,7 +896,10 @@ class _DeliveryDetailSheet extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: _statusColor(current.deliveryStatus).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
@@ -788,15 +920,23 @@ class _DeliveryDetailSheet extends StatelessWidget {
           const SizedBox(height: 16),
           _detailRow('Order', current.salesOrderNumber),
           _detailRow('Customer', current.customerName),
-          _detailRow('Date', DateFormat('dd MMM yyyy').format(current.deliveryDate)),
-          if (current.deliveryPerson != null && current.deliveryPerson!.isNotEmpty)
+          _detailRow(
+            'Date',
+            DateFormat('dd MMM yyyy').format(current.deliveryDate),
+          ),
+          if (current.deliveryPerson != null &&
+              current.deliveryPerson!.isNotEmpty)
             _detailRow('Delivery Person', current.deliveryPerson!),
-          if (current.trackingNumber != null && current.trackingNumber!.isNotEmpty)
+          if (current.trackingNumber != null &&
+              current.trackingNumber!.isNotEmpty)
             _detailRow('Tracking', current.trackingNumber!),
           if (current.notes != null && current.notes!.isNotEmpty)
             _detailRow('Notes', current.notes!),
           if (current.confirmedAt != null)
-            _detailRow('Confirmed', DateFormat('dd MMM yyyy HH:mm').format(current.confirmedAt!)),
+            _detailRow(
+              'Confirmed',
+              DateFormat('dd MMM yyyy HH:mm').format(current.confirmedAt!),
+            ),
           const SizedBox(height: 16),
           Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
           const SizedBox(height: 12),
@@ -805,10 +945,7 @@ class _DeliveryDetailSheet extends StatelessWidget {
             children: [
               const Text(
                 'Delivery Items',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                ),
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
               ),
               Text(
                 '${current.totalDeliveredQty}/${current.totalOrderedQty}',
@@ -839,51 +976,62 @@ class _DeliveryDetailSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          ...current.items.map((item) => Container(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: Colors.grey.withOpacity(0.06)),
-                  ),
+          ...current.items.map(
+            (item) => Container(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: Colors.grey.withOpacity(0.06)),
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.productName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                            ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.productName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
                           ),
-                          Text(
-                            'Ordered: ${item.orderedQuantity} • Delivered: ${item.deliveredQuantity} • Remaining: ${item.remainingQuantity}',
-                            style: TextStyle(fontSize: 11, color: kSubText),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: item.isFullyDelivered ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        item.isFullyDelivered ? 'Complete' : '${item.deliveredQuantity}/${item.orderedQuantity}',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: item.isFullyDelivered ? Colors.green : Colors.orange,
                         ),
+                        Text(
+                          'Ordered: ${item.orderedQuantity} • Delivered: ${item.deliveredQuantity} • Remaining: ${item.remainingQuantity}',
+                          style: TextStyle(fontSize: 11, color: kSubText),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: item.isFullyDelivered
+                          ? Colors.green.withOpacity(0.1)
+                          : Colors.orange.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      item.isFullyDelivered
+                          ? 'Complete'
+                          : '${item.deliveredQuantity}/${item.orderedQuantity}',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: item.isFullyDelivered
+                            ? Colors.green
+                            : Colors.orange,
                       ),
                     ),
-                  ],
-                ),
-              )),
+                  ),
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: 20),
           // Action buttons
           if (!current.isDelivered && !current.isConfirmed) ...[
@@ -894,7 +1042,9 @@ class _DeliveryDetailSheet extends StatelessWidget {
                     onPressed: controller.isSubmitting.value
                         ? null
                         : () async {
-                            final ok = await controller.confirmDelivery(current.id);
+                            final ok = await controller.confirmDelivery(
+                              current.id,
+                            );
                             if (ok) onClose();
                           },
                     style: ElevatedButton.styleFrom(
@@ -952,10 +1102,7 @@ class _DeliveryDetailSheet extends StatelessWidget {
             ),
             child: Text(
               'Close',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: kSubText,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w600, color: kSubText),
             ),
           ),
         ],
@@ -1083,7 +1230,10 @@ class _DeliveryListView extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimary,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -1132,7 +1282,11 @@ class _DeliveryListView extends StatelessWidget {
                           color: color.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Icon(Icons.local_shipping, color: color, size: 22),
+                        child: Icon(
+                          Icons.local_shipping,
+                          color: color,
+                          size: 22,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -1152,10 +1306,7 @@ class _DeliveryListView extends StatelessWidget {
                             const SizedBox(height: 3),
                             Text(
                               item.customerName,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: kText,
-                              ),
+                              style: TextStyle(fontSize: 12, color: kText),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -1220,7 +1371,9 @@ class _DeliveryListView extends StatelessWidget {
                                   ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  DateFormat('dd MMM yyyy').format(item.deliveryDate),
+                                  DateFormat(
+                                    'dd MMM yyyy',
+                                  ).format(item.deliveryDate),
                                   style: TextStyle(
                                     fontSize: 9,
                                     color: kSubText,

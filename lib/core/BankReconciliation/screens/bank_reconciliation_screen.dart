@@ -1,7 +1,7 @@
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/responsive_utils.dart';
-import 'package:LedgerPro_app/core/BankReconciliation/controllers/bank_reconciliation_controller.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
+import 'package:BisonsTechs_app/core/BankReconciliation/controllers/bank_reconciliation_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -95,49 +95,51 @@ class BankReconciliationScreen extends StatelessWidget {
             SizedBox(height: 2.h),
             SizedBox(
               width: 80.w,
-              child: Obx(() => DropdownButtonFormField<String>(
-                value: controller.selectedAccountId.value.isEmpty 
-                    ? null 
-                    : controller.selectedAccountId.value,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.5.h),
-                ),
-                style: TextStyle(fontSize: 14.sp, color: kText),
-                hint: Text(
-                  'Choose an account',
-                  style: TextStyle(fontSize: 12.sp, color: kSubText),
-                ),
-                items: controller.bankAccounts.map((account) {
-                  return DropdownMenuItem(
-                    value: account.id,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          account.name,
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          '${account.number} • Balance: ${_formatAmount(account.balance)}',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: kSubText,
-                          ),
-                        ),
-                      ],
+              child: Obx(
+                () => DropdownButtonFormField<String>(
+                  value: controller.selectedAccountId.value.isEmpty
+                      ? null
+                      : controller.selectedAccountId.value,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) controller.selectAccount(value);
-                },
-              )),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 4.w,
+                      vertical: 1.5.h,
+                    ),
+                  ),
+                  style: TextStyle(fontSize: 14.sp, color: kText),
+                  hint: Text(
+                    'Choose an account',
+                    style: TextStyle(fontSize: 12.sp, color: kSubText),
+                  ),
+                  items: controller.bankAccounts.map((account) {
+                    return DropdownMenuItem(
+                      value: account.id,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            account.name,
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            '${account.number} • Balance: ${_formatAmount(account.balance)}',
+                            style: TextStyle(fontSize: 12.sp, color: kSubText),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) controller.selectAccount(value);
+                  },
+                ),
+              ),
             ),
             SizedBox(height: 3.h),
           ],
@@ -208,8 +210,8 @@ class BankReconciliationScreen extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(3.w),
             decoration: BoxDecoration(
-              color: controller.isBalanced.value 
-                  ? kSuccess.withOpacity(0.1) 
+              color: controller.isBalanced.value
+                  ? kSuccess.withOpacity(0.1)
                   : kDanger.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
@@ -233,10 +235,13 @@ class BankReconciliationScreen extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.5.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 2.w,
+                    vertical: 0.5.h,
+                  ),
                   decoration: BoxDecoration(
-                    color: controller.isBalanced.value 
-                        ? kSuccess.withOpacity(0.2) 
+                    color: controller.isBalanced.value
+                        ? kSuccess.withOpacity(0.2)
                         : kDanger.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -257,7 +262,12 @@ class BankReconciliationScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBalanceCard(String title, String amount, Color color, IconData icon) {
+  Widget _buildBalanceCard(
+    String title,
+    String amount,
+    Color color,
+    IconData icon,
+  ) {
     return Container(
       padding: EdgeInsets.all(3.w),
       decoration: BoxDecoration(
@@ -385,7 +395,10 @@ class BankReconciliationScreen extends StatelessWidget {
             decoration: InputDecoration(
               hintText: '0.00',
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.2.h),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 3.w,
+                vertical: 1.2.h,
+              ),
               prefixText: CurrencyUtils.prefix,
               prefixStyle: TextStyle(fontSize: 12.sp, color: kSubText),
             ),
@@ -446,9 +459,14 @@ class BankReconciliationScreen extends StatelessWidget {
               ],
             ),
           ),
-          if (deposits.isNotEmpty) 
-            _buildTransactionSection('Deposits', deposits, kSuccess, controller),
-          if (payments.isNotEmpty) 
+          if (deposits.isNotEmpty)
+            _buildTransactionSection(
+              'Deposits',
+              deposits,
+              kSuccess,
+              controller,
+            ),
+          if (payments.isNotEmpty)
             _buildTransactionSection('Payments', payments, kDanger, controller),
         ],
       ),
@@ -475,8 +493,9 @@ class BankReconciliationScreen extends StatelessWidget {
             ),
           ),
         ),
-        ...transactions.map((transaction) => 
-          _buildTransactionItem(transaction, color, controller)
+        ...transactions.map(
+          (transaction) =>
+              _buildTransactionItem(transaction, color, controller),
         ),
       ],
     );
@@ -488,7 +507,7 @@ class BankReconciliationScreen extends StatelessWidget {
     BankReconciliationController controller,
   ) {
     bool isChecked = controller.clearedTransactionIds.contains(transaction.id);
-    
+
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.5.h),
       padding: EdgeInsets.all(3.w),
@@ -526,17 +545,14 @@ class BankReconciliationScreen extends StatelessWidget {
                 SizedBox(height: 0.3.h),
                 Text(
                   '${DateFormat('dd MMM yyyy').format(transaction.date)} • Ref: ${transaction.reference}',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: kSubText,
-                  ),
+                  style: TextStyle(fontSize: 12.sp, color: kSubText),
                 ),
               ],
             ),
           ),
           Text(
-            transaction.type == 'Deposit' 
-                ? '+ ${_formatAmount(transaction.amount)}' 
+            transaction.type == 'Deposit'
+                ? '+ ${_formatAmount(transaction.amount)}'
                 : '- ${_formatAmount(transaction.amount)}',
             style: TextStyle(
               fontSize: 14.sp,
@@ -550,64 +566,72 @@ class BankReconciliationScreen extends StatelessWidget {
   }
 
   Widget _buildActionButtons(BankReconciliationController controller) {
-    return Obx(() => Container(
-      padding: EdgeInsets.all(4.w),
-      child: Row(
-        children: [
-          Expanded(
-            child: OutlinedButton(
-              onPressed: controller.isReconciling.value ? null : controller.resetReconciliation,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: kDanger,
-                side: BorderSide(color: kDanger, width: 1),
-                padding: EdgeInsets.symmetric(vertical: 1.5.h),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+    return Obx(
+      () => Container(
+        padding: EdgeInsets.all(4.w),
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: controller.isReconciling.value
+                    ? null
+                    : controller.resetReconciliation,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: kDanger,
+                  side: BorderSide(color: kDanger, width: 1),
+                  padding: EdgeInsets.symmetric(vertical: 1.5.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-              ),
-              child: Text(
-                'Reset',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
+                child: Text(
+                  'Reset',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
-          ),
-          SizedBox(width: 3.w),
-          Expanded(
-            child: ElevatedButton(
-              onPressed: controller.isReconciling.value || !controller.isBalanced.value 
-                  ? null 
-                  : () => controller.completeReconciliation(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: controller.isBalanced.value ? kSuccess : kSubText,
-                padding: EdgeInsets.symmetric(vertical: 1.5.h),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            SizedBox(width: 3.w),
+            Expanded(
+              child: ElevatedButton(
+                onPressed:
+                    controller.isReconciling.value ||
+                        !controller.isBalanced.value
+                    ? null
+                    : () => controller.completeReconciliation(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: controller.isBalanced.value
+                      ? kSuccess
+                      : kSubText,
+                  padding: EdgeInsets.symmetric(vertical: 1.5.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
+                child: controller.isReconciling.value
+                    ? SizedBox(
+                        width: 5.w,
+                        height: 5.w,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.w,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        'Complete Reconciliation',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               ),
-              child: controller.isReconciling.value
-                  ? SizedBox(
-                      width: 5.w,
-                      height: 5.w,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.w,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Text(
-                      'Complete Reconciliation',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ));
+    );
   }
 
   String _formatAmount(double amount) => CurrencyUtils.format(amount);

@@ -1,6 +1,6 @@
 // lib/core/dashboard/widgets/profile_dropdown.dart
 
-import 'package:LedgerPro_app/core/companyprofile/controller/profile_controller.dart';
+import 'package:BisonsTechs_app/core/companyprofile/controller/profile_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -14,7 +14,6 @@ const _kTextSecondary = Color(0xFF8B90A7);
 const _kBlue = Color(0xFF014582);
 const _kBlueDark = Color(0xFF014582);
 const _kRed = Color(0xFFEF4444);
-
 
 class ProfileDropdown extends StatefulWidget {
   final ProfileController profileCtrl;
@@ -134,7 +133,6 @@ class _ProfileDropdownState extends State<ProfileDropdown>
   }
 }
 
-
 class _DropdownOverlay extends StatelessWidget {
   final LayerLink layerLink;
   final Animation<double> fadeAnim;
@@ -186,7 +184,6 @@ class _DropdownOverlay extends StatelessWidget {
     );
   }
 }
-
 
 class _ProfileDropdownCard extends StatefulWidget {
   final ProfileController profileCtrl;
@@ -759,4 +756,3 @@ class _EditField {
     this.keyboard = TextInputType.text,
   });
 }
-

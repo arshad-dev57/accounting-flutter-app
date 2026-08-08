@@ -1,5 +1,5 @@
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/responsive_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -10,13 +10,16 @@ class AboutAppScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isWeb = ResponsiveUtils.isWeb(context);
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F8FC),
       appBar: AppBar(
         title: Text(
-          isWeb ? 'LedgerPro' : 'About App',
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          isWeb ? 'BisonsTechs' : 'About App',
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: kPrimary,
         elevation: 0,
@@ -43,7 +46,7 @@ class AboutAppScreen extends StatelessWidget {
 
   Widget _buildAppHeader() {
     final isWeb = ResponsiveUtils.isWeb(Get.context!);
-    
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(vertical: isWeb ? 60 : 40),
@@ -81,7 +84,7 @@ class AboutAppScreen extends StatelessWidget {
           ),
           SizedBox(height: isWeb ? 24 : 20),
           Text(
-            isWeb ? 'LedgerPro' : 'LedgerPro Pro',
+            isWeb ? 'BisonsTechs' : 'BisonsTechs Pro',
             style: TextStyle(
               fontSize: isWeb ? 36 : 28,
               fontWeight: FontWeight.bold,
@@ -90,11 +93,10 @@ class AboutAppScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            isWeb ? 'Professional LedgerPro Management System' : 'Smart LedgerPro Solution',
-            style: TextStyle(
-              fontSize: isWeb ? 16 : 14,
-              color: Colors.white70,
-            ),
+            isWeb
+                ? 'Professional BisonsTechs Management System'
+                : 'Smart BisonsTechs Solution',
+            style: TextStyle(fontSize: isWeb ? 16 : 14, color: Colors.white70),
           ),
         ],
       ),
@@ -103,7 +105,7 @@ class AboutAppScreen extends StatelessWidget {
 
   Widget _buildAppDescription() {
     final isWeb = ResponsiveUtils.isWeb(Get.context!);
-    
+
     return Padding(
       padding: EdgeInsets.all(isWeb ? 32 : 20),
       child: Container(
@@ -149,9 +151,9 @@ class AboutAppScreen extends StatelessWidget {
             ),
             SizedBox(height: isWeb ? 20 : 16),
             Text(
-              isWeb 
-                  ? 'LedgerPro is a comprehensive financial management platform designed to help businesses of all sizes track their finances, manage invoices, generate reports, and make informed business decisions. Our web-based solution provides real-time access to your financial data from anywhere.'
-                  : 'LedgerPro Pro is a comprehensive financial management solution designed to help businesses of all sizes track their finances, manage invoices, generate reports, and make informed business decisions.',
+              isWeb
+                  ? 'BisonsTechs is a comprehensive financial management platform designed to help businesses of all sizes track their finances, manage invoices, generate reports, and make informed business decisions. Our web-based solution provides real-time access to your financial data from anywhere.'
+                  : 'BisonsTechs Pro is a comprehensive financial management solution designed to help businesses of all sizes track their finances, manage invoices, generate reports, and make informed business decisions.',
               style: TextStyle(
                 fontSize: isWeb ? 16 : 14,
                 color: const Color(0xFF7A8FA6),
@@ -161,8 +163,8 @@ class AboutAppScreen extends StatelessWidget {
             SizedBox(height: isWeb ? 20 : 16),
             Text(
               isWeb
-                  ? 'Whether you are a small business owner, freelancer, or accountant, LedgerPro provides all the tools you need to manage your finances efficiently and accurately on any device with internet access.'
-                  : 'Whether you are a small business owner, freelancer, or accountant, LedgerPro Pro provides all the tools you need to manage your finances efficiently and accurately.',
+                  ? 'Whether you are a small business owner, freelancer, or accountant, BisonsTechs provides all the tools you need to manage your finances efficiently and accurately on any device with internet access.'
+                  : 'Whether you are a small business owner, freelancer, or accountant, BisonsTechs Pro provides all the tools you need to manage your finances efficiently and accurately.',
               style: TextStyle(
                 fontSize: isWeb ? 16 : 14,
                 color: const Color(0xFF7A8FA6),
@@ -177,18 +179,42 @@ class AboutAppScreen extends StatelessWidget {
 
   Widget _buildFeaturesList() {
     final isWeb = ResponsiveUtils.isWeb(Get.context!);
-    
+
     final features = [
-      {'icon': Icons.trending_up, 'title': 'Income & Expense Tracking', 'color': const Color(0xFF2ECC71)},
-      {'icon': Icons.receipt, 'title': 'Invoice & Bill Management', 'color': const Color(0xFF3498DB)},
-      {'icon': Icons.account_balance, 'title': 'Bank Account Management', 'color': const Color(0xFF9B59B6)},
-      {'icon': Icons.assessment, 'title': 'Financial Reports', 'color': const Color(0xFF1ABC9C)},
+      {
+        'icon': Icons.trending_up,
+        'title': 'Income & Expense Tracking',
+        'color': const Color(0xFF2ECC71),
+      },
+      {
+        'icon': Icons.receipt,
+        'title': 'Invoice & Bill Management',
+        'color': const Color(0xFF3498DB),
+      },
+      {
+        'icon': Icons.account_balance,
+        'title': 'Bank Account Management',
+        'color': const Color(0xFF9B59B6),
+      },
+      {
+        'icon': Icons.assessment,
+        'title': 'Financial Reports',
+        'color': const Color(0xFF1ABC9C),
+      },
     ];
 
     if (isWeb) {
       features.addAll([
-        {'icon': Icons.cloud_queue, 'title': 'Cloud Sync', 'color': const Color(0xFFE67E22)},
-        {'icon': Icons.security, 'title': 'Data Security', 'color': const Color(0xFFE74C3C)},
+        {
+          'icon': Icons.cloud_queue,
+          'title': 'Cloud Sync',
+          'color': const Color(0xFFE67E22),
+        },
+        {
+          'icon': Icons.security,
+          'title': 'Data Security',
+          'color': const Color(0xFFE74C3C),
+        },
       ]);
     }
 
@@ -236,7 +262,11 @@ class AboutAppScreen extends StatelessWidget {
                         color: (feature['color'] as Color).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(isWeb ? 14 : 12),
                       ),
-                      child: Icon(feature['icon'] as IconData, color: feature['color'] as Color, size: isWeb ? 32 : 28),
+                      child: Icon(
+                        feature['icon'] as IconData,
+                        color: feature['color'] as Color,
+                        size: isWeb ? 32 : 28,
+                      ),
                     ),
                     SizedBox(height: isWeb ? 12 : 8),
                     Text(
@@ -260,7 +290,7 @@ class AboutAppScreen extends StatelessWidget {
 
   Widget _buildVersionInfo() {
     final isWeb = ResponsiveUtils.isWeb(Get.context!);
-    
+
     return Padding(
       padding: EdgeInsets.all(isWeb ? 32 : 20),
       child: Container(
@@ -278,13 +308,33 @@ class AboutAppScreen extends StatelessWidget {
         ),
         child: Column(
           children: [
-            _buildInfoRow(Icons.code, 'Version', isWeb ? '2.0.0' : '1.0.0', isWeb),
+            _buildInfoRow(
+              Icons.code,
+              'Version',
+              isWeb ? '2.0.0' : '1.0.0',
+              isWeb,
+            ),
             const Divider(height: 24),
-            _buildInfoRow(Icons.calendar_today, 'Release Date', 'April 2026', isWeb),
+            _buildInfoRow(
+              Icons.calendar_today,
+              'Release Date',
+              'April 2026',
+              isWeb,
+            ),
             const Divider(height: 24),
-            _buildInfoRow(Icons.web, 'Platform', isWeb ? 'Web' : 'Android & iOS', isWeb),
+            _buildInfoRow(
+              Icons.web,
+              'Platform',
+              isWeb ? 'Web' : 'Android & iOS',
+              isWeb,
+            ),
             const Divider(height: 24),
-            _buildInfoRow(Icons.update, 'Last Updated', 'April 28, 2026', isWeb),
+            _buildInfoRow(
+              Icons.update,
+              'Last Updated',
+              'April 28, 2026',
+              isWeb,
+            ),
           ],
         ),
       ),
@@ -325,18 +375,48 @@ class AboutAppScreen extends StatelessWidget {
 
   Widget _buildSocialLinks() {
     final isWeb = ResponsiveUtils.isWeb(Get.context!);
-    
+
     final socialLinks = [
-      {'icon': Icons.web, 'label': 'Website', 'url': 'https://zoltech.com', 'color': const Color(0xFF1AB4F5)},
-      {'icon': Icons.facebook, 'label': 'Facebook', 'url': 'https://facebook.com/zoltech', 'color': const Color(0xFF1877F2)},
-      {'icon': Icons.link, 'label': 'LinkedIn', 'url': 'https://linkedin.com/company/zoltech', 'color': const Color(0xFF0A66C2)},
-      {'icon': Icons.alternate_email, 'label': 'Twitter', 'url': 'https://twitter.com/zoltech', 'color': const Color(0xFF1DA1F2)},
+      {
+        'icon': Icons.web,
+        'label': 'Website',
+        'url': 'https://zoltech.com',
+        'color': const Color(0xFF1AB4F5),
+      },
+      {
+        'icon': Icons.facebook,
+        'label': 'Facebook',
+        'url': 'https://facebook.com/zoltech',
+        'color': const Color(0xFF1877F2),
+      },
+      {
+        'icon': Icons.link,
+        'label': 'LinkedIn',
+        'url': 'https://linkedin.com/company/zoltech',
+        'color': const Color(0xFF0A66C2),
+      },
+      {
+        'icon': Icons.alternate_email,
+        'label': 'Twitter',
+        'url': 'https://twitter.com/zoltech',
+        'color': const Color(0xFF1DA1F2),
+      },
     ];
 
     if (isWeb) {
       socialLinks.addAll([
-        {'icon': Icons.podcasts, 'label': 'Blog', 'url': 'https://zoltech.com/blog', 'color': const Color(0xFFE74C3C)},
-        {'icon': Icons.youtube_searched_for, 'label': 'YouTube', 'url': 'https://youtube.com/zoltech', 'color': const Color(0xFFFF0000)},
+        {
+          'icon': Icons.podcasts,
+          'label': 'Blog',
+          'url': 'https://zoltech.com/blog',
+          'color': const Color(0xFFE74C3C),
+        },
+        {
+          'icon': Icons.youtube_searched_for,
+          'label': 'YouTube',
+          'url': 'https://youtube.com/zoltech',
+          'color': const Color(0xFFFF0000),
+        },
       ]);
     }
 
@@ -375,20 +455,32 @@ class AboutAppScreen extends StatelessWidget {
                   onTap: () async {
                     final Uri url = Uri.parse(social['url']! as String);
                     if (await canLaunchUrl(url)) {
-                      await launchUrl(url, mode: LaunchMode.externalApplication);
+                      await launchUrl(
+                        url,
+                        mode: LaunchMode.externalApplication,
+                      );
                     }
                   },
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: isWeb ? 20 : 16, vertical: isWeb ? 12 : 10),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isWeb ? 20 : 16,
+                      vertical: isWeb ? 12 : 10,
+                    ),
                     decoration: BoxDecoration(
                       color: (social['color'] as Color).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(isWeb ? 14 : 12),
-                      border: Border.all(color: (social['color'] as Color).withOpacity(0.3)),
+                      border: Border.all(
+                        color: (social['color'] as Color).withOpacity(0.3),
+                      ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(social['icon'] as IconData, color: social['color'] as Color, size: isWeb ? 20 : 18),
+                        Icon(
+                          social['icon'] as IconData,
+                          color: social['color'] as Color,
+                          size: isWeb ? 20 : 18,
+                        ),
                         SizedBox(width: isWeb ? 12 : 8),
                         Text(
                           social['label'] as String,
@@ -412,7 +504,7 @@ class AboutAppScreen extends StatelessWidget {
 
   Widget _buildCopyright() {
     final isWeb = ResponsiveUtils.isWeb(Get.context!);
-    
+
     return Padding(
       padding: EdgeInsets.all(isWeb ? 32 : 20),
       child: Column(
@@ -441,5 +533,3 @@ class AboutAppScreen extends StatelessWidget {
     );
   }
 }
-
-

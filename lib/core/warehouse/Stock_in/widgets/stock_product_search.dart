@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/core/warehouse/Stock_in/controller/stock_in_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/products/screen/product_qr_scan_screen.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/warehouse/Stock_in/controller/stock_in_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/products/screen/product_qr_scan_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -83,17 +83,18 @@ class _StockProductSearchState extends State<StockProductSearch> {
     );
 
     if (result != null && result.isNotEmpty) {
-      final scannedBarcode = result['text']?.toString() ?? 
-                              result['id']?.toString() ?? 
-                              result['url']?.toString() ?? 
-                              result['barcode']?.toString() ?? 
-                              result['code']?.toString() ?? 
-                              result['rawValue']?.toString();
-      
+      final scannedBarcode =
+          result['text']?.toString() ??
+          result['id']?.toString() ??
+          result['url']?.toString() ??
+          result['barcode']?.toString() ??
+          result['code']?.toString() ??
+          result['rawValue']?.toString();
+
       if (scannedBarcode != null && scannedBarcode.isNotEmpty) {
         // Search for product by barcode
         final list = await widget.controller.searchProducts(scannedBarcode);
-        
+
         if (list.isNotEmpty) {
           final product = list.first;
           setState(() {
@@ -102,7 +103,7 @@ class _StockProductSearchState extends State<StockProductSearch> {
             _results.addAll(list);
             _showResults = true;
           });
-          
+
           Get.snackbar(
             'Product Found',
             'Found: ${product['name']}',
@@ -116,7 +117,7 @@ class _StockProductSearchState extends State<StockProductSearch> {
             _results.clear();
             _showResults = false;
           });
-          
+
           Get.snackbar(
             'Product Not Found',
             'No product found with barcode: $scannedBarcode',
@@ -146,7 +147,11 @@ class _StockProductSearchState extends State<StockProductSearch> {
                 if (_loading)
                   const Padding(
                     padding: EdgeInsets.all(12),
-                    child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   ),
                 GestureDetector(
                   onTap: _scanBarcode,
@@ -183,19 +188,29 @@ class _StockProductSearchState extends State<StockProductSearch> {
             child: ListView.separated(
               shrinkWrap: true,
               itemCount: _results.length,
-              separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
+              separatorBuilder: (_, __) =>
+                  Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
               itemBuilder: (context, index) {
                 final product = _results[index];
                 return ListTile(
                   dense: true,
-                  title: Text(product['name']?.toString() ?? '', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                  title: Text(
+                    product['name']?.toString() ?? '',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
                   subtitle: Text(
                     '${product['sku']} • ${product['categoryName'] ?? 'Uncategorized'}',
                     style: TextStyle(fontSize: 11, color: kSubText),
                   ),
                   trailing: Text(
                     '${product['currentStock']} ${product['stockUnit'] ?? 'pcs'}',
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   onTap: () {
                     widget.onSelected(product);
@@ -208,7 +223,8 @@ class _StockProductSearchState extends State<StockProductSearch> {
               },
             ),
           ),
-        if (widget.selectedProduct != null && widget.selectedProduct!.isNotEmpty)
+        if (widget.selectedProduct != null &&
+            widget.selectedProduct!.isNotEmpty)
           Container(
             margin: const EdgeInsets.only(top: 8),
             padding: const EdgeInsets.all(10),
@@ -223,8 +239,13 @@ class _StockProductSearchState extends State<StockProductSearch> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(widget.selectedProduct!['name']?.toString() ?? '',
-                          style: TextStyle(fontWeight: FontWeight.w700, color: kPrimary)),
+                      Text(
+                        widget.selectedProduct!['name']?.toString() ?? '',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: kPrimary,
+                        ),
+                      ),
                       Text(
                         'Stock: ${widget.selectedProduct!['currentStock']} ${widget.selectedProduct!['stockUnit'] ?? 'pcs'}',
                         style: TextStyle(fontSize: 12, color: kSubText),
@@ -236,7 +257,10 @@ class _StockProductSearchState extends State<StockProductSearch> {
                   icon: const Icon(Icons.close, size: 18),
                   onPressed: () => widget.onSelected({}),
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
                 ),
               ],
             ),

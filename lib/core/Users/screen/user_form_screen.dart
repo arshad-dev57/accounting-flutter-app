@@ -1,5 +1,5 @@
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/core/Users/controller/user_management_controller.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/Users/controller/user_management_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -42,7 +42,9 @@ class _UserFormScreenState extends State<UserFormScreen> {
   }
 
   Future<void> _loadUserData() async {
-    final user = _controller.users.firstWhereOrNull((u) => u.id == widget.userId);
+    final user = _controller.users.firstWhereOrNull(
+      (u) => u.id == widget.userId,
+    );
     if (user != null) {
       setState(() {
         _firstNameController.text = user.firstName;
@@ -391,19 +393,12 @@ class _UserFormScreenState extends State<UserFormScreen> {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ],
             ),
           ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeColor: kPrimary,
-          ),
+          Switch(value: value, onChanged: onChanged, activeColor: kPrimary),
         ],
       ),
     );

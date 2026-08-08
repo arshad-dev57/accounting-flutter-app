@@ -1,4 +1,4 @@
-name: LedgerPro_app
+name: BisonsTechs_app
 description: "A new Flutter project."
 publish_to: 'none'
 
@@ -45,6 +45,8 @@ dependencies:
   flutter_svg: ^2.0.10
   signature: ^6.3.0
   onesignal_flutter: ^5.6.5
+  intl_phone_field: ^3.2.0
+  intl_phone_field_continued: ^1.0.3
 dev_dependencies:
   flutter_test:
     sdk: flutter

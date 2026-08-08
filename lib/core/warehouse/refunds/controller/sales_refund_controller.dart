@@ -1,9 +1,9 @@
 // lib/core/warehouse/refunds/controller/refund_controller.dart - FIXED ORDER SEARCH ENDPOINT
 
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/order/model/order_model.dart';
-import 'package:LedgerPro_app/core/warehouse/refunds/model/refund_model.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/model/order_model.dart';
+import 'package:BisonsTechs_app/core/warehouse/refunds/model/refund_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -36,7 +36,14 @@ class SalesRefundController extends GetxController {
   final Rx<DateTime?> fromDate = Rx<DateTime?>(null);
   final Rx<DateTime?> toDate = Rx<DateTime?>(null);
 
-  final List<String> filters = ['all', 'Pending', 'Processing', 'Completed', 'Failed', 'Cancelled'];
+  final List<String> filters = [
+    'all',
+    'Pending',
+    'Processing',
+    'Completed',
+    'Failed',
+    'Cancelled',
+  ];
 
   // ─── STATS ────────────────────────────────────────────────────
   final Rx<RefundStats> stats = RefundStats(
@@ -49,7 +56,14 @@ class SalesRefundController extends GetxController {
   ).obs;
 
   // ─── CONSTANTS ────────────────────────────────────────────────
-  static const statusOptions = ['all', 'Pending', 'Processing', 'Completed', 'Failed', 'Cancelled'];
+  static const statusOptions = [
+    'all',
+    'Pending',
+    'Processing',
+    'Completed',
+    'Failed',
+    'Cancelled',
+  ];
   static const methodOptions = [
     'all',
     'Original Payment',
@@ -100,9 +114,11 @@ class SalesRefundController extends GetxController {
 
   Future<void> fetchRefunds({bool resetPage = false}) async {
     print('🔵 [SalesRefundController] fetchRefunds called');
-    print('🔵 [SalesRefundController] Current Page: ${currentPage.value}, Limit: ${pageLimit.value}');
+    print(
+      '🔵 [SalesRefundController] Current Page: ${currentPage.value}, Limit: ${pageLimit.value}',
+    );
     print('🔵 [SalesRefundController] Reset Page: $resetPage');
-    
+
     if (resetPage) currentPage.value = 1;
     try {
       isLoading.value = true;
@@ -112,15 +128,21 @@ class SalesRefundController extends GetxController {
       };
       if (searchFilter.value.isNotEmpty) {
         params['search'] = searchFilter.value;
-        print('🔵 [SalesRefundController] Search filter: ${searchFilter.value}');
+        print(
+          '🔵 [SalesRefundController] Search filter: ${searchFilter.value}',
+        );
       }
       if (statusFilter.value != 'all') {
         params['status'] = statusFilter.value;
-        print('🔵 [SalesRefundController] Status filter: ${statusFilter.value}');
+        print(
+          '🔵 [SalesRefundController] Status filter: ${statusFilter.value}',
+        );
       }
       if (methodFilter.value != 'all') {
         params['method'] = methodFilter.value;
-        print('🔵 [SalesRefundController] Method filter: ${methodFilter.value}');
+        print(
+          '🔵 [SalesRefundController] Method filter: ${methodFilter.value}',
+        );
       }
       if (fromDate.value != null) {
         params['fromDate'] = fromDate.value!.toIso8601String().split('T').first;
@@ -131,23 +153,32 @@ class SalesRefundController extends GetxController {
         print('🔵 [SalesRefundController] To date: ${params['toDate']}');
       }
 
-      final query = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
-      print('🔵 [SalesRefundController] API Request: GET /api/sales/refunds?$query');
+      final query = params.entries
+          .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+          .join('&');
+      print(
+        '🔵 [SalesRefundController] API Request: GET /api/sales/refunds?$query',
+      );
 
-      final response = await _api.get('/api/sales/refunds?$query', requiresAuth: true);
+      final response = await _api.get(
+        '/api/sales/refunds?$query',
+        requiresAuth: true,
+      );
 
-      print('🔵 [SalesRefundController] Response Status: ${response.statusCode}');
+      print(
+        '🔵 [SalesRefundController] Response Status: ${response.statusCode}',
+      );
       print('🔵 [SalesRefundController] Response Success: ${response.success}');
       print('🔵 [SalesRefundController] Response Data: ${response.data}');
 
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         print('🔵 [SalesRefundController] Data length: ${list.length}');
-        
+
         refunds.value = list
             .map((e) => RefundModel.fromJson(Map<String, dynamic>.from(e)))
             .toList();
-        
+
         applyLocalFilters();
 
         if (response.data['stats'] != null) {
@@ -165,9 +196,13 @@ class SalesRefundController extends GetxController {
           hasNext.value = pagination['hasNext'] == true;
           hasPrev.value = pagination['hasPrev'] == true;
           hasMore.value = pagination['hasNext'] == true;
-          
-          print('✅ [SalesRefundController] Refunds fetched successfully: ${refunds.length} refunds');
-          print('✅ [SalesRefundController] Total records: ${totalRecords.value}, Total pages: ${totalPages.value}');
+
+          print(
+            '✅ [SalesRefundController] Refunds fetched successfully: ${refunds.length} refunds',
+          );
+          print(
+            '✅ [SalesRefundController] Total records: ${totalRecords.value}, Total pages: ${totalPages.value}',
+          );
         }
       } else {
         print('❌ [SalesRefundController] Failed to fetch refunds');
@@ -180,7 +215,9 @@ class SalesRefundController extends GetxController {
       Get.snackbar('Error', e.toString());
     } finally {
       isLoading.value = false;
-      print('🔵 [SalesRefundController] fetchRefunds completed, isLoading: ${isLoading.value}');
+      print(
+        '🔵 [SalesRefundController] fetchRefunds completed, isLoading: ${isLoading.value}',
+      );
     }
   }
 
@@ -188,25 +225,31 @@ class SalesRefundController extends GetxController {
 
   void applyLocalFilters() {
     print('🟣 [SalesRefundController] applyLocalFilters called');
-    print('🟣 [SalesRefundController] Selected filter: ${selectedFilter.value}');
+    print(
+      '🟣 [SalesRefundController] Selected filter: ${selectedFilter.value}',
+    );
     print('🟣 [SalesRefundController] Search filter: ${searchFilter.value}');
-    
+
     final list = refunds.toList();
     final filtered = list.where((refund) {
-      if (selectedFilter.value != 'all' && refund.refundStatus != selectedFilter.value) {
+      if (selectedFilter.value != 'all' &&
+          refund.refundStatus != selectedFilter.value) {
         return false;
       }
       if (searchFilter.value.isNotEmpty) {
         final query = searchFilter.value.toLowerCase();
-        final matches = refund.refundNumber.toLowerCase().contains(query) ||
+        final matches =
+            refund.refundNumber.toLowerCase().contains(query) ||
             refund.customerName.toLowerCase().contains(query) ||
             refund.orderNumber.toLowerCase().contains(query);
         if (!matches) return false;
       }
       return true;
     }).toList();
-    
-    print('🟣 [SalesRefundController] Filtered refunds: ${filtered.length} out of ${list.length}');
+
+    print(
+      '🟣 [SalesRefundController] Filtered refunds: ${filtered.length} out of ${list.length}',
+    );
     filteredRefunds.value = filtered;
   }
 
@@ -233,13 +276,15 @@ class SalesRefundController extends GetxController {
 
   Future<void> fetchMoreRefunds() async {
     print('🟡 [SalesRefundController] fetchMoreRefunds called');
-    print('🟡 [SalesRefundController] hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}');
-    
+    print(
+      '🟡 [SalesRefundController] hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}',
+    );
+
     if (!hasMore.value || isLoadingMore.value) {
       print('🟡 [SalesRefundController] Skipping load more');
       return;
     }
-    
+
     try {
       isLoadingMore.value = true;
       currentPage.value += 1;
@@ -253,18 +298,27 @@ class SalesRefundController extends GetxController {
       if (statusFilter.value != 'all') params['status'] = statusFilter.value;
       if (methodFilter.value != 'all') params['method'] = methodFilter.value;
 
-      final query = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
-      print('🟡 [SalesRefundController] API Request: GET /api/sales/refunds?$query');
+      final query = params.entries
+          .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+          .join('&');
+      print(
+        '🟡 [SalesRefundController] API Request: GET /api/sales/refunds?$query',
+      );
 
-      final response = await _api.get('/api/sales/refunds?$query', requiresAuth: true);
+      final response = await _api.get(
+        '/api/sales/refunds?$query',
+        requiresAuth: true,
+      );
 
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         final newRefunds = list
             .map((e) => RefundModel.fromJson(Map<String, dynamic>.from(e)))
             .toList();
-        
-        print('🟡 [SalesRefundController] Loaded ${newRefunds.length} more refunds');
+
+        print(
+          '🟡 [SalesRefundController] Loaded ${newRefunds.length} more refunds',
+        );
         refunds.addAll(newRefunds);
         applyLocalFilters();
 
@@ -274,7 +328,9 @@ class SalesRefundController extends GetxController {
           totalRecords.value = (pagination['total'] as num?)?.toInt() ?? 0;
           totalPages.value = (pagination['pages'] as num?)?.toInt() ?? 1;
         }
-        print('🟡 [SalesRefundController] Total refunds now: ${refunds.length}, hasMore: ${hasMore.value}');
+        print(
+          '🟡 [SalesRefundController] Total refunds now: ${refunds.length}, hasMore: ${hasMore.value}',
+        );
       } else {
         print('❌ [SalesRefundController] Failed to load more refunds');
       }
@@ -301,7 +357,9 @@ class SalesRefundController extends GetxController {
   void goToPage(int page) {
     print('🟣 [SalesRefundController] goToPage called: $page');
     if (page < 1 || page > totalPages.value) {
-      print('🟣 [SalesRefundController] Invalid page: $page, totalPages: ${totalPages.value}');
+      print(
+        '🟣 [SalesRefundController] Invalid page: $page, totalPages: ${totalPages.value}',
+      );
       return;
     }
     currentPage.value = page;
@@ -348,29 +406,30 @@ class SalesRefundController extends GetxController {
 
   Future<void> searchOrders(String query) async {
     print('🔵 [SalesRefundController] searchOrders called with: "$query"');
-    
+
     if (query.trim().length < 2) {
-      print('🔵 [SalesRefundController] Query too short (${query.trim().length} chars), clearing results');
+      print(
+        '🔵 [SalesRefundController] Query too short (${query.trim().length} chars), clearing results',
+      );
       orderSearchResults.clear();
       return;
     }
-    
+
     try {
       isSearchingOrders.value = true;
       final encoded = Uri.encodeComponent(query.trim());
-      
+
       // ✅ FIX: Use the correct endpoint - /api/orders/sales with search parameter
       // This will hit the getSalesOrders endpoint which has search support
       final apiUrl = '/api/orders/sales?search=$encoded&limit=10';
-      
-      print('🔵 [SalesRefundController] API Request URL: $apiUrl');
-      
-      final response = await _api.get(
-        apiUrl,
-        requiresAuth: true,
-      );
 
-      print('🔵 [SalesRefundController] Response Status Code: ${response.statusCode}');
+      print('🔵 [SalesRefundController] API Request URL: $apiUrl');
+
+      final response = await _api.get(apiUrl, requiresAuth: true);
+
+      print(
+        '🔵 [SalesRefundController] Response Status Code: ${response.statusCode}',
+      );
       print('🔵 [SalesRefundController] Response Success: ${response.success}');
       print('🔵 [SalesRefundController] Response Data: ${response.data}');
       print('🔵 [SalesRefundController] Response Message: ${response.message}');
@@ -378,38 +437,56 @@ class SalesRefundController extends GetxController {
       if (response.success && response.data != null) {
         print('🔵 [SalesRefundController] Response structure:');
         print('🔵 [SalesRefundController] Keys: ${response.data.keys}');
-        
+
         // Get data from response
         List<dynamic> list = [];
         if (response.data['data'] is List) {
           list = response.data['data'] as List;
-          print('🔵 [SalesRefundController] Found data in response.data["data"]');
+          print(
+            '🔵 [SalesRefundController] Found data in response.data["data"]',
+          );
         } else if (response.data is List) {
           list = response.data as List;
           print('🔵 [SalesRefundController] Response.data itself is a List');
         } else {
-          print('🔵 [SalesRefundController] Could not find list data in response');
+          print(
+            '🔵 [SalesRefundController] Could not find list data in response',
+          );
         }
 
         if (list.isNotEmpty) {
-          print('🔵 [SalesRefundController] First item structure: ${list.first}');
-          print('🔵 [SalesRefundController] List contains ${list.length} items');
-          
+          print(
+            '🔵 [SalesRefundController] First item structure: ${list.first}',
+          );
+          print(
+            '🔵 [SalesRefundController] List contains ${list.length} items',
+          );
+
           orderSearchResults.value = list
               .map((e) => OrderModel.fromJson(Map<String, dynamic>.from(e)))
               .toList();
-          
-          print('✅ [SalesRefundController] Successfully parsed ${orderSearchResults.length} orders');
-          print('✅ [SalesRefundController] First order: ${orderSearchResults.isNotEmpty ? orderSearchResults.first.orderNumber : 'None'}');
+
+          print(
+            '✅ [SalesRefundController] Successfully parsed ${orderSearchResults.length} orders',
+          );
+          print(
+            '✅ [SalesRefundController] First order: ${orderSearchResults.isNotEmpty ? orderSearchResults.first.orderNumber : 'None'}',
+          );
         } else {
           print('🔵 [SalesRefundController] List is empty, no orders found');
           orderSearchResults.clear();
         }
       } else {
-        print('❌ [SalesRefundController] API request failed or returned no data');
-        print('❌ [SalesRefundController] Response success: ${response.success}');
+        print(
+          '❌ [SalesRefundController] API request failed or returned no data',
+        );
+        print(
+          '❌ [SalesRefundController] Response success: ${response.success}',
+        );
         print('❌ [SalesRefundController] Response data: ${response.data}');
-        print('❌ [SalesRefundController] Response message: ${response.message}');
+        print(
+          '❌ [SalesRefundController] Response message: ${response.message}',
+        );
         orderSearchResults.clear();
       }
     } catch (e) {
@@ -425,14 +502,16 @@ class SalesRefundController extends GetxController {
 
   void selectOrderForRefund(OrderModel order) {
     print('🔵 [SalesRefundController] selectOrderForRefund called');
-    print('🔵 [SalesRefundController] Selected order: ${order.orderNumber} - ${order.customerName}');
+    print(
+      '🔵 [SalesRefundController] Selected order: ${order.orderNumber} - ${order.customerName}',
+    );
     print('🔵 [SalesRefundController] Order grand total: ${order.grandTotal}');
-    
+
     selectedOrder.value = order;
     amountController.text = order.grandTotal.toStringAsFixed(2);
     orderSearchResults.clear();
     orderSearchController.text = order.orderNumber;
-    
+
     print('✅ [SalesRefundController] Order selected successfully');
   }
 
@@ -442,33 +521,38 @@ class SalesRefundController extends GetxController {
 
   Future<bool> createRefund() async {
     print('🔵 [SalesRefundController] createRefund called');
-    
+
     final order = selectedOrder.value;
     if (order == null) {
       print('❌ [SalesRefundController] No order selected');
       Get.snackbar('Validation', 'Please select an order');
       return false;
     }
-    
+
     final amount = double.tryParse(amountController.text.trim());
     if (amount == null || amount <= 0) {
-      print('❌ [SalesRefundController] Invalid amount: ${amountController.text}');
+      print(
+        '❌ [SalesRefundController] Invalid amount: ${amountController.text}',
+      );
       Get.snackbar('Validation', 'Enter a valid refund amount');
       return false;
     }
-    
+
     if (reasonController.text.trim().isEmpty) {
       print('❌ [SalesRefundController] No reason provided');
       Get.snackbar('Validation', 'Refund reason is required');
       return false;
     }
-    
+
     if (refundMethod.value == 'Bank Transfer') {
       if (bankNameController.text.trim().isEmpty ||
           accountNumberController.text.trim().isEmpty ||
           accountHolderController.text.trim().isEmpty) {
         print('❌ [SalesRefundController] Bank details incomplete');
-        Get.snackbar('Validation', 'Bank details are required for bank transfer');
+        Get.snackbar(
+          'Validation',
+          'Bank details are required for bank transfer',
+        );
         return false;
       }
     }
@@ -484,7 +568,9 @@ class SalesRefundController extends GetxController {
         'amount': amount,
         'refundMethod': refundMethod.value,
         'reason': reasonController.text.trim(),
-        'notes': notesController.text.trim().isEmpty ? null : notesController.text.trim(),
+        'notes': notesController.text.trim().isEmpty
+            ? null
+            : notesController.text.trim(),
         'referenceNumber': referenceController.text.trim().isEmpty
             ? null
             : referenceController.text.trim(),
@@ -500,7 +586,9 @@ class SalesRefundController extends GetxController {
       };
 
       print('🔵 [SalesRefundController] Submitting refund payload:');
-      print('🔵 [SalesRefundController] ${payload.toString().substring(0, payload.toString().length > 500 ? 500 : payload.toString().length)}...');
+      print(
+        '🔵 [SalesRefundController] ${payload.toString().substring(0, payload.toString().length > 500 ? 500 : payload.toString().length)}...',
+      );
 
       final response = await _api.post(
         '/api/sales/refunds',
@@ -508,7 +596,9 @@ class SalesRefundController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🔵 [SalesRefundController] Response Status: ${response.statusCode}');
+      print(
+        '🔵 [SalesRefundController] Response Status: ${response.statusCode}',
+      );
       print('🔵 [SalesRefundController] Response Success: ${response.success}');
 
       if (response.success) {
@@ -518,8 +608,10 @@ class SalesRefundController extends GetxController {
         await fetchRefunds(resetPage: true);
         return true;
       }
-      
-      print('❌ [SalesRefundController] Failed to create refund: ${response.message}');
+
+      print(
+        '❌ [SalesRefundController] Failed to create refund: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to create refund');
       return false;
     } catch (e) {
@@ -534,14 +626,16 @@ class SalesRefundController extends GetxController {
   }
 
   void selectRefund(RefundModel refund) {
-    print('🔵 [SalesRefundController] selectRefund called for: ${refund.refundNumber}');
+    print(
+      '🔵 [SalesRefundController] selectRefund called for: ${refund.refundNumber}',
+    );
     selectedRefund.value = refund;
   }
 
   Future<bool> updateRefund(String id, Map<String, dynamic> data) async {
     print('🔵 [SalesRefundController] updateRefund called for ID: $id');
     print('🔵 [SalesRefundController] Update data: $data');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.put(
@@ -550,7 +644,9 @@ class SalesRefundController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🔵 [SalesRefundController] Response Status: ${response.statusCode}');
+      print(
+        '🔵 [SalesRefundController] Response Status: ${response.statusCode}',
+      );
       print('🔵 [SalesRefundController] Response Success: ${response.success}');
 
       if (response.success) {
@@ -559,8 +655,10 @@ class SalesRefundController extends GetxController {
         await fetchRefunds(resetPage: true);
         return true;
       }
-      
-      print('❌ [SalesRefundController] Failed to update refund: ${response.message}');
+
+      print(
+        '❌ [SalesRefundController] Failed to update refund: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to update refund');
       return false;
     } catch (e) {
@@ -574,7 +672,7 @@ class SalesRefundController extends GetxController {
 
   Future<bool> deleteRefund(String id) async {
     print('🔵 [SalesRefundController] deleteRefund called for ID: $id');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.delete(
@@ -582,7 +680,9 @@ class SalesRefundController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🔵 [SalesRefundController] Response Status: ${response.statusCode}');
+      print(
+        '🔵 [SalesRefundController] Response Status: ${response.statusCode}',
+      );
       print('🔵 [SalesRefundController] Response Success: ${response.success}');
 
       if (response.success) {
@@ -591,8 +691,10 @@ class SalesRefundController extends GetxController {
         await fetchRefunds(resetPage: true);
         return true;
       }
-      
-      print('❌ [SalesRefundController] Failed to delete refund: ${response.message}');
+
+      print(
+        '❌ [SalesRefundController] Failed to delete refund: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to delete refund');
       return false;
     } catch (e) {
@@ -606,7 +708,7 @@ class SalesRefundController extends GetxController {
 
   Future<bool> processRefund(String id) async {
     print('🟣 [SalesRefundController] processRefund called for ID: $id');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.patch(
@@ -615,7 +717,9 @@ class SalesRefundController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🟣 [SalesRefundController] Response Status: ${response.statusCode}');
+      print(
+        '🟣 [SalesRefundController] Response Status: ${response.statusCode}',
+      );
       print('🟣 [SalesRefundController] Response Success: ${response.success}');
 
       if (response.success) {
@@ -624,8 +728,10 @@ class SalesRefundController extends GetxController {
         await fetchRefunds();
         return true;
       }
-      
-      print('❌ [SalesRefundController] Failed to process refund: ${response.message}');
+
+      print(
+        '❌ [SalesRefundController] Failed to process refund: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to process refund');
       return false;
     } catch (e) {
@@ -639,7 +745,7 @@ class SalesRefundController extends GetxController {
 
   Future<bool> completeRefund(String id) async {
     print('🟣 [SalesRefundController] completeRefund called for ID: $id');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.patch(
@@ -648,7 +754,9 @@ class SalesRefundController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🟣 [SalesRefundController] Response Status: ${response.statusCode}');
+      print(
+        '🟣 [SalesRefundController] Response Status: ${response.statusCode}',
+      );
       print('🟣 [SalesRefundController] Response Success: ${response.success}');
 
       if (response.success) {
@@ -657,8 +765,10 @@ class SalesRefundController extends GetxController {
         await fetchRefunds();
         return true;
       }
-      
-      print('❌ [SalesRefundController] Failed to complete refund: ${response.message}');
+
+      print(
+        '❌ [SalesRefundController] Failed to complete refund: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to complete refund');
       return false;
     } catch (e) {
@@ -673,7 +783,7 @@ class SalesRefundController extends GetxController {
   Future<bool> cancelRefund(String id, {String? reason}) async {
     print('🟣 [SalesRefundController] cancelRefund called for ID: $id');
     print('🟣 [SalesRefundController] Reason: $reason');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.patch(
@@ -682,7 +792,9 @@ class SalesRefundController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🟣 [SalesRefundController] Response Status: ${response.statusCode}');
+      print(
+        '🟣 [SalesRefundController] Response Status: ${response.statusCode}',
+      );
       print('🟣 [SalesRefundController] Response Success: ${response.success}');
 
       if (response.success) {
@@ -691,8 +803,10 @@ class SalesRefundController extends GetxController {
         await fetchRefunds();
         return true;
       }
-      
-      print('❌ [SalesRefundController] Failed to cancel refund: ${response.message}');
+
+      print(
+        '❌ [SalesRefundController] Failed to cancel refund: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to cancel refund');
       return false;
     } catch (e) {

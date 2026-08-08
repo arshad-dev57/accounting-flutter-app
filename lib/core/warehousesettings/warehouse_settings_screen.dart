@@ -1,7 +1,7 @@
 // lib/core/warehousesettings/views/settings_screen.dart
 
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/core/warehousesettings/warehouse_settings_controller.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/warehousesettings/warehouse_settings_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -27,27 +27,40 @@ class SettingsScreen extends StatelessWidget {
         backgroundColor: kPrimary,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: kWhite, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: kWhite,
+            size: 20,
+          ),
           onPressed: () => Get.back(),
         ),
         title: const Text(
           'Settings',
-          style: TextStyle(color: kWhite, fontWeight: FontWeight.w700, fontSize: 18),
+          style: TextStyle(
+            color: kWhite,
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
+          ),
         ),
         actions: [
-          Obx(() => ctrl.isLoading.value
-              ? const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(color: kWhite, strokeWidth: 2),
+          Obx(
+            () => ctrl.isLoading.value
+                ? const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: kWhite,
+                        strokeWidth: 2,
+                      ),
+                    ),
+                  )
+                : IconButton(
+                    icon: const Icon(Icons.refresh_rounded, color: kWhite),
+                    onPressed: ctrl.fetchSettings,
                   ),
-                )
-              : IconButton(
-                  icon: const Icon(Icons.refresh_rounded, color: kWhite),
-                  onPressed: ctrl.fetchSettings,
-                )),
+          ),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
@@ -60,8 +73,14 @@ class SettingsScreen extends StatelessWidget {
               indicatorSize: TabBarIndicatorSize.tab,
               labelColor: kWhite,
               unselectedLabelColor: Colors.white60,
-              labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-              unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 13,
+              ),
               tabs: const [
                 Tab(
                   icon: Icon(Icons.inventory_2_outlined, size: 18),
@@ -81,10 +100,16 @@ class SettingsScreen extends StatelessWidget {
           // ── Message Banner ──
           Obx(() {
             if (ctrl.successMessage.value.isNotEmpty) {
-              return _MessageBanner(message: ctrl.successMessage.value, isSuccess: true);
+              return _MessageBanner(
+                message: ctrl.successMessage.value,
+                isSuccess: true,
+              );
             }
             if (ctrl.errorMessage.value.isNotEmpty) {
-              return _MessageBanner(message: ctrl.errorMessage.value, isSuccess: false);
+              return _MessageBanner(
+                message: ctrl.errorMessage.value,
+                isSuccess: false,
+              );
             }
             return const SizedBox.shrink();
           }),
@@ -95,14 +120,16 @@ class SettingsScreen extends StatelessWidget {
                 _SettingsTab(
                   title: 'Product Settings',
                   icon: Icons.inventory_2_outlined,
-                  description: 'Manage product-related settings like units, brands, tax rates',
+                  description:
+                      'Manage product-related settings like units, brands, tax rates',
                   categories: productSettingCategories,
                   ctrl: ctrl,
                 ),
                 _SettingsTab(
                   title: 'Order Settings',
                   icon: Icons.shopping_cart_outlined,
-                  description: 'Manage order-related settings like warehouses, locations, statuses',
+                  description:
+                      'Manage order-related settings like warehouses, locations, statuses',
                   categories: orderSettingCategories,
                   ctrl: ctrl,
                 ),
@@ -250,7 +277,10 @@ class _SettingsTab extends StatelessWidget {
                   onTap: () => ctrl.setCategory(cat.id),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 0,
+                    ),
                     decoration: BoxDecoration(
                       color: isActive ? kPrimary : kWhite,
                       borderRadius: BorderRadius.circular(20),
@@ -264,7 +294,7 @@ class _SettingsTab extends StatelessWidget {
                                 color: kPrimary.withOpacity(0.25),
                                 blurRadius: 8,
                                 offset: const Offset(0, 3),
-                              )
+                              ),
                             ]
                           : [],
                     ),
@@ -383,15 +413,21 @@ class _SearchBar extends StatelessWidget {
                 ),
               ),
             ),
-            Obx(() => ctrl.searchQuery.value.isNotEmpty
-                ? GestureDetector(
-                    onTap: () => ctrl.searchQuery.value = '',
-                    child: Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: Icon(Icons.close_rounded, size: 16, color: kTextGrey),
-                    ),
-                  )
-                : const SizedBox(width: 12)),
+            Obx(
+              () => ctrl.searchQuery.value.isNotEmpty
+                  ? GestureDetector(
+                      onTap: () => ctrl.searchQuery.value = '',
+                      child: Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 16,
+                          color: kTextGrey,
+                        ),
+                      ),
+                    )
+                  : const SizedBox(width: 12),
+            ),
           ],
         ),
       );
@@ -419,7 +455,10 @@ class _SettingsList extends StatelessWidget {
           child: const Center(
             child: Padding(
               padding: EdgeInsets.symmetric(vertical: 60),
-              child: CircularProgressIndicator(color: kPrimary, strokeWidth: 2.5),
+              child: CircularProgressIndicator(
+                color: kPrimary,
+                strokeWidth: 2.5,
+              ),
             ),
           ),
         );
@@ -476,7 +515,10 @@ class _SettingsList extends StatelessWidget {
               GestureDetector(
                 onTap: () => _showFormSheet(context, ctrl, null),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: kPrimaryLight,
                     borderRadius: BorderRadius.circular(20),
@@ -526,12 +568,18 @@ class _SettingsList extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
               decoration: BoxDecoration(
                 color: kBg,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
                 border: Border(bottom: BorderSide(color: kBorder)),
               ),
               child: Row(
                 children: [
-                  Icon(_getCategoryIcon(ctrl.activeCategory.value), size: 15, color: kPrimary),
+                  Icon(
+                    _getCategoryIcon(ctrl.activeCategory.value),
+                    size: 15,
+                    color: kPrimary,
+                  ),
                   const SizedBox(width: 7),
                   Text(
                     categoryLabel,
@@ -543,7 +591,10 @@ class _SettingsList extends StatelessWidget {
                   ),
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: kPrimary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
@@ -657,7 +708,10 @@ class _SettingTile extends StatelessWidget {
                     if (item.isDefault) ...[
                       const SizedBox(width: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: kPrimary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20),
@@ -676,7 +730,9 @@ class _SettingTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  showZone && item.zone != null ? 'Zone: ${item.zone}' : categoryLabel,
+                  showZone && item.zone != null
+                      ? 'Zone: ${item.zone}'
+                      : categoryLabel,
                   style: const TextStyle(fontSize: 11, color: kTextGrey),
                 ),
               ],
@@ -691,11 +747,19 @@ class _SettingTile extends StatelessWidget {
             ),
             child: Text(
               'Active',
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: kGreen),
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: kGreen,
+              ),
             ),
           ),
           const SizedBox(width: 8),
-          _ActionBtn(icon: Icons.edit_outlined, color: Colors.orange, onTap: onEdit),
+          _ActionBtn(
+            icon: Icons.edit_outlined,
+            color: Colors.orange,
+            onTap: onEdit,
+          ),
           const SizedBox(width: 6),
           _ActionBtn(
             icon: Icons.delete_outline,
@@ -739,13 +803,23 @@ class _ActionBtn extends StatelessWidget {
 // ============================================================
 // CONFIRM DELETE
 // ============================================================
-void _confirmDelete(BuildContext context, SettingsController ctrl, SettingItem item) {
+void _confirmDelete(
+  BuildContext context,
+  SettingsController ctrl,
+  SettingItem item,
+) {
   showDialog(
     context: context,
     builder: (_) => AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: const Text('Delete Item', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-      content: Text('Delete "${item.name}"?', style: const TextStyle(color: kTextGrey)),
+      title: const Text(
+        'Delete Item',
+        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+      ),
+      content: Text(
+        'Delete "${item.name}"?',
+        style: const TextStyle(color: kTextGrey),
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
@@ -755,7 +829,9 @@ void _confirmDelete(BuildContext context, SettingsController ctrl, SettingItem i
           style: ElevatedButton.styleFrom(
             backgroundColor: kRed,
             foregroundColor: kWhite,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
           onPressed: () {
             Navigator.pop(context);
@@ -771,7 +847,11 @@ void _confirmDelete(BuildContext context, SettingsController ctrl, SettingItem i
 // ============================================================
 // ADD / EDIT BOTTOM SHEET
 // ============================================================
-void _showFormSheet(BuildContext context, SettingsController ctrl, SettingItem? item) {
+void _showFormSheet(
+  BuildContext context,
+  SettingsController ctrl,
+  SettingItem? item,
+) {
   final isEditing = item != null;
   final nameCtrl = TextEditingController(text: item?.name ?? '');
   final symbolCtrl = TextEditingController(text: item?.symbol ?? '');
@@ -783,17 +863,27 @@ void _showFormSheet(BuildContext context, SettingsController ctrl, SettingItem? 
   final isCurrency = activeCategory == 'currency';
   final isRackLocation = activeCategory == 'rackLocation';
 
-  final zoneOptions = ['Receiving', 'Storage', 'Picking', 'Shipping', 'Returns', 'Bulk'];
+  final zoneOptions = [
+    'Receiving',
+    'Storage',
+    'Picking',
+    'Shipping',
+    'Returns',
+    'Bulk',
+  ];
   final categoryInfo = ctrl.activeCategoryInfo;
 
-  final singularLabel = categoryInfo?.label.replaceAll(RegExp(r's$'), '') ?? 'Item';
-  final sectionLabel = activeCategory == 'currency' ||
+  final singularLabel =
+      categoryInfo?.label.replaceAll(RegExp(r's$'), '') ?? 'Item';
+  final sectionLabel =
+      activeCategory == 'currency' ||
           activeCategory == 'unit' ||
           activeCategory == 'brand' ||
           activeCategory == 'taxRate'
       ? 'Product Settings'
       : 'Order Settings';
-  final sectionIcon = activeCategory == 'currency' ||
+  final sectionIcon =
+      activeCategory == 'currency' ||
           activeCategory == 'unit' ||
           activeCategory == 'brand' ||
           activeCategory == 'taxRate'
@@ -805,7 +895,9 @@ void _showFormSheet(BuildContext context, SettingsController ctrl, SettingItem? 
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (_) => Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: Container(
         decoration: const BoxDecoration(
           color: kWhite,
@@ -822,7 +914,10 @@ void _showFormSheet(BuildContext context, SettingsController ctrl, SettingItem? 
                 width: 40,
                 height: 4,
                 margin: const EdgeInsets.only(top: 12, bottom: 16),
-                decoration: BoxDecoration(color: kBorder, borderRadius: BorderRadius.circular(2)),
+                decoration: BoxDecoration(
+                  color: kBorder,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
 
@@ -873,7 +968,11 @@ void _showFormSheet(BuildContext context, SettingsController ctrl, SettingItem? 
                             ),
                             const Padding(
                               padding: EdgeInsets.symmetric(horizontal: 4),
-                              child: Icon(Icons.chevron_right_rounded, size: 14, color: kTextGrey),
+                              child: Icon(
+                                Icons.chevron_right_rounded,
+                                size: 14,
+                                color: kTextGrey,
+                              ),
                             ),
                             Text(
                               categoryInfo?.label ?? 'Items',
@@ -889,7 +988,10 @@ void _showFormSheet(BuildContext context, SettingsController ctrl, SettingItem? 
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: kPrimary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
@@ -968,7 +1070,10 @@ void _showFormSheet(BuildContext context, SettingsController ctrl, SettingItem? 
                       children: [
                         _FieldLabel('Symbol'),
                         const SizedBox(height: 6),
-                        _InputField(controller: symbolCtrl, hint: 'e.g. \$, €, £'),
+                        _InputField(
+                          controller: symbolCtrl,
+                          hint: 'e.g. \$, €, £',
+                        ),
                       ],
                     ),
                   ),
@@ -979,7 +1084,10 @@ void _showFormSheet(BuildContext context, SettingsController ctrl, SettingItem? 
                       children: [
                         _FieldLabel('Code'),
                         const SizedBox(height: 6),
-                        _InputField(controller: codeCtrl, hint: 'e.g. PKR, USD'),
+                        _InputField(
+                          controller: codeCtrl,
+                          hint: 'e.g. PKR, USD',
+                        ),
                       ],
                     ),
                   ),
@@ -992,86 +1100,107 @@ void _showFormSheet(BuildContext context, SettingsController ctrl, SettingItem? 
             if (isRackLocation) ...[
               _FieldLabel('Zone'),
               const SizedBox(height: 6),
-              Obx(() => Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(
-                      color: kBg,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: kBorder),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedZone.value.isEmpty ? null : selectedZone.value,
-                        hint: const Text('Select zone...',
-                            style: TextStyle(color: kTextGrey, fontSize: 14)),
-                        isExpanded: true,
-                        items: zoneOptions
-                            .map((z) => DropdownMenuItem(
-                                  value: z,
-                                  child: Text(z, style: const TextStyle(fontSize: 14)),
-                                ))
-                            .toList(),
-                        onChanged: (v) => selectedZone.value = v ?? '',
+              Obx(
+                () => Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  decoration: BoxDecoration(
+                    color: kBg,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: kBorder),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: selectedZone.value.isEmpty
+                          ? null
+                          : selectedZone.value,
+                      hint: const Text(
+                        'Select zone...',
+                        style: TextStyle(color: kTextGrey, fontSize: 14),
                       ),
+                      isExpanded: true,
+                      items: zoneOptions
+                          .map(
+                            (z) => DropdownMenuItem(
+                              value: z,
+                              child: Text(
+                                z,
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (v) => selectedZone.value = v ?? '',
                     ),
-                  )),
+                  ),
+                ),
+              ),
               const SizedBox(height: 14),
             ],
 
             // ── Default checkbox ──
-            Obx(() => GestureDetector(
-                  onTap: () => isDefaultObs.value = !isDefaultObs.value,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: isDefaultObs.value ? kPrimaryLight : kBg,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: isDefaultObs.value ? kPrimary.withOpacity(0.3) : kBorder,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 150),
-                          width: 20,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            color: isDefaultObs.value ? kPrimary : kWhite,
-                            borderRadius: BorderRadius.circular(5),
-                            border: Border.all(
-                              color: isDefaultObs.value ? kPrimary : kBorder,
-                              width: 2,
-                            ),
-                          ),
-                          child: isDefaultObs.value
-                              ? const Icon(Icons.check, size: 14, color: kWhite)
-                              : null,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Set as Default',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: kTextDark,
-                                ),
-                              ),
-                              Text(
-                                'This will be the default option for new ${singularLabel.toLowerCase()}s',
-                                style: const TextStyle(fontSize: 11, color: kTextGrey),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+            Obx(
+              () => GestureDetector(
+                onTap: () => isDefaultObs.value = !isDefaultObs.value,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDefaultObs.value ? kPrimaryLight : kBg,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isDefaultObs.value
+                          ? kPrimary.withOpacity(0.3)
+                          : kBorder,
                     ),
                   ),
-                )),
+                  child: Row(
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: isDefaultObs.value ? kPrimary : kWhite,
+                          borderRadius: BorderRadius.circular(5),
+                          border: Border.all(
+                            color: isDefaultObs.value ? kPrimary : kBorder,
+                            width: 2,
+                          ),
+                        ),
+                        child: isDefaultObs.value
+                            ? const Icon(Icons.check, size: 14, color: kWhite)
+                            : null,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Set as Default',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: kTextDark,
+                              ),
+                            ),
+                            Text(
+                              'This will be the default option for new ${singularLabel.toLowerCase()}s',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: kTextGrey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
             const SizedBox(height: 24),
 
             // ── Buttons ──
@@ -1088,65 +1217,81 @@ void _showFormSheet(BuildContext context, SettingsController ctrl, SettingItem? 
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600)),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   flex: 2,
-                  child: Obx(() => ElevatedButton(
-                        onPressed: ctrl.isSaving.value
-                            ? null
-                            : () async {
-                                if (nameCtrl.text.trim().isEmpty) {
-                                  Get.snackbar('Error', 'Name is required');
-                                  return;
-                                }
-                                final payload = <String, dynamic>{
-                                  'category': activeCategory,
-                                  'name': nameCtrl.text.trim(),
-                                  'isDefault': isDefaultObs.value,
-                                };
-                                if (isCurrency) {
-                                  payload['symbol'] = symbolCtrl.text.trim();
-                                  payload['code'] = codeCtrl.text.trim().toUpperCase();
-                                }
-                                if (isRackLocation && selectedZone.value.isNotEmpty) {
-                                  payload['zone'] = selectedZone.value;
-                                }
-                                bool success;
-                                if (isEditing) {
-                                  success = await ctrl.updateSetting(item!.id, payload);
-                                } else {
-                                  success = await ctrl.createSetting(payload);
-                                }
-                                if (success && context.mounted) {
-                                  Navigator.pop(context);
-                                }
-                              },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: kPrimary,
-                          foregroundColor: kWhite,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          disabledBackgroundColor: kPrimary.withOpacity(0.5),
+                  child: Obx(
+                    () => ElevatedButton(
+                      onPressed: ctrl.isSaving.value
+                          ? null
+                          : () async {
+                              if (nameCtrl.text.trim().isEmpty) {
+                                Get.snackbar('Error', 'Name is required');
+                                return;
+                              }
+                              final payload = <String, dynamic>{
+                                'category': activeCategory,
+                                'name': nameCtrl.text.trim(),
+                                'isDefault': isDefaultObs.value,
+                              };
+                              if (isCurrency) {
+                                payload['symbol'] = symbolCtrl.text.trim();
+                                payload['code'] = codeCtrl.text
+                                    .trim()
+                                    .toUpperCase();
+                              }
+                              if (isRackLocation &&
+                                  selectedZone.value.isNotEmpty) {
+                                payload['zone'] = selectedZone.value;
+                              }
+                              bool success;
+                              if (isEditing) {
+                                success = await ctrl.updateSetting(
+                                  item!.id,
+                                  payload,
+                                );
+                              } else {
+                                success = await ctrl.createSetting(payload);
+                              }
+                              if (success && context.mounted) {
+                                Navigator.pop(context);
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kPrimary,
+                        foregroundColor: kWhite,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        child: ctrl.isSaving.value
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(color: kWhite, strokeWidth: 2),
-                              )
-                            : Text(
-                                isEditing ? 'Update $singularLabel' : 'Add $singularLabel',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 15,
-                                ),
+                        disabledBackgroundColor: kPrimary.withOpacity(0.5),
+                      ),
+                      child: ctrl.isSaving.value
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: kWhite,
+                                strokeWidth: 2,
                               ),
-                      )),
+                            )
+                          : Text(
+                              isEditing
+                                  ? 'Update $singularLabel'
+                                  : 'Add $singularLabel',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                              ),
+                            ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -1161,13 +1306,13 @@ void _showFormSheet(BuildContext context, SettingsController ctrl, SettingItem? 
 // HELPERS
 // ============================================================
 Widget _FieldLabel(String label) => Text(
-      label,
-      style: const TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: kTextDark,
-      ),
-    );
+  label,
+  style: const TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+    color: kTextDark,
+  ),
+);
 
 class _InputField extends StatelessWidget {
   final TextEditingController controller;
@@ -1188,10 +1333,15 @@ class _InputField extends StatelessWidget {
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(color: kTextGrey, fontSize: 14),
-        prefixIcon: prefixIcon != null ? Icon(prefixIcon, size: 18, color: kTextGrey) : null,
+        prefixIcon: prefixIcon != null
+            ? Icon(prefixIcon, size: 18, color: kTextGrey)
+            : null,
         filled: true,
         fillColor: kBg,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: kBorder),

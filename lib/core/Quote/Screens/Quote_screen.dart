@@ -1,4 +1,4 @@
-import 'package:LedgerPro_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:flutter/material.dart';
 
 class QuoteScreen extends StatefulWidget {
@@ -14,7 +14,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
   DateTime _selectedDate = DateTime.now();
   DateTime _expiryDate = DateTime.now().add(const Duration(days: 30));
   String _taxType = 'Tax exclusive';
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,7 +36,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
         icon: Icon(Icons.arrow_back, color: kText),
         onPressed: () => Navigator.pop(context),
       ),
-      title:Text(
+      title: Text(
         'Quote',
         style: TextStyle(
           color: kText,
@@ -64,23 +64,23 @@ class _QuoteScreenState extends State<QuoteScreen> {
           // Customer selection
           _buildCustomerSection(),
           const SizedBox(height: 12),
-          
+
           // Date and expiry section
           _buildDateAndExpirySection(),
           const SizedBox(height: 12),
-          
+
           // Tax section
           _buildTaxSection(),
           const SizedBox(height: 12),
-          
+
           // Items section
           _buildItemsSection(),
           const SizedBox(height: 12),
-          
+
           // Total section
           _buildTotalSection(),
           const SizedBox(height: 12),
-          
+
           // Attach files button
           _buildAttachFilesButton(),
           const SizedBox(height: 20),
@@ -99,7 +99,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-         Text(
+          Text(
             'Who is it for?',
             style: TextStyle(
               fontSize: 14,
@@ -118,7 +118,10 @@ class _QuoteScreenState extends State<QuoteScreen> {
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Search or select a customer',
-                hintStyle: TextStyle(color: kSubText.withOpacity(0.5), fontSize: 14),
+                hintStyle: TextStyle(
+                  color: kSubText.withOpacity(0.5),
+                  fontSize: 14,
+                ),
                 prefixIcon: Icon(Icons.search, color: kSubText, size: 20),
                 suffixIcon: Icon(Icons.arrow_drop_down, color: kSubText),
                 border: InputBorder.none,
@@ -153,11 +156,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
                   ),
                 ),
               ),
-              Container(
-                height: 40,
-                width: 1,
-                color: kBorder,
-              ),
+              Container(height: 40, width: 1, color: kBorder),
               Expanded(
                 child: GestureDetector(
                   onTap: () => _selectDate(context, isExpiry: true),
@@ -210,17 +209,11 @@ class _QuoteScreenState extends State<QuoteScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: kSubText,
-                ),
-              ),
+              Text(label, style: TextStyle(fontSize: 12, color: kSubText)),
               const SizedBox(height: 2),
               Text(
                 value,
-                style:  TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: kText,
@@ -229,8 +222,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
             ],
           ),
         ),
-        if (!showIcon)
-          Icon(Icons.arrow_drop_down, color: kSubText),
+        if (!showIcon) Icon(Icons.arrow_drop_down, color: kSubText),
       ],
     );
   }
@@ -245,7 +237,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-         Text(
+          Text(
             'Items',
             style: TextStyle(
               fontSize: 16,
@@ -254,7 +246,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          
+
           // Items list
           if (_items.isEmpty) ...[
             Container(
@@ -266,7 +258,11 @@ class _QuoteScreenState extends State<QuoteScreen> {
               child: Center(
                 child: Column(
                   children: [
-                    Icon(Icons.inventory_2_outlined, size: 48, color: kSubText.withOpacity(0.3)),
+                    Icon(
+                      Icons.inventory_2_outlined,
+                      size: 48,
+                      color: kSubText.withOpacity(0.3),
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       'No items added',
@@ -281,20 +277,20 @@ class _QuoteScreenState extends State<QuoteScreen> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _items.length,
-              separatorBuilder: (_, __) =>  Divider(color: kBorder),
+              separatorBuilder: (_, __) => Divider(color: kBorder),
               itemBuilder: (context, index) {
                 return _buildItemTile(_items[index], index);
               },
             ),
           ],
-          
+
           const SizedBox(height: 12),
-          
+
           // Add item button
           OutlinedButton.icon(
             onPressed: _showAddItemDialog,
             icon: Icon(Icons.add, size: 18),
-            label:Text(
+            label: Text(
               'ADD AN ITEM',
               style: TextStyle(
                 fontSize: 13,
@@ -328,7 +324,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
               children: [
                 Text(
                   item['name'],
-                  style:  TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: kText,
@@ -337,17 +333,14 @@ class _QuoteScreenState extends State<QuoteScreen> {
                 const SizedBox(height: 4),
                 Text(
                   '${item['quantity']} x ${item['rate']}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: kSubText,
-                  ),
+                  style: TextStyle(fontSize: 13, color: kSubText),
                 ),
               ],
             ),
           ),
           Text(
             '${item['amount']}',
-            style:  TextStyle(
+            style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
               color: kText,
@@ -374,7 +367,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title:Text('Add Item'),
+        title: Text('Add Item'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -432,7 +425,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
                 final quantity = double.parse(quantityController.text);
                 final rate = double.parse(rateController.text);
                 final amount = quantity * rate;
-                
+
                 setState(() {
                   _items.add({
                     'name': nameController.text,
@@ -448,7 +441,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
               backgroundColor: kPrimary,
               foregroundColor: Colors.white,
             ),
-            child:Text('Add'),
+            child: Text('Add'),
           ),
         ],
       ),
@@ -471,7 +464,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-         Text(
+          Text(
             'Total',
             style: TextStyle(
               fontSize: 16,
@@ -481,7 +474,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
           ),
           Text(
             '\$${total.toStringAsFixed(2)}',
-            style:  TextStyle(
+            style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w800,
               color: kPrimary,
@@ -502,7 +495,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
       child: OutlinedButton.icon(
         onPressed: _showAttachFilesBottomSheet,
         icon: Icon(Icons.attach_file, size: 18, color: kPrimary),
-        label:Text(
+        label: Text(
           '+ ATTACH FILES',
           style: TextStyle(
             fontSize: 13,
@@ -544,7 +537,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-             Text(
+              Text(
                 'Attach Files',
                 style: TextStyle(
                   fontSize: 18,
@@ -608,7 +601,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
       ),
       title: Text(
         label,
-        style:  TextStyle(
+        style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w500,
           color: kText,
@@ -650,12 +643,9 @@ class _QuoteScreenState extends State<QuoteScreen> {
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child:Text(
+                child: Text(
                   'Save as draft',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -673,12 +663,9 @@ class _QuoteScreenState extends State<QuoteScreen> {
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child:Text(
+                child: Text(
                   'Email',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -691,7 +678,10 @@ class _QuoteScreenState extends State<QuoteScreen> {
   // ════════════════════════════════════════════
   //  HELPER METHODS
   // ════════════════════════════════════════════
-  Future<void> _selectDate(BuildContext context, {required bool isExpiry}) async {
+  Future<void> _selectDate(
+    BuildContext context, {
+    required bool isExpiry,
+  }) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: isExpiry ? _expiryDate : _selectedDate,
@@ -713,26 +703,26 @@ class _QuoteScreenState extends State<QuoteScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title:Text('Select Tax Type'),
+        title: Text('Select Tax Type'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              title:Text('Tax exclusive'),
+              title: Text('Tax exclusive'),
               onTap: () {
                 setState(() => _taxType = 'Tax exclusive');
                 Navigator.pop(context);
               },
             ),
             ListTile(
-              title:Text('Tax inclusive'),
+              title: Text('Tax inclusive'),
               onTap: () {
                 setState(() => _taxType = 'Tax inclusive');
                 Navigator.pop(context);
               },
             ),
             ListTile(
-              title:Text('No tax'),
+              title: Text('No tax'),
               onTap: () {
                 setState(() => _taxType = 'No tax');
                 Navigator.pop(context);
@@ -749,7 +739,20 @@ class _QuoteScreenState extends State<QuoteScreen> {
   }
 
   String _getMonth(int month) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return months[month - 1];
   }
 

@@ -1,16 +1,16 @@
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/config/apiconfig.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/config/apiconfig.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:universal_html/html.dart' as html;
 import 'package:get/get.dart';
-import 'package:LedgerPro_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'dart:convert';
 import 'dart:io';
-import 'package:LedgerPro_app/core/GeneralLedger/Screen/general_ledger_screen.dart';
-import 'package:LedgerPro_app/core/Transfer/screen/transfer_screen.dart';
+import 'package:BisonsTechs_app/core/GeneralLedger/Screen/general_ledger_screen.dart';
+import 'package:BisonsTechs_app/core/Transfer/screen/transfer_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
@@ -386,6 +386,87 @@ class BankAccountController extends GetxController {
     Get.to(() => TransferScreen(), arguments: {'fromAccountId': account.id});
   }
 
+  /// Add Money / Deposit into an existing bank account (proper JE on backend).
+  Future<bool> depositToBankAccount({
+    required String bankAccountId,
+    required String sourceAccountId,
+    required double amount,
+    required DateTime date,
+    String? description,
+    String? reference,
+    String? notes,
+  }) async {
+    try {
+      final body = {
+        'amount': amount,
+        'sourceAccountId': sourceAccountId,
+        'date': date.toIso8601String(),
+        if (description != null && description.isNotEmpty)
+          'description': description,
+        if (reference != null && reference.isNotEmpty) 'reference': reference,
+        if (notes != null && notes.isNotEmpty) 'notes': notes,
+      };
+
+      final response = await _api.post(
+        '/api/bank-accounts/$bankAccountId/deposit',
+        body: body,
+      );
+
+      if (response.success) {
+        AppSnackbar.success(
+          Colors.green,
+          'Success',
+          response.message.isNotEmpty
+              ? response.message
+              : 'Deposit posted successfully',
+        );
+        await fetchBankAccounts();
+        return true;
+      }
+
+      AppSnackbar.error(
+        Colors.red,
+        'Error',
+        response.message.isNotEmpty
+            ? response.message
+            : (response.data is Map
+                  ? (response.data['message']?.toString() ?? 'Deposit failed')
+                  : 'Deposit failed'),
+      );
+      return false;
+    } catch (e) {
+      AppSnackbar.error(Colors.red, 'Error', 'Deposit failed: $e');
+      return false;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchDepositSourceAccounts() async {
+    try {
+      final response = await _api.get(
+        '/api/chart-of-accounts',
+        queryParameters: {'limit': '200', 'status': 'All'},
+      );
+      if (!response.success) return [];
+      final root = response.data;
+      final list = (root is Map ? root['data'] : null);
+      if (list is! List) return [];
+      return list
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .where((a) {
+            final type = (a['type'] ?? '').toString();
+            // Suitable credit sources for deposits (not the bank asset itself)
+            return type == 'Equity' ||
+                type == 'Liability' ||
+                type == 'Revenue' ||
+                type == 'Asset';
+          })
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
   // ─────────────────────── EXPORT FUNCTIONS ───────────────────────
 
   void exportAccounts() {
@@ -560,7 +641,7 @@ class BankAccountController extends GetxController {
               borderRadius: pw.BorderRadius.circular(6),
             ),
             child: pw.Text(
-              'LedgerPro',
+              'BisonsTechs',
               style: pw.TextStyle(
                 color: PdfColors.white,
                 fontWeight: pw.FontWeight.bold,
@@ -1158,7 +1239,7 @@ class BankAccount {
     }
 
     return BankAccount(
-      id: json['_id'].toString(),
+      id: (json['id'] ?? json['_id']).toString(),
       accountName: json['accountName'].toString(),
       accountNumber: json['accountNumber'].toString(),
       bankName: json['bankName'].toString(),

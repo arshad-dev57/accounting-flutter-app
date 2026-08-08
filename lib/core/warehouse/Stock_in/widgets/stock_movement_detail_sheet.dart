@@ -1,6 +1,6 @@
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/core/warehouse/Stock_in/controller/stock_in_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/Stock_in/model/stock_movement_model.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/warehouse/Stock_in/controller/stock_in_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/Stock_in/model/stock_movement_model.dart';
 import 'package:flutter/material.dart';
 
 class StockMovementDetailSheet extends StatelessWidget {
@@ -43,15 +43,30 @@ class StockMovementDetailSheet extends StatelessWidget {
                       color: typeColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(controller.getTypeIcon(movement.type), color: typeColor),
+                    child: Icon(
+                      controller.getTypeIcon(movement.type),
+                      color: typeColor,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(movement.productName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-                        Text(movement.getTypeLabel(), style: TextStyle(color: typeColor, fontWeight: FontWeight.w600)),
+                        Text(
+                          movement.productName,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        Text(
+                          movement.getTypeLabel(),
+                          style: TextStyle(
+                            color: typeColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -59,20 +74,27 @@ class StockMovementDetailSheet extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              _row('Quantity', '${movement.type == 'stock_in' ? '+' : '-'}${movement.quantity}'),
+              _row(
+                'Quantity',
+                '${movement.type == 'stock_in' ? '+' : '-'}${movement.quantity}',
+              ),
               _row('Stock', '${movement.previousStock} → ${movement.newStock}'),
               _row('Status', movement.status),
               if (boxSummary != null) _row('Box Details', boxSummary),
               if (movement.reason.isNotEmpty) _row('Reason', movement.reason),
-              if (movement.supplierName != null && movement.supplierName!.isNotEmpty)
+              if (movement.supplierName != null &&
+                  movement.supplierName!.isNotEmpty)
                 _row('Supplier', movement.supplierName!),
-              if (movement.customerName != null && movement.customerName!.isNotEmpty)
+              if (movement.customerName != null &&
+                  movement.customerName!.isNotEmpty)
                 _row('Customer', movement.customerName!),
               if (movement.reference != null && movement.reference!.isNotEmpty)
                 _row('Reference', movement.reference!),
-              if (movement.notes != null && movement.notes!.isNotEmpty) _row('Notes', movement.notes!),
+              if (movement.notes != null && movement.notes!.isNotEmpty)
+                _row('Notes', movement.notes!),
               _row('Date', controller.formatDate(movement.createdAt)),
-              if (movement.createdBy != null) _row('By', movement.createdBy!.name),
+              if (movement.createdBy != null)
+                _row('By', movement.createdBy!.name),
             ],
           ),
         );
@@ -86,8 +108,16 @@ class StockMovementDetailSheet extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 100, child: Text(label, style: TextStyle(color: kSubText, fontSize: 13))),
-          Expanded(child: Text(value, style: const TextStyle(fontWeight: FontWeight.w500))),
+          SizedBox(
+            width: 100,
+            child: Text(label, style: TextStyle(color: kSubText, fontSize: 13)),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+          ),
         ],
       ),
     );

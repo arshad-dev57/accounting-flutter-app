@@ -1,7 +1,7 @@
-import 'package:LedgerPro_app/Services/subscription_service.dart';
-import 'package:LedgerPro_app/core/plans/views/Subscription_plans.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/Services/subscription_service.dart';
+import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -76,7 +76,8 @@ class SubscriptionController extends GetxController {
     trialDaysRemaining.value = sub['trialDaysRemaining'] ?? 0;
     subscriptionDaysRemaining.value = sub['subscriptionDaysRemaining'] ?? 0;
 
-    isTrialActive.value = (subscriptionPlan.value == 'trial' &&
+    isTrialActive.value =
+        (subscriptionPlan.value == 'trial' &&
         trialDaysRemaining.value > 0 &&
         hasActiveSubscription.value);
 
@@ -137,8 +138,7 @@ class SubscriptionController extends GetxController {
       isLoading.value = true;
       final response = await _subscriptionService.getPlans();
       if (response['success'] == true) {
-        plans.value =
-            List<Map<String, dynamic>>.from(response['data'] as List);
+        plans.value = List<Map<String, dynamic>>.from(response['data'] as List);
       }
     } catch (e) {
       print('[SubscriptionController] Error loading plans: $e');
@@ -186,7 +186,11 @@ class SubscriptionController extends GetxController {
         return false;
       }
     } catch (e) {
-      AppSnackbar.error(kDanger, 'Error', 'Something went wrong. Please try again.');
+      AppSnackbar.error(
+        kDanger,
+        'Error',
+        'Something went wrong. Please try again.',
+      );
       return false;
     } finally {
       isLoading.value = false;
@@ -246,7 +250,10 @@ class SubscriptionController extends GetxController {
       justSubscribed.value = false;
       isLoading.value = false;
       AppSnackbar.error(
-          kDanger, 'Error', 'Something went wrong. Please try again.');
+        kDanger,
+        'Error',
+        'Something went wrong. Please try again.',
+      );
       return false;
     }
   }
@@ -270,7 +277,10 @@ class SubscriptionController extends GetxController {
         await _saveSubscriptionStatus();
 
         AppSnackbar.success(
-            kSuccess, 'Cancelled', 'Subscription cancelled successfully');
+          kSuccess,
+          'Cancelled',
+          'Subscription cancelled successfully',
+        );
 
         Get.offAll(() => const SelectPlanScreen());
       } else {
@@ -282,7 +292,10 @@ class SubscriptionController extends GetxController {
       }
     } catch (e) {
       AppSnackbar.error(
-          kDanger, 'Error', 'Something went wrong. Please try again.');
+        kDanger,
+        'Error',
+        'Something went wrong. Please try again.',
+      );
     } finally {
       isLoading.value = false;
     }
@@ -292,7 +305,8 @@ class SubscriptionController extends GetxController {
 
   String getTrialStatusText() {
     if (isTrialActive.value) {
-      if (trialDaysRemaining.value == 30) return '🎉 30-Day Free Trial Started!';
+      if (trialDaysRemaining.value == 30)
+        return '🎉 30-Day Free Trial Started!';
       if (trialDaysRemaining.value <= 3) {
         return '⚠️ Trial ends in ${trialDaysRemaining.value} day(s)!';
       }
@@ -320,7 +334,8 @@ class SubscriptionController extends GetxController {
     if (isTrialActive.value && trialDaysRemaining.value > 0) {
       return trialDaysRemaining.value;
     }
-    if (subscriptionDaysRemaining.value > 0) return subscriptionDaysRemaining.value;
+    if (subscriptionDaysRemaining.value > 0)
+      return subscriptionDaysRemaining.value;
     return 0;
   }
 
@@ -345,7 +360,9 @@ class SubscriptionController extends GetxController {
     await prefs.setString('subscription_plan', subscriptionPlan.value);
     await prefs.setInt('trial_days_remaining', trialDaysRemaining.value);
     await prefs.setInt(
-        'subscription_days_remaining', subscriptionDaysRemaining.value);
+      'subscription_days_remaining',
+      subscriptionDaysRemaining.value,
+    );
     await prefs.setBool('is_trial_active', isTrialActive.value);
   }
 }

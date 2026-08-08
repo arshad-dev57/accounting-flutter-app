@@ -1,10 +1,10 @@
 // screens/bills_screen.dart - PROFESSIONAL MOBILE DESIGN
 
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/Bills/controller/bills_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/supplier/screen/supplier_screen.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/Bills/controller/bills_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/supplier/screen/supplier_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -20,7 +20,9 @@ class BillsScreen extends StatelessWidget {
     final controller = Get.put(BillController());
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (supplierId != null && supplierId!.isNotEmpty && controller.suppliers.isNotEmpty) {
+      if (supplierId != null &&
+          supplierId!.isNotEmpty &&
+          controller.suppliers.isNotEmpty) {
         final exists = controller.suppliers.any(
           (s) => s['_id'].toString() == supplierId,
         );
@@ -49,9 +51,7 @@ class BillsScreen extends StatelessWidget {
                   children: [
                     _buildSummaryCards(controller),
                     const SizedBox(height: 8),
-                    Expanded(
-                      child: _buildListView(controller, context),
-                    ),
+                    Expanded(child: _buildListView(controller, context)),
                   ],
                 ),
               );
@@ -189,7 +189,10 @@ class BillsScreen extends StatelessWidget {
                             controller.fetchBills();
                           }
                         },
-                        style: const TextStyle(fontSize: 13, color: Colors.black87),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black87,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Search bills...',
                           hintStyle: TextStyle(
@@ -202,7 +205,9 @@ class BillsScreen extends StatelessWidget {
                             color: Colors.grey.shade400,
                           ),
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                          ),
                         ),
                       ),
                     ),
@@ -227,11 +232,19 @@ class BillsScreen extends StatelessWidget {
                         () => DropdownButton<String>(
                           value: controller.selectedFilter.value,
                           icon: const Icon(Icons.arrow_drop_down, size: 20),
-                          style: const TextStyle(fontSize: 12, color: Colors.black87),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black87,
+                          ),
                           underline: const SizedBox.shrink(),
-                          items: ['All', 'Unpaid', 'Paid', 'Overdue', 'Partial'].map((f) {
-                            return DropdownMenuItem(value: f, child: Text(f));
-                          }).toList(),
+                          items: ['All', 'Unpaid', 'Paid', 'Overdue', 'Partial']
+                              .map((f) {
+                                return DropdownMenuItem(
+                                  value: f,
+                                  child: Text(f),
+                                );
+                              })
+                              .toList(),
                           onChanged: (v) {
                             if (v != null) controller.changeFilter(v);
                           },
@@ -290,87 +303,88 @@ class BillsScreen extends StatelessWidget {
     );
   }
 
- Widget _buildProfessionalCard({
-  required String title,
-  required String amount,
-  required Color color,
-  required IconData icon,
-  required Color bgColor,
-  required Color borderColor,
-}) {
-  return Expanded(
-    child: Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: kCardBg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: borderColor, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min, // ✅ ADDED: Prevents overflow
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: bgColor,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, size: 14, color: color),
-              ),
-              const SizedBox(width: 6),
-              Expanded( // ✅ WRAPPED with Expanded to prevent overflow
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: kSubText,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.3,
+  Widget _buildProfessionalCard({
+    required String title,
+    required String amount,
+    required Color color,
+    required IconData icon,
+    required Color bgColor,
+    required Color borderColor,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: kCardBg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: borderColor, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min, // ✅ ADDED: Prevents overflow
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  child: Icon(icon, size: 14, color: color),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            amount,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: color,
-              letterSpacing: -0.5,
+                const SizedBox(width: 6),
+                Expanded(
+                  // ✅ WRAPPED with Expanded to prevent overflow
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: kSubText,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.3,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Container(
-            height: 2,
-            width: 30,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [color, color.withOpacity(0.3)],
+            const SizedBox(height: 8),
+            Text(
+              amount,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: color,
+                letterSpacing: -0.5,
               ),
-              borderRadius: BorderRadius.circular(2),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Container(
+              height: 2,
+              width: 30,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [color, color.withOpacity(0.3)],
+                ),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
   // ═══════════════════════════════════════════════════════════════
   // LIST VIEW WITH LAZY LOADING
   // ═══════════════════════════════════════════════════════════════
@@ -399,7 +413,10 @@ class BillsScreen extends StatelessWidget {
                 onPressed: () => _showAddBillDialog(controller, context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimary,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 10,
+                  ),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -470,10 +487,10 @@ class BillsScreen extends StatelessWidget {
     final statusColor = bill.status == 'Paid'
         ? kSuccess
         : bill.status == 'Overdue'
-            ? kDanger
-            : bill.status == 'Partial'
-                ? kWarning
-                : kPrimary;
+        ? kDanger
+        : bill.status == 'Partial'
+        ? kWarning
+        : kPrimary;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -481,10 +498,7 @@ class BillsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: statusColor.withOpacity(0.2),
-          width: 1.5,
-        ),
+        border: Border.all(color: statusColor.withOpacity(0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -618,7 +632,8 @@ class BillsScreen extends StatelessWidget {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _showBillDetails(bill, controller, context),
+                        onPressed: () =>
+                            _showBillDetails(bill, controller, context),
                         icon: Icon(
                           Icons.visibility_outlined,
                           size: 14,
@@ -645,7 +660,8 @@ class BillsScreen extends StatelessWidget {
                       const SizedBox(width: 10),
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () => _recordBillPayment(bill, controller, context),
+                          onPressed: () =>
+                              _recordBillPayment(bill, controller, context),
                           icon: const Icon(
                             Icons.payment,
                             size: 14,
@@ -705,7 +721,10 @@ class BillsScreen extends StatelessWidget {
           double calculateTotal() {
             double itemTotal = items.fold(
               0.0,
-              (s, i) => s + (i['quantity'] as num).toDouble() * (i['unitPrice'] as num).toDouble(),
+              (s, i) =>
+                  s +
+                  (i['quantity'] as num).toDouble() *
+                      (i['unitPrice'] as num).toDouble(),
             );
             double tax = itemTotal * (taxRate / 100);
             return itemTotal + tax - discount;
@@ -838,7 +857,9 @@ class BillsScreen extends StatelessWidget {
                             _buildTextField(
                               label: 'Tax Rate (%)',
                               hint: '0',
-                              onChanged: (v) => setState(() => taxRate = double.tryParse(v) ?? 0),
+                              onChanged: (v) => setState(
+                                () => taxRate = double.tryParse(v) ?? 0,
+                              ),
                               keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 16),
@@ -847,7 +868,9 @@ class BillsScreen extends StatelessWidget {
                               label: 'Discount',
                               hint: '0.00',
                               prefixText: CurrencyUtils.prefix,
-                              onChanged: (v) => setState(() => discount = double.tryParse(v) ?? 0),
+                              onChanged: (v) => setState(
+                                () => discount = double.tryParse(v) ?? 0,
+                              ),
                               keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 16),
@@ -881,7 +904,8 @@ class BillsScreen extends StatelessWidget {
                                 ),
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     'Total Amount',
@@ -954,18 +978,27 @@ class BillsScreen extends StatelessWidget {
                               onPressed: controller.isSaving.value
                                   ? null
                                   : () async {
-                                      if (!formKey.currentState!.validate()) return;
+                                      if (!formKey.currentState!.validate())
+                                        return;
 
                                       if (supplierId.isEmpty) {
-                                        AppSnackbar.error(kDanger, 'Error', 'Please select a supplier');
+                                        AppSnackbar.error(
+                                          kDanger,
+                                          'Error',
+                                          'Please select a supplier',
+                                        );
                                         return;
                                       }
 
                                       Navigator.pop(context);
                                       await controller.createBill({
                                         'supplierId': supplierId,
-                                        'date': DateFormat('yyyy-MM-dd').format(selectedDate),
-                                        'dueDate': DateFormat('yyyy-MM-dd').format(dueDate),
+                                        'date': DateFormat(
+                                          'yyyy-MM-dd',
+                                        ).format(selectedDate),
+                                        'dueDate': DateFormat(
+                                          'yyyy-MM-dd',
+                                        ).format(dueDate),
                                         'reference': reference,
                                         'description': description,
                                         'items': items,
@@ -976,7 +1009,9 @@ class BillsScreen extends StatelessWidget {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: kPrimary,
                                 elevation: 0,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -987,7 +1022,10 @@ class BillsScreen extends StatelessWidget {
                                       height: 20,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.black),
+                                        valueColor:
+                                            const AlwaysStoppedAnimation<Color>(
+                                              Colors.black,
+                                            ),
                                       ),
                                     )
                                   : const Text(
@@ -1025,10 +1063,10 @@ class BillsScreen extends StatelessWidget {
     final statusColor = bill.status == 'Paid'
         ? kSuccess
         : bill.status == 'Overdue'
-            ? kDanger
-            : bill.status == 'Partial'
-                ? kWarning
-                : kPrimary;
+        ? kDanger
+        : bill.status == 'Partial'
+        ? kWarning
+        : kPrimary;
 
     showModalBottomSheet(
       context: context,
@@ -1166,11 +1204,19 @@ class BillsScreen extends StatelessWidget {
 
                       // Details
                       _detailRow('Supplier', bill.supplierName),
-                      _detailRow('Bill Date', DateFormat('dd MMM yyyy').format(bill.date)),
-                      _detailRow('Due Date', DateFormat('dd MMM yyyy').format(bill.dueDate),
-                          valueColor: bill.isOverdue ? kDanger : null),
-                      if (bill.reference != null && bill.reference!.isNotEmpty) _detailRow('Reference', bill.reference!),
-                      if (bill.notes.isNotEmpty) _detailRow('Notes', bill.notes),
+                      _detailRow(
+                        'Bill Date',
+                        DateFormat('dd MMM yyyy').format(bill.date),
+                      ),
+                      _detailRow(
+                        'Due Date',
+                        DateFormat('dd MMM yyyy').format(bill.dueDate),
+                        valueColor: bill.isOverdue ? kDanger : null,
+                      ),
+                      if (bill.reference != null && bill.reference!.isNotEmpty)
+                        _detailRow('Reference', bill.reference!),
+                      if (bill.notes.isNotEmpty)
+                        _detailRow('Notes', bill.notes),
                       const SizedBox(height: 16),
                       Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
                       const SizedBox(height: 16),
@@ -1186,55 +1232,61 @@ class BillsScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        ...bill.items.map(
-                          (item) => Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: kBgLight,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: Colors.grey.withOpacity(0.1),
+                        ...bill.items
+                            .map(
+                              (item) => Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: kBgLight,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: Colors.grey.withOpacity(0.1),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            item.description,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              color: kText,
+                                            ),
+                                          ),
+                                          Text(
+                                            '${item.quantity} × ${_formatAmount(item.unitPrice)}',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: kSubText,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Text(
+                                      _formatAmount(item.amount),
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
+                                        color: kDanger,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item.description,
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                          color: kText,
-                                        ),
-                                      ),
-                                      Text(
-                                        '${item.quantity} × ${_formatAmount(item.unitPrice)}',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: kSubText,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Text(
-                                  _formatAmount(item.amount),
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w800,
-                                    color: kDanger,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ).toList(),
+                            )
+                            .toList(),
                         const SizedBox(height: 16),
-                        Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                        Divider(
+                          height: 1,
+                          color: Colors.grey.withOpacity(0.12),
+                        ),
                         const SizedBox(height: 16),
                       ],
 
@@ -1248,7 +1300,11 @@ class BillsScreen extends StatelessWidget {
                                 child: ElevatedButton.icon(
                                   onPressed: () {
                                     Navigator.pop(context);
-                                    _recordBillPayment(bill, controller, context);
+                                    _recordBillPayment(
+                                      bill,
+                                      controller,
+                                      context,
+                                    );
                                   },
                                   icon: const Icon(
                                     Icons.payment,
@@ -1435,12 +1491,26 @@ class BillsScreen extends StatelessWidget {
                               child: Column(
                                 children: [
                                   _detailRow('Supplier', bill.supplierName),
-                                  _detailRow('Bill Date', DateFormat('dd MMM yyyy').format(bill.date)),
-                                  _detailRow('Due Date', DateFormat('dd MMM yyyy').format(bill.dueDate),
-                                      valueColor: bill.isOverdue ? kDanger : null),
-                                  _detailRow('Total', _formatAmount(bill.totalAmount)),
-                                  _detailRow('Outstanding', _formatAmount(bill.outstanding),
-                                      valueColor: kDanger),
+                                  _detailRow(
+                                    'Bill Date',
+                                    DateFormat('dd MMM yyyy').format(bill.date),
+                                  ),
+                                  _detailRow(
+                                    'Due Date',
+                                    DateFormat(
+                                      'dd MMM yyyy',
+                                    ).format(bill.dueDate),
+                                    valueColor: bill.isOverdue ? kDanger : null,
+                                  ),
+                                  _detailRow(
+                                    'Total',
+                                    _formatAmount(bill.totalAmount),
+                                  ),
+                                  _detailRow(
+                                    'Outstanding',
+                                    _formatAmount(bill.outstanding),
+                                    valueColor: kDanger,
+                                  ),
                                 ],
                               ),
                             ),
@@ -1450,12 +1520,16 @@ class BillsScreen extends StatelessWidget {
                               label: 'Payment Amount *',
                               hint: bill.outstanding.toStringAsFixed(2),
                               prefixText: CurrencyUtils.prefix,
-                              onChanged: (v) => amount = double.tryParse(v) ?? 0,
+                              onChanged: (v) =>
+                                  amount = double.tryParse(v) ?? 0,
                               validator: (v) {
-                                if (v == null || v.isEmpty) return 'Amount required';
+                                if (v == null || v.isEmpty)
+                                  return 'Amount required';
                                 final val = double.tryParse(v);
-                                if (val == null || val <= 0) return 'Invalid amount';
-                                if (val > bill.outstanding) return 'Exceeds outstanding';
+                                if (val == null || val <= 0)
+                                  return 'Invalid amount';
+                                if (val > bill.outstanding)
+                                  return 'Exceeds outstanding';
                                 return null;
                               },
                               keyboardType: TextInputType.number,
@@ -1473,8 +1547,14 @@ class BillsScreen extends StatelessWidget {
                             _buildDropdownField(
                               label: 'Payment Method',
                               value: paymentMethod,
-                              items: const ['Bank Transfer', 'Cash', 'Cheque', 'Credit Card'],
-                              onChanged: (v) => setState(() => paymentMethod = v!),
+                              items: const [
+                                'Bank Transfer',
+                                'Cash',
+                                'Cheque',
+                                'Credit Card',
+                              ],
+                              onChanged: (v) =>
+                                  setState(() => paymentMethod = v!),
                             ),
                             const SizedBox(height: 16),
 
@@ -1487,8 +1567,12 @@ class BillsScreen extends StatelessWidget {
 
                             if (paymentMethod == 'Bank Transfer') ...[
                               _buildBankAccountDropdownField(
-                                selectedBankAccountId.isEmpty ? null : selectedBankAccountId,
-                                (v) => setState(() => selectedBankAccountId = v ?? ''),
+                                selectedBankAccountId.isEmpty
+                                    ? null
+                                    : selectedBankAccountId,
+                                (v) => setState(
+                                  () => selectedBankAccountId = v ?? '',
+                                ),
                                 controller.bankAccounts.toList(),
                               ),
                             ],
@@ -1544,8 +1628,13 @@ class BillsScreen extends StatelessWidget {
                                   ? null
                                   : () {
                                       if (formKey.currentState!.validate()) {
-                                        if (paymentMethod == 'Bank Transfer' && selectedBankAccountId.isEmpty) {
-                                          AppSnackbar.error(kDanger, 'Error', 'Please select a bank account');
+                                        if (paymentMethod == 'Bank Transfer' &&
+                                            selectedBankAccountId.isEmpty) {
+                                          AppSnackbar.error(
+                                            kDanger,
+                                            'Error',
+                                            'Please select a bank account',
+                                          );
                                           return;
                                         }
                                         Navigator.pop(context);
@@ -1563,7 +1652,9 @@ class BillsScreen extends StatelessWidget {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: kSuccess,
                                 elevation: 0,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -1574,7 +1665,10 @@ class BillsScreen extends StatelessWidget {
                                       height: 20,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.black),
+                                        valueColor:
+                                            const AlwaysStoppedAnimation<Color>(
+                                              Colors.black,
+                                            ),
                                       ),
                                     )
                                   : const Text(
@@ -1687,10 +1781,7 @@ class BillsScreen extends StatelessWidget {
           Container(
             width: 5,
             height: 5,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 4),
           Text(
@@ -1739,9 +1830,7 @@ class BillsScreen extends StatelessWidget {
         labelText: label,
         hintText: hint,
         prefixText: prefixText,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
@@ -1767,9 +1856,7 @@ class BillsScreen extends StatelessWidget {
       value: value,
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
@@ -1794,9 +1881,7 @@ class BillsScreen extends StatelessWidget {
       value: selectedId,
       decoration: InputDecoration(
         labelText: 'Supplier *',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
@@ -1812,16 +1897,16 @@ class BillsScreen extends StatelessWidget {
       items: suppliers.isEmpty
           ? []
           : suppliers
-              .map(
-                (s) => DropdownMenuItem<String>(
-                  value: (s['_id'] ?? s['id']).toString(),
-                  child: Text(
-                    s['name'] ?? 'Unknown',
-                    overflow: TextOverflow.ellipsis,
+                .map(
+                  (s) => DropdownMenuItem<String>(
+                    value: (s['_id'] ?? s['id']).toString(),
+                    child: Text(
+                      s['name'] ?? 'Unknown',
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-              )
-              .toList(),
+                )
+                .toList(),
       onChanged: suppliers.isEmpty ? null : onChanged,
       validator: (value) => value == null ? 'Please select a supplier' : null,
     );
@@ -1836,9 +1921,7 @@ class BillsScreen extends StatelessWidget {
       value: selectedId,
       decoration: InputDecoration(
         labelText: 'Bank Account *',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
@@ -1854,18 +1937,19 @@ class BillsScreen extends StatelessWidget {
       items: bankAccounts.isEmpty
           ? []
           : bankAccounts
-              .map(
-                (a) => DropdownMenuItem<String>(
-                  value: (a['_id'] ?? a['id']).toString(),
-                  child: Text(
-                    a['accountName'] ?? 'Unknown',
-                    overflow: TextOverflow.ellipsis,
+                .map(
+                  (a) => DropdownMenuItem<String>(
+                    value: (a['_id'] ?? a['id']).toString(),
+                    child: Text(
+                      a['accountName'] ?? 'Unknown',
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-              )
-              .toList(),
+                )
+                .toList(),
       onChanged: bankAccounts.isEmpty ? null : onChanged,
-      validator: (value) => value == null ? 'Please select a bank account' : null,
+      validator: (value) =>
+          value == null ? 'Please select a bank account' : null,
     );
   }
 
@@ -1899,10 +1983,7 @@ class BillsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    label,
-                    style: TextStyle(fontSize: 11, color: kSubText),
-                  ),
+                  Text(label, style: TextStyle(fontSize: 11, color: kSubText)),
                   Text(
                     DateFormat('dd MMM yyyy').format(date),
                     style: TextStyle(
@@ -1914,11 +1995,7 @@ class BillsScreen extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
-              Icons.arrow_drop_down,
-              size: 20,
-              color: kSubText,
-            ),
+            Icon(Icons.arrow_drop_down, size: 20, color: kSubText),
           ],
         ),
       ),
@@ -1972,9 +2049,14 @@ class BillsScreen extends StatelessWidget {
                           isDense: true,
                           labelStyle: TextStyle(fontSize: 11, color: kSubText),
                         ),
-                        style: const TextStyle(fontSize: 13, color: Colors.black),
-                        onChanged: (v) => setState(() => item['description'] = v),
-                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
+                        onChanged: (v) =>
+                            setState(() => item['description'] = v),
+                        validator: (v) =>
+                            (v == null || v.trim().isEmpty) ? 'Required' : null,
                       ),
                     ),
                     if (items.length > 1) ...[
@@ -2007,7 +2089,10 @@ class BillsScreen extends StatelessWidget {
                           isDense: true,
                           labelStyle: TextStyle(fontSize: 11, color: kSubText),
                         ),
-                        style: const TextStyle(fontSize: 13, color: Colors.black),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
                         keyboardType: TextInputType.number,
                         onChanged: (v) => setState(() {
                           item['quantity'] = int.tryParse(v) ?? 1;
@@ -2032,7 +2117,10 @@ class BillsScreen extends StatelessWidget {
                           isDense: true,
                           labelStyle: TextStyle(fontSize: 11, color: kSubText),
                         ),
-                        style: const TextStyle(fontSize: 13, color: Colors.black),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black,
+                        ),
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
@@ -2052,11 +2140,7 @@ class BillsScreen extends StatelessWidget {
         }).toList(),
         TextButton.icon(
           onPressed: () => setState(() {
-            items.add({
-              'description': '',
-              'quantity': 1,
-              'unitPrice': 0.0,
-            });
+            items.add({'description': '', 'quantity': 1, 'unitPrice': 0.0});
           }),
           icon: const Icon(Icons.add, size: 16, color: kPrimary),
           label: Text(

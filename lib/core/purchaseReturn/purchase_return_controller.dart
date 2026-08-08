@@ -1,8 +1,8 @@
 // lib/core/warehouse/purchase_return/controller/purchase_return_controller.dart
 
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/core/purchaseReturn/purchase_return_model.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/core/purchaseReturn/purchase_return_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -12,11 +12,14 @@ class PurchaseReturnController extends GetxController {
 
   // ─── MAIN STATE ──────────────────────────────────────────────
   final RxList<PurchaseReturnModel> returns = <PurchaseReturnModel>[].obs;
-  final RxList<PurchaseReturnModel> filteredReturns = <PurchaseReturnModel>[].obs;
+  final RxList<PurchaseReturnModel> filteredReturns =
+      <PurchaseReturnModel>[].obs;
   final RxBool isLoading = false.obs;
   final RxBool isSubmitting = false.obs;
   final RxBool showCreateForm = false.obs;
-  final Rx<PurchaseReturnModel?> selectedReturn = Rx<PurchaseReturnModel?>(null);
+  final Rx<PurchaseReturnModel?> selectedReturn = Rx<PurchaseReturnModel?>(
+    null,
+  );
 
   // ─── PAGINATION ──────────────────────────────────────────────
   final RxInt currentPage = 1.obs;
@@ -46,8 +49,11 @@ class PurchaseReturnController extends GetxController {
   ).obs;
 
   // ─── CREATE FORM STATE ──────────────────────────────────────
-  final Rx<Map<String, dynamic>?> selectedSupplier = Rx<Map<String, dynamic>?>(null);
-  final RxList<Map<String, dynamic>> supplierSearchResults = <Map<String, dynamic>>[].obs;
+  final Rx<Map<String, dynamic>?> selectedSupplier = Rx<Map<String, dynamic>?>(
+    null,
+  );
+  final RxList<Map<String, dynamic>> supplierSearchResults =
+      <Map<String, dynamic>>[].obs;
   final RxBool isSearchingSuppliers = false.obs;
   final RxList<InvoiceForReturn> availableInvoices = <InvoiceForReturn>[].obs;
   final Rx<InvoiceForReturn?> selectedInvoice = Rx<InvoiceForReturn?>(null);
@@ -70,7 +76,9 @@ class PurchaseReturnController extends GetxController {
     super.onInit();
     print('🟢 [PurchaseReturnController] onInit called');
     selectedReturnDate.value = DateTime.now();
-    returnDateController.text = DateFormat('dd MMM yyyy').format(selectedReturnDate.value!);
+    returnDateController.text = DateFormat(
+      'dd MMM yyyy',
+    ).format(selectedReturnDate.value!);
     fetchReturns();
   }
 
@@ -116,7 +124,7 @@ class PurchaseReturnController extends GetxController {
   Future<void> fetchReturns({bool resetPage = false}) async {
     print('🔵 [PurchaseReturnController] fetchReturns called');
     if (resetPage) currentPage.value = 1;
-    
+
     try {
       isLoading.value = true;
       final params = <String, String>{
@@ -133,15 +141,24 @@ class PurchaseReturnController extends GetxController {
         params['toDate'] = toDate.value!.toIso8601String().split('T').first;
       }
 
-      final query = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
-      print('🔵 [PurchaseReturnController] API Request: GET /api/purchase/returns?$query');
+      final query = params.entries
+          .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+          .join('&');
+      print(
+        '🔵 [PurchaseReturnController] API Request: GET /api/purchase/returns?$query',
+      );
 
-      final response = await _api.get('/api/purchase/returns?$query', requiresAuth: true);
+      final response = await _api.get(
+        '/api/purchase/returns?$query',
+        requiresAuth: true,
+      );
 
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         returns.value = list
-            .map((e) => PurchaseReturnModel.fromJson(Map<String, dynamic>.from(e)))
+            .map(
+              (e) => PurchaseReturnModel.fromJson(Map<String, dynamic>.from(e)),
+            )
             .toList();
 
         applyLocalFilters();
@@ -162,7 +179,7 @@ class PurchaseReturnController extends GetxController {
           hasPrev.value = pagination['hasPrev'] == true;
           hasMore.value = pagination['hasNext'] == true;
         }
-        
+
         print('✅ [PurchaseReturnController] Fetched ${returns.length} returns');
       } else {
         print('❌ [PurchaseReturnController] Failed to fetch returns');
@@ -181,19 +198,21 @@ class PurchaseReturnController extends GetxController {
   void applyLocalFilters() {
     final list = returns.toList();
     final filtered = list.where((item) {
-      if (selectedFilter.value != 'all' && item.status != selectedFilter.value) {
+      if (selectedFilter.value != 'all' &&
+          item.status != selectedFilter.value) {
         return false;
       }
       if (searchFilter.value.isNotEmpty) {
         final query = searchFilter.value.toLowerCase();
-        final matches = item.returnNumber.toLowerCase().contains(query) ||
+        final matches =
+            item.returnNumber.toLowerCase().contains(query) ||
             item.supplierName.toLowerCase().contains(query) ||
             item.purchaseInvoiceNumber.toLowerCase().contains(query);
         if (!matches) return false;
       }
       return true;
     }).toList();
-    
+
     filteredReturns.value = filtered;
   }
 
@@ -223,7 +242,7 @@ class PurchaseReturnController extends GetxController {
 
   Future<void> fetchMoreReturns() async {
     if (!hasMore.value || isLoadingMore.value) return;
-    
+
     try {
       isLoadingMore.value = true;
       currentPage.value += 1;
@@ -234,15 +253,22 @@ class PurchaseReturnController extends GetxController {
       };
       if (searchFilter.value.isNotEmpty) params['search'] = searchFilter.value;
 
-      final query = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
-      final response = await _api.get('/api/purchase/returns?$query', requiresAuth: true);
+      final query = params.entries
+          .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+          .join('&');
+      final response = await _api.get(
+        '/api/purchase/returns?$query',
+        requiresAuth: true,
+      );
 
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         final newReturns = list
-            .map((e) => PurchaseReturnModel.fromJson(Map<String, dynamic>.from(e)))
+            .map(
+              (e) => PurchaseReturnModel.fromJson(Map<String, dynamic>.from(e)),
+            )
             .toList();
-        
+
         returns.addAll(newReturns);
         applyLocalFilters();
 
@@ -284,7 +310,9 @@ class PurchaseReturnController extends GetxController {
     returnReason.value = '';
     notesController.clear();
     selectedReturnDate.value = DateTime.now();
-    returnDateController.text = DateFormat('dd MMM yyyy').format(selectedReturnDate.value!);
+    returnDateController.text = DateFormat(
+      'dd MMM yyyy',
+    ).format(selectedReturnDate.value!);
     isLoadingInvoices.value = false;
     isLoadingProducts.value = false;
   }
@@ -296,22 +324,24 @@ class PurchaseReturnController extends GetxController {
       supplierSearchResults.clear();
       return;
     }
-    
+
     try {
       isSearchingSuppliers.value = true;
       final encoded = Uri.encodeComponent(query.trim());
-      
+
       final response = await _api.get(
         '/api/warehouse/supplier?search=$encoded&limit=10',
         requiresAuth: true,
       );
-      
+
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         supplierSearchResults.value = list
             .map((e) => Map<String, dynamic>.from(e))
             .toList();
-        print('🔵 [PurchaseReturnController] Found ${supplierSearchResults.length} suppliers');
+        print(
+          '🔵 [PurchaseReturnController] Found ${supplierSearchResults.length} suppliers',
+        );
       } else {
         supplierSearchResults.clear();
       }
@@ -337,18 +367,20 @@ class PurchaseReturnController extends GetxController {
       isLoadingInvoices.value = true;
       availableInvoices.clear();
       selectedInvoice.value = null;
-      
+
       final response = await _api.get(
         '/api/purchase/returns/supplier/$supplierId/invoices',
         requiresAuth: true,
       );
-      
+
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         availableInvoices.value = list
             .map((e) => InvoiceForReturn.fromJson(Map<String, dynamic>.from(e)))
             .toList();
-        print('🔵 [PurchaseReturnController] Found ${availableInvoices.length} invoices');
+        print(
+          '🔵 [PurchaseReturnController] Found ${availableInvoices.length} invoices',
+        );
       }
     } catch (e) {
       print('❌ [PurchaseReturnController] fetchSupplierInvoices error: $e');
@@ -368,21 +400,25 @@ class PurchaseReturnController extends GetxController {
     try {
       isLoadingProducts.value = true;
       returnItems.clear();
-      
+
       final response = await _api.get(
         '/api/purchase/returns/invoice/$invoiceId/products',
         requiresAuth: true,
       );
-      
+
       if (response.success && response.data != null) {
         final data = response.data['data'] as Map<String, dynamic>;
         final products = data['products'] as List? ?? [];
-        
+
         returnItems.value = products
-            .map((e) => ReturnItemForForm.fromJson(Map<String, dynamic>.from(e)))
+            .map(
+              (e) => ReturnItemForForm.fromJson(Map<String, dynamic>.from(e)),
+            )
             .toList();
-        
-        print('🔵 [PurchaseReturnController] Found ${returnItems.length} products for return');
+
+        print(
+          '🔵 [PurchaseReturnController] Found ${returnItems.length} products for return',
+        );
       }
     } catch (e) {
       print('❌ [PurchaseReturnController] fetchInvoiceProducts error: $e');
@@ -450,7 +486,9 @@ class PurchaseReturnController extends GetxController {
     final item = returnItems[index];
     item.isSelected = !item.isSelected;
     if (item.isSelected) {
-      item.returnQuantity = item.availableQuantity > 0 ? item.availableQuantity : 0;
+      item.returnQuantity = item.availableQuantity > 0
+          ? item.availableQuantity
+          : 0;
       if (item.isBoxBased && item.boxQuantity > 0) {
         item.boxes = (item.returnQuantity / item.boxQuantity).floor();
         item.quantityPerBox = item.boxQuantity;
@@ -475,7 +513,7 @@ class PurchaseReturnController extends GetxController {
       firstDate: DateTime.now().subtract(const Duration(days: 30)),
       lastDate: DateTime.now().add(const Duration(days: 30)),
     );
-    
+
     if (date != null) {
       selectedReturnDate.value = date;
       returnDateController.text = DateFormat('dd MMM yyyy').format(date);
@@ -494,22 +532,26 @@ class PurchaseReturnController extends GetxController {
 
     try {
       isSubmitting.value = true;
-      
+
       final items = returnItems
           .where((item) => item.isSelected && item.returnQuantity > 0)
-          .map((item) => {
-            'productId': item.productId,
-            'productName': item.productName,
-            'sku': item.sku,
-            'purchaseInvoiceItemId': item.purchaseInvoiceItemId,
-            'returnQuantity': item.returnQuantity,
-            'isBoxBased': item.isBoxBased,
-            'boxes': item.boxes ?? 0,
-            'quantityPerBox': item.quantityPerBox ?? 0,
-            'unitPrice': item.unitPrice,
-            'returnReason': item.returnReason.isNotEmpty ? item.returnReason : returnReason.value,
-            'notes': item.notes ?? '',
-          })
+          .map(
+            (item) => {
+              'productId': item.productId,
+              'productName': item.productName,
+              'sku': item.sku,
+              'purchaseInvoiceItemId': item.purchaseInvoiceItemId,
+              'returnQuantity': item.returnQuantity,
+              'isBoxBased': item.isBoxBased,
+              'boxes': item.boxes ?? 0,
+              'quantityPerBox': item.quantityPerBox ?? 0,
+              'unitPrice': item.unitPrice,
+              'returnReason': item.returnReason.isNotEmpty
+                  ? item.returnReason
+                  : returnReason.value,
+              'notes': item.notes ?? '',
+            },
+          )
           .toList();
 
       final payload = {
@@ -536,9 +578,12 @@ class PurchaseReturnController extends GetxController {
         await fetchReturns(resetPage: true);
         return true;
       }
-      
+
       print('❌ [PurchaseReturnController] Failed to create draft return');
-      Get.snackbar('Error', response.message ?? 'Failed to create draft return');
+      Get.snackbar(
+        'Error',
+        response.message ?? 'Failed to create draft return',
+      );
       return false;
     } catch (e) {
       print('❌ [PurchaseReturnController] createDraftReturn error: $e');
@@ -560,7 +605,7 @@ class PurchaseReturnController extends GetxController {
   Future<bool> processReturn(String id) async {
     try {
       isSubmitting.value = true;
-      
+
       final response = await _api.post(
         '/api/purchase/returns/$id/process',
         requiresAuth: true,
@@ -571,7 +616,7 @@ class PurchaseReturnController extends GetxController {
         await fetchReturns(resetPage: true);
         return true;
       }
-      
+
       Get.snackbar('Error', response.message ?? 'Failed to process return');
       return false;
     } catch (e) {
@@ -586,7 +631,7 @@ class PurchaseReturnController extends GetxController {
   Future<bool> cancelReturn(String id, {String? reason}) async {
     try {
       isSubmitting.value = true;
-      
+
       final response = await _api.post(
         '/api/purchase/returns/$id/cancel',
         body: {'reason': reason ?? 'Cancelled by user'},
@@ -598,7 +643,7 @@ class PurchaseReturnController extends GetxController {
         await fetchReturns(resetPage: true);
         return true;
       }
-      
+
       Get.snackbar('Error', response.message ?? 'Failed to cancel return');
       return false;
     } catch (e) {
@@ -613,7 +658,7 @@ class PurchaseReturnController extends GetxController {
   Future<bool> deleteReturn(String id) async {
     try {
       isSubmitting.value = true;
-      
+
       final response = await _api.delete(
         '/api/purchase/returns/$id',
         requiresAuth: true,
@@ -624,7 +669,7 @@ class PurchaseReturnController extends GetxController {
         await fetchReturns(resetPage: true);
         return true;
       }
-      
+
       Get.snackbar('Error', response.message ?? 'Failed to delete return');
       return false;
     } catch (e) {
@@ -664,7 +709,7 @@ class ReturnItemForForm {
   final String boxUnitName;
   final String returnReason;
   final String? notes;
-  
+
   bool isSelected;
   int returnQuantity;
   int? boxes;
@@ -734,7 +779,7 @@ class PurchaseReturnStats {
     final today = json['today'] as Map<String, dynamic>? ?? {};
     final month = json['month'] as Map<String, dynamic>? ?? {};
     final draft = json['draft'] as Map<String, dynamic>? ?? {};
-    
+
     return PurchaseReturnStats(
       todayCount: (today['count'] as num?)?.toInt() ?? 0,
       todayAmount: (today['amount'] as num?)?.toDouble() ?? 0,

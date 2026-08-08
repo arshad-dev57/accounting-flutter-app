@@ -4,13 +4,13 @@ import re
 LIB_DIR = os.path.join(os.path.dirname(__file__), '..', 'lib')
 SKIP_FILES = {'currency_controller.dart', 'currency_utils.dart'}
 
-IMPORT_LINE = "import 'package:LedgerPro_app/Utils/currency_utils.dart';\n"
+IMPORT_LINE = "import 'package:BisonsTechs_app/Utils/currency_utils.dart';\n"
 
 def add_import(content: str) -> str:
     if 'currency_utils.dart' in content:
         return content
     for anchor in [
-        "import 'package:LedgerPro_app/Utils/colors.dart';\n",
+        "import 'package:BisonsTechs_app/Utils/colors.dart';\n",
         "import 'package:flutter/material.dart';\n",
         "import 'package:get/get.dart';\n",
     ]:

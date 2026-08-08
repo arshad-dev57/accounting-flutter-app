@@ -1,8 +1,8 @@
 // core/GeneralLedger/Controller/general_ledger_controller.dart
 
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -122,7 +122,7 @@ class GeneralLedgerController extends GetxController {
         print('📊 Full response keys: ${data.keys}');
         print('📊 Data field: ${data['data']}');
         print('📊 Data field type: ${data['data'].runtimeType}');
-        
+
         // Handle data field - could be List or Map
         final dataList = data['data'];
         if (dataList is List) {
@@ -146,7 +146,9 @@ class GeneralLedgerController extends GetxController {
           // Handle nested structure: {count, data: [...], summary}
           final nestedList = dataList['data'];
           if (nestedList is List) {
-            print('✅ Found nested list in data.data with ${nestedList.length} items');
+            print(
+              '✅ Found nested list in data.data with ${nestedList.length} items',
+            );
             accountSummaries.value = nestedList
                 .map((e) => AccountSummary.fromJson(e))
                 .toList();
@@ -161,7 +163,10 @@ class GeneralLedgerController extends GetxController {
                 .toList();
           } else {
             // Try other common keys
-            final altList = dataList['entries'] ?? dataList['items'] ?? dataList['accounts'];
+            final altList =
+                dataList['entries'] ??
+                dataList['items'] ??
+                dataList['accounts'];
             if (altList is List) {
               print('✅ Found nested list with ${altList.length} items');
               accountSummaries.value = altList
@@ -183,7 +188,9 @@ class GeneralLedgerController extends GetxController {
             }
           }
         } else {
-          print('⚠️ API returned non-List data for accounts: ${dataList.runtimeType}');
+          print(
+            '⚠️ API returned non-List data for accounts: ${dataList.runtimeType}',
+          );
           accountSummaries.value = [];
           accountsForDropdown.value = [];
         }
@@ -195,10 +202,9 @@ class GeneralLedgerController extends GetxController {
           totalCreditSummary.value = _toDouble(summary['totalCredit']);
           netDifferenceSummary.value = _toDouble(summary['netDifference'] ?? 0);
           isBalancedSummary.value = summary['isBalanced'] ?? true;
-          trialBalanceStatus.value = summary['status'] ?? 
-              (isBalancedSummary.value 
-                  ? '✅ Balanced' 
-                  : '⚠️ Not Balanced');
+          trialBalanceStatus.value =
+              summary['status'] ??
+              (isBalancedSummary.value ? '✅ Balanced' : '⚠️ Not Balanced');
         }
       } else {
         AppSnackbar.error(
@@ -281,40 +287,41 @@ class GeneralLedgerController extends GetxController {
         print('📊 Full response keys: ${data.keys}');
         print('📊 Data field: ${data['data']}');
         print('📊 Data field type: ${data['data'].runtimeType}');
-        
+
         // Handle data field - could be List or Map
         final dataList = data['data'];
         List<LedgerEntry> entries = [];
-        
+
         if (dataList is List) {
           print('✅ Data is a List with ${dataList.length} items');
-          entries = dataList
-              .map((e) => LedgerEntry.fromJson(e))
-              .toList();
+          entries = dataList.map((e) => LedgerEntry.fromJson(e)).toList();
           print('✅ Parsed ${entries.length} ledger entries');
         } else if (dataList is Map) {
           print('⚠️ Data is a Map, looking for nested list...');
           // Handle nested structure: {count, data: [...], summary}
           final nestedList = dataList['data'];
           if (nestedList is List) {
-            print('✅ Found nested list in data.data with ${nestedList.length} items');
-            entries = nestedList
-                .map((e) => LedgerEntry.fromJson(e))
-                .toList();
+            print(
+              '✅ Found nested list in data.data with ${nestedList.length} items',
+            );
+            entries = nestedList.map((e) => LedgerEntry.fromJson(e)).toList();
           } else {
             // Try other common keys
-            final altList = dataList['entries'] ?? dataList['items'] ?? dataList['transactions'];
+            final altList =
+                dataList['entries'] ??
+                dataList['items'] ??
+                dataList['transactions'];
             if (altList is List) {
               print('✅ Found nested list with ${altList.length} items');
-              entries = altList
-                  .map((e) => LedgerEntry.fromJson(e))
-                  .toList();
+              entries = altList.map((e) => LedgerEntry.fromJson(e)).toList();
             } else {
               print('❌ No nested list found in Map');
             }
           }
         } else {
-          print('⚠️ API returned non-List data for ledger entries: ${dataList.runtimeType}');
+          print(
+            '⚠️ API returned non-List data for ledger entries: ${dataList.runtimeType}',
+          );
           print('📋 Response data structure: $data');
         }
 
@@ -333,8 +340,8 @@ class GeneralLedgerController extends GetxController {
           totalCreditSummary.value = _toDouble(summary['totalCredit'] ?? 0);
           netDifferenceSummary.value = _toDouble(summary['netDifference'] ?? 0);
           isBalancedSummary.value = summary['isBalanced'] ?? true;
-          trialBalanceStatus.value = isBalancedSummary.value 
-              ? '✅ Balanced' 
+          trialBalanceStatus.value = isBalancedSummary.value
+              ? '✅ Balanced'
               : '⚠️ Not Balanced';
         }
 
@@ -584,7 +591,9 @@ class LedgerEntry {
   factory LedgerEntry.fromJson(Map<String, dynamic> json) {
     return LedgerEntry(
       id: json['id'] ?? '',
-      date: json['date'] != null ? DateTime.parse(json['date']) : DateTime.now(),
+      date: json['date'] != null
+          ? DateTime.parse(json['date'])
+          : DateTime.now(),
       accountId: json['accountId'] ?? '',
       accountName: json['accountName'] ?? '',
       accountCode: json['accountCode'] ?? '',

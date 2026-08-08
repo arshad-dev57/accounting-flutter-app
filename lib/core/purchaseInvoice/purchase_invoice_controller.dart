@@ -1,8 +1,8 @@
 // lib/core/warehouse/purchase_invoice/controller/purchase_invoice_controller.dart
 
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/core/purchaseInvoice/purchase_invoice_model.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/core/purchaseInvoice/purchase_invoice_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -12,11 +12,14 @@ class PurchaseInvoiceController extends GetxController {
 
   // ─── MAIN STATE ──────────────────────────────────────────────
   final RxList<PurchaseInvoiceModel> invoices = <PurchaseInvoiceModel>[].obs;
-  final RxList<PurchaseInvoiceModel> filteredInvoices = <PurchaseInvoiceModel>[].obs;
+  final RxList<PurchaseInvoiceModel> filteredInvoices =
+      <PurchaseInvoiceModel>[].obs;
   final RxBool isLoading = false.obs;
   final RxBool isSubmitting = false.obs;
   final RxBool showCreateWizard = false.obs;
-  final Rx<PurchaseInvoiceModel?> selectedInvoice = Rx<PurchaseInvoiceModel?>(null);
+  final Rx<PurchaseInvoiceModel?> selectedInvoice = Rx<PurchaseInvoiceModel?>(
+    null,
+  );
 
   // ─── PAGINATION ──────────────────────────────────────────────
   final RxInt currentPage = 1.obs;
@@ -36,7 +39,14 @@ class PurchaseInvoiceController extends GetxController {
   final Rx<DateTime?> fromDate = Rx<DateTime?>(null);
   final Rx<DateTime?> toDate = Rx<DateTime?>(null);
 
-  final List<String> filters = ['all', 'Draft', 'Posted', 'Partially Paid', 'Paid', 'Cancelled'];
+  final List<String> filters = [
+    'all',
+    'Draft',
+    'Posted',
+    'Partially Paid',
+    'Paid',
+    'Cancelled',
+  ];
 
   // ─── STATS ────────────────────────────────────────────────────
   final Rx<PurchaseInvoiceStats> stats = PurchaseInvoiceStats(
@@ -54,11 +64,15 @@ class PurchaseInvoiceController extends GetxController {
 
   // ─── CREATE WIZARD STATE ─────────────────────────────────────
   final RxInt wizardStep = 0.obs;
-  final RxList<Map<String, dynamic>> sourceResults = <Map<String, dynamic>>[].obs;
+  final RxList<Map<String, dynamic>> sourceResults =
+      <Map<String, dynamic>>[].obs;
   final RxBool isSearchingSource = false.obs;
   final RxString sourceType = 'grn'.obs; // 'grn' or 'po'
-  final Rx<Map<String, dynamic>?> selectedSource = Rx<Map<String, dynamic>?>(null);
-  final RxList<PurchaseInvoiceLineDraft> lineDrafts = <PurchaseInvoiceLineDraft>[].obs;
+  final Rx<Map<String, dynamic>?> selectedSource = Rx<Map<String, dynamic>?>(
+    null,
+  );
+  final RxList<PurchaseInvoiceLineDraft> lineDrafts =
+      <PurchaseInvoiceLineDraft>[].obs;
 
   // ─── CONTROLLERS ─────────────────────────────────────────────
   final sourceSearchController = TextEditingController();
@@ -78,14 +92,20 @@ class PurchaseInvoiceController extends GetxController {
     print('🟢 [PurchaseInvoiceController] onInit called');
     selectedInvoiceDate.value = DateTime.now();
     selectedDueDate.value = DateTime.now().add(const Duration(days: 30));
-    invoiceDateController.text = DateFormat('dd MMM yyyy').format(selectedInvoiceDate.value!);
-    dueDateController.text = DateFormat('dd MMM yyyy').format(selectedDueDate.value!);
+    invoiceDateController.text = DateFormat(
+      'dd MMM yyyy',
+    ).format(selectedInvoiceDate.value!);
+    dueDateController.text = DateFormat(
+      'dd MMM yyyy',
+    ).format(selectedDueDate.value!);
     fetchInvoices();
   }
 
   @override
   void onClose() {
-    print('🟢 [PurchaseInvoiceController] onClose called - disposing controllers');
+    print(
+      '🟢 [PurchaseInvoiceController] onClose called - disposing controllers',
+    );
     sourceSearchController.dispose();
     supplierInvoiceNoController.dispose();
     invoiceDateController.dispose();
@@ -123,9 +143,11 @@ class PurchaseInvoiceController extends GetxController {
 
   Future<void> fetchInvoices({bool resetPage = false}) async {
     print('🔵 [PurchaseInvoiceController] fetchInvoices called');
-    print('🔵 [PurchaseInvoiceController] Current Page: ${currentPage.value}, Limit: ${pageLimit.value}');
+    print(
+      '🔵 [PurchaseInvoiceController] Current Page: ${currentPage.value}, Limit: ${pageLimit.value}',
+    );
     print('🔵 [PurchaseInvoiceController] Reset Page: $resetPage');
-    
+
     if (resetPage) currentPage.value = 1;
     try {
       isLoading.value = true;
@@ -135,39 +157,61 @@ class PurchaseInvoiceController extends GetxController {
       };
       if (searchFilter.value.isNotEmpty) {
         params['search'] = searchFilter.value;
-        print('🔵 [PurchaseInvoiceController] Search filter: ${searchFilter.value}');
+        print(
+          '🔵 [PurchaseInvoiceController] Search filter: ${searchFilter.value}',
+        );
       }
       if (statusFilter.value != 'all') {
         params['status'] = statusFilter.value;
-        print('🔵 [PurchaseInvoiceController] Status filter: ${statusFilter.value}');
+        print(
+          '🔵 [PurchaseInvoiceController] Status filter: ${statusFilter.value}',
+        );
       }
       if (paymentFilter.value != 'all') {
         params['paymentStatus'] = paymentFilter.value;
-        print('🔵 [PurchaseInvoiceController] Payment filter: ${paymentFilter.value}');
+        print(
+          '🔵 [PurchaseInvoiceController] Payment filter: ${paymentFilter.value}',
+        );
       }
       if (fromDate.value != null) {
         params['fromDate'] = fromDate.value!.toIso8601String().split('T').first;
-        print('🔵 [PurchaseInvoiceController] From date: ${params['fromDate']}');
+        print(
+          '🔵 [PurchaseInvoiceController] From date: ${params['fromDate']}',
+        );
       }
       if (toDate.value != null) {
         params['toDate'] = toDate.value!.toIso8601String().split('T').first;
         print('🔵 [PurchaseInvoiceController] To date: ${params['toDate']}');
       }
 
-      final query = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
-      print('🔵 [PurchaseInvoiceController] API Request: GET /api/purchase/invoices?$query');
+      final query = params.entries
+          .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+          .join('&');
+      print(
+        '🔵 [PurchaseInvoiceController] API Request: GET /api/purchase/invoices?$query',
+      );
 
-      final response = await _api.get('/api/purchase/invoices?$query', requiresAuth: true);
+      final response = await _api.get(
+        '/api/purchase/invoices?$query',
+        requiresAuth: true,
+      );
 
-      print('🔵 [PurchaseInvoiceController] Response Status: ${response.statusCode}');
-      print('🔵 [PurchaseInvoiceController] Response Success: ${response.success}');
+      print(
+        '🔵 [PurchaseInvoiceController] Response Status: ${response.statusCode}',
+      );
+      print(
+        '🔵 [PurchaseInvoiceController] Response Success: ${response.success}',
+      );
 
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         print('🔵 [PurchaseInvoiceController] Data length: ${list.length}');
-        
+
         invoices.value = list
-            .map((e) => PurchaseInvoiceModel.fromJson(Map<String, dynamic>.from(e)))
+            .map(
+              (e) =>
+                  PurchaseInvoiceModel.fromJson(Map<String, dynamic>.from(e)),
+            )
             .toList();
 
         applyLocalFilters();
@@ -188,14 +232,21 @@ class PurchaseInvoiceController extends GetxController {
           hasNext.value = pagination['hasNext'] == true;
           hasPrev.value = pagination['hasPrev'] == true;
           hasMore.value = pagination['hasNext'] == true;
-          
-          print('✅ [PurchaseInvoiceController] Invoices fetched successfully: ${invoices.length} invoices');
-          print('✅ [PurchaseInvoiceController] Total records: ${totalRecords.value}, Total pages: ${totalPages.value}');
+
+          print(
+            '✅ [PurchaseInvoiceController] Invoices fetched successfully: ${invoices.length} invoices',
+          );
+          print(
+            '✅ [PurchaseInvoiceController] Total records: ${totalRecords.value}, Total pages: ${totalPages.value}',
+          );
         }
       } else {
         print('❌ [PurchaseInvoiceController] Failed to fetch invoices');
         print('❌ [PurchaseInvoiceController] Response data: ${response.data}');
-        Get.snackbar('Error', response.message ?? 'Failed to load purchase invoices');
+        Get.snackbar(
+          'Error',
+          response.message ?? 'Failed to load purchase invoices',
+        );
       }
     } catch (e) {
       print('❌ [PurchaseInvoiceController] fetchInvoices error: $e');
@@ -203,7 +254,9 @@ class PurchaseInvoiceController extends GetxController {
       Get.snackbar('Error', e.toString());
     } finally {
       isLoading.value = false;
-      print('🔵 [PurchaseInvoiceController] fetchInvoices completed, isLoading: ${isLoading.value}');
+      print(
+        '🔵 [PurchaseInvoiceController] fetchInvoices completed, isLoading: ${isLoading.value}',
+      );
     }
   }
 
@@ -211,19 +264,25 @@ class PurchaseInvoiceController extends GetxController {
 
   void applyLocalFilters() {
     print('🟣 [PurchaseInvoiceController] applyLocalFilters called');
-    print('🟣 [PurchaseInvoiceController] Selected filter: ${selectedFilter.value}');
-    print('🟣 [PurchaseInvoiceController] Search filter: ${searchFilter.value}');
-    
+    print(
+      '🟣 [PurchaseInvoiceController] Selected filter: ${selectedFilter.value}',
+    );
+    print(
+      '🟣 [PurchaseInvoiceController] Search filter: ${searchFilter.value}',
+    );
+
     final list = invoices.toList();
     final filtered = list.where((item) {
       // Status filter
-      if (selectedFilter.value != 'all' && item.invoiceStatus != selectedFilter.value) {
+      if (selectedFilter.value != 'all' &&
+          item.invoiceStatus != selectedFilter.value) {
         return false;
       }
       // Search filter
       if (searchFilter.value.isNotEmpty) {
         final query = searchFilter.value.toLowerCase();
-        final matches = item.invoiceNumber.toLowerCase().contains(query) ||
+        final matches =
+            item.invoiceNumber.toLowerCase().contains(query) ||
             item.supplierName.toLowerCase().contains(query) ||
             item.supplierInvoiceNo?.toLowerCase().contains(query) == true ||
             item.purchaseOrderNumber?.toLowerCase().contains(query) == true;
@@ -231,8 +290,10 @@ class PurchaseInvoiceController extends GetxController {
       }
       return true;
     }).toList();
-    
-    print('🟣 [PurchaseInvoiceController] Filtered invoices: ${filtered.length} out of ${list.length}');
+
+    print(
+      '🟣 [PurchaseInvoiceController] Filtered invoices: ${filtered.length} out of ${list.length}',
+    );
     filteredInvoices.value = filtered;
   }
 
@@ -259,17 +320,21 @@ class PurchaseInvoiceController extends GetxController {
 
   Future<void> fetchMoreInvoices() async {
     print('🟡 [PurchaseInvoiceController] fetchMoreInvoices called');
-    print('🟡 [PurchaseInvoiceController] hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}');
-    
+    print(
+      '🟡 [PurchaseInvoiceController] hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}',
+    );
+
     if (!hasMore.value || isLoadingMore.value) {
       print('🟡 [PurchaseInvoiceController] Skipping load more');
       return;
     }
-    
+
     try {
       isLoadingMore.value = true;
       currentPage.value += 1;
-      print('🟡 [PurchaseInvoiceController] Loading page: ${currentPage.value}');
+      print(
+        '🟡 [PurchaseInvoiceController] Loading page: ${currentPage.value}',
+      );
 
       final params = <String, String>{
         'page': currentPage.value.toString(),
@@ -277,20 +342,33 @@ class PurchaseInvoiceController extends GetxController {
       };
       if (searchFilter.value.isNotEmpty) params['search'] = searchFilter.value;
       if (statusFilter.value != 'all') params['status'] = statusFilter.value;
-      if (paymentFilter.value != 'all') params['paymentStatus'] = paymentFilter.value;
+      if (paymentFilter.value != 'all')
+        params['paymentStatus'] = paymentFilter.value;
 
-      final query = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
-      print('🟡 [PurchaseInvoiceController] API Request: GET /api/purchase/invoices?$query');
+      final query = params.entries
+          .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+          .join('&');
+      print(
+        '🟡 [PurchaseInvoiceController] API Request: GET /api/purchase/invoices?$query',
+      );
 
-      final response = await _api.get('/api/purchase/invoices?$query', requiresAuth: true);
+      final response = await _api.get(
+        '/api/purchase/invoices?$query',
+        requiresAuth: true,
+      );
 
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         final newInvoices = list
-            .map((e) => PurchaseInvoiceModel.fromJson(Map<String, dynamic>.from(e)))
+            .map(
+              (e) =>
+                  PurchaseInvoiceModel.fromJson(Map<String, dynamic>.from(e)),
+            )
             .toList();
-        
-        print('🟡 [PurchaseInvoiceController] Loaded ${newInvoices.length} more invoices');
+
+        print(
+          '🟡 [PurchaseInvoiceController] Loaded ${newInvoices.length} more invoices',
+        );
         invoices.addAll(newInvoices);
         applyLocalFilters();
 
@@ -300,7 +378,9 @@ class PurchaseInvoiceController extends GetxController {
           totalRecords.value = (pagination['total'] as num?)?.toInt() ?? 0;
           totalPages.value = (pagination['pages'] as num?)?.toInt() ?? 1;
         }
-        print('🟡 [PurchaseInvoiceController] Total invoices now: ${invoices.length}, hasMore: ${hasMore.value}');
+        print(
+          '🟡 [PurchaseInvoiceController] Total invoices now: ${invoices.length}, hasMore: ${hasMore.value}',
+        );
       } else {
         print('❌ [PurchaseInvoiceController] Failed to load more invoices');
       }
@@ -332,14 +412,18 @@ class PurchaseInvoiceController extends GetxController {
     print('🟢 [PurchaseInvoiceController] openCreateWizard called');
     _resetWizard();
     showCreateWizard.value = true;
-    print('🟢 [PurchaseInvoiceController] showCreateWizard: ${showCreateWizard.value}');
+    print(
+      '🟢 [PurchaseInvoiceController] showCreateWizard: ${showCreateWizard.value}',
+    );
   }
 
   void closeCreateWizard() {
     print('🟢 [PurchaseInvoiceController] closeCreateWizard called');
     showCreateWizard.value = false;
     _resetWizard();
-    print('🟢 [PurchaseInvoiceController] showCreateWizard: ${showCreateWizard.value}');
+    print(
+      '🟢 [PurchaseInvoiceController] showCreateWizard: ${showCreateWizard.value}',
+    );
   }
 
   void _resetWizard() {
@@ -354,8 +438,12 @@ class PurchaseInvoiceController extends GetxController {
     paymentTermsController.text = 'Net 30';
     selectedInvoiceDate.value = DateTime.now();
     selectedDueDate.value = DateTime.now().add(const Duration(days: 30));
-    invoiceDateController.text = DateFormat('dd MMM yyyy').format(selectedInvoiceDate.value!);
-    dueDateController.text = DateFormat('dd MMM yyyy').format(selectedDueDate.value!);
+    invoiceDateController.text = DateFormat(
+      'dd MMM yyyy',
+    ).format(selectedInvoiceDate.value!);
+    dueDateController.text = DateFormat(
+      'dd MMM yyyy',
+    ).format(selectedDueDate.value!);
     print('✅ [PurchaseInvoiceController] Wizard reset complete');
   }
 
@@ -372,30 +460,32 @@ class PurchaseInvoiceController extends GetxController {
 
   Future<void> searchSource(String query) async {
     print('🔵 [PurchaseInvoiceController] searchSource called with: "$query"');
-    
+
     if (query.trim().length < 2) {
       print('🔵 [PurchaseInvoiceController] Query too short, clearing results');
       sourceResults.clear();
       return;
     }
-    
+
     try {
       isSearchingSource.value = true;
       final encoded = Uri.encodeComponent(query.trim());
-      final endpoint = sourceType.value == 'grn' 
+      final endpoint = sourceType.value == 'grn'
           ? '/api/purchase/invoices/available-grns?search=$encoded&limit=10'
           : '/api/purchase/invoices/available-pos?search=$encoded&limit=10';
-      
+
       print('🔵 [PurchaseInvoiceController] API Request: GET $endpoint');
-      
+
       final response = await _api.get(endpoint, requiresAuth: true);
-      
+
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         sourceResults.value = list
             .map((e) => Map<String, dynamic>.from(e))
             .toList();
-        print('🔵 [PurchaseInvoiceController] Found ${sourceResults.length} results for query: $query');
+        print(
+          '🔵 [PurchaseInvoiceController] Found ${sourceResults.length} results for query: $query',
+        );
       } else {
         print('❌ [PurchaseInvoiceController] No results found');
         sourceResults.clear();
@@ -411,15 +501,15 @@ class PurchaseInvoiceController extends GetxController {
 
   void selectSource(Map<String, dynamic> source) {
     print('🔵 [PurchaseInvoiceController] selectSource called');
-    final displayName = sourceType.value == 'grn' 
-        ? source['grnNumber'] 
+    final displayName = sourceType.value == 'grn'
+        ? source['grnNumber']
         : source['orderNumber'];
     print('🔵 [PurchaseInvoiceController] Selected source: $displayName');
-    
+
     selectedSource.value = source;
     sourceResults.clear();
     sourceSearchController.text = displayName ?? '';
-    
+
     // Create line drafts from source items
     final items = source['items'] as List? ?? [];
     lineDrafts.value = items.map((item) {
@@ -428,14 +518,17 @@ class PurchaseInvoiceController extends GetxController {
         productName: item['productName'] ?? '',
         sku: item['sku'] ?? '',
         quantity: item['quantity'] ?? item['receivingQuantity'] ?? 0,
-        unitPrice: item['unitPrice']?.toDouble() ?? item['costPrice']?.toDouble() ?? 0,
+        unitPrice:
+            item['unitPrice']?.toDouble() ?? item['costPrice']?.toDouble() ?? 0,
         discount: item['discount']?.toDouble() ?? 0,
         taxRate: item['taxRate']?.toDouble() ?? 0,
         notes: item['notes'],
       );
     }).toList();
-    
-    print('🔵 [PurchaseInvoiceController] Created ${lineDrafts.length} line drafts');
+
+    print(
+      '🔵 [PurchaseInvoiceController] Created ${lineDrafts.length} line drafts',
+    );
   }
 
   // ─── DATE SELECTION ──────────────────────────────────────────
@@ -447,7 +540,7 @@ class PurchaseInvoiceController extends GetxController {
       firstDate: DateTime.now().subtract(const Duration(days: 30)),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    
+
     if (date != null) {
       selectedInvoiceDate.value = date;
       invoiceDateController.text = DateFormat('dd MMM yyyy').format(date);
@@ -457,11 +550,12 @@ class PurchaseInvoiceController extends GetxController {
   void selectDueDate(BuildContext context) async {
     final date = await showDatePicker(
       context: context,
-      initialDate: selectedDueDate.value ?? DateTime.now().add(const Duration(days: 30)),
+      initialDate:
+          selectedDueDate.value ?? DateTime.now().add(const Duration(days: 30)),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    
+
     if (date != null) {
       selectedDueDate.value = date;
       dueDateController.text = DateFormat('dd MMM yyyy').format(date);
@@ -483,29 +577,41 @@ class PurchaseInvoiceController extends GetxController {
   }
 
   void nextStep() {
-    print('🟡 [PurchaseInvoiceController] nextStep called, current step: ${wizardStep.value}');
-    
+    print(
+      '🟡 [PurchaseInvoiceController] nextStep called, current step: ${wizardStep.value}',
+    );
+
     if (wizardStep.value == 0 && !canGoToStep2()) {
-      print('❌ [PurchaseInvoiceController] Cannot go to step 2 - no source selected');
+      print(
+        '❌ [PurchaseInvoiceController] Cannot go to step 2 - no source selected',
+      );
       Get.snackbar('Validation', 'Select a source first');
       return;
     }
     if (wizardStep.value == 1 && !canGoToStep3()) {
-      print('❌ [PurchaseInvoiceController] Cannot go to step 3 - no items available');
+      print(
+        '❌ [PurchaseInvoiceController] Cannot go to step 3 - no items available',
+      );
       Get.snackbar('Validation', 'No items available for invoicing');
       return;
     }
     if (wizardStep.value < 2) {
       wizardStep.value++;
-      print('🟡 [PurchaseInvoiceController] Step changed to: ${wizardStep.value}');
+      print(
+        '🟡 [PurchaseInvoiceController] Step changed to: ${wizardStep.value}',
+      );
     }
   }
 
   void previousStep() {
-    print('🟡 [PurchaseInvoiceController] previousStep called, current step: ${wizardStep.value}');
+    print(
+      '🟡 [PurchaseInvoiceController] previousStep called, current step: ${wizardStep.value}',
+    );
     if (wizardStep.value > 0) {
       wizardStep.value--;
-      print('🟡 [PurchaseInvoiceController] Step changed to: ${wizardStep.value}');
+      print(
+        '🟡 [PurchaseInvoiceController] Step changed to: ${wizardStep.value}',
+      );
     }
   }
 
@@ -515,7 +621,7 @@ class PurchaseInvoiceController extends GetxController {
 
   Future<bool> createInvoice() async {
     print('🔵 [PurchaseInvoiceController] createInvoice called');
-    
+
     final source = selectedSource.value;
     if (source == null) {
       print('❌ [PurchaseInvoiceController] No source selected');
@@ -530,7 +636,7 @@ class PurchaseInvoiceController extends GetxController {
 
     final invoiceDate = selectedInvoiceDate.value;
     final dueDate = selectedDueDate.value;
-    
+
     if (invoiceDate == null || dueDate == null) {
       print('❌ [PurchaseInvoiceController] Dates not selected');
       Get.snackbar('Validation', 'Please select dates');
@@ -539,26 +645,26 @@ class PurchaseInvoiceController extends GetxController {
 
     try {
       isSubmitting.value = true;
-      
+
       final payload = {
-        if (sourceType.value == 'grn') 
+        if (sourceType.value == 'grn')
           'goodsReceivingId': source['id']
-        else 
+        else
           'purchaseOrderId': source['id'],
-        'supplierInvoiceNo': supplierInvoiceNoController.text.trim().isEmpty 
-            ? null 
+        'supplierInvoiceNo': supplierInvoiceNoController.text.trim().isEmpty
+            ? null
             : supplierInvoiceNoController.text.trim(),
         'invoiceDate': invoiceDate.toIso8601String().split('T').first,
         'dueDate': dueDate.toIso8601String().split('T').first,
-        'paymentTerms': paymentTermsController.text.trim().isEmpty 
-            ? 'Net 30' 
+        'paymentTerms': paymentTermsController.text.trim().isEmpty
+            ? 'Net 30'
             : paymentTermsController.text.trim(),
-        'notes': notesController.text.trim().isEmpty 
-            ? null 
+        'notes': notesController.text.trim().isEmpty
+            ? null
             : notesController.text.trim(),
       };
 
-      final endpoint = sourceType.value == 'grn' 
+      final endpoint = sourceType.value == 'grn'
           ? '/api/purchase/invoices/from-grn'
           : '/api/purchase/invoices/from-po';
 
@@ -571,19 +677,30 @@ class PurchaseInvoiceController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🔵 [PurchaseInvoiceController] Response Status: ${response.statusCode}');
-      print('🔵 [PurchaseInvoiceController] Response Success: ${response.success}');
+      print(
+        '🔵 [PurchaseInvoiceController] Response Status: ${response.statusCode}',
+      );
+      print(
+        '🔵 [PurchaseInvoiceController] Response Success: ${response.success}',
+      );
 
       if (response.success) {
-        print('✅ [PurchaseInvoiceController] Purchase invoice created successfully!');
+        print(
+          '✅ [PurchaseInvoiceController] Purchase invoice created successfully!',
+        );
         Get.snackbar('Success', 'Purchase invoice created successfully');
         closeCreateWizard();
         await fetchInvoices(resetPage: true);
         return true;
       }
-      
-      print('❌ [PurchaseInvoiceController] Failed to create invoice: ${response.message}');
-      Get.snackbar('Error', response.message ?? 'Failed to create purchase invoice');
+
+      print(
+        '❌ [PurchaseInvoiceController] Failed to create invoice: ${response.message}',
+      );
+      Get.snackbar(
+        'Error',
+        response.message ?? 'Failed to create purchase invoice',
+      );
       return false;
     } catch (e) {
       print('❌ [PurchaseInvoiceController] createInvoice error: $e');
@@ -599,13 +716,15 @@ class PurchaseInvoiceController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   void selectInvoice(PurchaseInvoiceModel invoice) {
-    print('🔵 [PurchaseInvoiceController] selectInvoice called for: ${invoice.invoiceNumber}');
+    print(
+      '🔵 [PurchaseInvoiceController] selectInvoice called for: ${invoice.invoiceNumber}',
+    );
     selectedInvoice.value = invoice;
   }
 
   Future<bool> postInvoice(String id) async {
     print('🟣 [PurchaseInvoiceController] postInvoice called for ID: $id');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.post(
@@ -614,17 +733,26 @@ class PurchaseInvoiceController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🟣 [PurchaseInvoiceController] Response Status: ${response.statusCode}');
-      print('🟣 [PurchaseInvoiceController] Response Success: ${response.success}');
+      print(
+        '🟣 [PurchaseInvoiceController] Response Status: ${response.statusCode}',
+      );
+      print(
+        '🟣 [PurchaseInvoiceController] Response Success: ${response.success}',
+      );
 
       if (response.success) {
         print('✅ [PurchaseInvoiceController] Invoice posted successfully');
-        Get.snackbar('Success', 'Purchase invoice posted and accounting entries created');
+        Get.snackbar(
+          'Success',
+          'Purchase invoice posted and accounting entries created',
+        );
         await fetchInvoices();
         return true;
       }
-      
-      print('❌ [PurchaseInvoiceController] Failed to post invoice: ${response.message}');
+
+      print(
+        '❌ [PurchaseInvoiceController] Failed to post invoice: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to post invoice');
       return false;
     } catch (e) {
@@ -639,7 +767,7 @@ class PurchaseInvoiceController extends GetxController {
   Future<bool> cancelInvoice(String id, {String? reason}) async {
     print('🟣 [PurchaseInvoiceController] cancelInvoice called for ID: $id');
     print('🟣 [PurchaseInvoiceController] Reason: $reason');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.post(
@@ -648,8 +776,12 @@ class PurchaseInvoiceController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🟣 [PurchaseInvoiceController] Response Status: ${response.statusCode}');
-      print('🟣 [PurchaseInvoiceController] Response Success: ${response.success}');
+      print(
+        '🟣 [PurchaseInvoiceController] Response Status: ${response.statusCode}',
+      );
+      print(
+        '🟣 [PurchaseInvoiceController] Response Success: ${response.success}',
+      );
 
       if (response.success) {
         print('✅ [PurchaseInvoiceController] Invoice cancelled successfully');
@@ -657,8 +789,10 @@ class PurchaseInvoiceController extends GetxController {
         await fetchInvoices();
         return true;
       }
-      
-      print('❌ [PurchaseInvoiceController] Failed to cancel invoice: ${response.message}');
+
+      print(
+        '❌ [PurchaseInvoiceController] Failed to cancel invoice: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to cancel invoice');
       return false;
     } catch (e) {
@@ -672,7 +806,7 @@ class PurchaseInvoiceController extends GetxController {
 
   Future<bool> deleteInvoice(String id) async {
     print('🔵 [PurchaseInvoiceController] deleteInvoice called for ID: $id');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.delete(
@@ -680,8 +814,12 @@ class PurchaseInvoiceController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🔵 [PurchaseInvoiceController] Response Status: ${response.statusCode}');
-      print('🔵 [PurchaseInvoiceController] Response Success: ${response.success}');
+      print(
+        '🔵 [PurchaseInvoiceController] Response Status: ${response.statusCode}',
+      );
+      print(
+        '🔵 [PurchaseInvoiceController] Response Success: ${response.success}',
+      );
 
       if (response.success) {
         print('✅ [PurchaseInvoiceController] Invoice deleted successfully');
@@ -689,8 +827,10 @@ class PurchaseInvoiceController extends GetxController {
         await fetchInvoices(resetPage: true);
         return true;
       }
-      
-      print('❌ [PurchaseInvoiceController] Failed to delete invoice: ${response.message}');
+
+      print(
+        '❌ [PurchaseInvoiceController] Failed to delete invoice: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to delete invoice');
       return false;
     } catch (e) {
@@ -704,21 +844,27 @@ class PurchaseInvoiceController extends GetxController {
 
   Future<PurchaseInvoiceModel?> getInvoiceById(String id) async {
     print('🔵 [PurchaseInvoiceController] getInvoiceById called for ID: $id');
-    
+
     try {
       final response = await _api.get(
         '/api/purchase/invoices/$id',
         requiresAuth: true,
       );
 
-      print('🔵 [PurchaseInvoiceController] Response Status: ${response.statusCode}');
-      print('🔵 [PurchaseInvoiceController] Response Success: ${response.success}');
+      print(
+        '🔵 [PurchaseInvoiceController] Response Status: ${response.statusCode}',
+      );
+      print(
+        '🔵 [PurchaseInvoiceController] Response Success: ${response.success}',
+      );
 
       if (response.success && response.data != null) {
         final invoice = PurchaseInvoiceModel.fromJson(
           Map<String, dynamic>.from(response.data['data']),
         );
-        print('✅ [PurchaseInvoiceController] Invoice found: ${invoice.invoiceNumber}');
+        print(
+          '✅ [PurchaseInvoiceController] Invoice found: ${invoice.invoiceNumber}',
+        );
         return invoice;
       }
       print('❌ [PurchaseInvoiceController] Invoice not found');
@@ -856,7 +1002,7 @@ class PurchaseInvoiceStats {
     final today = json['today'] as Map<String, dynamic>? ?? {};
     final month = json['month'] as Map<String, dynamic>? ?? {};
     final status = json['status'] as Map<String, dynamic>? ?? {};
-    
+
     return PurchaseInvoiceStats(
       todayCount: (today['count'] as num?)?.toInt() ?? 0,
       todayAmount: (today['amount'] as num?)?.toDouble() ?? 0,

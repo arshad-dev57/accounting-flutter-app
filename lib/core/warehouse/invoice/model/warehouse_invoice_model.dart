@@ -13,6 +13,8 @@ class WarehouseInvoiceModel {
   final double discountTotal;
   final double grandTotal;
   final double paidAmount;
+  final double creditIssued;
+  final double netOutstanding;
   final String invoiceStatus;
   final String paymentStatus;
   final String? notes;
@@ -34,6 +36,8 @@ class WarehouseInvoiceModel {
     required this.discountTotal,
     required this.grandTotal,
     required this.paidAmount,
+    this.creditIssued = 0,
+    this.netOutstanding = 0,
     required this.invoiceStatus,
     required this.paymentStatus,
     this.notes,
@@ -41,7 +45,16 @@ class WarehouseInvoiceModel {
     required this.dueDate,
   });
 
-  double get outstanding => grandTotal - paidAmount;
+  double get outstanding {
+    if (netOutstanding != 0 || creditIssued > 0) return netOutstanding;
+    return grandTotal - paidAmount;
+  }
+
+  String get displayStatus {
+    if (netOutstanding < 0 || (creditIssued > 0 && netOutstanding < 0)) return 'Credit Balance';
+    if (netOutstanding == 0 && (paidAmount > 0 || creditIssued > 0)) return 'Paid';
+    return paymentStatus;
+  }
   bool get isOverdue => dueDate.isBefore(DateTime.now()) && paymentStatus != 'Paid';
 
   factory WarehouseInvoiceModel.fromJson(Map<String, dynamic> json) {
@@ -63,6 +76,8 @@ class WarehouseInvoiceModel {
       discountTotal: _toDouble(json['discountTotal']),
       grandTotal: _toDouble(json['grandTotal']),
       paidAmount: _toDouble(json['paidAmount']),
+      creditIssued: _toDouble(json['creditIssued']),
+      netOutstanding: _toDouble(json['netOutstanding']),
       invoiceStatus: json['invoiceStatus']?.toString() ?? 'Draft',
       paymentStatus: json['paymentStatus']?.toString() ?? 'Unpaid',
       notes: json['notes']?.toString(),

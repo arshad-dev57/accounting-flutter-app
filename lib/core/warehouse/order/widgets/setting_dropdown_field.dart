@@ -1,5 +1,5 @@
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/core/warehouse/order/controller/sales_order_controller.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/controller/sales_order_controller.dart';
 import 'package:flutter/material.dart';
 
 class SettingDropdownField extends StatelessWidget {
@@ -33,7 +33,11 @@ class SettingDropdownField extends StatelessWidget {
       children: [
         Text(
           requiredField ? '$label *' : label,
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kSubText),
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: kSubText,
+          ),
         ),
         const SizedBox(height: 6),
         Row(
@@ -44,10 +48,14 @@ class SettingDropdownField extends StatelessWidget {
                 decoration: InputDecoration(
                   hintText: 'Select $label',
                   isDense: true,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 items: options
-                    .map((opt) => DropdownMenuItem(value: opt, child: Text(opt)))
+                    .map(
+                      (opt) => DropdownMenuItem(value: opt, child: Text(opt)),
+                    )
                     .toList(),
                 onChanged: (v) {
                   if (v != null) onChanged(v);
@@ -99,7 +107,10 @@ class _SettingsManageSheetState extends State<SettingsManageSheet> {
   Future<void> _add() async {
     if (_input.text.trim().isEmpty) return;
     setState(() => _saving = true);
-    final ok = await widget.controller.addSetting(widget.category, _input.text.trim());
+    final ok = await widget.controller.addSetting(
+      widget.category,
+      _input.text.trim(),
+    );
     setState(() => _saving = false);
     if (ok) {
       _input.clear();
@@ -127,7 +138,10 @@ class _SettingsManageSheetState extends State<SettingsManageSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(widget.title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          Text(
+            widget.title,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -136,7 +150,9 @@ class _SettingsManageSheetState extends State<SettingsManageSheet> {
                   controller: _input,
                   decoration: InputDecoration(
                     hintText: 'Enter new ${widget.title.toLowerCase()}',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   onSubmitted: (_) => _add(),
                 ),
@@ -149,7 +165,10 @@ class _SettingsManageSheetState extends State<SettingsManageSheet> {
                     ? const SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.black,
+                        ),
                       )
                     : const Icon(Icons.add, color: Colors.black),
               ),

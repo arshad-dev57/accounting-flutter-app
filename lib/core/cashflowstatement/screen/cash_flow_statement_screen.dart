@@ -1,10 +1,8 @@
 // screens/cash_flow_statement_screen.dart - COMPLETE PROFESSIONAL MOBILE DESIGN
 
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/FiscalYear/controller/fiscal_year_controller.dart';
-import 'package:LedgerPro_app/core/cashflowstatement/controller/cashflow_controller.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/cashflowstatement/controller/cashflow_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -15,8 +13,10 @@ class CashFlowStatementScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final fiscalYearController = Get.isRegistered<FiscalYearController>()
+        ? Get.find<FiscalYearController>()
+        : Get.put(FiscalYearController());
     final controller = Get.put(CashFlowController());
-    final fiscalYearController = Get.put(FiscalYearController());
 
     return Scaffold(
       backgroundColor: kBgLight,
@@ -43,7 +43,10 @@ class CashFlowStatementScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildFiscalYearSelector(fiscalYearController, controller),
+                      _buildFiscalYearSelector(
+                        fiscalYearController,
+                        controller,
+                      ),
                       const SizedBox(height: 10),
                       _buildPeriodSelector(controller, context),
                       const SizedBox(height: 10),
@@ -225,10 +228,7 @@ class CashFlowStatementScreen extends StatelessWidget {
             icon: const Icon(Icons.arrow_drop_down, size: 20),
             padding: EdgeInsets.zero,
             isExpanded: true,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.black87,
-            ),
+            style: const TextStyle(fontSize: 12, color: Colors.black87),
             items: fiscalYearController.fiscalYears.map((year) {
               return DropdownMenuItem(
                 value: year.id,
@@ -241,10 +241,7 @@ class CashFlowStatementScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        year.name,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      child: Text(year.name, overflow: TextOverflow.ellipsis),
                     ),
                   ],
                 ),
@@ -255,7 +252,6 @@ class CashFlowStatementScreen extends StatelessWidget {
                 final selectedYear = fiscalYearController.fiscalYears
                     .firstWhere((y) => y.id == value);
                 fiscalYearController.selectFiscalYear(selectedYear);
-                controller.loadCashFlowData();
               }
             },
           ),
@@ -289,21 +285,12 @@ class CashFlowStatementScreen extends StatelessWidget {
                 () => DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: controller.selectedPeriod.value,
-                    icon: Icon(
-                      Icons.arrow_drop_down,
-                      size: 20,
-                      color: kText,
-                    ),
+                    icon: Icon(Icons.arrow_drop_down, size: 20, color: kText),
                     isExpanded: true,
                     style: const TextStyle(fontSize: 12, color: Colors.black87),
                     dropdownColor: kCardBg,
                     items: controller.periodOptions
-                        .map(
-                          (p) => DropdownMenuItem(
-                            value: p,
-                            child: Text(p),
-                          ),
-                        )
+                        .map((p) => DropdownMenuItem(value: p, child: Text(p)))
                         .toList(),
                     onChanged: (value) {
                       if (value != null) {
@@ -346,11 +333,7 @@ class CashFlowStatementScreen extends StatelessWidget {
                       const SizedBox(width: 4),
                       GestureDetector(
                         onTap: () => controller.clearDateRange(),
-                        child: Icon(
-                          Icons.close,
-                          size: 14,
-                          color: kPrimary,
-                        ),
+                        child: Icon(Icons.close, size: 14, color: kPrimary),
                       ),
                     ],
                   ),
@@ -376,7 +359,9 @@ class CashFlowStatementScreen extends StatelessWidget {
           children: [
             _buildProfessionalCard(
               title: 'Opening',
-              amount: controller.formatAmount(controller.openingCashBalance.value),
+              amount: controller.formatAmount(
+                controller.openingCashBalance.value,
+              ),
               color: kPrimary,
               icon: Icons.account_balance,
               bgColor: kPrimary.withOpacity(0.08),
@@ -400,7 +385,9 @@ class CashFlowStatementScreen extends StatelessWidget {
             const SizedBox(width: 8),
             _buildProfessionalCard(
               title: 'Closing',
-              amount: controller.formatAmount(controller.closingCashBalance.value),
+              amount: controller.formatAmount(
+                controller.closingCashBalance.value,
+              ),
               color: kSuccess,
               icon: Icons.account_balance_wallet,
               bgColor: kSuccess.withOpacity(0.08),
@@ -419,7 +406,6 @@ class CashFlowStatementScreen extends StatelessWidget {
     required IconData icon,
     required Color bgColor,
     required Color borderColor,
-    bool isNumber = false,
   }) {
     return Expanded(
       child: Container(
@@ -545,13 +531,7 @@ class CashFlowStatementScreen extends StatelessWidget {
                 ),
               ),
             ),
-            Text(
-              'No data',
-              style: TextStyle(
-                fontSize: 12,
-                color: kSubText,
-              ),
-            ),
+            Text('No data', style: TextStyle(fontSize: 12, color: kSubText)),
           ],
         ),
       );
@@ -649,9 +629,7 @@ class CashFlowStatementScreen extends StatelessWidget {
                 bottomRight: Radius.circular(14),
               ),
               border: Border(
-                top: BorderSide(
-                  color: Colors.grey.withOpacity(0.12),
-                ),
+                top: BorderSide(color: Colors.grey.withOpacity(0.12)),
               ),
             ),
             child: Row(
@@ -951,10 +929,7 @@ class CashFlowStatementScreen extends StatelessWidget {
           child: OutlinedButton.icon(
             onPressed: () => controller.exportToPdf(),
             icon: Icon(Icons.picture_as_pdf, size: 16, color: kDanger),
-            label: Text(
-              'PDF',
-              style: TextStyle(fontSize: 12, color: kDanger),
-            ),
+            label: Text('PDF', style: TextStyle(fontSize: 12, color: kDanger)),
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: kDanger),
               padding: const EdgeInsets.symmetric(vertical: 10),
@@ -998,18 +973,11 @@ class CashFlowStatementScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: kDanger,
-            ),
+            Icon(Icons.error_outline, size: 64, color: kDanger),
             const SizedBox(height: 16),
             Text(
               controller.errorMessage.value,
-              style: TextStyle(
-                fontSize: 16,
-                color: kSubText,
-              ),
+              style: TextStyle(fontSize: 16, color: kSubText),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),

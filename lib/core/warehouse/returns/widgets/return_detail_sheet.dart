@@ -1,7 +1,7 @@
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/returns/controller/sales_return_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/returns/model/return_model.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/returns/controller/sales_return_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/returns/model/return_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -36,7 +36,10 @@ class _ReturnDetailSheetState extends State<ReturnDetailSheet> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final current = widget.controller.returns.firstWhereOrNull((r) => r.id == widget.returnItem.id) ??
+      final current =
+          widget.controller.returns.firstWhereOrNull(
+            (r) => r.id == widget.returnItem.id,
+          ) ??
           widget.returnItem;
 
       return DraggableScrollableSheet(
@@ -59,10 +62,17 @@ class _ReturnDetailSheetState extends State<ReturnDetailSheet> {
                     Expanded(
                       child: Text(
                         current.returnNumber,
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: kPrimary),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: kPrimary,
+                        ),
                       ),
                     ),
-                    IconButton(onPressed: widget.onClose, icon: const Icon(Icons.close)),
+                    IconButton(
+                      onPressed: widget.onClose,
+                      icon: const Icon(Icons.close),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -73,27 +83,43 @@ class _ReturnDetailSheetState extends State<ReturnDetailSheet> {
                 _row('Customer', current.customerName),
                 _row('Total Refund', _format(current.totalRefund)),
                 _row('Reason', current.reason),
-                if (current.rejectionReason != null) _row('Rejection', current.rejectionReason!),
-                _row('Date', DateFormat('dd MMM yyyy').format(current.returnDate)),
+                if (current.rejectionReason != null)
+                  _row('Rejection', current.rejectionReason!),
+                _row(
+                  'Date',
+                  DateFormat('dd MMM yyyy').format(current.returnDate),
+                ),
                 const Divider(height: 24),
-                const Text('Items', style: TextStyle(fontWeight: FontWeight.w700)),
+                const Text(
+                  'Items',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
                 const SizedBox(height: 8),
-                ...current.items.map((item) => ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(item.productName),
-                      subtitle: Text('Qty: ${item.returnQuantity} • ${item.condition}'),
-                      trailing: Text(_format(item.refundAmount)),
-                    )),
+                ...current.items.map(
+                  (item) => ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(item.productName),
+                    subtitle: Text(
+                      'Qty: ${item.returnQuantity} • ${item.condition}',
+                    ),
+                    trailing: Text(_format(item.refundAmount)),
+                  ),
+                ),
                 if (current.returnStatus == 'Pending') ...[
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: widget.controller.isSubmitting.value
                         ? null
                         : () async {
-                            final ok = await widget.controller.approveReturn(current.id);
+                            final ok = await widget.controller.approveReturn(
+                              current.id,
+                            );
                             if (ok) widget.onClose();
                           },
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                    ),
                     child: const Text('Approve Return'),
                   ),
                   const SizedBox(height: 12),
@@ -115,7 +141,9 @@ class _ReturnDetailSheetState extends State<ReturnDetailSheet> {
                             );
                             if (ok) widget.onClose();
                           },
-                    style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red,
+                    ),
                     child: const Text('Reject Return'),
                   ),
                 ],
@@ -133,8 +161,16 @@ class _ReturnDetailSheetState extends State<ReturnDetailSheet> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 100, child: Text(label, style: TextStyle(color: kSubText, fontSize: 13))),
-          Expanded(child: Text(value, style: const TextStyle(fontWeight: FontWeight.w500))),
+          SizedBox(
+            width: 100,
+            child: Text(label, style: TextStyle(color: kSubText, fontSize: 13)),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+          ),
         ],
       ),
     );

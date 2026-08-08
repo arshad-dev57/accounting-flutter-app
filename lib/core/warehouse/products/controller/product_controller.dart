@@ -1,10 +1,10 @@
 // controllers/product_controller.dart - COMPLETE WITH QR (FIXED)
 
-import 'package:LedgerPro_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:image_picker/image_picker.dart';
@@ -18,56 +18,56 @@ class ProductsController extends GetxController {
   final ApiClient _api = Get.find<ApiClient>();
 
   // ─── KPI Counts ───────────────────────────────────────────────
-  RxInt inStockCount    = 0.obs;
-  RxInt lowStockCount   = 0.obs;
+  RxInt inStockCount = 0.obs;
+  RxInt lowStockCount = 0.obs;
   RxInt outOfStockCount = 0.obs;
   RxInt categoriesCount = 0.obs;
 
   // ─── Categories & Suppliers ───────────────────────────────────
-  var categories  = <Map<String, dynamic>>[].obs;
-  var suppliers   = <Map<String, dynamic>>[].obs;
+  var categories = <Map<String, dynamic>>[].obs;
+  var suppliers = <Map<String, dynamic>>[].obs;
   var isSubmitting = false.obs;
 
   // ─── Settings dropdowns ───────────────────────────────────────
-  var productTypes      = <Map<String, dynamic>>[].obs;
-  var weightUnits       = <Map<String, dynamic>>[].obs;
-  var dimensionUnits    = <Map<String, dynamic>>[].obs;
-  var stockUnits        = <Map<String, dynamic>>[].obs;
-  var taxTypes          = <Map<String, dynamic>>[].obs;
-  var rackLocations     = <Map<String, dynamic>>[].obs;
-  var zones             = <Map<String, dynamic>>[].obs;
-  var sizes             = <Map<String, dynamic>>[].obs;
-  var shippingClasses   = <Map<String, dynamic>>[].obs;
+  var productTypes = <Map<String, dynamic>>[].obs;
+  var weightUnits = <Map<String, dynamic>>[].obs;
+  var dimensionUnits = <Map<String, dynamic>>[].obs;
+  var stockUnits = <Map<String, dynamic>>[].obs;
+  var taxTypes = <Map<String, dynamic>>[].obs;
+  var rackLocations = <Map<String, dynamic>>[].obs;
+  var zones = <Map<String, dynamic>>[].obs;
+  var sizes = <Map<String, dynamic>>[].obs;
+  var shippingClasses = <Map<String, dynamic>>[].obs;
   var storageConditions = <Map<String, dynamic>>[].obs;
 
   // ─── Order Settings ───────────────────────────────────────────
-  var orderTypes       = <Map<String, dynamic>>[].obs;
-  var priorities       = <Map<String, dynamic>>[].obs;
-  var orderSources     = <Map<String, dynamic>>[].obs;
-  var shippingMethods  = <Map<String, dynamic>>[].obs;
-  var paymentMethods   = <Map<String, dynamic>>[].obs;
+  var orderTypes = <Map<String, dynamic>>[].obs;
+  var priorities = <Map<String, dynamic>>[].obs;
+  var orderSources = <Map<String, dynamic>>[].obs;
+  var shippingMethods = <Map<String, dynamic>>[].obs;
+  var paymentMethods = <Map<String, dynamic>>[].obs;
   var shippingCarriers = <Map<String, dynamic>>[].obs;
 
   // ─── Mobile Infinite Scroll ───────────────────────────────────
   var isLoadingMore = false.obs;
-  var hasMore       = true.obs;
-  int _mobilePage   = 1;
+  var hasMore = true.obs;
+  int _mobilePage = 1;
 
   // ─── Main Products List ───────────────────────────────────────
-  var products       = <Map<String, dynamic>>[].obs;
-  var isLoading      = false.obs;
-  var searchQuery    = ''.obs;
+  var products = <Map<String, dynamic>>[].obs;
+  var isLoading = false.obs;
+  var searchQuery = ''.obs;
   var selectedFilter = 'All'.obs;
-  var currentPage    = 1.obs;
-  var totalPages     = 1.obs;
-  var totalProducts  = 0.obs;
+  var currentPage = 1.obs;
+  var totalPages = 1.obs;
+  var totalProducts = 0.obs;
 
   final List<String> filters = ['All', 'Low Stock', 'Out of Stock', 'In Stock'];
 
   // ═══════════════════════════════════════════════════════════════
   // ─── QR CODE STATE ────────────────────────────────────────────
   // ═══════════════════════════════════════════════════════════════
-  
+
   var isScanning = false.obs;
   var scannedData = ''.obs;
   var qrData = ''.obs;
@@ -75,34 +75,31 @@ class ProductsController extends GetxController {
   var isFlashOn = false.obs;
   var isFrontCamera = false.obs;
   var isGeneratingQR = false.obs;
-  
+
   // QR Generation Options
   var qrSize = 200.0.obs;
   var qrForegroundColor = Colors.black.obs;
   var qrBackgroundColor = Colors.white.obs;
   var selectedQRType = 'Product QR'.obs;
-  
+
   // QR Types
-  final List<String> qrTypes = [
-    'Product QR',
-    'Custom Data',
-    'URL',
-    'Text',
-  ];
-  
+  final List<String> qrTypes = ['Product QR', 'Custom Data', 'URL', 'Text'];
+
   // QR Controllers
   final TextEditingController urlController = TextEditingController();
   final TextEditingController textController = TextEditingController();
   final TextEditingController customDataController = TextEditingController();
   final TextEditingController productIdController = TextEditingController();
-  final TextEditingController quantityController = TextEditingController(text: '1');
-  
+  final TextEditingController quantityController = TextEditingController(
+    text: '1',
+  );
+
   // QR Global Key
   final GlobalKey qrKey = GlobalKey();
-  
+
   // Scan History
   var scanHistory = <Map<String, dynamic>>[].obs;
-  
+
   // Scanner Controller
   final MobileScannerController scannerController = MobileScannerController(
     detectionSpeed: DetectionSpeed.normal,
@@ -162,9 +159,16 @@ class ProductsController extends GetxController {
   // ─── Settings ─────────────────────────────────────────────────
   Future<void> _fetchSettings() async {
     final cats = [
-      'productType', 'weightUnit', 'dimensionUnit',
-      'stockUnit', 'taxType', 'rackLocation',
-      'zone', 'size', 'shippingClass', 'storageCondition',
+      'productType',
+      'weightUnit',
+      'dimensionUnit',
+      'stockUnit',
+      'taxType',
+      'rackLocation',
+      'zone',
+      'size',
+      'shippingClass',
+      'storageCondition',
     ];
     await Future.wait(cats.map((cat) => _fetchSetting(cat)));
   }
@@ -190,16 +194,36 @@ class ProductsController extends GetxController {
         final active = data.where((d) => d['isActive'] != false).toList();
 
         switch (category) {
-          case 'productType':      productTypes.value      = active; break;
-          case 'weightUnit':       weightUnits.value       = active; break;
-          case 'dimensionUnit':    dimensionUnits.value    = active; break;
-          case 'stockUnit':        stockUnits.value        = active; break;
-          case 'taxType':          taxTypes.value          = active; break;
-          case 'rackLocation':     rackLocations.value     = active; break;
-          case 'zone':             zones.value             = active; break;
-          case 'size':             sizes.value             = active; break;
-          case 'shippingClass':    shippingClasses.value   = active; break;
-          case 'storageCondition': storageConditions.value = active; break;
+          case 'productType':
+            productTypes.value = active;
+            break;
+          case 'weightUnit':
+            weightUnits.value = active;
+            break;
+          case 'dimensionUnit':
+            dimensionUnits.value = active;
+            break;
+          case 'stockUnit':
+            stockUnits.value = active;
+            break;
+          case 'taxType':
+            taxTypes.value = active;
+            break;
+          case 'rackLocation':
+            rackLocations.value = active;
+            break;
+          case 'zone':
+            zones.value = active;
+            break;
+          case 'size':
+            sizes.value = active;
+            break;
+          case 'shippingClass':
+            shippingClasses.value = active;
+            break;
+          case 'storageCondition':
+            storageConditions.value = active;
+            break;
         }
       }
     } catch (e) {
@@ -287,7 +311,10 @@ class ProductsController extends GetxController {
   Future<bool> updateProduct(String id, Map<String, dynamic> data) async {
     try {
       isSubmitting.value = true;
-      final response = await _api.put('/api/warehouse/products/$id', body: data);
+      final response = await _api.put(
+        '/api/warehouse/products/$id',
+        body: data,
+      );
       if (response.success && response.data['success'] == true) {
         refreshAll();
         return true;
@@ -332,8 +359,10 @@ class ProductsController extends GetxController {
     outOfStockCount.value = products
         .where((p) => (p['currentStock'] ?? 0) <= 0)
         .length;
-    categoriesCount.value =
-        products.map((p) => p['categoryName']).toSet().length;
+    categoriesCount.value = products
+        .map((p) => p['categoryName'])
+        .toSet()
+        .length;
   }
 
   // ─── Query ────────────────────────────────────────────────────
@@ -343,9 +372,9 @@ class ProductsController extends GetxController {
       params['q'] = searchQuery.value;
       params['searchBy'] = 'all'; // Search by name, SKU, or barcode
     }
-    if (selectedFilter.value == 'Low Stock')     params['stockStatus'] = 'low';
-    if (selectedFilter.value == 'Out of Stock')  params['stockStatus'] = 'out';
-    if (selectedFilter.value == 'In Stock')      params['stockStatus'] = 'in';
+    if (selectedFilter.value == 'Low Stock') params['stockStatus'] = 'low';
+    if (selectedFilter.value == 'Out of Stock') params['stockStatus'] = 'out';
+    if (selectedFilter.value == 'In Stock') params['stockStatus'] = 'in';
     return params;
   }
 
@@ -360,9 +389,8 @@ class ProductsController extends GetxController {
       if (response.success) {
         final data = response.data;
         if (data['success'] == true) {
-          products.value =
-              List<Map<String, dynamic>>.from(data['data'] ?? []);
-          totalPages.value    = data['pagination']?['pages'] ?? 1;
+          products.value = List<Map<String, dynamic>>.from(data['data'] ?? []);
+          totalPages.value = data['pagination']?['pages'] ?? 1;
           totalProducts.value = data['pagination']?['total'] ?? 0;
           _updateKpiCounts();
         }
@@ -389,11 +417,10 @@ class ProductsController extends GetxController {
       if (response.success) {
         final data = response.data;
         if (data['success'] == true) {
-          final newItems =
-              List<Map<String, dynamic>>.from(data['data'] ?? []);
+          final newItems = List<Map<String, dynamic>>.from(data['data'] ?? []);
           final pages = data['pagination']?['pages'] ?? 1;
           products.addAll(newItems);
-          totalPages.value    = pages;
+          totalPages.value = pages;
           totalProducts.value =
               data['pagination']?['total'] ?? totalProducts.value;
           _mobilePage = nextPage;
@@ -411,32 +438,35 @@ class ProductsController extends GetxController {
   // ─── Refresh ──────────────────────────────────────────────────
   void refreshAll() {
     currentPage.value = 1;
-    _mobilePage       = 1;
-    hasMore.value     = true;
+    _mobilePage = 1;
+    hasMore.value = true;
     fetchProducts();
   }
 
   Future<void> refreshProducts() async {
-    await Future.wait([
-      fetchCategories(),
-      fetchSuppliers(),
-      fetchProducts(),
-    ]);
+    await Future.wait([fetchCategories(), fetchSuppliers(), fetchProducts()]);
   }
 
   // ─── Refresh Dropdown Data ───────────────────────────────────────
   Future<void> refreshDropdownData() async {
-    await Future.wait([
-      fetchCategories(),
-      fetchSuppliers(),
-      _fetchSettings(),
-    ]);
+    await Future.wait([fetchCategories(), fetchSuppliers(), _fetchSettings()]);
   }
 
   // ─── Search & Filter ──────────────────────────────────────────
-  void searchProducts(String query) { searchQuery.value = query; refreshAll(); }
-  void clearSearch()                { searchQuery.value = '';    refreshAll(); }
-  void filterProducts(String filter){ selectedFilter.value = filter; refreshAll(); }
+  void searchProducts(String query) {
+    searchQuery.value = query;
+    refreshAll();
+  }
+
+  void clearSearch() {
+    searchQuery.value = '';
+    refreshAll();
+  }
+
+  void filterProducts(String filter) {
+    selectedFilter.value = filter;
+    refreshAll();
+  }
 
   // ─── Pagination (Web) ─────────────────────────────────────────
   void nextPage() {
@@ -472,10 +502,7 @@ class ProductsController extends GetxController {
 
   // ─── QR Permissions ──────────────────────────────────────────
   Future<void> _requestQRPermissions() async {
-    await [
-      Permission.camera,
-      Permission.storage,
-    ].request();
+    await [Permission.camera, Permission.storage].request();
   }
 
   // ─── Start Scan ──────────────────────────────────────────────
@@ -517,37 +544,34 @@ class ProductsController extends GetxController {
     final barcode = capture.barcodes.first;
     if (barcode.rawValue != null) {
       scannedData.value = barcode.rawValue!;
-      
+
       // Parse scanned data
       try {
         final data = barcode.rawValue!;
         if (data.startsWith('{') && data.endsWith('}')) {
           // Try to parse as JSON
           final json = Map<String, dynamic>.from(
-            Uri.parse('data:application/json,$data').queryParameters
+            Uri.parse('data:application/json,$data').queryParameters,
           );
           selectedProductForQR.value = json;
         } else if (data.startsWith('http://') || data.startsWith('https://')) {
           selectedProductForQR.value = {'url': data};
         } else if (data.contains('PROD-')) {
-          selectedProductForQR.value = {
-            'id': data,
-            'type': 'product',
-          };
+          selectedProductForQR.value = {'id': data, 'type': 'product'};
         } else {
           selectedProductForQR.value = {'text': data};
         }
       } catch (e) {
         selectedProductForQR.value = {'text': barcode.rawValue};
       }
-      
+
       // Add to history
       scanHistory.add({
         'data': barcode.rawValue,
         'timestamp': DateTime.now().toIso8601String(),
         'type': barcode.type.toString(),
       });
-      
+
       // Stop scanning
       stopScan();
     }
@@ -573,7 +597,7 @@ class ProductsController extends GetxController {
     Share.share(
       'Scanned QR Code Data:\n${scannedData.value}\n\n'
       'Time: ${DateTime.now().toString()}\n'
-      'LedgerPro App',
+      'BisonsTechs App',
     );
   }
 
@@ -581,12 +605,12 @@ class ProductsController extends GetxController {
   Future<void> generateQRCode() async {
     try {
       isGeneratingQR.value = true;
-      
+
       String dataToEncode = '';
-      
+
       switch (selectedQRType.value) {
         case 'Product QR':
-          dataToEncode = productIdController.text.isEmpty 
+          dataToEncode = productIdController.text.isEmpty
               ? 'PROD-${DateTime.now().millisecondsSinceEpoch}'
               : productIdController.text;
           dataToEncode = '{"id":"$dataToEncode","type":"product"}';
@@ -601,9 +625,9 @@ class ProductsController extends GetxController {
           dataToEncode = customDataController.text;
           break;
         default:
-          dataToEncode = 'LedgerPro_${DateTime.now().millisecondsSinceEpoch}';
+          dataToEncode = 'BisonsTechs_${DateTime.now().millisecondsSinceEpoch}';
       }
-      
+
       if (dataToEncode.isEmpty) {
         Get.snackbar(
           'Error',
@@ -614,9 +638,9 @@ class ProductsController extends GetxController {
         isGeneratingQR.value = false;
         return;
       }
-      
+
       qrData.value = dataToEncode;
-      
+
       Get.snackbar(
         'Success',
         'QR Code generated successfully!',
@@ -649,18 +673,19 @@ class ProductsController extends GetxController {
         );
         return;
       }
-      
-      final RenderRepaintBoundary boundary = qrKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+
+      final RenderRepaintBoundary boundary =
+          qrKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
       final image = await boundary.toImage(pixelRatio: 3.0);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       final pngBytes = byteData!.buffer.asUint8List();
-      
+
       final directory = await getExternalStorageDirectory();
       final fileName = 'qr_code_${DateTime.now().millisecondsSinceEpoch}.png';
       final filePath = '${directory!.path}/$fileName';
       final file = File(filePath);
       await file.writeAsBytes(pngBytes);
-      
+
       Get.snackbar(
         'Success',
         'QR Code saved to gallery!',
@@ -682,19 +707,19 @@ class ProductsController extends GetxController {
   // ─── Share QR Code ──────────────────────────────────────────────
   Future<void> shareQRCode() async {
     try {
-      final RenderRepaintBoundary boundary = qrKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      final RenderRepaintBoundary boundary =
+          qrKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
       final image = await boundary.toImage(pixelRatio: 2.0);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       final pngBytes = byteData!.buffer.asUint8List();
-      
+
       final tempDir = await getTemporaryDirectory();
       final file = File('${tempDir.path}/qr_code.png');
       await file.writeAsBytes(pngBytes);
-      
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        text: 'QR Code Data: ${qrData.value}',
-      );
+
+      await Share.shareXFiles([
+        XFile(file.path),
+      ], text: 'QR Code Data: ${qrData.value}');
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -735,10 +760,7 @@ class ProductsController extends GetxController {
       } else if (data.startsWith('http://') || data.startsWith('https://')) {
         selectedProductForQR.value = {'url': data};
       } else if (data.contains('PROD-')) {
-        selectedProductForQR.value = {
-          'id': data,
-          'type': 'product',
-        };
+        selectedProductForQR.value = {'id': data, 'type': 'product'};
       } else {
         selectedProductForQR.value = {'text': data};
       }
@@ -765,7 +787,7 @@ class ProductsController extends GetxController {
       'type': 'product',
     };
     qrData.value = productData.toString();
-    
+
     Get.snackbar(
       'QR Generated',
       'QR code for ${product['name']} generated!',
@@ -778,16 +800,22 @@ class ProductsController extends GetxController {
   // ─── Check if Barcode Exists ───────────────────────────────────
   Future<Map<String, dynamic>?> checkBarcodeExists(String barcode) async {
     try {
-      final response = await _api.get('/warehouse/products/check-barcode/$barcode');
-      
-      if (response.success == true && response.data is Map && response.data['exists'] == true) {
+      final response = await _api.get(
+        '/warehouse/products/check-barcode/$barcode',
+      );
+
+      if (response.success == true &&
+          response.data is Map &&
+          response.data['exists'] == true) {
         // Get full product details
-        final productResponse = await _api.get('/warehouse/products/barcode/$barcode');
+        final productResponse = await _api.get(
+          '/warehouse/products/barcode/$barcode',
+        );
         if (productResponse.success == true) {
           return productResponse.data;
         }
       }
-      
+
       return null;
     } catch (e) {
       print('Error checking barcode: $e');

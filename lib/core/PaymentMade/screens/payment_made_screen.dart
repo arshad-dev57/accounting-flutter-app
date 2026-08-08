@@ -1,10 +1,10 @@
 // screens/payments_made_screen.dart - PROFESSIONAL MOBILE DESIGN (NO WEB)
 
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/PaymentMade/controller/paymentmade_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/supplier/screen/supplier_screen.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/PaymentMade/controller/paymentmade_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/supplier/screen/supplier_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -38,9 +38,7 @@ class PaymentsMadeScreen extends StatelessWidget {
                   children: [
                     _buildSummaryCards(controller),
                     const SizedBox(height: 8),
-                    Expanded(
-                      child: _buildListView(controller, context),
-                    ),
+                    Expanded(child: _buildListView(controller, context)),
                   ],
                 ),
               );
@@ -73,7 +71,10 @@ class PaymentsMadeScreen extends StatelessWidget {
   // TOP HEADER
   // ═══════════════════════════════════════════════════════════════
 
-  Widget _buildTopHeader(BuildContext context, PaymentMadeController controller) {
+  Widget _buildTopHeader(
+    BuildContext context,
+    PaymentMadeController controller,
+  ) {
     return Container(
       color: kPrimary,
       child: SafeArea(
@@ -176,7 +177,10 @@ class PaymentsMadeScreen extends StatelessWidget {
                       ),
                       child: TextField(
                         onChanged: (value) => controller.searchPayments(value),
-                        style: const TextStyle(fontSize: 13, color: Colors.black87),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black87,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Search payments...',
                           hintStyle: TextStyle(
@@ -189,7 +193,9 @@ class PaymentsMadeScreen extends StatelessWidget {
                             color: Colors.grey.shade400,
                           ),
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                          ),
                         ),
                       ),
                     ),
@@ -214,11 +220,19 @@ class PaymentsMadeScreen extends StatelessWidget {
                         () => DropdownButton<String>(
                           value: controller.selectedFilter.value,
                           icon: const Icon(Icons.arrow_drop_down, size: 20),
-                          style: const TextStyle(fontSize: 12, color: Colors.black87),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black87,
+                          ),
                           underline: const SizedBox.shrink(),
-                          items: ['All', 'Today', 'This Week', 'This Month'].map((f) {
-                            return DropdownMenuItem(value: f, child: Text(f));
-                          }).toList(),
+                          items: ['All', 'Today', 'This Week', 'This Month']
+                              .map((f) {
+                                return DropdownMenuItem(
+                                  value: f,
+                                  child: Text(f),
+                                );
+                              })
+                              .toList(),
                           onChanged: (v) {
                             if (v != null) controller.applyDateFilter(v);
                           },
@@ -365,7 +379,10 @@ class PaymentsMadeScreen extends StatelessWidget {
   // LIST VIEW WITH LAZY LOADING
   // ═══════════════════════════════════════════════════════════════
 
-  Widget _buildListView(PaymentMadeController controller, BuildContext context) {
+  Widget _buildListView(
+    PaymentMadeController controller,
+    BuildContext context,
+  ) {
     return Obx(() {
       final payments = controller.payments;
 
@@ -389,7 +406,10 @@ class PaymentsMadeScreen extends StatelessWidget {
                 onPressed: () => _showRecordPaymentDialog(controller, context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kDanger,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 10,
+                  ),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -457,7 +477,8 @@ class PaymentsMadeScreen extends StatelessWidget {
     PaymentMadeController controller,
     BuildContext context,
   ) {
-    final statusColor = payment.status == 'Cleared' || payment.status == 'Completed'
+    final statusColor =
+        payment.status == 'Cleared' || payment.status == 'Completed'
         ? kSuccess
         : kWarning;
 
@@ -467,10 +488,7 @@ class PaymentsMadeScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: statusColor.withOpacity(0.2),
-          width: 1.5,
-        ),
+        border: Border.all(color: statusColor.withOpacity(0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -554,10 +572,7 @@ class PaymentsMadeScreen extends StatelessWidget {
                             children: [
                               _statusBadge(payment.status, statusColor),
                               _badge(payment.paymentMethod, kPrimary),
-                              _badge(
-                                'Bill: ${payment.billNumber}',
-                                kSubText,
-                              ),
+                              _badge('Bill: ${payment.billNumber}', kSubText),
                             ],
                           ),
                         ],
@@ -595,7 +610,8 @@ class PaymentsMadeScreen extends StatelessWidget {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _showPaymentDetails(payment, controller, context),
+                        onPressed: () =>
+                            _showPaymentDetails(payment, controller, context),
                         icon: Icon(
                           Icons.visibility_outlined,
                           size: 14,
@@ -781,10 +797,11 @@ class PaymentsMadeScreen extends StatelessWidget {
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(8),
                                       ),
-                                      contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 10,
-                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 10,
+                                          ),
                                       isDense: true,
                                       labelStyle: TextStyle(
                                         fontSize: 12,
@@ -816,7 +833,9 @@ class PaymentsMadeScreen extends StatelessWidget {
                                     onChanged: (v) async {
                                       selectedSupplierId = v!;
                                       controller.clearBillSelections();
-                                      await controller.getUnpaidBills(selectedSupplierId);
+                                      await controller.getUnpaidBills(
+                                        selectedSupplierId,
+                                      );
                                       amount = 0;
                                       setState(() {});
                                     },
@@ -930,7 +949,8 @@ class PaymentsMadeScreen extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 8),
                                   ...controller.currentBills.map((bill) {
-                                    final isSelected = controller.selectedBillIds
+                                    final isSelected = controller
+                                        .selectedBillIds
                                         .contains(bill.id);
                                     return Container(
                                       margin: const EdgeInsets.only(bottom: 6),
@@ -961,7 +981,9 @@ class PaymentsMadeScreen extends StatelessWidget {
                                                 bill.outstanding,
                                               );
                                             }
-                                            amount = controller.totalSelectedAmount.value;
+                                            amount = controller
+                                                .totalSelectedAmount
+                                                .value;
                                           });
                                         },
                                         title: Text(
@@ -988,17 +1010,20 @@ class PaymentsMadeScreen extends StatelessWidget {
                                               style: TextStyle(
                                                 fontSize: 11,
                                                 fontWeight: FontWeight.w600,
-                                                color: isSelected ? kDanger : kDanger,
+                                                color: isSelected
+                                                    ? kDanger
+                                                    : kDanger,
                                               ),
                                             ),
                                           ],
                                         ),
                                         controlAffinity:
                                             ListTileControlAffinity.leading,
-                                        contentPadding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 2,
-                                        ),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 2,
+                                            ),
                                         activeColor: kDanger,
                                       ),
                                     );
@@ -1013,25 +1038,41 @@ class PaymentsMadeScreen extends StatelessWidget {
                                           TextButton(
                                             onPressed: () {
                                               setState(() {
-                                                if (controller.selectedBillIds.length ==
-                                                    controller.currentBills.length) {
-                                                  controller.clearBillSelections();
+                                                if (controller
+                                                        .selectedBillIds
+                                                        .length ==
+                                                    controller
+                                                        .currentBills
+                                                        .length) {
+                                                  controller
+                                                      .clearBillSelections();
                                                 } else {
-                                                  for (var bill in controller.currentBills) {
-                                                    if (!controller.selectedBillIds.contains(bill.id)) {
-                                                      controller.toggleBillSelection(
-                                                        bill.id,
-                                                        bill.outstanding,
-                                                      );
+                                                  for (var bill
+                                                      in controller
+                                                          .currentBills) {
+                                                    if (!controller
+                                                        .selectedBillIds
+                                                        .contains(bill.id)) {
+                                                      controller
+                                                          .toggleBillSelection(
+                                                            bill.id,
+                                                            bill.outstanding,
+                                                          );
                                                     }
                                                   }
                                                 }
-                                                amount = controller.totalSelectedAmount.value;
+                                                amount = controller
+                                                    .totalSelectedAmount
+                                                    .value;
                                               });
                                             },
                                             child: Text(
-                                              controller.selectedBillIds.length ==
-                                                  controller.currentBills.length
+                                              controller
+                                                          .selectedBillIds
+                                                          .length ==
+                                                      controller
+                                                          .currentBills
+                                                          .length
                                                   ? 'Deselect All'
                                                   : 'Select All',
                                               style: TextStyle(
@@ -1090,7 +1131,8 @@ class PaymentsMadeScreen extends StatelessWidget {
                                   fontSize: 12,
                                   color: kSubText,
                                 ),
-                                helperText: controller.totalSelectedAmount.value > 0
+                                helperText:
+                                    controller.totalSelectedAmount.value > 0
                                     ? 'Max: ${controller.formatAmount(controller.totalSelectedAmount.value)}'
                                     : null,
                                 helperStyle: TextStyle(
@@ -1105,7 +1147,8 @@ class PaymentsMadeScreen extends StatelessWidget {
                               keyboardType: TextInputType.number,
                               onChanged: (v) {
                                 final val = double.tryParse(v) ?? 0;
-                                final maxAmount = controller.totalSelectedAmount.value;
+                                final maxAmount =
+                                    controller.totalSelectedAmount.value;
                                 if (maxAmount > 0 && val > maxAmount) {
                                   AppSnackbar.error(
                                     kWarning,
@@ -1118,8 +1161,9 @@ class PaymentsMadeScreen extends StatelessWidget {
                                 }
                                 setState(() {});
                               },
-                              validator: (v) =>
-                                  v == null || v.isEmpty ? 'Amount required' : null,
+                              validator: (v) => v == null || v.isEmpty
+                                  ? 'Amount required'
+                                  : null,
                             ),
                             const SizedBox(height: 16),
 
@@ -1163,7 +1207,8 @@ class PaymentsMadeScreen extends StatelessWidget {
                                   child: Text('Credit Card'),
                                 ),
                               ],
-                              onChanged: (v) => setState(() => paymentMethod = v!),
+                              onChanged: (v) =>
+                                  setState(() => paymentMethod = v!),
                             ),
                             const SizedBox(height: 16),
 
@@ -1348,7 +1393,8 @@ class PaymentsMadeScreen extends StatelessWidget {
                               onPressed: controller.isRecording.value
                                   ? null
                                   : () async {
-                                      if (!formKey.currentState!.validate()) return;
+                                      if (!formKey.currentState!.validate())
+                                        return;
 
                                       if (controller.selectedBillIds.isEmpty) {
                                         AppSnackbar.error(
@@ -1378,7 +1424,10 @@ class PaymentsMadeScreen extends StatelessWidget {
                                         return;
                                       }
 
-                                      if (amount > controller.totalSelectedAmount.value) {
+                                      if (amount >
+                                          controller
+                                              .totalSelectedAmount
+                                              .value) {
                                         AppSnackbar.error(
                                           kDanger,
                                           'Error',
@@ -1390,12 +1439,14 @@ class PaymentsMadeScreen extends StatelessWidget {
                                       Navigator.pop(context);
                                       await controller.recordPayment(
                                         supplierId: selectedSupplierId,
-                                        billIds: controller.selectedBillIds.toList(),
+                                        billIds: controller.selectedBillIds
+                                            .toList(),
                                         amount: amount,
                                         paymentDate: DateTime.now(),
                                         paymentMethod: paymentMethod,
                                         reference: reference,
-                                        bankAccountId: selectedBankAccountId.isEmpty
+                                        bankAccountId:
+                                            selectedBankAccountId.isEmpty
                                             ? null
                                             : selectedBankAccountId,
                                         notes: notes,
@@ -1404,7 +1455,9 @@ class PaymentsMadeScreen extends StatelessWidget {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: kDanger,
                                 elevation: 0,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -1417,7 +1470,8 @@ class PaymentsMadeScreen extends StatelessWidget {
                                         strokeWidth: 2,
                                         valueColor:
                                             const AlwaysStoppedAnimation<Color>(
-                                                Colors.black),
+                                              Colors.black,
+                                            ),
                                       ),
                                     )
                                   : const Text(
@@ -1452,7 +1506,8 @@ class PaymentsMadeScreen extends StatelessWidget {
     PaymentMadeController controller,
     BuildContext context,
   ) {
-    final statusColor = payment.status == 'Cleared' || payment.status == 'Completed'
+    final statusColor =
+        payment.status == 'Cleared' || payment.status == 'Completed'
         ? kSuccess
         : kWarning;
 
@@ -1593,7 +1648,10 @@ class PaymentsMadeScreen extends StatelessWidget {
                       // Details
                       _detailRow('Supplier', payment.supplierName),
                       _detailRow('Bill #', payment.billNumber),
-                      _detailRow('Bill Amount', controller.formatAmount(payment.billAmount)),
+                      _detailRow(
+                        'Bill Amount',
+                        controller.formatAmount(payment.billAmount),
+                      ),
                       _detailRow('Payment Method', payment.paymentMethod),
                       if (payment.reference.isNotEmpty)
                         _detailRow('Reference', payment.reference),
@@ -1603,9 +1661,9 @@ class PaymentsMadeScreen extends StatelessWidget {
                         _detailRow('Notes', payment.notes),
                       _detailRow(
                         'Recorded At',
-                        DateFormat('dd MMM yyyy, hh:mm a').format(
-                          payment.createdAt,
-                        ),
+                        DateFormat(
+                          'dd MMM yyyy, hh:mm a',
+                        ).format(payment.createdAt),
                       ),
                       const SizedBox(height: 16),
                       Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
@@ -1624,7 +1682,9 @@ class PaymentsMadeScreen extends StatelessWidget {
                                     Navigator.pop(context);
                                     final confirm = await Get.dialog<bool>(
                                       AlertDialog(
-                                        title: const Text('Clear Cheque Payment'),
+                                        title: const Text(
+                                          'Clear Cheque Payment',
+                                        ),
                                         content: Text(
                                           'Clear cheque payment ${payment.paymentNumber}?',
                                         ),
@@ -1898,10 +1958,7 @@ class PaymentsMadeScreen extends StatelessWidget {
           Container(
             width: 5,
             height: 5,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 4),
           Text(

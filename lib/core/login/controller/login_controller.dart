@@ -3,17 +3,17 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
-import 'package:LedgerPro_app/Services/permission_service.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/changepassword/screen/otp_screen.dart';
-import 'package:LedgerPro_app/core/dashboard/Screens/dashbaord_screen.dart';
-import 'package:LedgerPro_app/core/loginOtp/screen/login_otp_screen.dart';
-import 'package:LedgerPro_app/core/plans/controllers/subscription_controller.dart';
-import 'package:LedgerPro_app/core/plans/views/Subscription_plans.dart';
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/Services/notification_Service.dart';
+import 'package:BisonsTechs_app/Services/permission_service.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/changepassword/screen/otp_screen.dart';
+import 'package:BisonsTechs_app/core/dashboard/Screens/dashbaord_screen.dart';
+import 'package:BisonsTechs_app/core/loginOtp/screen/login_otp_screen.dart';
+import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
+import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Services/notification_Service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -104,7 +104,9 @@ class LoginController extends GetxController {
       print('🔍 [LOGIN] Response success: ${response.success}');
       print('🔍 [LOGIN] Response message: ${response.message}');
       print('🔍 [LOGIN] Response data: ${response.data}');
-      print('🔍 [LOGIN] Response isFiscalYearError: ${response.isFiscalYearError}');
+      print(
+        '🔍 [LOGIN] Response isFiscalYearError: ${response.isFiscalYearError}',
+      );
 
       final data = response.data;
 
@@ -150,18 +152,26 @@ class LoginController extends GetxController {
             final userData = data['user'] as Map<String, dynamic>?;
             if (userData != null && userData['_id'] != null) {
               final userId = userData['_id'].toString();
-              print('🔔 [LoginController] Setting up notification service for user: $userId');
-              
-              print('🔔 [LoginController] Calling NotificationService.login()...');
+              print(
+                '🔔 [LoginController] Setting up notification service for user: $userId',
+              );
+
+              print(
+                '🔔 [LoginController] Calling NotificationService.login()...',
+              );
               await NotificationService.instance.login(userId);
-              
-              print('🔔 [LoginController] Calling verifyDeviceRegistration()...');
+
+              print(
+                '🔔 [LoginController] Calling verifyDeviceRegistration()...',
+              );
               await NotificationService.instance.verifyDeviceRegistration();
-              
+
               print('✅ [LoginController] Notification service setup completed');
               print('🔔🔔🔔 [LoginController] NOTIFICATION SETUP END 🔔🔔🔔');
             } else {
-              print('⚠️ [LoginController] User data or user ID is null, skipping notification setup');
+              print(
+                '⚠️ [LoginController] User data or user ID is null, skipping notification setup',
+              );
             }
           } catch (e) {
             print('❌ [LoginController] Notification service setup error: $e');
@@ -169,7 +179,9 @@ class LoginController extends GetxController {
             // Don't block login on notification error
           }
         } else {
-          print('🔔 [LoginController] Running on web, skipping notification setup');
+          print(
+            '🔔 [LoginController] Running on web, skipping notification setup',
+          );
         }
 
         if (subscriptionController.hasAccess) {
@@ -260,23 +272,21 @@ class LoginController extends GetxController {
         // ✅ Save user data in format expected by PermissionService
         final permissionService = Get.find<PermissionService>();
         final permissionsList = userData['permissions'] as List<dynamic>?;
-        final userPermissions = permissionsList?.map((p) {
-          if (p is Map<String, dynamic>) {
-            return UserPermission(
-              id: p['id']?.toString() ?? '',
-              page: p['page']?.toString() ?? '',
-              canView: p['canView'] ?? true,
-              canCreate: p['canCreate'] ?? false,
-              canEdit: p['canEdit'] ?? false,
-              canDelete: p['canDelete'] ?? false,
-            );
-          }
-          return UserPermission(
-            id: '',
-            page: p.toString(),
-            canView: true,
-          );
-        }).toList() ?? [];
+        final userPermissions =
+            permissionsList?.map((p) {
+              if (p is Map<String, dynamic>) {
+                return UserPermission(
+                  id: p['id']?.toString() ?? '',
+                  page: p['page']?.toString() ?? '',
+                  canView: p['canView'] ?? true,
+                  canCreate: p['canCreate'] ?? false,
+                  canEdit: p['canEdit'] ?? false,
+                  canDelete: p['canDelete'] ?? false,
+                );
+              }
+              return UserPermission(id: '', page: p.toString(), canView: true);
+            }).toList() ??
+            [];
 
         final userDataForPermissions = UserData(
           id: userData['_id']?.toString() ?? '',
@@ -286,7 +296,7 @@ class LoginController extends GetxController {
           role: userData['role']?.toString() ?? 'user',
           permissions: userPermissions,
         );
-        
+
         await permissionService.saveUserData(userDataForPermissions);
         print('✅ [LOGIN] User data saved for PermissionService');
 

@@ -1,19 +1,18 @@
 // lib/core/Register/controller/registercontroller.dart
 
-import 'package:LedgerPro_app/core/plans/controllers/subscription_controller.dart';
-import 'package:LedgerPro_app/core/plans/views/Subscription_plans.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
+import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:LedgerPro_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:LedgerPro_app/Utils/signature_dialog.dart';
-import 'package:flutter/material.dart';
+import 'package:BisonsTechs_app/Utils/signature_dialog.dart';
 
 class AuthController extends GetxController {
   var isLoading = false.obs;
@@ -51,8 +50,12 @@ class AuthController extends GetxController {
   var lastName = ''.obs;
   var email = ''.obs;
   var phone = ''.obs;
+  var fullPhoneNumber = ''.obs;
+  var phoneCountryIso = 'PK'.obs;
   var country = ''.obs;
   var selectedCurrencyCode = ''.obs;
+  var selectedCurrencyName = ''.obs;
+  var selectedCurrencySymbol = ''.obs;
   var password = ''.obs;
   var confirmPassword = ''.obs;
   var address = ''.obs;
@@ -290,6 +293,14 @@ class AuthController extends GetxController {
         AppSnackbar.error(kDanger, 'Error', 'Please enter phone number');
         return false;
       }
+      if (fullPhoneNumber.value.trim().isEmpty) {
+        AppSnackbar.error(
+          kDanger,
+          'Error',
+          'Please enter a valid phone number',
+        );
+        return false;
+      }
       if (emailController.text.trim().isEmpty ||
           !emailController.text.contains('@')) {
         AppSnackbar.error(kDanger, 'Error', 'Please enter valid email');
@@ -350,7 +361,7 @@ class AuthController extends GetxController {
           'email': emailController.text.trim(),
           'password': passwordController.text,
           'country': countryController.text.trim(),
-          'phone': phoneController.text.trim(),
+          'phone': fullPhoneNumber.value.trim(),
           'address': addressController.text.trim(),
           'organizationName': organizationNameController.text.trim(),
           'fiscalYear': selectedFiscalYear.value,
@@ -358,7 +369,7 @@ class AuthController extends GetxController {
           'industry': industryController.text.trim(),
           'businessType': selectedBusinessType.value,
           'websiteLink': '',
-          'contactNo': phoneController.text.trim(),
+          'contactNo': fullPhoneNumber.value.trim(),
         };
 
         final Map<String, String> filePaths = {};
@@ -614,6 +625,10 @@ class AuthController extends GetxController {
     selectedFiscalYear.value = '';
     agreeToTerms.value = false;
     selectedCurrencyCode.value = '';
+    selectedCurrencyName.value = '';
+    selectedCurrencySymbol.value = '';
+    fullPhoneNumber.value = '';
+    phoneCountryIso.value = 'PK';
     currentStep.value = 0;
     passwordStrength.value = 0;
     passwordStrengthText.value = '';

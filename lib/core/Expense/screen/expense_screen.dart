@@ -1,11 +1,11 @@
 // core/Expense/views/expense_screen.dart - COMPLETE WITH LOADING
 
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/responsive_utils.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/Expense/controller/expense_controller.dart';
-import 'package:LedgerPro_app/core/Expense/model/expense_model.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/Expense/controller/expense_controller.dart';
+import 'package:BisonsTechs_app/core/Expense/model/expense_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -182,7 +182,9 @@ class ExpenseScreen extends StatelessWidget {
                             color: Colors.grey.shade400,
                           ),
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                          ),
                         ),
                       ),
                     ),
@@ -205,15 +207,25 @@ class ExpenseScreen extends StatelessWidget {
                     child: DropdownButtonHideUnderline(
                       child: Obx(
                         () => DropdownButton<String>(
-                          value: controller.selectedType.value == 'All' ? 'All Types' : controller.selectedType.value,
+                          value: controller.selectedType.value == 'All'
+                              ? 'All Types'
+                              : controller.selectedType.value,
                           icon: const Icon(Icons.arrow_drop_down, size: 18),
-                          style: const TextStyle(fontSize: 12, color: Colors.black87),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black87,
+                          ),
                           underline: const SizedBox.shrink(),
-                          items: ['All Types', ...controller.expenseTypes].map((f) {
+                          items: ['All Types', ...controller.expenseTypes].map((
+                            f,
+                          ) {
                             return DropdownMenuItem(value: f, child: Text(f));
                           }).toList(),
                           onChanged: (v) {
-                            if (v != null) controller.applyTypeFilter(v == 'All Types' ? 'All' : v);
+                            if (v != null)
+                              controller.applyTypeFilter(
+                                v == 'All Types' ? 'All' : v,
+                              );
                           },
                         ),
                       ),
@@ -241,7 +253,9 @@ class ExpenseScreen extends StatelessWidget {
                 Expanded(
                   child: _buildSummaryTile(
                     label: 'Total Expense',
-                    value: controller.formatAmount(controller.totalExpense.value),
+                    value: controller.formatAmount(
+                      controller.totalExpense.value,
+                    ),
                     icon: Icons.trending_down,
                     accentColor: kDanger,
                   ),
@@ -250,7 +264,9 @@ class ExpenseScreen extends StatelessWidget {
                 Expanded(
                   child: _buildSummaryTile(
                     label: 'This Month',
-                    value: controller.formatAmount(controller.thisMonthTotal.value),
+                    value: controller.formatAmount(
+                      controller.thisMonthTotal.value,
+                    ),
                     icon: Icons.calendar_month,
                     accentColor: kPrimary,
                   ),
@@ -264,7 +280,9 @@ class ExpenseScreen extends StatelessWidget {
                 Expanded(
                   child: _buildSummaryTile(
                     label: 'This Week',
-                    value: controller.formatAmount(controller.thisWeekTotal.value),
+                    value: controller.formatAmount(
+                      controller.thisWeekTotal.value,
+                    ),
                     icon: Icons.calendar_today,
                     accentColor: kWarning,
                   ),
@@ -431,10 +449,7 @@ class ExpenseScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: statusColor.withOpacity(0.2),
-          width: 1.5,
-        ),
+        border: Border.all(color: statusColor.withOpacity(0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -515,10 +530,7 @@ class ExpenseScreen extends StatelessWidget {
                             spacing: 5,
                             runSpacing: 4,
                             children: [
-                              _badge(
-                                expense.status,
-                                statusColor,
-                              ),
+                              _badge(expense.status, statusColor),
                               _badge(expense.paymentMethod, kSubText),
                             ],
                           ),
@@ -535,9 +547,7 @@ class ExpenseScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: kDanger.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: kDanger.withOpacity(0.2),
-                        ),
+                        border: Border.all(color: kDanger.withOpacity(0.2)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -602,7 +612,11 @@ class ExpenseScreen extends StatelessWidget {
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: () => controller.postExpense(expense.id),
-                          icon: const Icon(Icons.check_circle, size: 14, color: Colors.black),
+                          icon: const Icon(
+                            Icons.check_circle,
+                            size: 14,
+                            color: Colors.black,
+                          ),
                           label: const Text(
                             'Post',
                             style: TextStyle(
@@ -740,7 +754,9 @@ class ExpenseScreen extends StatelessWidget {
             child: DropdownButtonHideUnderline(
               child: Obx(
                 () => DropdownButton<String>(
-                  value: controller.selectedType.value == 'All' ? 'All Types' : controller.selectedType.value,
+                  value: controller.selectedType.value == 'All'
+                      ? 'All Types'
+                      : controller.selectedType.value,
                   icon: Icon(
                     Icons.arrow_drop_down,
                     size: 20,
@@ -753,11 +769,15 @@ class ExpenseScreen extends StatelessWidget {
                   items: ['All Types', ...controller.expenseTypes].map((f) {
                     return DropdownMenuItem(
                       value: f,
-                      child: Text(f, style: const TextStyle(color: Colors.black87)),
+                      child: Text(
+                        f,
+                        style: const TextStyle(color: Colors.black87),
+                      ),
                     );
                   }).toList(),
                   onChanged: (v) {
-                    if (v != null) controller.applyTypeFilter(v == 'All Types' ? 'All' : v);
+                    if (v != null)
+                      controller.applyTypeFilter(v == 'All Types' ? 'All' : v);
                   },
                 ),
               ),
@@ -1187,9 +1207,7 @@ class ExpenseScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      expense.vendorName.isNotEmpty
-                          ? expense.vendorName
-                          : '-',
+                      expense.vendorName.isNotEmpty ? expense.vendorName : '-',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -1447,7 +1465,9 @@ class ExpenseScreen extends StatelessWidget {
             child: Container(
               width: isWeb ? 560 : double.infinity,
               constraints: BoxConstraints(
-                maxHeight: isWeb ? 680 : MediaQuery.of(context).size.height * 0.88,
+                maxHeight: isWeb
+                    ? 680
+                    : MediaQuery.of(context).size.height * 0.88,
                 maxWidth: 500,
               ),
               decoration: BoxDecoration(
@@ -1753,11 +1773,16 @@ class ExpenseScreen extends StatelessWidget {
                                 'Bank Transfer',
                                 'Cheque',
                                 'Credit Card',
+                                'Online',
                               ],
-                              onChanged: (v) =>
-                                  setState(() => paymentMethod = v!),
+                              onChanged: (v) => setState(() {
+                                paymentMethod = v!;
+                                // clear bank selection when switching to Cash
+                                if (v == 'Cash') selectedBankAccountId = null;
+                              }),
                             ),
-                            if (paymentMethod == 'Bank Transfer' &&
+                            // Show bank dropdown for all non-Cash methods
+                            if (paymentMethod != 'Cash' &&
                                 controller.bankAccounts.isNotEmpty) ...[
                               const SizedBox(height: 12),
                               _buildBankDropdownField(
@@ -1893,8 +1918,27 @@ class ExpenseScreen extends StatelessWidget {
 
                                       final finalBankAccountId =
                                           paymentMethod == 'Cash'
-                                              ? null
-                                              : selectedBankAccountId;
+                                          ? null
+                                          : selectedBankAccountId;
+
+                                      print(
+                                        '🔍 [Flutter Screen] Before createExpense:',
+                                      );
+                                      print(
+                                        '🔍 [Flutter Screen] paymentMethod: $paymentMethod',
+                                      );
+                                      print(
+                                        '🔍 [Flutter Screen] selectedBankAccountId: $selectedBankAccountId',
+                                      );
+                                      print(
+                                        '🔍 [Flutter Screen] selectedBankAccountId type: ${selectedBankAccountId.runtimeType}',
+                                      );
+                                      print(
+                                        '🔍 [Flutter Screen] finalBankAccountId: $finalBankAccountId',
+                                      );
+                                      print(
+                                        '🔍 [Flutter Screen] finalBankAccountId type: ${finalBankAccountId.runtimeType}',
+                                      );
 
                                       Navigator.pop(context);
                                       await controller.createExpense(
@@ -1917,7 +1961,9 @@ class ExpenseScreen extends StatelessWidget {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: kPrimary,
                                 elevation: 0,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -1930,7 +1976,8 @@ class ExpenseScreen extends StatelessWidget {
                                         strokeWidth: 2,
                                         valueColor:
                                             const AlwaysStoppedAnimation<Color>(
-                                                Colors.black),
+                                              Colors.black,
+                                            ),
                                       ),
                                     )
                                   : const Text(
@@ -2056,14 +2103,16 @@ class ExpenseScreen extends StatelessWidget {
         'Select bank account',
         style: TextStyle(fontSize: 12, color: kSubText),
       ),
-      items: bankAccounts
-          .map(
-            (a) => DropdownMenuItem(
-              value: a['_id'].toString(),
-              child: Text(a['accountName'], overflow: TextOverflow.ellipsis),
-            ),
-          )
-          .toList(),
+      items: bankAccounts.map((a) {
+        final accountId = a['id']?.toString() ?? a['_id']?.toString();
+        print(
+          '🔍 [Flutter Bank Dropdown] Account: ${a['accountName']}, id: ${a['id']}, _id: ${a['_id']}, final: $accountId',
+        );
+        return DropdownMenuItem(
+          value: accountId,
+          child: Text(a['accountName'], overflow: TextOverflow.ellipsis),
+        );
+      }).toList(),
       onChanged: onChanged,
     );
   }

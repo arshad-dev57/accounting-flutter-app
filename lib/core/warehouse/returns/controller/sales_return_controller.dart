@@ -1,9 +1,9 @@
 // lib/core/warehouse/returns/controller/return_controller.dart - COMPLETE WITH DEBUG LOGS
 
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/order/model/order_model.dart';
-import 'package:LedgerPro_app/core/warehouse/returns/model/return_model.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/model/order_model.dart';
+import 'package:BisonsTechs_app/core/warehouse/returns/model/return_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -36,7 +36,14 @@ class SalesReturnController extends GetxController {
   final Rx<DateTime?> fromDate = Rx<DateTime?>(null);
   final Rx<DateTime?> toDate = Rx<DateTime?>(null);
 
-  final List<String> filters = ['all', 'Pending', 'Approved', 'Rejected', 'Completed', 'Cancelled'];
+  final List<String> filters = [
+    'all',
+    'Pending',
+    'Approved',
+    'Rejected',
+    'Completed',
+    'Cancelled',
+  ];
 
   // ─── STATS ────────────────────────────────────────────────────
   final Rx<ReturnStats> stats = ReturnStats(
@@ -49,8 +56,21 @@ class SalesReturnController extends GetxController {
   ).obs;
 
   // ─── CONSTANTS ────────────────────────────────────────────────
-  static const statusOptions = ['all', 'Pending', 'Approved', 'Rejected', 'Completed', 'Cancelled'];
-  static const typeOptions = ['all', 'Return', 'Exchange', 'Warranty', 'Damaged'];
+  static const statusOptions = [
+    'all',
+    'Pending',
+    'Approved',
+    'Rejected',
+    'Completed',
+    'Cancelled',
+  ];
+  static const typeOptions = [
+    'all',
+    'Return',
+    'Exchange',
+    'Warranty',
+    'Damaged',
+  ];
   static const methodOptions = [
     'Original Payment',
     'Bank Transfer',
@@ -58,7 +78,13 @@ class SalesReturnController extends GetxController {
     'Store Credit',
     'Cheque',
   ];
-  static const conditionOptions = ['New', 'Opened', 'Damaged', 'Defective', 'Used'];
+  static const conditionOptions = [
+    'New',
+    'Opened',
+    'Damaged',
+    'Defective',
+    'Used',
+  ];
 
   // ─── WIZARD STATE ─────────────────────────────────────────────
   final RxInt wizardStep = 0.obs;
@@ -97,15 +123,21 @@ class SalesReturnController extends GetxController {
 
   // ─── GETTERS ──────────────────────────────────────────────────
 
-  double get selectedSubtotal =>
-      lineDrafts.where((l) => l.selected.value).fold(0.0, (sum, l) => sum + l.refundAmount);
+  double get selectedSubtotal => lineDrafts
+      .where((l) => l.selected.value)
+      .fold(0.0, (sum, l) => sum + l.refundAmount);
 
-  double get restockingFee => double.tryParse(restockingFeeController.text.trim()) ?? 0;
+  double get restockingFee =>
+      double.tryParse(restockingFeeController.text.trim()) ?? 0;
 
-  double get shippingCost => double.tryParse(shippingCostController.text.trim()) ?? 0;
+  double get shippingCost =>
+      double.tryParse(shippingCostController.text.trim()) ?? 0;
 
   double get totalRefundAmount =>
-      (selectedSubtotal - restockingFee - shippingCost).clamp(0, double.infinity);
+      (selectedSubtotal - restockingFee - shippingCost).clamp(
+        0,
+        double.infinity,
+      );
 
   // ═══════════════════════════════════════════════════════════════
   // FETCH RETURNS
@@ -113,9 +145,11 @@ class SalesReturnController extends GetxController {
 
   Future<void> fetchReturns({bool resetPage = false}) async {
     print('🔵 [SalesReturnController] fetchReturns called');
-    print('🔵 [SalesReturnController] Current Page: ${currentPage.value}, Limit: ${pageLimit.value}');
+    print(
+      '🔵 [SalesReturnController] Current Page: ${currentPage.value}, Limit: ${pageLimit.value}',
+    );
     print('🔵 [SalesReturnController] Reset Page: $resetPage');
-    
+
     if (resetPage) currentPage.value = 1;
     try {
       isLoading.value = true;
@@ -125,11 +159,15 @@ class SalesReturnController extends GetxController {
       };
       if (searchFilter.value.isNotEmpty) {
         params['search'] = searchFilter.value;
-        print('🔵 [SalesReturnController] Search filter: ${searchFilter.value}');
+        print(
+          '🔵 [SalesReturnController] Search filter: ${searchFilter.value}',
+        );
       }
       if (statusFilter.value != 'all') {
         params['status'] = statusFilter.value;
-        print('🔵 [SalesReturnController] Status filter: ${statusFilter.value}');
+        print(
+          '🔵 [SalesReturnController] Status filter: ${statusFilter.value}',
+        );
       }
       if (typeFilter.value != 'all') {
         params['type'] = typeFilter.value;
@@ -144,18 +182,27 @@ class SalesReturnController extends GetxController {
         print('🔵 [SalesReturnController] To date: ${params['toDate']}');
       }
 
-      final query = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
-      print('🔵 [SalesReturnController] API Request: GET /api/warehouse/returns?$query');
+      final query = params.entries
+          .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+          .join('&');
+      print(
+        '🔵 [SalesReturnController] API Request: GET /api/warehouse/returns?$query',
+      );
 
-      final response = await _api.get('/api/warehouse/returns?$query', requiresAuth: true);
+      final response = await _api.get(
+        '/api/warehouse/returns?$query',
+        requiresAuth: true,
+      );
 
-      print('🔵 [SalesReturnController] Response Status: ${response.statusCode}');
+      print(
+        '🔵 [SalesReturnController] Response Status: ${response.statusCode}',
+      );
       print('🔵 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         print('🔵 [SalesReturnController] Data length: ${list.length}');
-        
+
         returns.value = list
             .map((e) => ReturnModel.fromJson(Map<String, dynamic>.from(e)))
             .toList();
@@ -179,9 +226,13 @@ class SalesReturnController extends GetxController {
           hasNext.value = pagination['hasNext'] == true;
           hasPrev.value = pagination['hasPrev'] == true;
           hasMore.value = pagination['hasNext'] == true;
-          
-          print('✅ [SalesReturnController] Returns fetched successfully: ${returns.length} returns');
-          print('✅ [SalesReturnController] Total records: ${totalRecords.value}, Total pages: ${totalPages.value}');
+
+          print(
+            '✅ [SalesReturnController] Returns fetched successfully: ${returns.length} returns',
+          );
+          print(
+            '✅ [SalesReturnController] Total records: ${totalRecords.value}, Total pages: ${totalPages.value}',
+          );
         }
       } else {
         print('❌ [SalesReturnController] Failed to fetch returns');
@@ -194,7 +245,9 @@ class SalesReturnController extends GetxController {
       Get.snackbar('Error', e.toString());
     } finally {
       isLoading.value = false;
-      print('🔵 [SalesReturnController] fetchReturns completed, isLoading: ${isLoading.value}');
+      print(
+        '🔵 [SalesReturnController] fetchReturns completed, isLoading: ${isLoading.value}',
+      );
     }
   }
 
@@ -202,27 +255,33 @@ class SalesReturnController extends GetxController {
 
   void applyLocalFilters() {
     print('🟣 [SalesReturnController] applyLocalFilters called');
-    print('🟣 [SalesReturnController] Selected filter: ${selectedFilter.value}');
+    print(
+      '🟣 [SalesReturnController] Selected filter: ${selectedFilter.value}',
+    );
     print('🟣 [SalesReturnController] Search filter: ${searchFilter.value}');
-    
+
     final list = returns.toList();
     final filtered = list.where((item) {
       // Status filter
-      if (selectedFilter.value != 'all' && item.returnStatus != selectedFilter.value) {
+      if (selectedFilter.value != 'all' &&
+          item.returnStatus != selectedFilter.value) {
         return false;
       }
       // Search filter
       if (searchFilter.value.isNotEmpty) {
         final query = searchFilter.value.toLowerCase();
-        final matches = item.returnNumber.toLowerCase().contains(query) ||
+        final matches =
+            item.returnNumber.toLowerCase().contains(query) ||
             item.customerName.toLowerCase().contains(query) ||
             item.orderNumber.toLowerCase().contains(query);
         if (!matches) return false;
       }
       return true;
     }).toList();
-    
-    print('🟣 [SalesReturnController] Filtered returns: ${filtered.length} out of ${list.length}');
+
+    print(
+      '🟣 [SalesReturnController] Filtered returns: ${filtered.length} out of ${list.length}',
+    );
     filteredReturns.value = filtered;
   }
 
@@ -249,13 +308,17 @@ class SalesReturnController extends GetxController {
 
   Future<void> fetchMoreReturns() async {
     print('🟡 [SalesReturnController] fetchMoreReturns called');
-    print('🟡 [SalesReturnController] hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}');
-    
+    print(
+      '🟡 [SalesReturnController] hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}',
+    );
+
     if (!hasMore.value || isLoadingMore.value) {
-      print('🟡 [SalesReturnController] Skipping load more - hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}');
+      print(
+        '🟡 [SalesReturnController] Skipping load more - hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}',
+      );
       return;
     }
-    
+
     try {
       isLoadingMore.value = true;
       currentPage.value += 1;
@@ -269,18 +332,27 @@ class SalesReturnController extends GetxController {
       if (statusFilter.value != 'all') params['status'] = statusFilter.value;
       if (typeFilter.value != 'all') params['type'] = typeFilter.value;
 
-      final query = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
-      print('🟡 [SalesReturnController] API Request: GET /api/warehouse/returns?$query (Page ${currentPage.value})');
+      final query = params.entries
+          .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+          .join('&');
+      print(
+        '🟡 [SalesReturnController] API Request: GET /api/warehouse/returns?$query (Page ${currentPage.value})',
+      );
 
-      final response = await _api.get('/api/warehouse/returns?$query', requiresAuth: true);
+      final response = await _api.get(
+        '/api/warehouse/returns?$query',
+        requiresAuth: true,
+      );
 
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         final newReturns = list
             .map((e) => ReturnModel.fromJson(Map<String, dynamic>.from(e)))
             .toList();
-        
-        print('🟡 [SalesReturnController] Loaded ${newReturns.length} more returns');
+
+        print(
+          '🟡 [SalesReturnController] Loaded ${newReturns.length} more returns',
+        );
         returns.addAll(newReturns);
         applyLocalFilters();
 
@@ -290,7 +362,9 @@ class SalesReturnController extends GetxController {
           totalRecords.value = (pagination['total'] as num?)?.toInt() ?? 0;
           totalPages.value = (pagination['pages'] as num?)?.toInt() ?? 1;
         }
-        print('🟡 [SalesReturnController] Total returns now: ${returns.length}, hasMore: ${hasMore.value}');
+        print(
+          '🟡 [SalesReturnController] Total returns now: ${returns.length}, hasMore: ${hasMore.value}',
+        );
       } else {
         print('❌ [SalesReturnController] Failed to load more returns');
       }
@@ -317,7 +391,9 @@ class SalesReturnController extends GetxController {
   void goToPage(int page) {
     print('🟣 [SalesReturnController] goToPage called: $page');
     if (page < 1 || page > totalPages.value) {
-      print('🟣 [SalesReturnController] Invalid page: $page, totalPages: ${totalPages.value}');
+      print(
+        '🟣 [SalesReturnController] Invalid page: $page, totalPages: ${totalPages.value}',
+      );
       return;
     }
     currentPage.value = page;
@@ -332,14 +408,18 @@ class SalesReturnController extends GetxController {
     print('🟢 [SalesReturnController] openCreateWizard called');
     _resetWizard();
     showCreateWizard.value = true;
-    print('🟢 [SalesReturnController] showCreateWizard: ${showCreateWizard.value}');
+    print(
+      '🟢 [SalesReturnController] showCreateWizard: ${showCreateWizard.value}',
+    );
   }
 
   void closeCreateWizard() {
     print('🟢 [SalesReturnController] closeCreateWizard called');
     showCreateWizard.value = false;
     _resetWizard();
-    print('🟢 [SalesReturnController] showCreateWizard: ${showCreateWizard.value}');
+    print(
+      '🟢 [SalesReturnController] showCreateWizard: ${showCreateWizard.value}',
+    );
   }
 
   void _resetWizard() {
@@ -360,29 +440,33 @@ class SalesReturnController extends GetxController {
 
   Future<void> searchOrders(String query) async {
     print('🔵 [SalesReturnController] searchOrders called with: $query');
-    
+
     if (query.trim().length < 2) {
       print('🔵 [SalesReturnController] Query too short, clearing results');
       orderSearchResults.clear();
       return;
     }
-    
+
     try {
       isSearchingOrders.value = true;
       final encoded = Uri.encodeComponent(query.trim());
-      print('🔵 [SalesReturnController] API Request: GET /api/warehouse/order?search=$encoded&limit=10');
-      
+      print(
+        '🔵 [SalesReturnController] API Request: GET /api/warehouse/order?search=$encoded&limit=10',
+      );
+
       final response = await _api.get(
         '/api/warehouse/order?search=$encoded&limit=10',
         requiresAuth: true,
       );
-      
+
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         orderSearchResults.value = list
             .map((e) => OrderModel.fromJson(Map<String, dynamic>.from(e)))
             .toList();
-        print('🔵 [SalesReturnController] Found ${orderSearchResults.length} orders for query: $query');
+        print(
+          '🔵 [SalesReturnController] Found ${orderSearchResults.length} orders for query: $query',
+        );
       } else {
         print('❌ [SalesReturnController] No orders found for query: $query');
         orderSearchResults.clear();
@@ -398,8 +482,10 @@ class SalesReturnController extends GetxController {
 
   void selectOrderForReturn(OrderModel order) {
     print('🔵 [SalesReturnController] selectOrderForReturn called');
-    print('🔵 [SalesReturnController] Selected order: ${order.orderNumber} - ${order.customerName}');
-    
+    print(
+      '🔵 [SalesReturnController] Selected order: ${order.orderNumber} - ${order.customerName}',
+    );
+
     selectedOrder.value = order;
     orderSearchResults.clear();
     orderSearchController.text = order.orderNumber;
@@ -412,8 +498,10 @@ class SalesReturnController extends GetxController {
         unitPrice: item.unitPrice,
       );
     }).toList();
-    
-    print('🔵 [SalesReturnController] Created ${lineDrafts.length} line drafts for order');
+
+    print(
+      '🔵 [SalesReturnController] Created ${lineDrafts.length} line drafts for order',
+    );
   }
 
   bool canGoToStep2() {
@@ -423,21 +511,29 @@ class SalesReturnController extends GetxController {
   }
 
   bool canGoToStep3() {
-    final canGo = lineDrafts.any((l) => l.selected.value && l.returnQuantity > 0);
+    final canGo = lineDrafts.any(
+      (l) => l.selected.value && l.returnQuantity > 0,
+    );
     print('🔵 [SalesReturnController] canGoToStep3: $canGo');
     return canGo;
   }
 
   void nextStep() {
-    print('🟡 [SalesReturnController] nextStep called, current step: ${wizardStep.value}');
-    
+    print(
+      '🟡 [SalesReturnController] nextStep called, current step: ${wizardStep.value}',
+    );
+
     if (wizardStep.value == 0 && !canGoToStep2()) {
-      print('❌ [SalesReturnController] Cannot go to step 2 - no order selected');
+      print(
+        '❌ [SalesReturnController] Cannot go to step 2 - no order selected',
+      );
       Get.snackbar('Validation', 'Select an order first');
       return;
     }
     if (wizardStep.value == 1 && !canGoToStep3()) {
-      print('❌ [SalesReturnController] Cannot go to step 3 - no items selected');
+      print(
+        '❌ [SalesReturnController] Cannot go to step 3 - no items selected',
+      );
       Get.snackbar('Validation', 'Select at least one item to return');
       return;
     }
@@ -448,7 +544,9 @@ class SalesReturnController extends GetxController {
   }
 
   void previousStep() {
-    print('🟡 [SalesReturnController] previousStep called, current step: ${wizardStep.value}');
+    print(
+      '🟡 [SalesReturnController] previousStep called, current step: ${wizardStep.value}',
+    );
     if (wizardStep.value > 0) {
       wizardStep.value--;
       print('🟡 [SalesReturnController] Step changed to: ${wizardStep.value}');
@@ -461,16 +559,18 @@ class SalesReturnController extends GetxController {
 
   Future<bool> createReturn() async {
     print('🔵 [SalesReturnController] createReturn called');
-    
+
     final order = selectedOrder.value;
     if (order == null) {
       print('❌ [SalesReturnController] No order selected');
       return false;
     }
 
-    final selectedItems = lineDrafts.where((l) => l.selected.value && l.returnQuantity > 0).toList();
+    final selectedItems = lineDrafts
+        .where((l) => l.selected.value && l.returnQuantity > 0)
+        .toList();
     print('🔵 [SalesReturnController] Selected items: ${selectedItems.length}');
-    
+
     if (selectedItems.isEmpty) {
       print('❌ [SalesReturnController] No items selected');
       Get.snackbar('Validation', 'Select at least one item');
@@ -495,13 +595,17 @@ class SalesReturnController extends GetxController {
         'returnType': returnType.value,
         'returnMethod': returnMethod.value,
         'reason': reason,
-        'notes': notesController.text.trim().isEmpty ? null : notesController.text.trim(),
+        'notes': notesController.text.trim().isEmpty
+            ? null
+            : notesController.text.trim(),
         'restockingFee': restockingFee,
         'shippingCost': shippingCost,
       };
 
       print('🔵 [SalesReturnController] Submitting return payload:');
-      print('🔵 [SalesReturnController] ${payload.toString().substring(0, payload.toString().length > 500 ? 500 : payload.toString().length)}...');
+      print(
+        '🔵 [SalesReturnController] ${payload.toString().substring(0, payload.toString().length > 500 ? 500 : payload.toString().length)}...',
+      );
 
       final response = await _api.post(
         '/api/warehouse/returns',
@@ -509,7 +613,9 @@ class SalesReturnController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🔵 [SalesReturnController] Response Status: ${response.statusCode}');
+      print(
+        '🔵 [SalesReturnController] Response Status: ${response.statusCode}',
+      );
       print('🔵 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success) {
@@ -519,8 +625,10 @@ class SalesReturnController extends GetxController {
         await fetchReturns(resetPage: true);
         return true;
       }
-      
-      print('❌ [SalesReturnController] Failed to create return: ${response.message}');
+
+      print(
+        '❌ [SalesReturnController] Failed to create return: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to create return');
       return false;
     } catch (e) {
@@ -535,14 +643,16 @@ class SalesReturnController extends GetxController {
   }
 
   void selectReturn(ReturnModel item) {
-    print('🔵 [SalesReturnController] selectReturn called for: ${item.returnNumber}');
+    print(
+      '🔵 [SalesReturnController] selectReturn called for: ${item.returnNumber}',
+    );
     selectedReturn.value = item;
   }
 
   Future<bool> updateReturn(String id, Map<String, dynamic> data) async {
     print('🔵 [SalesReturnController] updateReturn called for ID: $id');
     print('🔵 [SalesReturnController] Update data: $data');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.put(
@@ -551,7 +661,9 @@ class SalesReturnController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🔵 [SalesReturnController] Response Status: ${response.statusCode}');
+      print(
+        '🔵 [SalesReturnController] Response Status: ${response.statusCode}',
+      );
       print('🔵 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success) {
@@ -560,8 +672,10 @@ class SalesReturnController extends GetxController {
         await fetchReturns(resetPage: true);
         return true;
       }
-      
-      print('❌ [SalesReturnController] Failed to update return: ${response.message}');
+
+      print(
+        '❌ [SalesReturnController] Failed to update return: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to update return');
       return false;
     } catch (e) {
@@ -575,7 +689,7 @@ class SalesReturnController extends GetxController {
 
   Future<bool> deleteReturn(String id) async {
     print('🔵 [SalesReturnController] deleteReturn called for ID: $id');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.delete(
@@ -583,7 +697,9 @@ class SalesReturnController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🔵 [SalesReturnController] Response Status: ${response.statusCode}');
+      print(
+        '🔵 [SalesReturnController] Response Status: ${response.statusCode}',
+      );
       print('🔵 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success) {
@@ -592,8 +708,10 @@ class SalesReturnController extends GetxController {
         await fetchReturns(resetPage: true);
         return true;
       }
-      
-      print('❌ [SalesReturnController] Failed to delete return: ${response.message}');
+
+      print(
+        '❌ [SalesReturnController] Failed to delete return: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to delete return');
       return false;
     } catch (e) {
@@ -611,7 +729,7 @@ class SalesReturnController extends GetxController {
 
   Future<bool> approveReturn(String id) async {
     print('🟣 [SalesReturnController] approveReturn called for ID: $id');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.patch(
@@ -620,7 +738,9 @@ class SalesReturnController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🟣 [SalesReturnController] Response Status: ${response.statusCode}');
+      print(
+        '🟣 [SalesReturnController] Response Status: ${response.statusCode}',
+      );
       print('🟣 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success) {
@@ -629,8 +749,10 @@ class SalesReturnController extends GetxController {
         await fetchReturns();
         return true;
       }
-      
-      print('❌ [SalesReturnController] Failed to approve return: ${response.message}');
+
+      print(
+        '❌ [SalesReturnController] Failed to approve return: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to approve return');
       return false;
     } catch (e) {
@@ -645,13 +767,13 @@ class SalesReturnController extends GetxController {
   Future<bool> rejectReturn(String id, String reason) async {
     print('🟣 [SalesReturnController] rejectReturn called for ID: $id');
     print('🟣 [SalesReturnController] Reason: $reason');
-    
+
     if (reason.trim().isEmpty) {
       print('❌ [SalesReturnController] No rejection reason provided');
       Get.snackbar('Validation', 'Rejection reason is required');
       return false;
     }
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.patch(
@@ -660,7 +782,9 @@ class SalesReturnController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🟣 [SalesReturnController] Response Status: ${response.statusCode}');
+      print(
+        '🟣 [SalesReturnController] Response Status: ${response.statusCode}',
+      );
       print('🟣 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success) {
@@ -669,8 +793,10 @@ class SalesReturnController extends GetxController {
         await fetchReturns();
         return true;
       }
-      
-      print('❌ [SalesReturnController] Failed to reject return: ${response.message}');
+
+      print(
+        '❌ [SalesReturnController] Failed to reject return: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to reject return');
       return false;
     } catch (e) {
@@ -684,7 +810,7 @@ class SalesReturnController extends GetxController {
 
   Future<bool> completeReturn(String id) async {
     print('🟣 [SalesReturnController] completeReturn called for ID: $id');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.patch(
@@ -693,7 +819,9 @@ class SalesReturnController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🟣 [SalesReturnController] Response Status: ${response.statusCode}');
+      print(
+        '🟣 [SalesReturnController] Response Status: ${response.statusCode}',
+      );
       print('🟣 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success) {
@@ -702,8 +830,10 @@ class SalesReturnController extends GetxController {
         await fetchReturns();
         return true;
       }
-      
-      print('❌ [SalesReturnController] Failed to complete return: ${response.message}');
+
+      print(
+        '❌ [SalesReturnController] Failed to complete return: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to complete return');
       return false;
     } catch (e) {
@@ -718,7 +848,7 @@ class SalesReturnController extends GetxController {
   Future<bool> cancelReturn(String id, {String? reason}) async {
     print('🟣 [SalesReturnController] cancelReturn called for ID: $id');
     print('🟣 [SalesReturnController] Reason: $reason');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.patch(
@@ -727,7 +857,9 @@ class SalesReturnController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🟣 [SalesReturnController] Response Status: ${response.statusCode}');
+      print(
+        '🟣 [SalesReturnController] Response Status: ${response.statusCode}',
+      );
       print('🟣 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success) {
@@ -736,8 +868,10 @@ class SalesReturnController extends GetxController {
         await fetchReturns();
         return true;
       }
-      
-      print('❌ [SalesReturnController] Failed to cancel return: ${response.message}');
+
+      print(
+        '❌ [SalesReturnController] Failed to cancel return: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to cancel return');
       return false;
     } catch (e) {
@@ -755,21 +889,25 @@ class SalesReturnController extends GetxController {
 
   Future<ReturnModel?> getReturnById(String id) async {
     print('🔵 [SalesReturnController] getReturnById called for ID: $id');
-    
+
     try {
       final response = await _api.get(
         '/api/warehouse/returns/$id',
         requiresAuth: true,
       );
 
-      print('🔵 [SalesReturnController] Response Status: ${response.statusCode}');
+      print(
+        '🔵 [SalesReturnController] Response Status: ${response.statusCode}',
+      );
       print('🔵 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success && response.data != null) {
         final returnData = ReturnModel.fromJson(
           Map<String, dynamic>.from(response.data['data']),
         );
-        print('✅ [SalesReturnController] Return found: ${returnData.returnNumber}');
+        print(
+          '✅ [SalesReturnController] Return found: ${returnData.returnNumber}',
+        );
         return returnData;
       }
       print('❌ [SalesReturnController] Return not found');
@@ -789,8 +927,10 @@ class SalesReturnController extends GetxController {
     DateTime? endDate,
   }) async {
     print('🔵 [SalesReturnController] fetchReturnStats called');
-    print('🔵 [SalesReturnController] Start date: $startDate, End date: $endDate');
-    
+    print(
+      '🔵 [SalesReturnController] Start date: $startDate, End date: $endDate',
+    );
+
     try {
       final params = <String, String>{};
       if (startDate != null) {
@@ -799,16 +939,22 @@ class SalesReturnController extends GetxController {
       if (endDate != null) {
         params['endDate'] = endDate.toIso8601String().split('T').first;
       }
-      final query = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
-      
-      print('🔵 [SalesReturnController] API Request: GET /api/warehouse/returns/stats?$query');
-      
+      final query = params.entries
+          .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+          .join('&');
+
+      print(
+        '🔵 [SalesReturnController] API Request: GET /api/warehouse/returns/stats?$query',
+      );
+
       final response = await _api.get(
         '/api/warehouse/returns/stats?$query',
         requiresAuth: true,
       );
 
-      print('🔵 [SalesReturnController] Response Status: ${response.statusCode}');
+      print(
+        '🔵 [SalesReturnController] Response Status: ${response.statusCode}',
+      );
       print('🔵 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success && response.data != null) {
@@ -828,33 +974,39 @@ class SalesReturnController extends GetxController {
   // NEW: BULK UPDATE RETURNS
   // ═══════════════════════════════════════════════════════════════
 
-  Future<bool> bulkUpdateReturns(List<String> ids, Map<String, dynamic> data) async {
+  Future<bool> bulkUpdateReturns(
+    List<String> ids,
+    Map<String, dynamic> data,
+  ) async {
     print('🔵 [SalesReturnController] bulkUpdateReturns called');
     print('🔵 [SalesReturnController] IDs: $ids');
     print('🔵 [SalesReturnController] Data: $data');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.post(
         '/api/warehouse/returns/bulk',
-        body: {
-          'ids': ids,
-          'data': data,
-        },
+        body: {'ids': ids, 'data': data},
         requiresAuth: true,
       );
 
-      print('🔵 [SalesReturnController] Response Status: ${response.statusCode}');
+      print(
+        '🔵 [SalesReturnController] Response Status: ${response.statusCode}',
+      );
       print('🔵 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success) {
-        print('✅ [SalesReturnController] ${ids.length} returns updated successfully');
+        print(
+          '✅ [SalesReturnController] ${ids.length} returns updated successfully',
+        );
         Get.snackbar('Success', '${ids.length} returns updated successfully');
         await fetchReturns(resetPage: true);
         return true;
       }
-      
-      print('❌ [SalesReturnController] Failed to update returns: ${response.message}');
+
+      print(
+        '❌ [SalesReturnController] Failed to update returns: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to update returns');
       return false;
     } catch (e) {
@@ -871,15 +1023,19 @@ class SalesReturnController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   Future<List<ReturnModel>> getReturnsByOrder(String orderId) async {
-    print('🔵 [SalesReturnController] getReturnsByOrder called for order: $orderId');
-    
+    print(
+      '🔵 [SalesReturnController] getReturnsByOrder called for order: $orderId',
+    );
+
     try {
       final response = await _api.get(
         '/api/warehouse/returns/order/$orderId',
         requiresAuth: true,
       );
 
-      print('🔵 [SalesReturnController] Response Status: ${response.statusCode}');
+      print(
+        '🔵 [SalesReturnController] Response Status: ${response.statusCode}',
+      );
       print('🔵 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success && response.data != null) {
@@ -887,7 +1043,9 @@ class SalesReturnController extends GetxController {
         final returnsList = list
             .map((e) => ReturnModel.fromJson(Map<String, dynamic>.from(e)))
             .toList();
-        print('✅ [SalesReturnController] Found ${returnsList.length} returns for order');
+        print(
+          '✅ [SalesReturnController] Found ${returnsList.length} returns for order',
+        );
         return returnsList;
       }
       print('❌ [SalesReturnController] No returns found for order');
@@ -908,8 +1066,10 @@ class SalesReturnController extends GetxController {
     DateTime? endDate,
   }) async {
     print('🔵 [SalesReturnController] exportReturns called');
-    print('🔵 [SalesReturnController] Format: $format, Start: $startDate, End: $endDate');
-    
+    print(
+      '🔵 [SalesReturnController] Format: $format, Start: $startDate, End: $endDate',
+    );
+
     try {
       final params = <String, String>{};
       if (format != null) params['format'] = format;
@@ -919,20 +1079,28 @@ class SalesReturnController extends GetxController {
       if (endDate != null) {
         params['endDate'] = endDate.toIso8601String().split('T').first;
       }
-      final query = params.entries.map((e) => '${e.key}=${Uri.encodeComponent(e.value)}').join('&');
-      
-      print('🔵 [SalesReturnController] API Request: GET /api/warehouse/returns/export?$query');
-      
+      final query = params.entries
+          .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+          .join('&');
+
+      print(
+        '🔵 [SalesReturnController] API Request: GET /api/warehouse/returns/export?$query',
+      );
+
       final response = await _api.get(
         '/api/warehouse/returns/export?$query',
         requiresAuth: true,
       );
 
-      print('🔵 [SalesReturnController] Response Status: ${response.statusCode}');
+      print(
+        '🔵 [SalesReturnController] Response Status: ${response.statusCode}',
+      );
       print('🔵 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success && response.data != null) {
-        print('✅ [SalesReturnController] Export URL: ${response.data?['url'] ?? response.data?['data']}');
+        print(
+          '✅ [SalesReturnController] Export URL: ${response.data?['url'] ?? response.data?['data']}',
+        );
         return response.data?['url'] ?? response.data?['data'];
       }
       print('❌ [SalesReturnController] Failed to export returns');
@@ -943,17 +1111,18 @@ class SalesReturnController extends GetxController {
     }
   }
 
-
   Future<Map<String, dynamic>> getReturnSummary() async {
     print('🔵 [SalesReturnController] getReturnSummary called');
-    
+
     try {
       final response = await _api.get(
         '/api/warehouse/returns/summary',
         requiresAuth: true,
       );
 
-      print('🔵 [SalesReturnController] Response Status: ${response.statusCode}');
+      print(
+        '🔵 [SalesReturnController] Response Status: ${response.statusCode}',
+      );
       print('🔵 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success && response.data != null) {
@@ -969,11 +1138,10 @@ class SalesReturnController extends GetxController {
     }
   }
 
-
   Future<bool> updateReturnStatus(String id, String status) async {
     print('🟣 [SalesReturnController] updateReturnStatus called');
     print('🟣 [SalesReturnController] ID: $id, New Status: $status');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.patch(
@@ -982,7 +1150,9 @@ class SalesReturnController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🟣 [SalesReturnController] Response Status: ${response.statusCode}');
+      print(
+        '🟣 [SalesReturnController] Response Status: ${response.statusCode}',
+      );
       print('🟣 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success) {
@@ -991,8 +1161,10 @@ class SalesReturnController extends GetxController {
         await fetchReturns();
         return true;
       }
-      
-      print('❌ [SalesReturnController] Failed to update status: ${response.message}');
+
+      print(
+        '❌ [SalesReturnController] Failed to update status: ${response.message}',
+      );
       Get.snackbar('Error', response.message ?? 'Failed to update status');
       return false;
     } catch (e) {

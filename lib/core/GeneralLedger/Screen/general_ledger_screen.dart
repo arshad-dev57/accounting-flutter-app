@@ -1,10 +1,10 @@
 // screens/general_ledger_screen.dart - COMPLETE UPDATED VERSION
 
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/responsive_utils.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/GeneralLedger/Controller/general_ledger_controller.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/GeneralLedger/Controller/general_ledger_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -92,9 +92,7 @@ class GeneralLedgerScreen extends StatelessWidget {
           _buildWebTopBar(context, controller),
           _buildWebKpiStrip(controller),
           _buildWebToolbar(controller, context),
-          Expanded(
-            child: _buildWebLedgerTable(controller, context),
-          ),
+          Expanded(child: _buildWebLedgerTable(controller, context)),
           _buildWebPaginationBar(controller, context),
         ],
       ),
@@ -546,10 +544,12 @@ class GeneralLedgerScreen extends StatelessWidget {
 
   Widget _buildMobileTrialBalanceCard(bool isBalanced, double netDifference) {
     final statusColor = isBalanced ? kSuccess : kDanger;
-    final statusIcon = isBalanced ? Icons.check_circle : Icons.warning_amber_rounded;
+    final statusIcon = isBalanced
+        ? Icons.check_circle
+        : Icons.warning_amber_rounded;
     final statusText = isBalanced ? '✓ Balanced' : '⚠ Not Balanced';
-    final subtitle = isBalanced 
-        ? 'Assets = Liabilities + Equity' 
+    final subtitle = isBalanced
+        ? 'Assets = Liabilities + Equity'
         : 'Diff: ${_formatAmount(netDifference.abs())}';
 
     return Container(
@@ -1144,10 +1144,12 @@ class GeneralLedgerScreen extends StatelessWidget {
 
   Widget _buildWebTrialBalanceTile(bool isBalanced, double netDifference) {
     final statusColor = isBalanced ? kSuccess : kDanger;
-    final statusIcon = isBalanced ? Icons.check_circle : Icons.warning_amber_rounded;
+    final statusIcon = isBalanced
+        ? Icons.check_circle
+        : Icons.warning_amber_rounded;
     final statusText = isBalanced ? '✓ Balanced' : '⚠ Not Balanced';
-    final subtitle = isBalanced 
-        ? 'Assets = Liabilities + Equity' 
+    final subtitle = isBalanced
+        ? 'Assets = Liabilities + Equity'
         : 'Diff: ${_formatAmount(netDifference.abs())}';
 
     return Container(
@@ -2193,7 +2195,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                     borderRadius: pw.BorderRadius.circular(6),
                   ),
                   child: pw.Text(
-                    'LedgerPro',
+                    'BisonsTechs',
                     style: pw.TextStyle(
                       color: PdfColors.white,
                       fontWeight: pw.FontWeight.bold,
@@ -2246,7 +2248,9 @@ class GeneralLedgerScreen extends StatelessWidget {
                     _pdfSummaryItem(
                       'Net Change',
                       _formatAmount(summary['netDifference']),
-                      summary['isBalanced'] ? PdfColors.green700 : PdfColors.red700,
+                      summary['isBalanced']
+                          ? PdfColors.green700
+                          : PdfColors.red700,
                     ),
                   ],
                 ),

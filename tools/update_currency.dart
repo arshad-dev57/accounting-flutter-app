@@ -1,12 +1,13 @@
 import 'dart:io';
 
 const skipFiles = {'currency_controller.dart', 'currency_utils.dart'};
-const importLine = "import 'package:LedgerPro_app/Utils/currency_utils.dart';\n";
+const importLine =
+    "import 'package:BisonsTechs_app/Utils/currency_utils.dart';\n";
 
 String addImport(String content) {
   if (content.contains('currency_utils.dart')) return content;
   for (final anchor in [
-    "import 'package:LedgerPro_app/Utils/colors.dart';\n",
+    "import 'package:BisonsTechs_app/Utils/colors.dart';\n",
     "import 'package:flutter/material.dart';\n",
     "import 'package:get/get.dart';\n",
   ]) {
@@ -39,15 +40,22 @@ bool processFile(File file) {
     r"'\$. ${amount.toStringAsFixed(2)}'",
     'CurrencyUtils.format(amount)',
   );
-  content = content.replaceAll(r"prefixText: '\$ '", 'prefixText: CurrencyUtils.prefix');
-  content = content.replaceAll(r"prefix: '\$ '", 'prefix: CurrencyUtils.prefix');
+  content = content.replaceAll(
+    r"prefixText: '\$ '",
+    'prefixText: CurrencyUtils.prefix',
+  );
+  content = content.replaceAll(
+    r"prefix: '\$ '",
+    'prefix: CurrencyUtils.prefix',
+  );
 
   content = content.replaceAllMapped(
     RegExp(
       r"String (_formatAmount|formatAmount)\(double amount\) \{\s*return '\\\$ \$\{amount\.toStringAsFixed\(2\)\}';\s*\}",
       multiLine: true,
     ),
-    (m) => 'String ${m.group(1)}(double amount) => CurrencyUtils.format(amount);',
+    (m) =>
+        'String ${m.group(1)}(double amount) => CurrencyUtils.format(amount);',
   );
 
   content = content.replaceAllMapped(
@@ -55,7 +63,8 @@ bool processFile(File file) {
       r"String (_formatAmount|formatAmount)\(double amount\) \{\s*final formatter = NumberFormat\('[^']+', 'en_US'\);\s*return CurrencyUtils\.format\(amount\);\s*\}",
       multiLine: true,
     ),
-    (m) => 'String ${m.group(1)}(double amount) => CurrencyUtils.format(amount);',
+    (m) =>
+        'String ${m.group(1)}(double amount) => CurrencyUtils.format(amount);',
   );
 
   content = content.replaceAllMapped(
@@ -63,7 +72,8 @@ bool processFile(File file) {
       r"String _formatAmount\(double amount\) \{\s*final f = NumberFormat\('[^']+', 'en_US'\);\s*return '\\\$ \$\{f\.format\(amount\)\}';\s*\}",
       multiLine: true,
     ),
-    (_) => 'String _formatAmount(double amount) => CurrencyUtils.format(amount);',
+    (_) =>
+        'String _formatAmount(double amount) => CurrencyUtils.format(amount);',
   );
 
   // Bank compact amounts
@@ -73,7 +83,8 @@ bool processFile(File file) {
       multiLine: true,
       dotAll: true,
     ),
-    (_) => 'String _formatCompactAmount(double amount) => CurrencyUtils.formatCompact(amount);',
+    (_) =>
+        'String _formatCompactAmount(double amount) => CurrencyUtils.formatCompact(amount);',
   );
 
   if (content == original) return false;

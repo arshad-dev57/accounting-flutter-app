@@ -1,7 +1,7 @@
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:universal_html/html.dart' as html;
@@ -194,10 +194,20 @@ class AccountsPayableController extends GetxController {
           // Parse pagination info
           if (data['pagination'] != null) {
             final pagination = data['pagination'];
-            totalPages.value = pagination['pages'] ?? pagination['totalPages'] ?? 1;
-            totalItems.value = pagination['total'] ?? pagination['totalItems'] ?? newBills.length;
-            hasNextPage.value = pagination['hasNext'] ?? pagination['nextPage'] != null ?? false;
-            hasPrevPage.value = pagination['hasPrev'] ?? pagination['prevPage'] != null ?? false;
+            totalPages.value =
+                pagination['pages'] ?? pagination['totalPages'] ?? 1;
+            totalItems.value =
+                pagination['total'] ??
+                pagination['totalItems'] ??
+                newBills.length;
+            hasNextPage.value =
+                pagination['hasNext'] ??
+                pagination['nextPage'] != null ??
+                false;
+            hasPrevPage.value =
+                pagination['hasPrev'] ??
+                pagination['prevPage'] != null ??
+                false;
             serverSupportsPagination.value = true;
           } else if (data['total'] != null) {
             totalPages.value = data['pages'] ?? 1;
@@ -208,13 +218,15 @@ class AccountsPayableController extends GetxController {
           } else if (data['totalCount'] != null) {
             totalItems.value = data['totalCount'];
             totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
-            hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+            hasNextPage.value =
+                (currentPage.value * itemsPerPage.value) < totalItems.value;
             hasPrevPage.value = currentPage.value > 1;
             serverSupportsPagination.value = false;
           } else {
             totalItems.value = bills.length;
             totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
-            hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+            hasNextPage.value =
+                (currentPage.value * itemsPerPage.value) < totalItems.value;
             hasPrevPage.value = currentPage.value > 1;
             serverSupportsPagination.value = false;
           }
@@ -268,8 +280,10 @@ class AccountsPayableController extends GetxController {
   // ─── Get Next Bill Number ───────────────────────────────────────────
   Future<String> getNextBillNumber() async {
     try {
-      final response = await _apiClient.get('/api/accounts-payable/next-bill-number');
-      
+      final response = await _apiClient.get(
+        '/api/accounts-payable/next-bill-number',
+      );
+
       if (response.success && response.statusCode == 200) {
         final data = response.data;
         if (data['success'] ?? true) {
@@ -279,7 +293,7 @@ class AccountsPayableController extends GetxController {
     } catch (e) {
       print('Error fetching next bill number: $e');
     }
-    
+
     // Fallback: generate locally based on existing bills
     if (bills.isNotEmpty) {
       final lastBill = bills.first;
@@ -288,7 +302,7 @@ class AccountsPayableController extends GetxController {
       final nextNum = lastNum + 1;
       return 'BILL-${nextNum.toString().padLeft(4, '0')}';
     }
-    
+
     return 'BILL-0001';
   }
 
@@ -480,7 +494,8 @@ class AccountsPayableController extends GetxController {
       // Close loading dialog
       Get.back();
 
-      if (response.success && (response.statusCode == 201 || response.statusCode == 200)) {
+      if (response.success &&
+          (response.statusCode == 201 || response.statusCode == 200)) {
         AppSnackbar.success(
           kSuccess,
           'Success ✅',
@@ -669,10 +684,7 @@ class AccountsPayableController extends GetxController {
             ),
             Text(
               subtitle,
-              style: TextStyle(
-                fontSize: 10,
-                color: color.withOpacity(0.7),
-              ),
+              style: TextStyle(fontSize: 10, color: color.withOpacity(0.7)),
             ),
           ],
         ),
@@ -822,7 +834,7 @@ class AccountsPayableController extends GetxController {
               borderRadius: pw.BorderRadius.circular(6),
             ),
             child: pw.Text(
-              'LedgerPro',
+              'BisonsTechs',
               style: pw.TextStyle(
                 color: PdfColors.white,
                 fontWeight: pw.FontWeight.bold,
@@ -1502,7 +1514,13 @@ class AccountsPayableController extends GetxController {
         _excelSetCell(suppliersSheet, row, 2, supplier.phone, bgColor: bg);
         _excelSetCell(suppliersSheet, row, 3, supplier.address, bgColor: bg);
         _excelSetCell(suppliersSheet, row, 4, supplier.taxId, bgColor: bg);
-        _excelSetCell(suppliersSheet, row, 5, supplier.paymentTerms, bgColor: bg);
+        _excelSetCell(
+          suppliersSheet,
+          row,
+          5,
+          supplier.paymentTerms,
+          bgColor: bg,
+        );
         _excelSetCell(suppliersSheet, row, 6, supplier.billCount, bgColor: bg);
         _excelSetCell(
           suppliersSheet,
@@ -1854,6 +1872,7 @@ class Supplier {
     );
   }
 }
+
 class Bill {
   final String id;
   final String billNumber;
@@ -1870,7 +1889,7 @@ class Bill {
   final String status;
   final String notes;
   final String reference;
-  final String description;  // ✅ ADDED: description field
+  final String description; // ✅ ADDED: description field
 
   Bill({
     required this.id,
@@ -1888,7 +1907,7 @@ class Bill {
     required this.status,
     required this.notes,
     this.reference = '',
-    this.description = '',  // ✅ ADDED: default value
+    this.description = '', // ✅ ADDED: default value
   });
 
   double get outstanding => (totalAmount - paidAmount).toDouble();
@@ -1942,10 +1961,11 @@ class Bill {
       status: json['status'] ?? 'Unpaid',
       notes: json['notes'] ?? '',
       reference: json['reference'] ?? '',
-      description: json['description'] ?? '',  // ✅ ADDED: parse description
+      description: json['description'] ?? '', // ✅ ADDED: parse description
     );
   }
 }
+
 class BillItem {
   final String description;
   final int quantity;

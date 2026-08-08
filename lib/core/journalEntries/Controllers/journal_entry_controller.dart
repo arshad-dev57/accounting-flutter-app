@@ -1,10 +1,10 @@
 // controllers/journal_entry_controller.dart
 
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/journalEntries/model/journal_entry_model.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/journalEntries/model/journal_entry_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -22,6 +22,7 @@ class JournalEntryController extends GetxController {
   // Pagination
   var currentPage = 1.obs;
   var totalPages = 1.obs;
+  var totalEntries = 0.obs;
   var hasMore = true.obs;
   final int pageSize = 10;
 
@@ -71,9 +72,12 @@ class JournalEntryController extends GetxController {
   void _resetAndReload() {
     currentPage.value = 1;
     journalEntries.clear();
+    allEntries.clear();
     hasMore.value = true;
     fetchJournalEntries();
   }
+
+  void refresh() => _resetAndReload();
 
   double _toDouble(dynamic value) {
     if (value == null) return 0.0;
@@ -89,8 +93,7 @@ class JournalEntryController extends GetxController {
     try {
       final response = await _api.get('/api/chart-of-accounts');
       if (response.success) {
-        accounts.value =
-            List<Map<String, dynamic>>.from(response.data['data']);
+        accounts.value = List<Map<String, dynamic>>.from(response.data['data']);
       }
     } catch (e) {
       // Silently fail for dropdown
@@ -112,13 +115,18 @@ class JournalEntryController extends GetxController {
       }
 
       if (selectedDateRange.value != null) {
-        params['startDate'] =
-            selectedDateRange.value!.start.toIso8601String();
+        params['startDate'] = selectedDateRange.value!.start.toIso8601String();
         params['endDate'] = selectedDateRange.value!.end.toIso8601String();
       }
 
-      final response = await _api.get('/api/journal-entries',
-          queryParameters: params);
+      if (searchQuery.value.isNotEmpty) {
+        params['search'] = searchQuery.value;
+      }
+
+      final response = await _api.get(
+        '/api/journal-entries',
+        queryParameters: params,
+      );
 
       if (response.success) {
         final data = response.data;
@@ -129,13 +137,14 @@ class JournalEntryController extends GetxController {
 
         if (currentPage.value == 1) {
           allEntries.value = entries;
+          journalEntries.value = entries;
         } else {
           allEntries.addAll(entries);
+          journalEntries.addAll(entries);
         }
 
-        journalEntries.value = entries;
-
         totalPages.value = data['pages'] ?? 1;
+        totalEntries.value = data['total'] ?? journalEntries.length;
         hasMore.value = currentPage.value < totalPages.value;
 
         final summary = data['summary'] as Map<String, dynamic>? ?? {};
@@ -180,13 +189,14 @@ class JournalEntryController extends GetxController {
         params['search'] = searchQuery.value;
       }
       if (selectedDateRange.value != null) {
-        params['startDate'] =
-            selectedDateRange.value!.start.toIso8601String();
+        params['startDate'] = selectedDateRange.value!.start.toIso8601String();
         params['endDate'] = selectedDateRange.value!.end.toIso8601String();
       }
 
-      final response = await _api.get('/api/journal-entries',
-          queryParameters: params);
+      final response = await _api.get(
+        '/api/journal-entries',
+        queryParameters: params,
+      );
 
       if (response.success) {
         final data = response.data;
@@ -299,14 +309,15 @@ class JournalEntryController extends GetxController {
 
     Get.dialog(
       AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Row(
           children: [
             Icon(Icons.account_balance, color: kSuccess, size: 24),
             const SizedBox(width: 8),
-            const Text('Balance Updated',
-                style: TextStyle(fontWeight: FontWeight.w700)),
+            const Text(
+              'Balance Updated',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
           ],
         ),
         content: SizedBox(
@@ -323,8 +334,7 @@ class JournalEntryController extends GetxController {
                     decoration: BoxDecoration(
                       color: kBg,
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                          color: Colors.grey.withOpacity(0.1)),
+                      border: Border.all(color: Colors.grey.withOpacity(0.1)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -335,16 +345,19 @@ class JournalEntryController extends GetxController {
                               child: Text(
                                 update.account,
                                 style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13,
-                                    color: kText),
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                  color: kText,
+                                ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: update.change >= 0
                                     ? kSuccess.withOpacity(0.1)
@@ -354,42 +367,43 @@ class JournalEntryController extends GetxController {
                               child: Text(
                                 update.accountType,
                                 style: TextStyle(
-                                    fontSize: 9,
-                                    color: update.change >= 0
-                                        ? kSuccess
-                                        : kDanger),
+                                  fontSize: 9,
+                                  color: update.change >= 0
+                                      ? kSuccess
+                                      : kDanger,
+                                ),
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 4),
                         Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment.spaceBetween,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                                'Old: ${_formatAmount(update.oldBalance)}',
-                                style: TextStyle(
-                                    fontSize: 12, color: kSubText)),
-                            Icon(Icons.arrow_forward,
-                                size: 14, color: kSubText),
+                              'Old: ${_formatAmount(update.oldBalance)}',
+                              style: TextStyle(fontSize: 12, color: kSubText),
+                            ),
+                            Icon(
+                              Icons.arrow_forward,
+                              size: 14,
+                              color: kSubText,
+                            ),
                             Text(
                               'New: ${_formatAmount(update.newBalance)}',
                               style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: update.change >= 0
-                                      ? kSuccess
-                                      : kDanger),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: update.change >= 0 ? kSuccess : kDanger,
+                              ),
                             ),
                             Text(
                               '${update.change >= 0 ? '+' : ''}${_formatAmount(update.change)}',
                               style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: update.change >= 0
-                                      ? kSuccess
-                                      : kDanger),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: update.change >= 0 ? kSuccess : kDanger,
+                              ),
                             ),
                           ],
                         ),
@@ -404,8 +418,7 @@ class JournalEntryController extends GetxController {
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child:
-                const Text('OK', style: TextStyle(color: Colors.black)),
+            child: const Text('OK', style: TextStyle(color: Colors.black)),
           ),
         ],
       ),
@@ -417,15 +430,15 @@ class JournalEntryController extends GetxController {
   void _showBalanceErrors(List<dynamic> errors) {
     Get.dialog(
       AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Row(
           children: [
             Icon(Icons.error_outline, color: kDanger, size: 24),
             const SizedBox(width: 8),
-            const Text('Balance Validation Failed',
-                style: TextStyle(
-                    fontWeight: FontWeight.w700, color: kDanger)),
+            const Text(
+              'Balance Validation Failed',
+              style: TextStyle(fontWeight: FontWeight.w700, color: kDanger),
+            ),
           ],
         ),
         content: SizedBox(
@@ -434,20 +447,22 @@ class JournalEntryController extends GetxController {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: errors
-                .map((e) => Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text('• $e',
-                          style:
-                              TextStyle(fontSize: 13, color: kText)),
-                    ))
+                .map(
+                  (e) => Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      '• $e',
+                      style: TextStyle(fontSize: 13, color: kText),
+                    ),
+                  ),
+                )
                 .toList(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: const Text('Close',
-                style: TextStyle(color: Colors.black)),
+            child: const Text('Close', style: TextStyle(color: Colors.black)),
           ),
         ],
       ),
@@ -474,18 +489,7 @@ class JournalEntryController extends GetxController {
 
   void searchEntries(String query) {
     searchQuery.value = query;
-
-    if (query.isEmpty) {
-      journalEntries.value = allEntries.value;
-    } else {
-      final searchLower = query.toLowerCase();
-      final results = allEntries.where((entry) {
-        return entry.entryNumber.toLowerCase().contains(searchLower) ||
-            entry.description.toLowerCase().contains(searchLower) ||
-            entry.reference.toLowerCase().contains(searchLower);
-      }).toList();
-      journalEntries.value = results;
-    }
+    _resetAndReload();
   }
 
   String _formatAmount(double amount) => CurrencyUtils.format(amount);

@@ -1,11 +1,11 @@
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/core/warehouse/Stock_in/model/stock_movement_model.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/warehouse/Stock_in/model/stock_movement_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class StockController extends GetxController {
   final ApiClient _api = Get.find<ApiClient>();
-  
+
   final RxList<StockMovementModel> movements = <StockMovementModel>[].obs;
   final RxBool isLoading = false.obs;
   final RxBool isSubmitting = false.obs;
@@ -54,7 +54,9 @@ class StockController extends GetxController {
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         movements.value = list
-            .map((e) => StockMovementModel.fromJson(Map<String, dynamic>.from(e)))
+            .map(
+              (e) => StockMovementModel.fromJson(Map<String, dynamic>.from(e)),
+            )
             .toList();
 
         if (response.data['summary'] != null) {
@@ -72,7 +74,12 @@ class StockController extends GetxController {
           hasPrev.value = currentPage.value > 1;
         }
       } else {
-        Get.snackbar('Error', response.message.isNotEmpty ? response.message : 'Failed to load movements');
+        Get.snackbar(
+          'Error',
+          response.message.isNotEmpty
+              ? response.message
+              : 'Failed to load movements',
+        );
       }
     } catch (e) {
       Get.snackbar('Error', e.toString());
@@ -90,8 +97,10 @@ class StockController extends GetxController {
       if (response.success && response.data != null) {
         final summary = response.data['summary'] as Map<String, dynamic>?;
         if (summary != null) {
-          totalInCount.value = (summary['totalIn'] as num?)?.toInt() ?? totalInCount.value;
-          totalOutCount.value = (summary['totalOut'] as num?)?.toInt() ?? totalOutCount.value;
+          totalInCount.value =
+              (summary['totalIn'] as num?)?.toInt() ?? totalInCount.value;
+          totalOutCount.value =
+              (summary['totalOut'] as num?)?.toInt() ?? totalOutCount.value;
           todayCount.value = (summary['total'] as num?)?.toInt() ?? 0;
         }
       }
@@ -200,7 +209,8 @@ class StockController extends GetxController {
         'reference': reference ?? '',
         'notes': notes ?? '',
       };
-      if (supplierId != null && supplierId.isNotEmpty) body['supplierId'] = supplierId;
+      if (supplierId != null && supplierId.isNotEmpty)
+        body['supplierId'] = supplierId;
       if (stockType == 'box') {
         body['boxCount'] = boxCount;
         body['piecesPerBox'] = piecesPerBox;
@@ -216,7 +226,10 @@ class StockController extends GetxController {
         await refreshMovements();
         return true;
       }
-      Get.snackbar('Error', response.message.isNotEmpty ? response.message : 'Failed to add stock');
+      Get.snackbar(
+        'Error',
+        response.message.isNotEmpty ? response.message : 'Failed to add stock',
+      );
       return false;
     } catch (e) {
       Get.snackbar('Error', e.toString());
@@ -253,7 +266,12 @@ class StockController extends GetxController {
         await refreshMovements();
         return true;
       }
-      Get.snackbar('Error', response.message.isNotEmpty ? response.message : 'Failed to remove stock');
+      Get.snackbar(
+        'Error',
+        response.message.isNotEmpty
+            ? response.message
+            : 'Failed to remove stock',
+      );
       return false;
     } catch (e) {
       Get.snackbar('Error', e.toString());
@@ -269,7 +287,8 @@ class StockController extends GetxController {
   IconData getTypeIcon(String type) =>
       type == 'stock_in' ? Icons.arrow_downward : Icons.arrow_upward;
 
-  String getTypeLabel(String type) => type == 'stock_in' ? 'Stock In' : 'Stock Out';
+  String getTypeLabel(String type) =>
+      type == 'stock_in' ? 'Stock In' : 'Stock Out';
 
   Color getStatusColor(String status) {
     switch (status) {

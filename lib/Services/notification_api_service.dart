@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:LedgerPro_app/config/apiconfig.dart';
+import 'package:BisonsTechs_app/config/apiconfig.dart';
 import 'package:http/http.dart' as http;
 
 class NotificationApi {
@@ -24,10 +24,7 @@ class NotificationApi {
       "subscriptionId": subscriptionId,
       "title": title,
       "message": message,
-      "data": {
-        "type": "auth",
-        "screen": "home",
-      }
+      "data": {"type": "auth", "screen": "home"},
     };
 
     print('🔔 [NotificationApi] Request Body: ${jsonEncode(body)}');
@@ -59,18 +56,20 @@ class NotificationApi {
         return {
           'success': false,
           'error': 'Failed to parse response',
-          'status': 'error'
+          'status': 'error',
         };
       }
 
       if (responseData['result'] != null &&
           responseData['result']['errors'] != null &&
-          responseData['result']['errors'].toString().contains("not subscribed")) {
+          responseData['result']['errors'].toString().contains(
+            "not subscribed",
+          )) {
         print('⚠️ [NotificationApi] User not subscribed yet');
         return {
           'success': true,
           'status': 'subscription_pending',
-          'message': 'Notification queued, subscription activating'
+          'message': 'Notification queued, subscription activating',
         };
       } else if (res.statusCode >= 200 && res.statusCode < 300) {
         if (responseData['success'] == true || responseData['ok'] == true) {
@@ -82,21 +81,12 @@ class NotificationApi {
 
       print('⚠️ [NotificationApi] Push notification response: $responseData');
       print('🔔🔔🔔 [NotificationApi] SEND PUSH FAILED 🔔🔔🔔');
-      return {
-        'success': false,
-        'error': responseData,
-        'status': 'failed'
-      };
-
+      return {'success': false, 'error': responseData, 'status': 'failed'};
     } catch (e) {
       print('❌ [NotificationApi] Exception sending push: $e');
       print('❌ [NotificationApi] Exception type: ${e.runtimeType}');
       print('🔔🔔🔔 [NotificationApi] SEND PUSH ERROR 🔔🔔🔔');
-      return {
-        'success': false,
-        'error': e.toString(),
-        'status': 'error'
-      };
+      return {'success': false, 'error': e.toString(), 'status': 'error'};
     } finally {
       print('🔔🔔🔔 [NotificationApi] SEND PUSH END 🔔🔔🔔');
     }
@@ -118,4 +108,3 @@ class NotificationApi {
     );
   }
 }
-

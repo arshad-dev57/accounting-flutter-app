@@ -43,7 +43,7 @@ class Loan {
 
   factory Loan.fromJson(Map<String, dynamic> json) {
     return Loan(
-      id: json['_id'] ?? '',
+      id: json['id']?.toString() ?? json['_id']?.toString() ?? '',
       loanNumber: json['loanNumber'] ?? '',
       loanType: json['loanType'] ?? '',
       lenderName: json['lenderName'] ?? '',

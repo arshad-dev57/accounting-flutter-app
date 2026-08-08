@@ -1,11 +1,11 @@
 // lib/core/warehouse/sales_order/controller/sales_order_controller.dart - COMPLETE WITH DEBUG LOGS
 
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/order/model/customer_model.dart';
-import 'package:LedgerPro_app/core/warehouse/order/model/order_model.dart';
-import 'package:LedgerPro_app/core/warehouse/products/controller/product_controller.dart';
-import 'package:LedgerPro_app/core/warehousesettings/warehouse_settings_controller.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/model/customer_model.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/model/order_model.dart';
+import 'package:BisonsTechs_app/core/warehouse/products/controller/product_controller.dart';
+import 'package:BisonsTechs_app/core/warehousesettings/warehouse_settings_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -112,7 +112,12 @@ class SalesOrderController extends GetxController {
     'Pre-Order',
     'Backorder',
   ].obs;
-  final RxList<String> priorities = <String>['Low', 'Medium', 'High', 'Urgent'].obs;
+  final RxList<String> priorities = <String>[
+    'Low',
+    'Medium',
+    'High',
+    'Urgent',
+  ].obs;
   final RxList<String> sources = <String>[
     'Web',
     'Mobile',
@@ -191,7 +196,9 @@ class SalesOrderController extends GetxController {
   final RxString formError = ''.obs;
 
   // Product selection state for create form
-  final Rx<Map<String, dynamic>?> selectedProduct = Rx<Map<String, dynamic>?>(null);
+  final Rx<Map<String, dynamic>?> selectedProduct = Rx<Map<String, dynamic>?>(
+    null,
+  );
   final RxInt quantity = 1.obs;
   final TextEditingController qtyController = TextEditingController(text: '1');
 
@@ -229,8 +236,10 @@ class SalesOrderController extends GetxController {
   // ─── List API ────────────────────────────────────────────────
   Future<void> fetchOrders() async {
     print('🔵 [SalesOrderController] fetchOrders called');
-    print('🔵 [SalesOrderController] Current Page: ${currentPage.value}, Limit: ${pageLimit.value}');
-    
+    print(
+      '🔵 [SalesOrderController] Current Page: ${currentPage.value}, Limit: ${pageLimit.value}',
+    );
+
     isLoading.value = true;
     try {
       final params = <String, dynamic>{
@@ -251,11 +260,15 @@ class SalesOrderController extends GetxController {
       }
       if (paymentStatusFilter.value != 'all') {
         params['paymentStatus'] = paymentStatusFilter.value;
-        print('🔵 [SalesOrderController] Payment status filter: ${paymentStatusFilter.value}');
+        print(
+          '🔵 [SalesOrderController] Payment status filter: ${paymentStatusFilter.value}',
+        );
       }
       if (priorityFilter.value != 'all') {
         params['priority'] = priorityFilter.value;
-        print('🔵 [SalesOrderController] Priority filter: ${priorityFilter.value}');
+        print(
+          '🔵 [SalesOrderController] Priority filter: ${priorityFilter.value}',
+        );
       }
 
       print('🔵 [SalesOrderController] API Request: GET /api/orders/sales');
@@ -267,7 +280,9 @@ class SalesOrderController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🔵 [SalesOrderController] Response Status: ${response.statusCode}');
+      print(
+        '🔵 [SalesOrderController] Response Status: ${response.statusCode}',
+      );
       print('🔵 [SalesOrderController] Response Success: ${response.success}');
 
       if (response.success && response.data is Map) {
@@ -290,8 +305,12 @@ class SalesOrderController extends GetxController {
         hasPrev.value = pagination['hasPrev'] == true;
         hasMore.value = pagination['hasNext'] == true;
 
-        print('✅ [SalesOrderController] Orders fetched successfully: ${orders.length} orders');
-        print('✅ [SalesOrderController] Total records: ${totalRecords.value}, Total pages: ${totalPages.value}');
+        print(
+          '✅ [SalesOrderController] Orders fetched successfully: ${orders.length} orders',
+        );
+        print(
+          '✅ [SalesOrderController] Total records: ${totalRecords.value}, Total pages: ${totalPages.value}',
+        );
       } else {
         print('❌ [SalesOrderController] Failed to fetch orders');
         print('❌ [SalesOrderController] Response data: ${response.data}');
@@ -301,20 +320,26 @@ class SalesOrderController extends GetxController {
       print('❌ [SalesOrderController] Stack trace: ${StackTrace.current}');
     } finally {
       isLoading.value = false;
-      print('🔵 [SalesOrderController] fetchOrders completed, isLoading: ${isLoading.value}');
+      print(
+        '🔵 [SalesOrderController] fetchOrders completed, isLoading: ${isLoading.value}',
+      );
     }
   }
 
   // ─── Load More (Infinite Scroll) ─────────────────────────────
   Future<void> fetchMoreOrders() async {
     print('🟡 [SalesOrderController] fetchMoreOrders called');
-    print('🟡 [SalesOrderController] hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}');
-    
+    print(
+      '🟡 [SalesOrderController] hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}',
+    );
+
     if (!hasMore.value || isLoadingMore.value) {
-      print('🟡 [SalesOrderController] Skipping load more - hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}');
+      print(
+        '🟡 [SalesOrderController] Skipping load more - hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}',
+      );
       return;
     }
-    
+
     try {
       isLoadingMore.value = true;
       currentPage.value += 1;
@@ -339,7 +364,9 @@ class SalesOrderController extends GetxController {
         params['priority'] = priorityFilter.value;
       }
 
-      print('🟡 [SalesOrderController] API Request: GET /api/orders/sales (Page ${currentPage.value})');
+      print(
+        '🟡 [SalesOrderController] API Request: GET /api/orders/sales (Page ${currentPage.value})',
+      );
 
       final response = await _api.get(
         '/api/orders/sales',
@@ -353,8 +380,10 @@ class SalesOrderController extends GetxController {
         final newOrders = data
             .map((e) => OrderModel.fromJson(Map<String, dynamic>.from(e)))
             .toList();
-        
-        print('🟡 [SalesOrderController] Loaded ${newOrders.length} more orders');
+
+        print(
+          '🟡 [SalesOrderController] Loaded ${newOrders.length} more orders',
+        );
         orders.addAll(newOrders);
         applyLocalFilters();
 
@@ -362,8 +391,10 @@ class SalesOrderController extends GetxController {
         hasMore.value = pagination['hasNext'] == true;
         totalRecords.value = (pagination['total'] as num?)?.toInt() ?? 0;
         totalPages.value = (pagination['pages'] as num?)?.toInt() ?? 1;
-        
-        print('🟡 [SalesOrderController] Total orders now: ${orders.length}, hasMore: ${hasMore.value}');
+
+        print(
+          '🟡 [SalesOrderController] Total orders now: ${orders.length}, hasMore: ${hasMore.value}',
+        );
       } else {
         print('❌ [SalesOrderController] Failed to load more orders');
       }
@@ -380,25 +411,29 @@ class SalesOrderController extends GetxController {
     print('🟣 [SalesOrderController] applyLocalFilters called');
     print('🟣 [SalesOrderController] Selected filter: ${selectedFilter.value}');
     print('🟣 [SalesOrderController] Search filter: ${searchFilter.value}');
-    
+
     final list = orders.toList();
     final filtered = list.where((order) {
       // Status filter
-      if (selectedFilter.value != 'all' && order.orderStatus != selectedFilter.value) {
+      if (selectedFilter.value != 'all' &&
+          order.orderStatus != selectedFilter.value) {
         return false;
       }
       // Search filter
       if (searchFilter.value.isNotEmpty) {
         final query = searchFilter.value.toLowerCase();
-        final matches = order.orderNumber.toLowerCase().contains(query) ||
+        final matches =
+            order.orderNumber.toLowerCase().contains(query) ||
             order.customerName.toLowerCase().contains(query) ||
             order.customerEmail?.toLowerCase().contains(query) == true;
         if (!matches) return false;
       }
       return true;
     }).toList();
-    
-    print('🟣 [SalesOrderController] Filtered orders: ${filtered.length} out of ${list.length}');
+
+    print(
+      '🟣 [SalesOrderController] Filtered orders: ${filtered.length} out of ${list.length}',
+    );
     orders.value = filtered;
   }
 
@@ -427,7 +462,9 @@ class SalesOrderController extends GetxController {
   }
 
   void updateFilter(String key, String value) {
-    print('🟣 [SalesOrderController] updateFilter called - key: $key, value: $value');
+    print(
+      '🟣 [SalesOrderController] updateFilter called - key: $key, value: $value',
+    );
     switch (key) {
       case 'search':
         searchFilter.value = value;
@@ -452,7 +489,9 @@ class SalesOrderController extends GetxController {
   void goToPage(int page) {
     print('🟣 [SalesOrderController] goToPage called: $page');
     if (page < 1 || page > totalPages.value) {
-      print('🟣 [SalesOrderController] Invalid page: $page, totalPages: ${totalPages.value}');
+      print(
+        '🟣 [SalesOrderController] Invalid page: $page, totalPages: ${totalPages.value}',
+      );
       return;
     }
     currentPage.value = page;
@@ -473,17 +512,23 @@ class SalesOrderController extends GetxController {
   }
 
   void openOrderDetail(OrderModel order) {
-    print('🟢 [SalesOrderController] openOrderDetail called for order: ${order.orderNumber}');
+    print(
+      '🟢 [SalesOrderController] openOrderDetail called for order: ${order.orderNumber}',
+    );
     selectedOrder.value = order;
     showDetailModal.value = true;
-    print('🟢 [SalesOrderController] showDetailModal: ${showDetailModal.value}');
+    print(
+      '🟢 [SalesOrderController] showDetailModal: ${showDetailModal.value}',
+    );
   }
 
   void closeOrderDetail() {
     print('🟢 [SalesOrderController] closeOrderDetail called');
     showDetailModal.value = false;
     selectedOrder.value = null;
-    print('🟢 [SalesOrderController] showDetailModal: ${showDetailModal.value}');
+    print(
+      '🟢 [SalesOrderController] showDetailModal: ${showDetailModal.value}',
+    );
   }
 
   // ─── Settings ────────────────────────────────────────────────
@@ -499,14 +544,18 @@ class SalesOrderController extends GetxController {
     };
 
     for (final entry in categories.entries) {
-      print('🟠 [SalesOrderController] Loading settings for category: ${entry.key}');
+      print(
+        '🟠 [SalesOrderController] Loading settings for category: ${entry.key}',
+      );
       await _loadSettingsCategory(entry.key, entry.value);
     }
     print('🟠 [SalesOrderController] All settings loaded');
   }
 
   Future<void> _loadSettingsCategory(String category, String targetKey) async {
-    print('🟠 [SalesOrderController] _loadSettingsCategory: $category -> $targetKey');
+    print(
+      '🟠 [SalesOrderController] _loadSettingsCategory: $category -> $targetKey',
+    );
     try {
       final response = await _api.get(
         '/api/settings',
@@ -514,16 +563,21 @@ class SalesOrderController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🟠 [SalesOrderController] Settings response for $category: ${response.statusCode}');
+      print(
+        '🟠 [SalesOrderController] Settings response for $category: ${response.statusCode}',
+      );
 
       if (response.success && response.data is Map) {
         final payload = response.data as Map<String, dynamic>;
         final list = _extractSettingsList(payload);
         settingsItemsByCategory[category] = list;
 
-        final names = list.map((e) => e.name).where((n) => n.isNotEmpty).toList();
+        final names = list
+            .map((e) => e.name)
+            .where((n) => n.isNotEmpty)
+            .toList();
         print('🟠 [SalesOrderController] Settings for $category: $names');
-        
+
         if (names.isNotEmpty) {
           switch (targetKey) {
             case 'orderTypes':
@@ -540,7 +594,9 @@ class SalesOrderController extends GetxController {
               break;
             case 'shippingMethods':
               shippingMethods.value = names;
-              print('🟠 [SalesOrderController] Updated shippingMethods: $names');
+              print(
+                '🟠 [SalesOrderController] Updated shippingMethods: $names',
+              );
               break;
             case 'paymentMethods':
               paymentMethods.value = names;
@@ -570,7 +626,9 @@ class SalesOrderController extends GetxController {
           .toList();
     }
     if (raw is Map && raw['data'] is List) {
-      print('🟠 [SalesOrderController] Raw is Map with data list, length: ${(raw['data'] as List).length}');
+      print(
+        '🟠 [SalesOrderController] Raw is Map with data list, length: ${(raw['data'] as List).length}',
+      );
       return (raw['data'] as List)
           .map((e) => SettingItem.fromJson(Map<String, dynamic>.from(e)))
           .toList();
@@ -667,15 +725,23 @@ class SalesOrderController extends GetxController {
     shippingAddress.value = OrderAddress();
     billingAddress.value = OrderAddress();
     sameAsShipping.value = true;
-    orderType.value = orderTypes.contains('Standard') ? 'Standard' : orderTypes.first;
-    priority.value = priorities.contains('Medium') ? 'Medium' : priorities.first;
+    orderType.value = orderTypes.contains('Standard')
+        ? 'Standard'
+        : orderTypes.first;
+    priority.value = priorities.contains('Medium')
+        ? 'Medium'
+        : priorities.first;
     source.value = sources.contains('Web') ? 'Web' : sources.first;
     salesPerson.value = '';
     expectedDeliveryDate.value = null;
-    shippingMethod.value = shippingMethods.contains('Standard') ? 'Standard' : shippingMethods.first;
+    shippingMethod.value = shippingMethods.contains('Standard')
+        ? 'Standard'
+        : shippingMethods.first;
     shippingCarrier.value = '';
     shippingCost.value = 0;
-    paymentMethod.value = paymentMethods.contains('Cash') ? 'Cash' : paymentMethods.first;
+    paymentMethod.value = paymentMethods.contains('Cash')
+        ? 'Cash'
+        : paymentMethods.first;
     paymentStatus.value = 'Pending';
     couponCode.value = '';
     discountType.value = 'Percentage';
@@ -691,7 +757,9 @@ class SalesOrderController extends GetxController {
   }
 
   void applyCustomer(WarehouseCustomer? customer) {
-    print('🔵 [SalesOrderController] applyCustomer called with: ${customer?.name ?? 'null'}');
+    print(
+      '🔵 [SalesOrderController] applyCustomer called with: ${customer?.name ?? 'null'}',
+    );
     selectedCustomer.value = customer;
     if (customer == null) {
       customerName.value = '';
@@ -711,7 +779,9 @@ class SalesOrderController extends GetxController {
     customerCompany.value = customer.company ?? '';
     customerTaxId.value = customer.taxId ?? '';
 
-    print('🔵 [SalesOrderController] Customer applied: ${customer.name}, Email: ${customer.email}, Phone: ${customer.phone}');
+    print(
+      '🔵 [SalesOrderController] Customer applied: ${customer.name}, Email: ${customer.email}, Phone: ${customer.phone}',
+    );
 
     final addr = customer.primaryAddress;
     if (addr != null) {
@@ -719,7 +789,9 @@ class SalesOrderController extends GetxController {
       if (sameAsShipping.value) {
         billingAddress.value = OrderAddress.fromMap(addr);
       }
-      print('🔵 [SalesOrderController] Address applied: ${addr['street']}, ${addr['city']}');
+      print(
+        '🔵 [SalesOrderController] Address applied: ${addr['street']}, ${addr['city']}',
+      );
     }
   }
 
@@ -734,13 +806,17 @@ class SalesOrderController extends GetxController {
         postalCode: shippingAddress.value.postalCode,
         country: shippingAddress.value.country,
       );
-      print('🔵 [SalesOrderController] Billing address set to shipping address');
+      print(
+        '🔵 [SalesOrderController] Billing address set to shipping address',
+      );
     }
   }
 
   void addProductToOrder(Map<String, dynamic> product, int quantity) {
-    print('🔵 [SalesOrderController] addProductToOrder called: ${product['name']}, quantity: $quantity');
-    
+    print(
+      '🔵 [SalesOrderController] addProductToOrder called: ${product['name']}, quantity: $quantity',
+    );
+
     final stock = (product['currentStock'] as num?)?.toInt() ?? 0;
     if (quantity <= 0) {
       formError.value = 'Quantity must be greater than 0';
@@ -749,27 +825,37 @@ class SalesOrderController extends GetxController {
     }
     if (quantity > stock) {
       formError.value = 'Insufficient stock. Available: $stock';
-      print('❌ [SalesOrderController] Insufficient stock. Available: $stock, Requested: $quantity');
+      print(
+        '❌ [SalesOrderController] Insufficient stock. Available: $stock, Requested: $quantity',
+      );
       return;
     }
 
     final productId = (product['id'] ?? product['_id']).toString();
-    final unitPrice = (product['sellingPrice'] ?? product['price'] as num?)?.toDouble() ?? 0;
+    final unitPrice =
+        (product['sellingPrice'] ?? product['price'] as num?)?.toDouble() ?? 0;
 
-    print('🔵 [SalesOrderController] Product ID: $productId, Unit Price: $unitPrice');
+    print(
+      '🔵 [SalesOrderController] Product ID: $productId, Unit Price: $unitPrice',
+    );
 
-    final existingIndex = createItems.indexWhere((item) => item.productId == productId);
+    final existingIndex = createItems.indexWhere(
+      (item) => item.productId == productId,
+    );
     if (existingIndex >= 0) {
       final item = createItems[existingIndex];
       item.quantity += quantity;
       item.totalPrice = item.unitPrice * item.quantity;
       createItems.refresh();
-      print('🔵 [SalesOrderController] Updated existing item: ${item.productName}, New quantity: ${item.quantity}');
+      print(
+        '🔵 [SalesOrderController] Updated existing item: ${item.productName}, New quantity: ${item.quantity}',
+      );
     } else {
       final dimensions = product['dimensions'];
       String dimensionText = '';
       if (dimensions is Map) {
-        dimensionText = '${dimensions['length']}x${dimensions['width']}x${dimensions['height']} ${dimensions['unit'] ?? ''}';
+        dimensionText =
+            '${dimensions['length']}x${dimensions['width']}x${dimensions['height']} ${dimensions['unit'] ?? ''}';
       }
 
       createItems.add(
@@ -785,10 +871,14 @@ class SalesOrderController extends GetxController {
           dimensions: dimensionText,
         ),
       );
-      print('🔵 [SalesOrderController] Added new item: ${product['name']}, Quantity: $quantity');
+      print(
+        '🔵 [SalesOrderController] Added new item: ${product['name']}, Quantity: $quantity',
+      );
     }
     formError.value = '';
-    print('🔵 [SalesOrderController] Total items in order: ${createItems.length}');
+    print(
+      '🔵 [SalesOrderController] Total items in order: ${createItems.length}',
+    );
   }
 
   void removeCreateItem(int index) {
@@ -804,16 +894,22 @@ class SalesOrderController extends GetxController {
   }
 
   void updateCreateItemQuantity(int index, int quantity) {
-    print('🔵 [SalesOrderController] updateCreateItemQuantity: index $index, quantity $quantity');
+    print(
+      '🔵 [SalesOrderController] updateCreateItemQuantity: index $index, quantity $quantity',
+    );
     if (index < 0 || index >= createItems.length || quantity < 1) {
-      print('❌ [SalesOrderController] Invalid index or quantity: $index, $quantity');
+      print(
+        '❌ [SalesOrderController] Invalid index or quantity: $index, $quantity',
+      );
       return;
     }
     final item = createItems[index];
     item.quantity = quantity;
     item.totalPrice = item.unitPrice * quantity;
     createItems.refresh();
-    print('🔵 [SalesOrderController] Updated item: ${item.productName}, New quantity: ${item.quantity}');
+    print(
+      '🔵 [SalesOrderController] Updated item: ${item.productName}, New quantity: ${item.quantity}',
+    );
   }
 
   double get subtotal {
@@ -825,7 +921,9 @@ class SalesOrderController extends GetxController {
   double get calculatedDiscount {
     if (discountType.value == 'Percentage' && discountPercentage.value > 0) {
       final discount = (subtotal * discountPercentage.value) / 100;
-      print('🔵 [SalesOrderController] Percentage discount: $discount% of $subtotal = $discount');
+      print(
+        '🔵 [SalesOrderController] Percentage discount: $discount% of $subtotal = $discount',
+      );
       return discount;
     }
     print('🔵 [SalesOrderController] Fixed discount: ${discountAmount.value}');
@@ -834,12 +932,17 @@ class SalesOrderController extends GetxController {
 
   double get grandTotal {
     final total = subtotal + shippingCost.value - calculatedDiscount;
-    print('🔵 [SalesOrderController] Grand Total: $total (Subtotal: $subtotal + Shipping: ${shippingCost.value} - Discount: $calculatedDiscount)');
+    print(
+      '🔵 [SalesOrderController] Grand Total: $total (Subtotal: $subtotal + Shipping: ${shippingCost.value} - Discount: $calculatedDiscount)',
+    );
     return total;
   }
 
   double get totalWeight {
-    final weight = createItems.fold(0.0, (sum, item) => sum + (item.weight * item.quantity));
+    final weight = createItems.fold(
+      0.0,
+      (sum, item) => sum + (item.weight * item.quantity),
+    );
     print('🔵 [SalesOrderController] Total Weight: $weight');
     return weight;
   }
@@ -869,7 +972,9 @@ class SalesOrderController extends GetxController {
           },
         )
         .toList();
-    print('🔵 [SalesOrderController] Found ${products.length} products for query: $query');
+    print(
+      '🔵 [SalesOrderController] Found ${products.length} products for query: $query',
+    );
     return products;
   }
 
@@ -877,8 +982,10 @@ class SalesOrderController extends GetxController {
     print('🔵 [SalesOrderController] submitCreateOrder called');
     print('🔵 [SalesOrderController] Customer: ${customerName.value}');
     print('🔵 [SalesOrderController] Items count: ${createItems.length}');
-    print('🔵 [SalesOrderController] Subtotal: $subtotal, Grand Total: $grandTotal');
-    
+    print(
+      '🔵 [SalesOrderController] Subtotal: $subtotal, Grand Total: $grandTotal',
+    );
+
     if (customerName.value.trim().isEmpty) {
       formError.value = 'Customer name is required';
       print('❌ [SalesOrderController] Customer name is required');
@@ -936,7 +1043,9 @@ class SalesOrderController extends GetxController {
       };
 
       print('🔵 [SalesOrderController] Submitting order payload:');
-      print('🔵 [SalesOrderController] ${payload.toString().substring(0, payload.toString().length > 500 ? 500 : payload.toString().length)}...');
+      print(
+        '🔵 [SalesOrderController] ${payload.toString().substring(0, payload.toString().length > 500 ? 500 : payload.toString().length)}...',
+      );
 
       final response = await _api.post(
         '/api/orders/sales',
@@ -944,7 +1053,9 @@ class SalesOrderController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🔵 [SalesOrderController] Response Status: ${response.statusCode}');
+      print(
+        '🔵 [SalesOrderController] Response Status: ${response.statusCode}',
+      );
       print('🔵 [SalesOrderController] Response Success: ${response.success}');
 
       if (response.success) {
@@ -972,10 +1083,16 @@ class SalesOrderController extends GetxController {
   }
 
   // ─── Update Order Status ──────────────────────────────────────
-  Future<bool> updateOrderStatus(String orderId, String status, {String? notes}) async {
+  Future<bool> updateOrderStatus(
+    String orderId,
+    String status, {
+    String? notes,
+  }) async {
     print('🟣 [SalesOrderController] updateOrderStatus called');
-    print('🟣 [SalesOrderController] Order ID: $orderId, Status: $status, Notes: $notes');
-    
+    print(
+      '🟣 [SalesOrderController] Order ID: $orderId, Status: $status, Notes: $notes',
+    );
+
     try {
       isSubmitting.value = true;
       final response = await _api.patch(
@@ -984,7 +1101,9 @@ class SalesOrderController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🟣 [SalesOrderController] Response Status: ${response.statusCode}');
+      print(
+        '🟣 [SalesOrderController] Response Status: ${response.statusCode}',
+      );
       print('🟣 [SalesOrderController] Response Success: ${response.success}');
 
       if (response.success) {
@@ -1006,7 +1125,7 @@ class SalesOrderController extends GetxController {
   Future<bool> cancelOrder(String orderId, {String? reason}) async {
     print('🟣 [SalesOrderController] cancelOrder called');
     print('🟣 [SalesOrderController] Order ID: $orderId, Reason: $reason');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.post(
@@ -1015,7 +1134,9 @@ class SalesOrderController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🟣 [SalesOrderController] Response Status: ${response.statusCode}');
+      print(
+        '🟣 [SalesOrderController] Response Status: ${response.statusCode}',
+      );
       print('🟣 [SalesOrderController] Response Success: ${response.success}');
 
       if (response.success) {
@@ -1037,7 +1158,7 @@ class SalesOrderController extends GetxController {
   Future<bool> deleteOrder(String orderId) async {
     print('🟣 [SalesOrderController] deleteOrder called');
     print('🟣 [SalesOrderController] Order ID: $orderId');
-    
+
     try {
       isSubmitting.value = true;
       final response = await _api.delete(
@@ -1045,7 +1166,9 @@ class SalesOrderController extends GetxController {
         requiresAuth: true,
       );
 
-      print('🟣 [SalesOrderController] Response Status: ${response.statusCode}');
+      print(
+        '🟣 [SalesOrderController] Response Status: ${response.statusCode}',
+      );
       print('🟣 [SalesOrderController] Response Success: ${response.success}');
 
       if (response.success) {

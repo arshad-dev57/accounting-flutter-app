@@ -2,8 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/core/warehouse/dashboard/warehouse_dashboard_controller.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/warehouse/dashboard/warehouse_dashboard_controller.dart';
 
 class ReportsController extends GetxController {
   final RxBool isLoading = false.obs;

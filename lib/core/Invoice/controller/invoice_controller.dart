@@ -1,11 +1,11 @@
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'dart:convert';
 import 'dart:io';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:LedgerPro_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
@@ -871,7 +871,7 @@ class InvoiceController extends GetxController {
               borderRadius: pw.BorderRadius.circular(6),
             ),
             child: pw.Text(
-              'LedgerPro',
+              'BisonsTechs',
               style: pw.TextStyle(
                 color: PdfColors.white,
                 fontWeight: pw.FontWeight.bold,
@@ -1981,7 +1981,7 @@ class InvoiceController extends GetxController {
               borderRadius: pw.BorderRadius.circular(6),
             ),
             child: pw.Text(
-              'LedgerPro',
+              'BisonsTechs',
               style: pw.TextStyle(
                 color: PdfColors.white,
                 fontWeight: pw.FontWeight.bold,

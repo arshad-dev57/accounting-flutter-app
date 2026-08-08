@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/core/warehouse/order/controller/sales_order_controller.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/controller/sales_order_controller.dart';
 import 'package:flutter/material.dart';
 
 class ProductSearchField extends StatefulWidget {
@@ -84,24 +84,22 @@ class _ProductSearchFieldState extends State<ProductSearchField> {
                       shrinkWrap: true,
                       itemCount: _products.length,
                       separatorBuilder: (_, __) => Divider(
-                          height: 1,
-                          color: Colors.grey.withOpacity(0.1)),
+                        height: 1,
+                        color: Colors.grey.withOpacity(0.1),
+                      ),
                       itemBuilder: (_, i) {
                         final p = _products[i];
-                        final stock =
-                            (p['currentStock'] as num?)?.toInt() ?? 0;
+                        final stock = (p['currentStock'] as num?)?.toInt() ?? 0;
                         final price =
                             (p['sellingPrice'] as num?)?.toDouble() ?? 0;
                         final outOfStock = stock <= 0;
-                        final isSelected =
-                            _selectedProduct?['id'] == p['id'];
+                        final isSelected = _selectedProduct?['id'] == p['id'];
 
                         return InkWell(
                           onTap: outOfStock
                               ? null
                               : () {
-                                  setState(
-                                      () => _selectedProduct = p);
+                                  setState(() => _selectedProduct = p);
                                   _searchCtrl.text =
                                       p['name']?.toString() ?? '';
                                   widget.onSelected(p);
@@ -112,7 +110,9 @@ class _ProductSearchFieldState extends State<ProductSearchField> {
                             opacity: outOfStock ? 0.45 : 1,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 10),
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? kPrimary.withOpacity(0.07)
@@ -126,8 +126,7 @@ class _ProductSearchFieldState extends State<ProductSearchField> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          p['name']?.toString() ??
-                                              'Unknown',
+                                          p['name']?.toString() ?? 'Unknown',
                                           style: TextStyle(
                                             fontSize: 13,
                                             fontWeight: FontWeight.w600,
@@ -135,8 +134,7 @@ class _ProductSearchFieldState extends State<ProductSearchField> {
                                                 ? kPrimary
                                                 : kText,
                                           ),
-                                          overflow:
-                                              TextOverflow.ellipsis,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
@@ -153,12 +151,10 @@ class _ProductSearchFieldState extends State<ProductSearchField> {
                                   ),
                                   const SizedBox(width: 8),
                                   Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.end,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
                                       Text(
-                                        widget.controller
-                                            .formatCurrency(price),
+                                        widget.controller.formatCurrency(price),
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w700,
@@ -169,8 +165,9 @@ class _ProductSearchFieldState extends State<ProductSearchField> {
                                         Text(
                                           'Out of stock',
                                           style: TextStyle(
-                                              fontSize: 9,
-                                              color: kDanger),
+                                            fontSize: 9,
+                                            color: kDanger,
+                                          ),
                                         ),
                                     ],
                                   ),
@@ -233,8 +230,7 @@ class _ProductSearchFieldState extends State<ProductSearchField> {
               focusNode: _focusNode,
               decoration: InputDecoration(
                 hintText: 'Search products by name or SKU...',
-                hintStyle: TextStyle(
-                    fontSize: 13, color: Colors.grey.shade400),
+                hintStyle: TextStyle(fontSize: 13, color: Colors.grey.shade400),
                 prefixIcon: const Icon(Icons.search, size: 20),
                 suffixIcon: _loading
                     ? const Padding(
@@ -242,34 +238,33 @@ class _ProductSearchFieldState extends State<ProductSearchField> {
                         child: SizedBox(
                           width: 16,
                           height: 16,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2),
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         ),
                       )
                     : _searchCtrl.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.close, size: 18),
-                            onPressed: _clearSelection,
-                          )
-                        : IconButton(
-                            icon: const Icon(Icons.expand_more,
-                                size: 20),
-                            onPressed: () async {
-                              _focusNode.requestFocus();
-                              await _loadProducts(
-                                  _searchCtrl.text.trim());
-                            },
-                          ),
+                    ? IconButton(
+                        icon: const Icon(Icons.close, size: 18),
+                        onPressed: _clearSelection,
+                      )
+                    : IconButton(
+                        icon: const Icon(Icons.expand_more, size: 20),
+                        onPressed: () async {
+                          _focusNode.requestFocus();
+                          await _loadProducts(_searchCtrl.text.trim());
+                        },
+                      ),
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide:
-                      BorderSide(color: kPrimary, width: 1.5),
+                  borderSide: BorderSide(color: kPrimary, width: 1.5),
                 ),
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 14),
+                  horizontal: 12,
+                  vertical: 14,
+                ),
               ),
               onTap: () => _loadProducts(_searchCtrl.text.trim()),
               onChanged: (v) {
@@ -284,26 +279,22 @@ class _ProductSearchFieldState extends State<ProductSearchField> {
             const SizedBox(height: 6),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 10, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
                 color: kPrimary.withOpacity(0.07),
                 borderRadius: BorderRadius.circular(8),
-                border:
-                    Border.all(color: kPrimary.withOpacity(0.25)),
+                border: Border.all(color: kPrimary.withOpacity(0.25)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.check_circle_outline,
-                      size: 15, color: kPrimary),
+                  Icon(Icons.check_circle_outline, size: 15, color: kPrimary),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _selectedProduct!['name']?.toString() ??
-                              '',
+                          _selectedProduct!['name']?.toString() ?? '',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -317,16 +308,20 @@ class _ProductSearchFieldState extends State<ProductSearchField> {
                           'Stock: ${(_selectedProduct!['currentStock'] as num?)?.toInt() ?? 0} • '
                           '${widget.controller.formatCurrency((_selectedProduct!['sellingPrice'] as num?)?.toDouble() ?? 0)}',
                           style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey.shade600),
+                            fontSize: 10,
+                            color: Colors.grey.shade600,
+                          ),
                         ),
                       ],
                     ),
                   ),
                   GestureDetector(
                     onTap: _clearSelection,
-                    child: Icon(Icons.close,
-                        size: 15, color: Colors.grey.shade500),
+                    child: Icon(
+                      Icons.close,
+                      size: 15,
+                      color: Colors.grey.shade500,
+                    ),
                   ),
                 ],
               ),

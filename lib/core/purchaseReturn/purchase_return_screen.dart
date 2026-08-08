@@ -1,8 +1,7 @@
-
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/core/purchaseReturn/purchase_return_controller.dart';
-import 'package:LedgerPro_app/core/purchaseReturn/purchase_return_model.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/core/purchaseReturn/purchase_return_controller.dart';
+import 'package:BisonsTechs_app/core/purchaseReturn/purchase_return_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -67,7 +66,11 @@ class PurchaseReturnScreen extends StatelessWidget {
         onPressed: controller.openCreateForm,
         backgroundColor: kPrimary,
         elevation: 2,
-        child: const Icon(Icons.assignment_return, color: Colors.black, size: 24),
+        child: const Icon(
+          Icons.assignment_return,
+          color: Colors.black,
+          size: 24,
+        ),
       ),
     );
   }
@@ -97,38 +100,46 @@ class PurchaseReturnScreen extends StatelessWidget {
                             letterSpacing: -0.3,
                           ),
                         ),
-                        Obx(() => Text(
-                          '${controller.totalRecords.value} returns',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.black.withOpacity(0.55),
-                            fontWeight: FontWeight.w500,
+                        Obx(
+                          () => Text(
+                            '${controller.totalRecords.value} returns',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.black.withOpacity(0.55),
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        )),
+                        ),
                       ],
                     ),
                   ),
-                  Obx(() => Row(
-                    children: [
-                      _compactKpi(
-                        'Today',
-                        controller.formatCurrency(controller.stats.value.todayAmount),
-                        Colors.green.shade800,
-                      ),
-                      const SizedBox(width: 8),
-                      _compactKpi(
-                        'Month',
-                        controller.formatCurrency(controller.stats.value.monthAmount),
-                        Colors.blue.shade800,
-                      ),
-                      const SizedBox(width: 8),
-                      _compactKpi(
-                        'Draft',
-                        controller.stats.value.draftCount.toString(),
-                        Colors.orange.shade800,
-                      ),
-                    ],
-                  )),
+                  Obx(
+                    () => Row(
+                      children: [
+                        _compactKpi(
+                          'Today',
+                          controller.formatCurrency(
+                            controller.stats.value.todayAmount,
+                          ),
+                          Colors.green.shade800,
+                        ),
+                        const SizedBox(width: 8),
+                        _compactKpi(
+                          'Month',
+                          controller.formatCurrency(
+                            controller.stats.value.monthAmount,
+                          ),
+                          Colors.blue.shade800,
+                        ),
+                        const SizedBox(width: 8),
+                        _compactKpi(
+                          'Draft',
+                          controller.stats.value.draftCount.toString(),
+                          Colors.orange.shade800,
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(width: 10),
                   GestureDetector(
                     onTap: controller.refreshReturns,
@@ -139,7 +150,11 @@ class PurchaseReturnScreen extends StatelessWidget {
                         color: Colors.black.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(9),
                       ),
-                      child: Icon(Icons.refresh_rounded, size: 17, color: Colors.black.withOpacity(0.65)),
+                      child: Icon(
+                        Icons.refresh_rounded,
+                        size: 17,
+                        color: Colors.black.withOpacity(0.65),
+                      ),
                     ),
                   ),
                 ],
@@ -163,18 +178,36 @@ class PurchaseReturnScreen extends StatelessWidget {
                 child: _SearchField(controller: controller),
               ),
             ),
-            Obx(() => SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-              child: Row(
-                children: [
-                  _filterChip('All', controller.selectedFilter.value == 'all', () => controller.filterReturns('all')),
-                  _filterChip('Draft', controller.selectedFilter.value == 'Draft', () => controller.filterReturns('Draft')),
-                  _filterChip('Processed', controller.selectedFilter.value == 'Processed', () => controller.filterReturns('Processed')),
-                  _filterChip('Cancelled', controller.selectedFilter.value == 'Cancelled', () => controller.filterReturns('Cancelled')),
-                ],
+            Obx(
+              () => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                child: Row(
+                  children: [
+                    _filterChip(
+                      'All',
+                      controller.selectedFilter.value == 'all',
+                      () => controller.filterReturns('all'),
+                    ),
+                    _filterChip(
+                      'Draft',
+                      controller.selectedFilter.value == 'Draft',
+                      () => controller.filterReturns('Draft'),
+                    ),
+                    _filterChip(
+                      'Processed',
+                      controller.selectedFilter.value == 'Processed',
+                      () => controller.filterReturns('Processed'),
+                    ),
+                    _filterChip(
+                      'Cancelled',
+                      controller.selectedFilter.value == 'Cancelled',
+                      () => controller.filterReturns('Cancelled'),
+                    ),
+                  ],
+                ),
               ),
-            )),
+            ),
           ],
         ),
       ),
@@ -185,8 +218,22 @@ class PurchaseReturnScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: color)),
-        Text(label, style: TextStyle(fontSize: 9, color: Colors.black.withOpacity(0.5), fontWeight: FontWeight.w600)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 9,
+            color: Colors.black.withOpacity(0.5),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
     );
   }
@@ -202,7 +249,9 @@ class PurchaseReturnScreen extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected ? Colors.black : Colors.white.withOpacity(0.18),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: selected ? Colors.black : Colors.white.withOpacity(0.4)),
+            border: Border.all(
+              color: selected ? Colors.black : Colors.white.withOpacity(0.4),
+            ),
           ),
           child: Text(
             label,
@@ -217,7 +266,11 @@ class PurchaseReturnScreen extends StatelessWidget {
     );
   }
 
-  void _showDetail(BuildContext context, PurchaseReturnController controller, PurchaseReturnModel item) {
+  void _showDetail(
+    BuildContext context,
+    PurchaseReturnController controller,
+    PurchaseReturnModel item,
+  ) {
     controller.selectReturn(item);
     showModalBottomSheet(
       context: context,
@@ -290,7 +343,9 @@ class _SearchFieldState extends State<_SearchField> {
       controller: _searchCtrl,
       onChanged: (v) {
         setState(() {});
-        v.isEmpty ? widget.controller.clearSearch() : widget.controller.searchReturns(v);
+        v.isEmpty
+            ? widget.controller.clearSearch()
+            : widget.controller.searchReturns(v);
       },
       style: const TextStyle(fontSize: 13, color: Colors.black87),
       decoration: InputDecoration(
@@ -308,7 +363,10 @@ class _SearchFieldState extends State<_SearchField> {
               )
             : null,
         border: InputBorder.none,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 11,
+        ),
         isDense: true,
       ),
     );
@@ -323,10 +381,7 @@ class _CreateReturnForm extends StatelessWidget {
   final PurchaseReturnController controller;
   final VoidCallback onCancel;
 
-  const _CreateReturnForm({
-    required this.controller,
-    required this.onCancel,
-  });
+  const _CreateReturnForm({required this.controller, required this.onCancel});
 
   String _format(double v) {
     final currency = Get.find<CurrencyController>();
@@ -383,7 +438,10 @@ class _CreateReturnForm extends StatelessWidget {
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(10)),
               ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
               isDense: true,
             ),
             onChanged: controller.searchSuppliers,
@@ -461,7 +519,9 @@ class _CreateReturnForm extends StatelessWidget {
         ],
 
         // ─── Return Details Section ──────────────────────────
-        if (controller.returnItems.any((item) => item.isSelected && item.returnQuantity > 0)) ...[
+        if (controller.returnItems.any(
+          (item) => item.isSelected && item.returnQuantity > 0,
+        )) ...[
           _section('Return Details', [
             // Return Date
             TextField(
@@ -473,7 +533,10 @@ class _CreateReturnForm extends StatelessWidget {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 isDense: true,
               ),
               onTap: () => controller.selectReturnDate(context),
@@ -482,17 +545,22 @@ class _CreateReturnForm extends StatelessWidget {
 
             // Return Reason
             TextField(
-              controller: TextEditingController(text: controller.returnReason.value)
-                ..addListener(() {
-                  controller.returnReason.value = controller.returnReason.value;
-                }),
+              controller:
+                  TextEditingController(text: controller.returnReason.value)
+                    ..addListener(() {
+                      controller.returnReason.value =
+                          controller.returnReason.value;
+                    }),
               decoration: const InputDecoration(
                 labelText: 'Return Reason *',
                 hintText: 'e.g., Damaged, Wrong item, Quality issue',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 isDense: true,
               ),
               onChanged: (value) => controller.returnReason.value = value,
@@ -508,7 +576,10 @@ class _CreateReturnForm extends StatelessWidget {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 isDense: true,
               ),
             ),
@@ -527,12 +598,25 @@ class _CreateReturnForm extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _summaryRow('Supplier', controller.selectedSupplier.value?['name'] ?? ''),
-                _summaryRow('Invoice', controller.selectedInvoice.value?.invoiceNumber ?? ''),
-                _summaryRow('Items', '${controller.returnItems.where((i) => i.isSelected && i.returnQuantity > 0).length} products'),
+                _summaryRow(
+                  'Supplier',
+                  controller.selectedSupplier.value?['name'] ?? '',
+                ),
+                _summaryRow(
+                  'Invoice',
+                  controller.selectedInvoice.value?.invoiceNumber ?? '',
+                ),
+                _summaryRow(
+                  'Items',
+                  '${controller.returnItems.where((i) => i.isSelected && i.returnQuantity > 0).length} products',
+                ),
                 const Divider(),
                 _summaryRow('Total Qty', controller.totalReturnQty.toString()),
-                _summaryRow('Total Amount', _format(controller.totalReturnAmount), bold: true),
+                _summaryRow(
+                  'Total Amount',
+                  _format(controller.totalReturnAmount),
+                  bold: true,
+                ),
               ],
             ),
           ),
@@ -577,7 +661,10 @@ class _CreateReturnForm extends StatelessWidget {
   Widget _supplierTile(Map<String, dynamic> supplier) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      title: Text(supplier['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.w600)),
+      title: Text(
+        supplier['name'] ?? '',
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
       subtitle: Text(supplier['email'] ?? supplier['phone'] ?? ''),
       trailing: Icon(Icons.chevron_right, color: kSubText),
       onTap: () => controller.selectSupplier(supplier),
@@ -596,7 +683,10 @@ class _CreateReturnForm extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(supplier['name'] ?? '', style: TextStyle(fontWeight: FontWeight.w700, color: kPrimary)),
+          Text(
+            supplier['name'] ?? '',
+            style: TextStyle(fontWeight: FontWeight.w700, color: kPrimary),
+          ),
           if (supplier['email'] != null) Text(supplier['email']),
           if (supplier['phone'] != null) Text(supplier['phone']),
         ],
@@ -643,7 +733,11 @@ class _CreateReturnForm extends StatelessWidget {
             ),
             Text(
               'Total: ${_format(invoice.grandTotal)} | Outstanding: ${_format(invoice.outstanding)}',
-              style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 11,
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             if (invoice.isFullyPaid)
               Container(
@@ -723,7 +817,9 @@ class _CreateReturnForm extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: item.availableQuantity > 0 ? Colors.green : Colors.red,
+                          color: item.availableQuantity > 0
+                              ? Colors.green
+                              : Colors.red,
                         ),
                       ),
                     ],
@@ -742,7 +838,10 @@ class _CreateReturnForm extends StatelessWidget {
                     ),
                     if (item.isBoxBased)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.purple.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(4),
@@ -774,7 +873,10 @@ class _CreateReturnForm extends StatelessWidget {
                           border: const OutlineInputBorder(
                             borderRadius: BorderRadius.all(Radius.circular(8)),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
                           isDense: true,
                         ),
                         onChanged: (v) {
@@ -793,7 +895,10 @@ class _CreateReturnForm extends StatelessWidget {
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.all(Radius.circular(8)),
                           ),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
                           isDense: true,
                         ),
                         onChanged: (v) {
@@ -823,7 +928,10 @@ class _CreateReturnForm extends StatelessWidget {
                     border: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(8)),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     isDense: true,
                     helperText: 'Max: ${item.availableQuantity}',
                   ),
@@ -845,7 +953,10 @@ class _CreateReturnForm extends StatelessWidget {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(8)),
                         ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         isDense: true,
                       ),
                       onChanged: (v) {
@@ -915,14 +1026,18 @@ class _CreateReturnForm extends StatelessWidget {
                 ),
                 side: BorderSide(color: Colors.grey.shade300),
               ),
-              child: Text('Cancel', style: TextStyle(color: kSubText, fontWeight: FontWeight.w600)),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: kSubText, fontWeight: FontWeight.w600),
+              ),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             flex: 2,
             child: ElevatedButton(
-              onPressed: controller.isSubmitting.value || !controller.canCreateReturn
+              onPressed:
+                  controller.isSubmitting.value || !controller.canCreateReturn
                   ? null
                   : controller.createDraftReturn,
               style: ElevatedButton.styleFrom(
@@ -937,7 +1052,10 @@ class _CreateReturnForm extends StatelessWidget {
                   ? const SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.black,
+                      ),
                     )
                   : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -1024,9 +1142,11 @@ class _ReturnDetailSheetState extends State<_ReturnDetailSheet> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final current = widget.controller.returns.firstWhereOrNull(
-        (p) => p.id == widget.returnItem.id,
-      ) ?? widget.returnItem;
+      final current =
+          widget.controller.returns.firstWhereOrNull(
+            (p) => p.id == widget.returnItem.id,
+          ) ??
+          widget.returnItem;
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1067,7 +1187,10 @@ class _ReturnDetailSheetState extends State<_ReturnDetailSheet> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: _statusColor(current.status).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
@@ -1088,7 +1211,10 @@ class _ReturnDetailSheetState extends State<_ReturnDetailSheet> {
           const SizedBox(height: 16),
           _detailRow('Supplier', current.supplierName),
           _detailRow('Invoice', current.purchaseInvoiceNumber),
-          _detailRow('Date', DateFormat('dd MMM yyyy').format(current.returnDate)),
+          _detailRow(
+            'Date',
+            DateFormat('dd MMM yyyy').format(current.returnDate),
+          ),
           _detailRow('Reason', current.returnReason),
           if (current.notes != null && current.notes!.isNotEmpty)
             _detailRow('Notes', current.notes!),
@@ -1100,10 +1226,7 @@ class _ReturnDetailSheetState extends State<_ReturnDetailSheet> {
             children: [
               const Text(
                 'Return Items',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                ),
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
               ),
               Text(
                 '${current.totalItems} items',
@@ -1112,110 +1235,121 @@ class _ReturnDetailSheetState extends State<_ReturnDetailSheet> {
             ],
           ),
           const SizedBox(height: 8),
-          ...current.items.map((item) => Container(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: Colors.grey.withOpacity(0.06)),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.productName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                            ),
-                          ),
-                          Text(
-                            'SKU: ${item.sku}',
-                            style: TextStyle(fontSize: 11, color: kSubText),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      _format(item.lineTotal),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                        color: Colors.green,
-                      ),
-                    ),
-                  ],
+          ...current.items.map(
+            (item) => Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: Colors.grey.withOpacity(0.06)),
                 ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        'Qty: ${item.returnQuantity}',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.blue.shade800,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.productName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                            Text(
+                              'SKU: ${item.sku}',
+                              style: TextStyle(fontSize: 11, color: kSubText),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    if (item.isBoxBased)
+                      Text(
+                        _format(item.lineTotal),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          color: Colors.green,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
-                          color: Colors.purple.shade50,
+                          color: Colors.blue.shade50,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          '${item.boxes ?? 0} ${item.quantityPerBox ?? 0}/box',
+                          'Qty: ${item.returnQuantity}',
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w500,
-                            color: Colors.purple.shade800,
+                            color: Colors.blue.shade800,
                           ),
                         ),
                       ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade50,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        '${_format(item.unitPrice)}/unit',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.green.shade800,
+                      const SizedBox(width: 6),
+                      if (item.isBoxBased)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.purple.shade50,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '${item.boxes ?? 0} ${item.quantityPerBox ?? 0}/box',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.purple.shade800,
+                            ),
+                          ),
+                        ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          '${_format(item.unitPrice)}/unit',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.green.shade800,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                if (item.returnReason.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      'Reason: ${item.returnReason}',
-                      style: TextStyle(fontSize: 10, color: kSubText),
-                    ),
+                    ],
                   ),
-              ],
+                  if (item.returnReason.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        'Reason: ${item.returnReason}',
+                        style: TextStyle(fontSize: 10, color: kSubText),
+                      ),
+                    ),
+                ],
+              ),
             ),
-          )),
+          ),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(12),
@@ -1296,30 +1430,40 @@ class _ReturnDetailSheetState extends State<_ReturnDetailSheet> {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  ...current.journalEntry!.lines.map((line) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: Text(
-                            line.accountName,
-                            style: TextStyle(fontSize: 11, color: kSubText),
+                  ...current.journalEntry!.lines.map(
+                    (line) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              line.accountName,
+                              style: TextStyle(fontSize: 11, color: kSubText),
+                            ),
                           ),
-                        ),
-                        if (line.debit > 0)
-                          Text(
-                            'Dr ${_format(line.debit)}',
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.green),
-                          ),
-                        if (line.credit > 0)
-                          Text(
-                            'Cr ${_format(line.credit)}',
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.red),
-                          ),
-                      ],
+                          if (line.debit > 0)
+                            Text(
+                              'Dr ${_format(line.debit)}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.green,
+                              ),
+                            ),
+                          if (line.credit > 0)
+                            Text(
+                              'Cr ${_format(line.credit)}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.red,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                  )),
+                  ),
                 ],
               ),
             ),
@@ -1333,7 +1477,9 @@ class _ReturnDetailSheetState extends State<_ReturnDetailSheet> {
                     onPressed: widget.controller.isSubmitting.value
                         ? null
                         : () async {
-                            final ok = await widget.controller.processReturn(current.id);
+                            final ok = await widget.controller.processReturn(
+                              current.id,
+                            );
                             if (ok) widget.onClose();
                           },
                     style: ElevatedButton.styleFrom(
@@ -1357,7 +1503,9 @@ class _ReturnDetailSheetState extends State<_ReturnDetailSheet> {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () async {
-                      final ok = await widget.controller.cancelReturn(current.id);
+                      final ok = await widget.controller.cancelReturn(
+                        current.id,
+                      );
                       if (ok) widget.onClose();
                     },
                     style: OutlinedButton.styleFrom(
@@ -1398,7 +1546,11 @@ class _ReturnDetailSheetState extends State<_ReturnDetailSheet> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.print, size: 18, color: Colors.blue.shade700),
+                        Icon(
+                          Icons.print,
+                          size: 18,
+                          color: Colors.blue.shade700,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           'Print Note',
@@ -1416,7 +1568,9 @@ class _ReturnDetailSheetState extends State<_ReturnDetailSheet> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () async {
-                        final ok = await widget.controller.deleteReturn(current.id);
+                        final ok = await widget.controller.deleteReturn(
+                          current.id,
+                        );
                         if (ok) widget.onClose();
                       },
                       style: OutlinedButton.styleFrom(
@@ -1452,10 +1606,7 @@ class _ReturnDetailSheetState extends State<_ReturnDetailSheet> {
             ),
             child: Text(
               'Close',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: kSubText,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w600, color: kSubText),
             ),
           ),
         ],
@@ -1578,7 +1729,11 @@ class _ReturnListView extends StatelessWidget {
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: onCreate,
-                icon: const Icon(Icons.assignment_return, size: 16, color: Colors.black),
+                icon: const Icon(
+                  Icons.assignment_return,
+                  size: 16,
+                  color: Colors.black,
+                ),
                 label: const Text(
                   'Create Return',
                   style: TextStyle(
@@ -1590,7 +1745,10 @@ class _ReturnListView extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimary,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -1640,7 +1798,9 @@ class _ReturnListView extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
-                          item.isProcessed ? Icons.check_circle : Icons.assignment_return,
+                          item.isProcessed
+                              ? Icons.check_circle
+                              : Icons.assignment_return,
                           color: color,
                           size: 22,
                         ),
@@ -1663,10 +1823,7 @@ class _ReturnListView extends StatelessWidget {
                             const SizedBox(height: 3),
                             Text(
                               item.supplierName,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: kText,
-                              ),
+                              style: TextStyle(fontSize: 12, color: kText),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -1730,7 +1887,9 @@ class _ReturnListView extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  DateFormat('dd MMM yyyy').format(item.returnDate),
+                                  DateFormat(
+                                    'dd MMM yyyy',
+                                  ).format(item.returnDate),
                                   style: TextStyle(
                                     fontSize: 9,
                                     color: kSubText,

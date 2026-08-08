@@ -1,19 +1,18 @@
-
-import 'package:LedgerPro_app/Services/permission_service.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/About/about_app_screen.dart';
-import 'package:LedgerPro_app/core/About/privacypolicy_screen.dart';
-import 'package:LedgerPro_app/core/About/termsofservice_screen.dart';
-import 'package:LedgerPro_app/core/Contact/Screens/Contact_Screen.dart';
-import 'package:LedgerPro_app/core/Feedback/feedback_screen.dart';
-import 'package:LedgerPro_app/core/ReportIsuue/Report_issue_screen.dart';
-import 'package:LedgerPro_app/core/UserGuide/screen/user_guide_screen.dart';
-import 'package:LedgerPro_app/core/changepassword/screen/change_password_screen.dart';
-import 'package:LedgerPro_app/core/companyprofile/screen/company_profile_screen.dart';
-import 'package:LedgerPro_app/core/login/screen/login_screen.dart';
-import 'package:LedgerPro_app/core/plans/views/Subscription_plans.dart';
-import 'package:LedgerPro_app/core/settings/screens/currency_screen.dart';
+import 'package:BisonsTechs_app/Services/permission_service.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/About/about_app_screen.dart';
+import 'package:BisonsTechs_app/core/About/privacypolicy_screen.dart';
+import 'package:BisonsTechs_app/core/About/termsofservice_screen.dart';
+import 'package:BisonsTechs_app/core/Contact/Screens/Contact_Screen.dart';
+import 'package:BisonsTechs_app/core/Feedback/feedback_screen.dart';
+import 'package:BisonsTechs_app/core/ReportIsuue/Report_issue_screen.dart';
+import 'package:BisonsTechs_app/core/UserGuide/screen/user_guide_screen.dart';
+import 'package:BisonsTechs_app/core/changepassword/screen/change_password_screen.dart';
+import 'package:BisonsTechs_app/core/companyprofile/screen/company_profile_screen.dart';
+import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
+import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
+import 'package:BisonsTechs_app/core/settings/screens/currency_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -52,13 +51,33 @@ class PurchaseDrawer extends StatelessWidget {
                     'purchase-returns',
                   ],
                   items: const [
-                    ('Purchase Dashboard', Mdi.view_dashboard, '/warehouse/purchase'),
+                    (
+                      'Purchase Dashboard',
+                      Mdi.view_dashboard,
+                      '/warehouse/purchase',
+                    ),
                     ('Purchase Orders', Mdi.receipt_text, '/purchase-order'),
                     ('Suppliers', Mdi.account_tie, '/warehouse/suppliers'),
-                    ('Goods Receiving', Mdi.archive_arrow_down, '/purchase/goods-receiving'),
-                    ('Purchase Invoices', Mdi.file_document, '/purchase/invoices'),
-                    ('Purchase Payments', Mdi.cash, '/purchase/purchase-payment'),
-                    ('Purchase Returns', Mdi.undo_variant, '/purchase/purchase-return'),
+                    (
+                      'Goods Receiving',
+                      Mdi.archive_arrow_down,
+                      '/purchase/goods-receiving',
+                    ),
+                    (
+                      'Purchase Invoices',
+                      Mdi.file_document,
+                      '/purchase/invoices',
+                    ),
+                    (
+                      'Purchase Payments',
+                      Mdi.cash,
+                      '/purchase/purchase-payment',
+                    ),
+                    (
+                      'Purchase Returns',
+                      Mdi.undo_variant,
+                      '/purchase/purchase-return',
+                    ),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -67,9 +86,7 @@ class PurchaseDrawer extends StatelessWidget {
                   title: 'Settings',
                   icon: Mdi.cog,
                   currentRoute: currentRoute,
-                  items: const [
-                    ('Currency', Mdi.currency_usd, '__currency'),
-                  ],
+                  items: const [('Currency', Mdi.currency_usd, '__currency')],
                 ),
                 _NavSection(
                   title: 'My Account',
@@ -96,9 +113,7 @@ class PurchaseDrawer extends StatelessWidget {
                   title: 'Feedback',
                   icon: Mdi.feedback,
                   currentRoute: currentRoute,
-                  items: const [
-                    ('Feedback', Mdi.feedback, '__feedback'),
-                  ],
+                  items: const [('Feedback', Mdi.feedback, '__feedback')],
                 ),
                 _NavSection(
                   title: 'Subscription',
@@ -162,7 +177,11 @@ class _PurchaseDrawerHeader extends StatelessWidget {
                 color: Colors.black.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.arrow_back_rounded, size: 16, color: Colors.black87),
+              child: const Icon(
+                Icons.arrow_back_rounded,
+                size: 16,
+                color: Colors.black87,
+              ),
             ),
           ),
           const SizedBox(height: 14),
@@ -176,7 +195,11 @@ class _PurchaseDrawerHeader extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Center(
-                  child: Icon(Icons.shopping_bag_rounded, color: Colors.black87, size: 22),
+                  child: Icon(
+                    Icons.shopping_bag_rounded,
+                    color: Colors.black87,
+                    size: 22,
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -197,7 +220,10 @@ class _PurchaseDrawerHeader extends StatelessWidget {
                     const SizedBox(height: 1),
                     Text(
                       'Purchase Module',
-                      style: TextStyle(color: Colors.black.withOpacity(0.55), fontSize: 11),
+                      style: TextStyle(
+                        color: Colors.black.withOpacity(0.55),
+                        fontSize: 11,
+                      ),
                     ),
                   ],
                 ),
@@ -215,17 +241,27 @@ class _PurchaseDrawerHeader extends StatelessWidget {
               children: [
                 Iconify(Mdi.shield_account, size: 14, color: Colors.black54),
                 const SizedBox(width: 6),
-                Text('Current Plan', style: TextStyle(fontSize: 11, color: Colors.black54)),
+                Text(
+                  'Current Plan',
+                  style: TextStyle(fontSize: 11, color: Colors.black54),
+                ),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.green.shade600,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Text(
                     'Premium',
-                    style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],
@@ -270,7 +306,14 @@ class _PurchaseDrawerFooter extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Center(
-                    child: Text('U', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14)),
+                    child: Text(
+                      'U',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -280,15 +323,28 @@ class _PurchaseDrawerFooter extends StatelessWidget {
                     children: [
                       const Text(
                         'User',
-                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Colors.black87),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                          color: Colors.black87,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
-                      Text('Premium Account', style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
+                      Text(
+                        'Premium Account',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.green.withOpacity(0.10),
                     borderRadius: BorderRadius.circular(20),
@@ -296,9 +352,23 @@ class _PurchaseDrawerFooter extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(width: 5, height: 5, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
+                      Container(
+                        width: 5,
+                        height: 5,
+                        decoration: const BoxDecoration(
+                          color: Colors.green,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
                       const SizedBox(width: 4),
-                      const Text('Active', style: TextStyle(fontSize: 9, color: Colors.green, fontWeight: FontWeight.w700)),
+                      const Text(
+                        'Active',
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: Colors.green,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -321,7 +391,14 @@ class _PurchaseDrawerFooter extends StatelessWidget {
                 children: [
                   Iconify(Mdi.logout, color: Colors.red.shade400, size: 16),
                   const SizedBox(width: 8),
-                  Text('Sign Out', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.red.shade400)),
+                  Text(
+                    'Sign Out',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.red.shade400,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -344,13 +421,31 @@ class _PurchaseDrawerFooter extends StatelessWidget {
               Container(
                 width: 52,
                 height: 52,
-                decoration: BoxDecoration(color: Colors.red.withOpacity(0.08), shape: BoxShape.circle),
-                child: const Icon(Icons.logout_rounded, color: Colors.red, size: 26),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.logout_rounded,
+                  color: Colors.red,
+                  size: 26,
+                ),
               ),
               const SizedBox(height: 14),
-              const Text('Sign Out', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Colors.black87)),
+              const Text(
+                'Sign Out',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black87,
+                ),
+              ),
               const SizedBox(height: 6),
-              Text('Are you sure you want to sign out?', textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
+              Text(
+                'Are you sure you want to sign out?',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+              ),
               const SizedBox(height: 22),
               Row(
                 children: [
@@ -360,10 +455,18 @@ class _PurchaseDrawerFooter extends StatelessWidget {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.grey.shade700,
                         side: BorderSide(color: Colors.grey.shade200),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
-                      child: const Text('Cancel', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -374,10 +477,18 @@ class _PurchaseDrawerFooter extends StatelessWidget {
                         backgroundColor: Colors.red,
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
-                      child: const Text('Sign Out', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                      child: const Text(
+                        'Sign Out',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -418,7 +529,12 @@ class _SectionLabel extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 12, 16, 6),
       child: Text(
         label,
-        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.grey.shade400, letterSpacing: 1.0),
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: Colors.grey.shade400,
+          letterSpacing: 1.0,
+        ),
       ),
     );
   }
@@ -463,7 +579,7 @@ class _NavSectionState extends State<_NavSection> {
     for (int i = 0; i < widget.items.length; i++) {
       final item = widget.items[i];
       final permission = widget.permissions![i];
-      
+
       if (_permissionService.hasSubPageAccess(widget.module!, permission)) {
         filtered.add(item);
       }
@@ -492,20 +608,28 @@ class _NavSectionState extends State<_NavSection> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
               children: [
-                Iconify(widget.icon, size: 18, color: _hasActiveChild ? kPrimary : Colors.grey.shade500),
+                Iconify(
+                  widget.icon,
+                  size: 18,
+                  color: _hasActiveChild ? kPrimary : Colors.grey.shade500,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     widget.title,
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: _hasActiveChild ? FontWeight.w700 : FontWeight.w600,
+                      fontWeight: _hasActiveChild
+                          ? FontWeight.w700
+                          : FontWeight.w600,
                       color: _hasActiveChild ? Colors.black : Colors.black87,
                     ),
                   ),
                 ),
                 Icon(
-                  _expanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                  _expanded
+                      ? Icons.keyboard_arrow_up_rounded
+                      : Icons.keyboard_arrow_down_rounded,
                   size: 18,
                   color: Colors.grey.shade400,
                 ),
@@ -515,7 +639,9 @@ class _NavSectionState extends State<_NavSection> {
         ),
         AnimatedCrossFade(
           duration: const Duration(milliseconds: 200),
-          crossFadeState: _expanded ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+          crossFadeState: _expanded
+              ? CrossFadeState.showFirst
+              : CrossFadeState.showSecond,
           firstChild: Column(
             children: _filteredItems.map((item) {
               return _NavItem(
@@ -541,18 +667,41 @@ class _NavSectionState extends State<_NavSection> {
       return;
     }
     switch (routeKey) {
-      case '__currency':   Get.to(() => const CurrencyScreen()); break;
-      case '__profile':    Get.to(() => const ProfileScreen()); break;
-      case '__changepassword': Get.to(() => const ChangePasswordScreen()); break;
-      case '__userguide':  Get.to(() => const UserGuideScreen()); break;
-      case '__contact':    Get.to(() => const ContactScreen()); break;
-      case '__reportissue': Get.to(() => const ReportIssueScreen()); break;
-      case '__feedback':   Get.to(() => const FeedbackScreen()); break;
-      case '__subscription': Get.to(() => const SelectPlanScreen()); break;
-      case '__about':      Get.to(() => const AboutAppScreen()); break;
-      case '__terms':      Get.to(() => const TermsOfServiceScreen()); break;
-      case '__privacy':    Get.to(() => const PrivacyPolicyScreen()); break;
-      default: Get.snackbar('Coming Soon', '$label coming soon');
+      case '__currency':
+        Get.to(() => const CurrencyScreen());
+        break;
+      case '__profile':
+        Get.to(() => const ProfileScreen());
+        break;
+      case '__changepassword':
+        Get.to(() => const ChangePasswordScreen());
+        break;
+      case '__userguide':
+        Get.to(() => const UserGuideScreen());
+        break;
+      case '__contact':
+        Get.to(() => const ContactScreen());
+        break;
+      case '__reportissue':
+        Get.to(() => const ReportIssueScreen());
+        break;
+      case '__feedback':
+        Get.to(() => const FeedbackScreen());
+        break;
+      case '__subscription':
+        Get.to(() => const SelectPlanScreen());
+        break;
+      case '__about':
+        Get.to(() => const AboutAppScreen());
+        break;
+      case '__terms':
+        Get.to(() => const TermsOfServiceScreen());
+        break;
+      case '__privacy':
+        Get.to(() => const PrivacyPolicyScreen());
+        break;
+      default:
+        Get.snackbar('Coming Soon', '$label coming soon');
     }
   }
 }
@@ -563,7 +712,12 @@ class _NavItem extends StatelessWidget {
   final bool isActive;
   final VoidCallback onTap;
 
-  const _NavItem({required this.label, required this.icon, required this.isActive, required this.onTap});
+  const _NavItem({
+    required this.label,
+    required this.icon,
+    required this.isActive,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -587,7 +741,11 @@ class _NavItem extends StatelessWidget {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            Iconify(icon, size: 16, color: isActive ? kPrimary : Colors.grey.shade500),
+            Iconify(
+              icon,
+              size: 16,
+              color: isActive ? kPrimary : Colors.grey.shade500,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -601,7 +759,14 @@ class _NavItem extends StatelessWidget {
               ),
             ),
             if (isActive)
-              Container(width: 6, height: 6, decoration: BoxDecoration(color: kPrimary, shape: BoxShape.circle)),
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: kPrimary,
+                  shape: BoxShape.circle,
+                ),
+              ),
           ],
         ),
       ),
@@ -629,9 +794,20 @@ class _BackToDashboard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(Icons.arrow_back_rounded, size: 16, color: Colors.grey.shade500),
+              Icon(
+                Icons.arrow_back_rounded,
+                size: 16,
+                color: Colors.grey.shade500,
+              ),
               const SizedBox(width: 10),
-              Text('Back to Dashboard', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey.shade600)),
+              Text(
+                'Back to Dashboard',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade600,
+                ),
+              ),
             ],
           ),
         ),

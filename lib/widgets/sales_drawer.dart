@@ -1,20 +1,19 @@
-
-import 'package:LedgerPro_app/Services/permission_service.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/About/about_app_screen.dart';
-import 'package:LedgerPro_app/core/About/privacypolicy_screen.dart';
-import 'package:LedgerPro_app/core/About/termsofservice_screen.dart';
-import 'package:LedgerPro_app/core/Contact/Screens/Contact_Screen.dart';
-import 'package:LedgerPro_app/core/Feedback/feedback_screen.dart';
-import 'package:LedgerPro_app/core/ReportIsuue/Report_issue_screen.dart';
-import 'package:LedgerPro_app/core/UserGuide/screen/user_guide_screen.dart';
-import 'package:LedgerPro_app/core/changepassword/screen/change_password_screen.dart';
-import 'package:LedgerPro_app/core/companyprofile/screen/company_profile_screen.dart';
-import 'package:LedgerPro_app/core/login/screen/login_screen.dart';
-import 'package:LedgerPro_app/core/plans/views/Subscription_plans.dart';
-import 'package:LedgerPro_app/core/settings/screens/currency_screen.dart';
-import 'package:LedgerPro_app/core/warehouse/Delievery/deleivery_screen.dart';
+import 'package:BisonsTechs_app/Services/permission_service.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/About/about_app_screen.dart';
+import 'package:BisonsTechs_app/core/About/privacypolicy_screen.dart';
+import 'package:BisonsTechs_app/core/About/termsofservice_screen.dart';
+import 'package:BisonsTechs_app/core/Contact/Screens/Contact_Screen.dart';
+import 'package:BisonsTechs_app/core/Feedback/feedback_screen.dart';
+import 'package:BisonsTechs_app/core/ReportIsuue/Report_issue_screen.dart';
+import 'package:BisonsTechs_app/core/UserGuide/screen/user_guide_screen.dart';
+import 'package:BisonsTechs_app/core/changepassword/screen/change_password_screen.dart';
+import 'package:BisonsTechs_app/core/companyprofile/screen/company_profile_screen.dart';
+import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
+import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
+import 'package:BisonsTechs_app/core/settings/screens/currency_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/Delievery/deleivery_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -53,10 +52,22 @@ class SalesDrawer extends StatelessWidget {
                     'sales-payments',
                   ],
                   items: const [
-                    ('Products', Mdi.package_variant_closed, '/warehouse/products'),
+                    (
+                      'Products',
+                      Mdi.package_variant_closed,
+                      '/warehouse/products',
+                    ),
                     ('Orders', Mdi.shopping, '/sales/orders'),
-                    ('Quotations', Mdi.file_document_outline, '/sales/quotations'),
-                    ('Customers', Mdi.account_group, '/sales/warehouse-customers'),
+                    (
+                      'Quotations',
+                      Mdi.file_document_outline,
+                      '/sales/quotations',
+                    ),
+                    (
+                      'Customers',
+                      Mdi.account_group,
+                      '/sales/warehouse-customers',
+                    ),
                     ('Deliveries', Mdi.truck_delivery, '/sales/delivery'),
                     ('Invoices', Mdi.receipt, '/sales-invoices'),
                     ('Sales Payments', Mdi.arrow_left_right, '/sales-payments'),
@@ -67,10 +78,7 @@ class SalesDrawer extends StatelessWidget {
                   icon: Mdi.undo_variant,
                   currentRoute: currentRoute,
                   module: 'sales',
-                  permissions: const [
-                    'sales-returns',
-                    'refunds',
-                  ],
+                  permissions: const ['sales-returns', 'refunds'],
                   items: const [
                     ('Sales Returns', Mdi.undo_variant, '/sales/returns'),
                     ('Refunds', Mdi.cash_refund, '/sales/refunds'),
@@ -82,9 +90,7 @@ class SalesDrawer extends StatelessWidget {
                   title: 'Settings',
                   icon: Mdi.cog,
                   currentRoute: currentRoute,
-                  items: const [
-                    ('Currency', Mdi.currency_usd, '__currency'),
-                  ],
+                  items: const [('Currency', Mdi.currency_usd, '__currency')],
                 ),
                 _NavSection(
                   title: 'My Account',
@@ -111,9 +117,7 @@ class SalesDrawer extends StatelessWidget {
                   title: 'Feedback',
                   icon: Mdi.feedback,
                   currentRoute: currentRoute,
-                  items: const [
-                    ('Feedback', Mdi.feedback, '__feedback'),
-                  ],
+                  items: const [('Feedback', Mdi.feedback, '__feedback')],
                 ),
                 _NavSection(
                   title: 'Subscription',
@@ -155,9 +159,7 @@ class _DrawerHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(
-        color: kPrimary,
-      ),
+      decoration: BoxDecoration(color: kPrimary),
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 16,
         left: 16,
@@ -176,7 +178,11 @@ class _DrawerHeader extends StatelessWidget {
                 color: Colors.black.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.arrow_back_rounded, size: 16, color: Colors.black87),
+              child: const Icon(
+                Icons.arrow_back_rounded,
+                size: 16,
+                color: Colors.black87,
+              ),
             ),
           ),
           const SizedBox(height: 14),
@@ -190,7 +196,11 @@ class _DrawerHeader extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Center(
-                  child: Icon(Icons.trending_up_rounded, color: Colors.black87, size: 22),
+                  child: Icon(
+                    Icons.trending_up_rounded,
+                    color: Colors.black87,
+                    size: 22,
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -239,14 +249,21 @@ class _DrawerHeader extends StatelessWidget {
                 ),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.green.shade600,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Text(
                     'Premium',
-                    style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],
@@ -318,7 +335,7 @@ class _NavSectionState extends State<_NavSection> {
     for (int i = 0; i < widget.items.length; i++) {
       final item = widget.items[i];
       final permission = widget.permissions![i];
-      
+
       if (_permissionService.hasSubPageAccess(widget.module!, permission)) {
         filtered.add(item);
       }
@@ -349,20 +366,28 @@ class _NavSectionState extends State<_NavSection> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
               children: [
-                Iconify(widget.icon, size: 18, color: _hasActiveChild ? kPrimary : Colors.grey.shade500),
+                Iconify(
+                  widget.icon,
+                  size: 18,
+                  color: _hasActiveChild ? kPrimary : Colors.grey.shade500,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     widget.title,
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: _hasActiveChild ? FontWeight.w700 : FontWeight.w600,
+                      fontWeight: _hasActiveChild
+                          ? FontWeight.w700
+                          : FontWeight.w600,
                       color: _hasActiveChild ? Colors.black : Colors.black87,
                     ),
                   ),
                 ),
                 Icon(
-                  _expanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                  _expanded
+                      ? Icons.keyboard_arrow_up_rounded
+                      : Icons.keyboard_arrow_down_rounded,
                   size: 18,
                   color: Colors.grey.shade400,
                 ),
@@ -373,7 +398,9 @@ class _NavSectionState extends State<_NavSection> {
         // Items
         AnimatedCrossFade(
           duration: const Duration(milliseconds: 200),
-          crossFadeState: _expanded ? CrossFadeState.showFirst : CrossFadeState.showSecond,
+          crossFadeState: _expanded
+              ? CrossFadeState.showFirst
+              : CrossFadeState.showSecond,
           firstChild: Column(
             children: _filteredItems.map((item) {
               final isActive = _isActive(item.$3);
@@ -397,71 +424,70 @@ class _NavSectionState extends State<_NavSection> {
   void _navigate(String routeKey, String label) {
     switch (routeKey) {
       case '/warehouse/products':
-        Get.toNamed('/warehouse/products'); 
+        Get.toNamed('/warehouse/products');
         break;
       case '/sales/orders':
-        Get.toNamed('/sales/orders'); 
+        Get.toNamed('/sales/orders');
         break;
       case '/sales/quotations':
-        Get.toNamed('/sales/quotations'); 
+        Get.toNamed('/sales/quotations');
         break;
       case '/sales/warehouse-customers':
-        Get.toNamed('/sales/warehouse-customers'); 
+        Get.toNamed('/sales/warehouse-customers');
         break;
       case '/sales/delivery':
-        Get.to(() => const DeliveryScreen()); 
+        Get.to(() => const DeliveryScreen());
         break;
       case '/sales-invoices':
-        Get.toNamed('/sales-invoices'); 
+        Get.toNamed('/sales-invoices');
         break;
       case '/sales-payments':
-        Get.toNamed('/sales-payments'); 
+        Get.toNamed('/sales-payments');
         break;
       case '/sales/returns':
-        Get.toNamed('/sales/returns'); 
+        Get.toNamed('/sales/returns');
         break;
       case '/sales/refunds':
-        Get.toNamed('/sales/refunds'); 
+        Get.toNamed('/sales/refunds');
         break;
       case '__currency':
-        Get.to(() => const CurrencyScreen()); 
+        Get.to(() => const CurrencyScreen());
         break;
       case '__profile':
-        Get.to(() => const ProfileScreen()); 
+        Get.to(() => const ProfileScreen());
         break;
       case '__changepassword':
-        Get.to(() => const ChangePasswordScreen()); 
+        Get.to(() => const ChangePasswordScreen());
         break;
       case '__userguide':
-        Get.to(() => const UserGuideScreen()); 
+        Get.to(() => const UserGuideScreen());
         break;
       case '__contact':
-        Get.to(() => const ContactScreen()); 
+        Get.to(() => const ContactScreen());
         break;
       case '__reportissue':
-        Get.to(() => const ReportIssueScreen()); 
+        Get.to(() => const ReportIssueScreen());
         break;
       case '__feedback':
-        Get.to(() => const FeedbackScreen()); 
+        Get.to(() => const FeedbackScreen());
         break;
       case '__subscription':
-        Get.to(() => const SelectPlanScreen()); 
+        Get.to(() => const SelectPlanScreen());
         break;
       case '__about':
-        Get.to(() => const AboutAppScreen()); 
+        Get.to(() => const AboutAppScreen());
         break;
       case '__terms':
-        Get.to(() => const TermsOfServiceScreen()); 
+        Get.to(() => const TermsOfServiceScreen());
         break;
       case '__privacy':
-        Get.to(() => const PrivacyPolicyScreen()); 
+        Get.to(() => const PrivacyPolicyScreen());
         break;
       default:
         Get.snackbar('Coming Soon', '$label coming soon');
     }
   }
 }
-
 
 class _NavItem extends StatelessWidget {
   final String label;
@@ -499,7 +525,11 @@ class _NavItem extends StatelessWidget {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            Iconify(icon, size: 16, color: isActive ? kPrimary : Colors.grey.shade500),
+            Iconify(
+              icon,
+              size: 16,
+              color: isActive ? kPrimary : Colors.grey.shade500,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -552,7 +582,11 @@ class _BackToDashboard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(Icons.arrow_back_rounded, size: 16, color: Colors.grey.shade500),
+              Icon(
+                Icons.arrow_back_rounded,
+                size: 16,
+                color: Colors.grey.shade500,
+              ),
               const SizedBox(width: 10),
               Text(
                 'Back to Dashboard',
@@ -600,7 +634,14 @@ class _DrawerFooter extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Center(
-                    child: Text('U', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14)),
+                    child: Text(
+                      'U',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -610,18 +651,28 @@ class _DrawerFooter extends StatelessWidget {
                     children: [
                       const Text(
                         'User',
-                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Colors.black87),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                          color: Colors.black87,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
                         'Premium Account',
-                        style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.grey.shade500,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.green.withOpacity(0.10),
                     borderRadius: BorderRadius.circular(20),
@@ -629,9 +680,23 @@ class _DrawerFooter extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(width: 5, height: 5, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
+                      Container(
+                        width: 5,
+                        height: 5,
+                        decoration: const BoxDecoration(
+                          color: Colors.green,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
                       const SizedBox(width: 4),
-                      const Text('Active', style: TextStyle(fontSize: 9, color: Colors.green, fontWeight: FontWeight.w700)),
+                      const Text(
+                        'Active',
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: Colors.green,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -657,7 +722,11 @@ class _DrawerFooter extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     'Sign Out',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.red.shade400),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.red.shade400,
+                    ),
                   ),
                 ],
               ),
@@ -685,10 +754,21 @@ class _DrawerFooter extends StatelessWidget {
                   color: Colors.red.withOpacity(0.08),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.logout_rounded, color: Colors.red, size: 26),
+                child: const Icon(
+                  Icons.logout_rounded,
+                  color: Colors.red,
+                  size: 26,
+                ),
               ),
               const SizedBox(height: 14),
-              const Text('Sign Out', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Colors.black87)),
+              const Text(
+                'Sign Out',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black87,
+                ),
+              ),
               const SizedBox(height: 6),
               Text(
                 'Are you sure you want to sign out?',
@@ -704,10 +784,18 @@ class _DrawerFooter extends StatelessWidget {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.grey.shade700,
                         side: BorderSide(color: Colors.grey.shade200),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
-                      child: const Text('Cancel', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -718,10 +806,18 @@ class _DrawerFooter extends StatelessWidget {
                         backgroundColor: Colors.red,
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
-                      child: const Text('Sign Out', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                      child: const Text(
+                        'Sign Out',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                 ],

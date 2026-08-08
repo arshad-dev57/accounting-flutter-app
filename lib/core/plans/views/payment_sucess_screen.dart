@@ -1,6 +1,6 @@
-import 'package:LedgerPro_app/core/dashboard/Screens/dashbaord_screen.dart';
-import 'package:LedgerPro_app/core/plans/controllers/subscription_controller.dart';
-import 'package:LedgerPro_app/core/plans/views/Subscription_plans.dart';
+import 'package:BisonsTechs_app/core/dashboard/Screens/dashbaord_screen.dart';
+import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
+import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -19,10 +19,9 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen> {
   }
 
   Future<void> _handleSuccess() async {
- 
     await Future.delayed(const Duration(seconds: 2));
     if (mounted) {
-      Get.offAll(() => const DashboardScreen ());
+      Get.offAll(() => const DashboardScreen());
     }
   }
 

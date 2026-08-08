@@ -1,13 +1,10 @@
-// core/loanBorrowing/controller/loan_controller.dart
-// COMPLETE CONTROLLER WITH ALL DIALOGS - NO WEB
-
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'dart:convert';
 import 'dart:io';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/config/apiconfig.dart';
-import 'package:LedgerPro_app/core/loanBorrowing/models/loan_model.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/config/apiconfig.dart';
+import 'package:BisonsTechs_app/core/loanBorrowing/models/loan_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -23,7 +20,7 @@ class LoanController extends GetxController {
   var allLoans = <Loan>[].obs;
   var loans = <Loan>[].obs;
   var bankAccounts = <Map<String, dynamic>>[].obs;
-  
+
   var isLoading = true.obs;
   var isLoadingMore = false.obs;
   var isProcessing = false.obs;
@@ -38,8 +35,14 @@ class LoanController extends GetxController {
   var hasPrevPage = false.obs;
   var itemsPerPage = 20.obs;
   var serverSupportsPagination = false.obs;
-
-  final List<String> filterOptions = ['All', 'Active', 'Fully Paid', 'Overdue', 'Defaulted'];
+  var loanSaved = false.obs;
+  final List<String> filterOptions = [
+    'All',
+    'Active',
+    'Fully Paid',
+    'Overdue',
+    'Defaulted',
+  ];
 
   var totalLoans = 0.obs;
   var totalPrincipal = 0.0.obs;
@@ -118,14 +121,18 @@ class LoanController extends GetxController {
       }
 
       final headers = await _getHeaders();
-      final uri = Uri.parse('$baseUrl/api/loans').replace(queryParameters: params);
+      final uri = Uri.parse(
+        '$baseUrl/api/loans',
+      ).replace(queryParameters: params);
       final response = await http.get(uri, headers: headers);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
         if (responseData['success'] == true) {
           List<dynamic> loansData = responseData['data'];
-          final newLoans = loansData.map((json) => Loan.fromJson(json)).toList();
+          final newLoans = loansData
+              .map((json) => Loan.fromJson(json))
+              .toList();
 
           if (resetPage) {
             allLoans.value = newLoans;
@@ -138,10 +145,20 @@ class LoanController extends GetxController {
           // Parse pagination info
           if (responseData['pagination'] != null) {
             final pagination = responseData['pagination'];
-            totalPages.value = pagination['pages'] ?? pagination['totalPages'] ?? 1;
-            totalItems.value = pagination['total'] ?? pagination['totalItems'] ?? newLoans.length;
-            hasNextPage.value = pagination['hasNext'] ?? pagination['nextPage'] != null ?? false;
-            hasPrevPage.value = pagination['hasPrev'] ?? pagination['prevPage'] != null ?? false;
+            totalPages.value =
+                pagination['pages'] ?? pagination['totalPages'] ?? 1;
+            totalItems.value =
+                pagination['total'] ??
+                pagination['totalItems'] ??
+                newLoans.length;
+            hasNextPage.value =
+                pagination['hasNext'] ??
+                pagination['nextPage'] != null ??
+                false;
+            hasPrevPage.value =
+                pagination['hasPrev'] ??
+                pagination['prevPage'] != null ??
+                false;
             serverSupportsPagination.value = true;
           } else if (responseData['total'] != null) {
             totalPages.value = responseData['pages'] ?? 1;
@@ -152,13 +169,15 @@ class LoanController extends GetxController {
           } else if (responseData['totalCount'] != null) {
             totalItems.value = responseData['totalCount'];
             totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
-            hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+            hasNextPage.value =
+                (currentPage.value * itemsPerPage.value) < totalItems.value;
             hasPrevPage.value = currentPage.value > 1;
             serverSupportsPagination.value = false;
           } else {
             totalItems.value = loans.length;
             totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
-            hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+            hasNextPage.value =
+                (currentPage.value * itemsPerPage.value) < totalItems.value;
             hasPrevPage.value = currentPage.value > 1;
             serverSupportsPagination.value = false;
           }
@@ -180,7 +199,6 @@ class LoanController extends GetxController {
     }
   }
 
-  // ─── LOAD MORE DATA (LAZY LOADING) ──────────────────────────────
   Future<void> loadMoreData() async {
     if (hasNextPage.value && !isLoadingMore.value && !isLoading.value) {
       currentPage.value++;
@@ -200,7 +218,9 @@ class LoanController extends GetxController {
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
         if (responseData['success'] == true) {
-          bankAccounts.value = List<Map<String, dynamic>>.from(responseData['data']);
+          bankAccounts.value = List<Map<String, dynamic>>.from(
+            responseData['data'],
+          );
         }
       }
     } catch (e) {
@@ -235,8 +255,14 @@ class LoanController extends GetxController {
 
   void _updateSummaryForFiltered(List<Loan> filteredLoans) {
     totalLoans.value = filteredLoans.length;
-    totalPrincipal.value = filteredLoans.fold(0.0, (sum, l) => sum + l.loanAmount);
-    totalOutstanding.value = filteredLoans.fold(0.0, (sum, l) => sum + l.outstandingBalance);
+    totalPrincipal.value = filteredLoans.fold(
+      0.0,
+      (sum, l) => sum + l.loanAmount,
+    );
+    totalOutstanding.value = filteredLoans.fold(
+      0.0,
+      (sum, l) => sum + l.outstandingBalance,
+    );
     totalPaid.value = filteredLoans.fold(0.0, (sum, l) => sum + l.totalPaid);
     totalEMI.value = filteredLoans.fold(0.0, (sum, l) => sum + l.emiAmount);
   }
@@ -253,7 +279,6 @@ class LoanController extends GetxController {
     loadLoans(resetPage: true);
   }
 
-  // ─── CREATE LOAN ──────────────────────────────────────────────
   Future<void> createLoan({
     required String loanType,
     required String lenderName,
@@ -263,11 +288,9 @@ class LoanController extends GetxController {
     required int tenureMonths,
     required String purpose,
     required String collateral,
-    required String accountNumber,
     String? bankAccountId,
     String? notes,
   }) async {
-    // Show loading dialog
     Get.dialog(
       Center(
         child: Card(
@@ -276,7 +299,7 @@ class LoanController extends GetxController {
             borderRadius: BorderRadius.circular(12),
           ),
           child: Padding(
-            padding: EdgeInsets.all(24.0),
+            padding: const EdgeInsets.all(24.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -288,7 +311,7 @@ class LoanController extends GetxController {
                     color: kPrimary,
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
                   'Creating loan...',
                   style: TextStyle(
@@ -297,7 +320,7 @@ class LoanController extends GetxController {
                     color: kText,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   'Please wait',
                   style: TextStyle(fontSize: 12, color: kSubText),
@@ -322,11 +345,12 @@ class LoanController extends GetxController {
         'tenureMonths': tenureMonths,
         'purpose': purpose,
         'collateral': collateral,
-        'accountNumber': accountNumber,
         'notes': notes ?? '',
       };
 
-      if (bankAccountId != null && bankAccountId.isNotEmpty && bankAccountId != 'null') {
+      if (bankAccountId != null &&
+          bankAccountId.isNotEmpty &&
+          bankAccountId != 'null') {
         loanData['bankAccountId'] = bankAccountId;
       }
 
@@ -338,18 +362,20 @@ class LoanController extends GetxController {
       );
 
       // Close loading dialog
-      Get.back();
+      if (Get.isDialogOpen ?? false) Get.back();
 
       if (response.statusCode == 201) {
         final Map<String, dynamic> responseData = json.decode(response.body);
         if (responseData['success'] == true) {
+          await loadLoans(resetPage: true);
+          await loadSummary();
+          await loadBankAccounts(); // refresh bank balance after disbursement
+          loanSaved.value = true; // ✅ signal
           AppSnackbar.success(
             kSuccess,
             'Success ✅',
             'Loan created successfully',
           );
-          await loadLoans(resetPage: true);
-          await loadSummary();
         } else {
           _showError(responseData['message'] ?? 'Failed to create loan');
         }
@@ -421,6 +447,12 @@ class LoanController extends GetxController {
     try {
       isProcessing.value = true;
 
+      if (loanId.trim().isEmpty) {
+        if (Get.isDialogOpen ?? false) Get.back();
+        _showError('Loan ID is missing. Please refresh and try again.');
+        return;
+      }
+
       final Map<String, dynamic> paymentData = {
         'loanId': loanId,
         'amount': amount,
@@ -451,6 +483,7 @@ class LoanController extends GetxController {
           );
           await loadLoans(resetPage: true);
           await loadSummary();
+          await loadBankAccounts(); // refresh bank balance after EMI payment
         } else {
           _showError(responseData['message'] ?? 'Failed to record payment');
         }
@@ -480,7 +513,10 @@ class LoanController extends GetxController {
       final calcResponse = await http.post(
         Uri.parse('$baseUrl/api/loans/prepayment/calculate'),
         headers: await _getHeaders(),
-        body: json.encode({'loanId': loanId, 'prepaymentAmount': prepaymentAmount}),
+        body: json.encode({
+          'loanId': loanId,
+          'prepaymentAmount': prepaymentAmount,
+        }),
       );
 
       if (calcResponse.statusCode != 200) {
@@ -493,22 +529,43 @@ class LoanController extends GetxController {
 
       final confirmed = await Get.dialog<bool>(
         AlertDialog(
-          title: Text('Prepayment Confirmation', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+          title: Text(
+            'Prepayment Confirmation',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Prepayment Amount: ${formatAmount(prepaymentAmount)}', style: TextStyle(fontSize: 13)),
+              Text(
+                'Prepayment Amount: ${formatAmount(prepaymentAmount)}',
+                style: TextStyle(fontSize: 13),
+              ),
               SizedBox(height: 8),
-              Text('Interest Saved: ${formatAmount(prepaymentInfo['interestSaved'])}', style: TextStyle(fontSize: 13, color: kSuccess)),
+              Text(
+                'Interest Saved: ${formatAmount(prepaymentInfo['interestSaved'])}',
+                style: TextStyle(fontSize: 13, color: kSuccess),
+              ),
               SizedBox(height: 8),
-              Text('Prepayment Penalty: ${formatAmount(prepaymentInfo['prepaymentPenalty'])}', style: TextStyle(fontSize: 13, color: kWarning)),
+              Text(
+                'Prepayment Penalty: ${formatAmount(prepaymentInfo['prepaymentPenalty'])}',
+                style: TextStyle(fontSize: 13, color: kWarning),
+              ),
               SizedBox(height: 8),
               Divider(),
-              Text('Net Saving: ${formatAmount(prepaymentInfo['netSaving'])}',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: prepaymentInfo['netSaving'] > 0 ? kSuccess : kDanger)),
+              Text(
+                'Net Saving: ${formatAmount(prepaymentInfo['netSaving'])}',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: prepaymentInfo['netSaving'] > 0 ? kSuccess : kDanger,
+                ),
+              ),
               SizedBox(height: 16),
-              Text('Do you want to proceed with prepayment?', style: TextStyle(fontSize: 13)),
+              Text(
+                'Do you want to proceed with prepayment?',
+                style: TextStyle(fontSize: 13),
+              ),
             ],
           ),
           actions: [
@@ -552,6 +609,7 @@ class LoanController extends GetxController {
           );
           await loadLoans(resetPage: true);
           await loadSummary();
+          await loadBankAccounts();
         } else {
           _showError(responseData['message'] ?? 'Failed to process prepayment');
         }
@@ -683,10 +741,7 @@ class LoanController extends GetxController {
             ),
             Text(
               subtitle,
-              style: TextStyle(
-                fontSize: 10,
-                color: color.withOpacity(0.7),
-              ),
+              style: TextStyle(fontSize: 10, color: color.withOpacity(0.7)),
             ),
           ],
         ),
@@ -720,10 +775,7 @@ class LoanController extends GetxController {
                   SizedBox(height: 16),
                   Text(
                     'Generating PDF...',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                   SizedBox(height: 4),
                   Text(
@@ -755,7 +807,8 @@ class LoanController extends GetxController {
       );
 
       final dir = await getTemporaryDirectory();
-      final fileName = 'loans_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+      final fileName =
+          'loans_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
       final file = File('${dir.path}/$fileName');
       await file.writeAsBytes(await pdf.save());
 
@@ -787,7 +840,8 @@ class LoanController extends GetxController {
           pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text('Loans Report',
+              pw.Text(
+                'Loans Report',
                 style: pw.TextStyle(
                   fontSize: 18,
                   fontWeight: pw.FontWeight.bold,
@@ -806,7 +860,8 @@ class LoanController extends GetxController {
               color: PdfColors.indigo800,
               borderRadius: pw.BorderRadius.circular(6),
             ),
-            child: pw.Text('LedgerPro',
+            child: pw.Text(
+              'BisonsTechs',
               style: pw.TextStyle(
                 color: PdfColors.white,
                 fontWeight: pw.FontWeight.bold,
@@ -830,10 +885,12 @@ class LoanController extends GetxController {
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
-          pw.Text('Confidential - For Internal Use Only',
+          pw.Text(
+            'Confidential - For Internal Use Only',
             style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
           ),
-          pw.Text('Page ${ctx.pageNumber} of ${ctx.pagesCount}',
+          pw.Text(
+            'Page ${ctx.pageNumber} of ${ctx.pagesCount}',
             style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
           ),
         ],
@@ -852,11 +909,31 @@ class LoanController extends GetxController {
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
         children: [
-          _pdfSummaryItem('Total Loans', totalLoans.value.toString(), PdfColors.indigo700),
-          _pdfSummaryItem('Total Principal', formatAmount(totalPrincipal.value), PdfColors.indigo700),
-          _pdfSummaryItem('Total Paid', formatAmount(totalPaid.value), PdfColors.green700),
-          _pdfSummaryItem('Total Outstanding', formatAmount(totalOutstanding.value), PdfColors.red700),
-          _pdfSummaryItem('Total EMI', formatAmount(totalEMI.value), PdfColors.orange700),
+          _pdfSummaryItem(
+            'Total Loans',
+            totalLoans.value.toString(),
+            PdfColors.indigo700,
+          ),
+          _pdfSummaryItem(
+            'Total Principal',
+            formatAmount(totalPrincipal.value),
+            PdfColors.indigo700,
+          ),
+          _pdfSummaryItem(
+            'Total Paid',
+            formatAmount(totalPaid.value),
+            PdfColors.green700,
+          ),
+          _pdfSummaryItem(
+            'Total Outstanding',
+            formatAmount(totalOutstanding.value),
+            PdfColors.red700,
+          ),
+          _pdfSummaryItem(
+            'Total EMI',
+            formatAmount(totalEMI.value),
+            PdfColors.orange700,
+          ),
           _pdfSummaryItem('Filter', selectedFilter.value, PdfColors.grey700),
         ],
       ),
@@ -864,22 +941,31 @@ class LoanController extends GetxController {
   }
 
   pw.Widget _pdfSummaryItem(String label, String value, PdfColor color) {
-    return pw.Column(children: [
-      pw.Text(label, style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
-      pw.SizedBox(height: 4),
-      pw.Text(value, style: pw.TextStyle(
-        fontSize: 11,
-        fontWeight: pw.FontWeight.bold,
-        color: color,
-      )),
-    ]);
+    return pw.Column(
+      children: [
+        pw.Text(
+          label,
+          style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+        ),
+        pw.SizedBox(height: 4),
+        pw.Text(
+          value,
+          style: pw.TextStyle(
+            fontSize: 11,
+            fontWeight: pw.FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    );
   }
 
   pw.Widget _pdfLoansSection() {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        pw.Text('Loan Details',
+        pw.Text(
+          'Loan Details',
           style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
         ),
         pw.SizedBox(height: 8),
@@ -890,59 +976,230 @@ class LoanController extends GetxController {
               bottom: pw.BorderSide(color: PdfColors.grey300, width: 1),
             ),
           ),
-          child: pw.Row(children: [
-            pw.Expanded(flex: 2, child: pw.Text('Loan #', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-            pw.Expanded(flex: 2, child: pw.Text('Lender', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-            pw.Expanded(flex: 2, child: pw.Text('Type', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-            pw.Expanded(flex: 2, child: pw.Text('Amount', textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-            pw.Expanded(flex: 2, child: pw.Text('EMI', textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-            pw.Expanded(flex: 2, child: pw.Text('Paid', textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-            pw.Expanded(flex: 2, child: pw.Text('Outstanding', textAlign: pw.TextAlign.right, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-            pw.Expanded(flex: 2, child: pw.Text('Status', textAlign: pw.TextAlign.center, style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-          ]),
-        ),
-        ...loans.map((loan) => pw.Container(
-          padding: const pw.EdgeInsets.symmetric(vertical: 6),
-          decoration: const pw.BoxDecoration(
-            border: pw.Border(
-              bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.5),
-            ),
+          child: pw.Row(
+            children: [
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Loan #',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Lender',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Type',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Amount',
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'EMI',
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Paid',
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Outstanding',
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  'Status',
+                  textAlign: pw.TextAlign.center,
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+            ],
           ),
-          child: pw.Row(children: [
-            pw.Expanded(flex: 2, child: pw.Text(loan.loanNumber, style: pw.TextStyle(fontSize: 9))),
-            pw.Expanded(flex: 2, child: pw.Text(loan.lenderName, style: pw.TextStyle(fontSize: 9))),
-            pw.Expanded(flex: 2, child: pw.Text(loan.loanType, style: pw.TextStyle(fontSize: 9))),
-            pw.Expanded(flex: 2, child: pw.Text(formatAmount(loan.loanAmount), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 9, color: PdfColors.indigo700))),
-            pw.Expanded(flex: 2, child: pw.Text(formatAmount(loan.emiAmount), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 9, color: PdfColors.orange700))),
-            pw.Expanded(flex: 2, child: pw.Text(formatAmount(loan.totalPaid), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 9, color: PdfColors.green700))),
-            pw.Expanded(flex: 2, child: pw.Text(formatAmount(loan.outstandingBalance), textAlign: pw.TextAlign.right, style: pw.TextStyle(fontSize: 9, color: loan.outstandingBalance > 0 ? PdfColors.red700 : PdfColors.green700))),
-            pw.Expanded(flex: 2, child: pw.Text(loan.status, textAlign: pw.TextAlign.center,
-              style: pw.TextStyle(fontSize: 9, color: loan.status == 'Active' ? PdfColors.orange700 : (loan.status == 'Fully Paid' ? PdfColors.green700 : PdfColors.red700))),
-            ),
-          ]),
-        )).toList(),
+        ),
+        ...loans
+            .map(
+              (loan) => pw.Container(
+                padding: const pw.EdgeInsets.symmetric(vertical: 6),
+                decoration: const pw.BoxDecoration(
+                  border: pw.Border(
+                    bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.5),
+                  ),
+                ),
+                child: pw.Row(
+                  children: [
+                    pw.Expanded(
+                      flex: 2,
+                      child: pw.Text(
+                        loan.loanNumber,
+                        style: pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                    pw.Expanded(
+                      flex: 2,
+                      child: pw.Text(
+                        loan.lenderName,
+                        style: pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                    pw.Expanded(
+                      flex: 2,
+                      child: pw.Text(
+                        loan.loanType,
+                        style: pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                    pw.Expanded(
+                      flex: 2,
+                      child: pw.Text(
+                        formatAmount(loan.loanAmount),
+                        textAlign: pw.TextAlign.right,
+                        style: pw.TextStyle(
+                          fontSize: 9,
+                          color: PdfColors.indigo700,
+                        ),
+                      ),
+                    ),
+                    pw.Expanded(
+                      flex: 2,
+                      child: pw.Text(
+                        formatAmount(loan.emiAmount),
+                        textAlign: pw.TextAlign.right,
+                        style: pw.TextStyle(
+                          fontSize: 9,
+                          color: PdfColors.orange700,
+                        ),
+                      ),
+                    ),
+                    pw.Expanded(
+                      flex: 2,
+                      child: pw.Text(
+                        formatAmount(loan.totalPaid),
+                        textAlign: pw.TextAlign.right,
+                        style: pw.TextStyle(
+                          fontSize: 9,
+                          color: PdfColors.green700,
+                        ),
+                      ),
+                    ),
+                    pw.Expanded(
+                      flex: 2,
+                      child: pw.Text(
+                        formatAmount(loan.outstandingBalance),
+                        textAlign: pw.TextAlign.right,
+                        style: pw.TextStyle(
+                          fontSize: 9,
+                          color: loan.outstandingBalance > 0
+                              ? PdfColors.red700
+                              : PdfColors.green700,
+                        ),
+                      ),
+                    ),
+                    pw.Expanded(
+                      flex: 2,
+                      child: pw.Text(
+                        loan.status,
+                        textAlign: pw.TextAlign.center,
+                        style: pw.TextStyle(
+                          fontSize: 9,
+                          color: loan.status == 'Active'
+                              ? PdfColors.orange700
+                              : (loan.status == 'Fully Paid'
+                                    ? PdfColors.green700
+                                    : PdfColors.red700),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+            .toList(),
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),
-          child: pw.Row(children: [
-            pw.Expanded(flex: 6, child: pw.Text('Total', style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
-            pw.Expanded(flex: 2, child: pw.Text(formatAmount(loans.fold(0.0, (sum, l) => sum + l.loanAmount)),
-              textAlign: pw.TextAlign.right,
-              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.indigo700),
-            )),
-            pw.Expanded(flex: 2, child: pw.Text(formatAmount(loans.fold(0.0, (sum, l) => sum + l.emiAmount)),
-              textAlign: pw.TextAlign.right,
-              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.orange700),
-            )),
-            pw.Expanded(flex: 2, child: pw.Text(formatAmount(loans.fold(0.0, (sum, l) => sum + l.totalPaid)),
-              textAlign: pw.TextAlign.right,
-              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.green700),
-            )),
-            pw.Expanded(flex: 2, child: pw.Text(formatAmount(loans.fold(0.0, (sum, l) => sum + l.outstandingBalance)),
-              textAlign: pw.TextAlign.right,
-              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.red700),
-            )),
-          ]),
+          child: pw.Row(
+            children: [
+              pw.Expanded(
+                flex: 6,
+                child: pw.Text(
+                  'Total',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  formatAmount(loans.fold(0.0, (sum, l) => sum + l.loanAmount)),
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.indigo700,
+                  ),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  formatAmount(loans.fold(0.0, (sum, l) => sum + l.emiAmount)),
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.orange700,
+                  ),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  formatAmount(loans.fold(0.0, (sum, l) => sum + l.totalPaid)),
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.green700,
+                  ),
+                ),
+              ),
+              pw.Expanded(
+                flex: 2,
+                child: pw.Text(
+                  formatAmount(
+                    loans.fold(0.0, (sum, l) => sum + l.outstandingBalance),
+                  ),
+                  textAlign: pw.TextAlign.right,
+                  style: pw.TextStyle(
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.red700,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -974,10 +1231,7 @@ class LoanController extends GetxController {
                   SizedBox(height: 16),
                   Text(
                     'Building Excel...',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                   SizedBox(height: 4),
                   Text(
@@ -998,13 +1252,34 @@ class LoanController extends GetxController {
       final summarySheet = excelFile['Summary'];
       excelFile.setDefaultSheet('Summary');
 
-      _excelSetCell(summarySheet, 0, 0, 'Loans Report',
-          bold: true, fontSize: 14, bgColor: '1A237E', fontColor: 'FFFFFF');
-      _excelSetCell(summarySheet, 1, 0,
-          'Generated: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now())}',
-          fontSize: 9, fontColor: '757575');
+      _excelSetCell(
+        summarySheet,
+        0,
+        0,
+        'Loans Report',
+        bold: true,
+        fontSize: 14,
+        bgColor: '1A237E',
+        fontColor: 'FFFFFF',
+      );
+      _excelSetCell(
+        summarySheet,
+        1,
+        0,
+        'Generated: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now())}',
+        fontSize: 9,
+        fontColor: '757575',
+      );
 
-      _excelSetCell(summarySheet, 5, 0, 'SUMMARY', bold: true, fontSize: 11, bgColor: 'E8EAF6');
+      _excelSetCell(
+        summarySheet,
+        5,
+        0,
+        'SUMMARY',
+        bold: true,
+        fontSize: 11,
+        bgColor: 'E8EAF6',
+      );
 
       final summaryRows = [
         ['Total Loans', totalLoans.value.toString()],
@@ -1016,8 +1291,13 @@ class LoanController extends GetxController {
 
       for (int r = 0; r < summaryRows.length; r++) {
         for (int c = 0; c < 2; c++) {
-          _excelSetCell(summarySheet, 6 + r, c, summaryRows[r][c],
-              bgColor: r.isEven ? 'FFFFFF' : 'F5F5F5');
+          _excelSetCell(
+            summarySheet,
+            6 + r,
+            c,
+            summaryRows[r][c],
+            bgColor: r.isEven ? 'FFFFFF' : 'F5F5F5',
+          );
         }
       }
       summarySheet.setColumnWidth(0, 25);
@@ -1026,14 +1306,33 @@ class LoanController extends GetxController {
       // Loans Sheet
       final loansSheet = excelFile['Loans'];
       final headers = [
-        'Loan #', 'Lender', 'Loan Type', 'Amount', 'Disbursement Date',
-        'Interest Rate (%)', 'Tenure (Months)', 'EMI Amount', 'Total Paid',
-        'Outstanding Balance', 'Purpose', 'Collateral', 'Account Number', 'Status', 'Notes'
+        'Loan #',
+        'Lender',
+        'Loan Type',
+        'Amount',
+        'Disbursement Date',
+        'Interest Rate (%)',
+        'Tenure (Months)',
+        'EMI Amount',
+        'Total Paid',
+        'Outstanding Balance',
+        'Purpose',
+        'Collateral',
+        'Status',
+        'Notes',
       ];
 
       for (int i = 0; i < headers.length; i++) {
-        _excelSetCell(loansSheet, 0, i, headers[i],
-            bold: true, bgColor: '1A237E', fontColor: 'FFFFFF', fontSize: 10);
+        _excelSetCell(
+          loansSheet,
+          0,
+          i,
+          headers[i],
+          bold: true,
+          bgColor: '1A237E',
+          fontColor: 'FFFFFF',
+          fontSize: 10,
+        );
       }
 
       int row = 1;
@@ -1042,33 +1341,123 @@ class LoanController extends GetxController {
         _excelSetCell(loansSheet, row, 0, loan.loanNumber, bgColor: bg);
         _excelSetCell(loansSheet, row, 1, loan.lenderName, bgColor: bg);
         _excelSetCell(loansSheet, row, 2, loan.loanType, bgColor: bg);
-        _excelSetCell(loansSheet, row, 3, loan.loanAmount, bgColor: bg, fontColor: '1A237E');
-        _excelSetCell(loansSheet, row, 4, DateFormat('dd MMM yyyy').format(loan.disbursementDate), bgColor: bg);
+        _excelSetCell(
+          loansSheet,
+          row,
+          3,
+          loan.loanAmount,
+          bgColor: bg,
+          fontColor: '1A237E',
+        );
+        _excelSetCell(
+          loansSheet,
+          row,
+          4,
+          DateFormat('dd MMM yyyy').format(loan.disbursementDate),
+          bgColor: bg,
+        );
         _excelSetCell(loansSheet, row, 5, loan.interestRate, bgColor: bg);
         _excelSetCell(loansSheet, row, 6, loan.tenureMonths, bgColor: bg);
-        _excelSetCell(loansSheet, row, 7, loan.emiAmount, bgColor: bg, fontColor: 'F39C12');
-        _excelSetCell(loansSheet, row, 8, loan.totalPaid, bgColor: bg, fontColor: '2E7D32');
-        _excelSetCell(loansSheet, row, 9, loan.outstandingBalance, bgColor: bg, fontColor: loan.outstandingBalance > 0 ? 'C62828' : '2E7D32');
+        _excelSetCell(
+          loansSheet,
+          row,
+          7,
+          loan.emiAmount,
+          bgColor: bg,
+          fontColor: 'F39C12',
+        );
+        _excelSetCell(
+          loansSheet,
+          row,
+          8,
+          loan.totalPaid,
+          bgColor: bg,
+          fontColor: '2E7D32',
+        );
+        _excelSetCell(
+          loansSheet,
+          row,
+          9,
+          loan.outstandingBalance,
+          bgColor: bg,
+          fontColor: loan.outstandingBalance > 0 ? 'C62828' : '2E7D32',
+        );
         _excelSetCell(loansSheet, row, 10, loan.purpose, bgColor: bg);
-        _excelSetCell(loansSheet, row, 11, loan.collateral.isEmpty ? '-' : loan.collateral, bgColor: bg);
-        _excelSetCell(loansSheet, row, 12, loan.accountNumber, bgColor: bg);
-        _excelSetCell(loansSheet, row, 13, loan.status,
-            bgColor: loan.status == 'Active' ? 'FFF8E1' : (loan.status == 'Fully Paid' ? 'E8F5E9' : 'FFEBEE'),
-            fontColor: loan.status == 'Active' ? 'F39C12' : (loan.status == 'Fully Paid' ? '2E7D32' : 'C62828'));
-        _excelSetCell(loansSheet, row, 14, loan.notes.isEmpty ? '-' : loan.notes, bgColor: bg);
+        _excelSetCell(
+          loansSheet,
+          row,
+          11,
+          loan.collateral.isEmpty ? '-' : loan.collateral,
+          bgColor: bg,
+        );
+        _excelSetCell(
+          loansSheet,
+          row,
+          12,
+          loan.status,
+          bgColor: loan.status == 'Active'
+              ? 'FFF8E1'
+              : (loan.status == 'Fully Paid' ? 'E8F5E9' : 'FFEBEE'),
+          fontColor: loan.status == 'Active'
+              ? 'F39C12'
+              : (loan.status == 'Fully Paid' ? '2E7D32' : 'C62828'),
+        );
+        _excelSetCell(
+          loansSheet,
+          row,
+          13,
+          loan.notes.isEmpty ? '-' : loan.notes,
+          bgColor: bg,
+        );
         row++;
       }
 
       // Totals row
       _excelSetCell(loansSheet, row, 3, 'TOTAL', bold: true, bgColor: 'E8EAF6');
-      _excelSetCell(loansSheet, row, 7, loans.fold(0.0, (sum, l) => sum + l.emiAmount),
-          bold: true, bgColor: 'E8EAF6', fontColor: 'F39C12');
-      _excelSetCell(loansSheet, row, 8, loans.fold(0.0, (sum, l) => sum + l.totalPaid),
-          bold: true, bgColor: 'E8EAF6', fontColor: '2E7D32');
-      _excelSetCell(loansSheet, row, 9, loans.fold(0.0, (sum, l) => sum + l.outstandingBalance),
-          bold: true, bgColor: 'E8EAF6', fontColor: 'C62828');
+      _excelSetCell(
+        loansSheet,
+        row,
+        7,
+        loans.fold(0.0, (sum, l) => sum + l.emiAmount),
+        bold: true,
+        bgColor: 'E8EAF6',
+        fontColor: 'F39C12',
+      );
+      _excelSetCell(
+        loansSheet,
+        row,
+        8,
+        loans.fold(0.0, (sum, l) => sum + l.totalPaid),
+        bold: true,
+        bgColor: 'E8EAF6',
+        fontColor: '2E7D32',
+      );
+      _excelSetCell(
+        loansSheet,
+        row,
+        9,
+        loans.fold(0.0, (sum, l) => sum + l.outstandingBalance),
+        bold: true,
+        bgColor: 'E8EAF6',
+        fontColor: 'C62828',
+      );
 
-      final colWidths = [15.0, 25.0, 15.0, 15.0, 12.0, 12.0, 12.0, 15.0, 15.0, 15.0, 25.0, 20.0, 18.0, 12.0, 30.0];
+      final colWidths = [
+        15.0,
+        25.0,
+        15.0,
+        15.0,
+        12.0,
+        12.0,
+        12.0,
+        15.0,
+        15.0,
+        15.0,
+        25.0,
+        20.0,
+        12.0,
+        30.0,
+      ];
       for (int i = 0; i < colWidths.length; i++) {
         loansSheet.setColumnWidth(i, colWidths[i]);
       }
@@ -1079,7 +1468,8 @@ class LoanController extends GetxController {
       if (bytes == null) throw Exception('Excel save failed');
 
       final dir = await getTemporaryDirectory();
-      final fileName = 'loans_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
+      final fileName =
+          'loans_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
       final file = File('${dir.path}/$fileName');
       await file.writeAsBytes(bytes);
 
@@ -1206,7 +1596,9 @@ class LoanController extends GetxController {
                         ),
                         IconButton(
                           icon: const Icon(Icons.close, size: 20),
-                          onPressed: isProcessing.value ? null : () => Get.back(),
+                          onPressed: isProcessing.value
+                              ? null
+                              : () => Get.back(),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                         ),
@@ -1225,8 +1617,10 @@ class LoanController extends GetxController {
                               label: 'Loan Amount *',
                               hint: 'Enter loan amount',
                               prefixText: CurrencyUtils.prefix,
-                              onChanged: (v) => loanAmount = double.tryParse(v) ?? 0,
-                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                              onChanged: (v) =>
+                                  loanAmount = double.tryParse(v) ?? 0,
+                              validator: (v) =>
+                                  v?.isEmpty == true ? 'Required' : null,
                               keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 16),
@@ -1234,8 +1628,10 @@ class LoanController extends GetxController {
                             _buildTextField(
                               label: 'Interest Rate (%) *',
                               hint: 'Enter annual interest rate',
-                              onChanged: (v) => interestRate = double.tryParse(v) ?? 0,
-                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                              onChanged: (v) =>
+                                  interestRate = double.tryParse(v) ?? 0,
+                              validator: (v) =>
+                                  v?.isEmpty == true ? 'Required' : null,
                               keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 16),
@@ -1243,8 +1639,10 @@ class LoanController extends GetxController {
                             _buildTextField(
                               label: 'Tenure (months) *',
                               hint: 'Enter loan tenure in months',
-                              onChanged: (v) => tenureMonths = int.tryParse(v) ?? 12,
-                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                              onChanged: (v) =>
+                                  tenureMonths = int.tryParse(v) ?? 12,
+                              validator: (v) =>
+                                  v?.isEmpty == true ? 'Required' : null,
                               keyboardType: TextInputType.number,
                             ),
                           ],
@@ -1264,106 +1662,119 @@ class LoanController extends GetxController {
                         ),
                       ],
                     ),
-                    child: Obx(() => ElevatedButton(
-                      onPressed: isProcessing.value
-                          ? null
-                          : () async {
-                              if (formKey.currentState!.validate()) {
-                                isProcessing.value = true;
-                                try {
-                                  final headers = await _getHeaders();
-                                  final response = await http.post(
-                                    Uri.parse('$baseUrl/api/loans/calculate-emi'),
-                                    headers: headers,
-                                    body: json.encode({
-                                      'loanAmount': loanAmount,
-                                      'interestRate': interestRate,
-                                      'tenureMonths': tenureMonths,
-                                    }),
-                                  );
+                    child: Obx(
+                      () => ElevatedButton(
+                        onPressed: isProcessing.value
+                            ? null
+                            : () async {
+                                if (formKey.currentState!.validate()) {
+                                  isProcessing.value = true;
+                                  try {
+                                    final headers = await _getHeaders();
+                                    final response = await http.post(
+                                      Uri.parse(
+                                        '$baseUrl/api/loans/calculate-emi',
+                                      ),
+                                      headers: headers,
+                                      body: json.encode({
+                                        'loanAmount': loanAmount,
+                                        'interestRate': interestRate,
+                                        'tenureMonths': tenureMonths,
+                                      }),
+                                    );
 
-                                  if (response.statusCode == 200) {
-                                    final data = json.decode(response.body);
-                                    if (data['success']) {
-                                      final result = data['data'];
-                                      Get.back();
-                                      Get.dialog(
-                                        AlertDialog(
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(16),
-                                          ),
-                                          title: Text(
-                                            'EMI Calculation Result',
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.w800,
-                                              color: kText,
+                                    if (response.statusCode == 200) {
+                                      final data = json.decode(response.body);
+                                      if (data['success']) {
+                                        final result = data['data'];
+                                        Get.back();
+                                        Get.dialog(
+                                          AlertDialog(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
                                             ),
-                                          ),
-                                          content: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              _buildCalcRow(
-                                                'Monthly EMI',
-                                                formatAmount(result['emi']),
-                                                kPrimary,
+                                            title: Text(
+                                              'EMI Calculation Result',
+                                              style: TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w800,
+                                                color: kText,
                                               ),
-                                              const SizedBox(height: 8),
-                                              _buildCalcRow(
-                                                'Total Payment',
-                                                formatAmount(result['totalPayment']),
-                                                kText,
-                                              ),
-                                              const SizedBox(height: 8),
-                                              _buildCalcRow(
-                                                'Total Interest',
-                                                formatAmount(result['totalInterest']),
-                                                kWarning,
+                                            ),
+                                            content: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                _buildCalcRow(
+                                                  'Monthly EMI',
+                                                  formatAmount(result['emi']),
+                                                  kPrimary,
+                                                ),
+                                                const SizedBox(height: 8),
+                                                _buildCalcRow(
+                                                  'Total Payment',
+                                                  formatAmount(
+                                                    result['totalPayment'],
+                                                  ),
+                                                  kText,
+                                                ),
+                                                const SizedBox(height: 8),
+                                                _buildCalcRow(
+                                                  'Total Interest',
+                                                  formatAmount(
+                                                    result['totalInterest'],
+                                                  ),
+                                                  kWarning,
+                                                ),
+                                              ],
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Get.back(),
+                                                child: const Text('Close'),
                                               ),
                                             ],
                                           ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () => Get.back(),
-                                              child: const Text('Close'),
-                                            ),
-                                          ],
-                                        ),
-                                      );
+                                        );
+                                      }
                                     }
+                                  } finally {
+                                    isProcessing.value = false;
                                   }
-                                } finally {
-                                  isProcessing.value = false;
                                 }
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kPrimary,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kPrimary,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
+                        child: isProcessing.value
+                            ? SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor:
+                                      const AlwaysStoppedAnimation<Color>(
+                                        Colors.black,
+                                      ),
+                                ),
+                              )
+                            : const Text(
+                                'Calculate EMI',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.black,
+                                ),
+                              ),
                       ),
-                      child: isProcessing.value
-                          ? SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: const AlwaysStoppedAnimation<Color>(Colors.black),
-                              ),
-                            )
-                          : const Text(
-                              'Calculate EMI',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.black,
-                              ),
-                            ),
-                    )),
+                    ),
                   ),
                 ],
               );
@@ -1379,11 +1790,14 @@ class LoanController extends GetxController {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: TextStyle(fontSize: 13, color: kSubText)),
-        Text(value, style: TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w700,
-          color: color,
-        )),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: color,
+          ),
+        ),
       ],
     );
   }
@@ -1486,7 +1900,8 @@ class LoanController extends GetxController {
                           child: Column(
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     'Installment ${payment['installmentNo']}',
@@ -1583,11 +1998,14 @@ class LoanController extends GetxController {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: TextStyle(fontSize: 11, color: kSubText)),
-          Text(value, style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: kText,
-          )),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: kText,
+            ),
+          ),
         ],
       ),
     );
@@ -1674,7 +2092,9 @@ class LoanController extends GetxController {
                         ),
                         IconButton(
                           icon: const Icon(Icons.close, size: 20),
-                          onPressed: isProcessing.value ? null : () => Get.back(),
+                          onPressed: isProcessing.value
+                              ? null
+                              : () => Get.back(),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                         ),
@@ -1702,10 +2122,16 @@ class LoanController extends GetxController {
                               child: Column(
                                 children: [
                                   _detailRow('Lender', loan.lenderName),
-                                  _detailRow('Outstanding', formatAmount(loan.outstandingBalance),
-                                      valueColor: kDanger),
-                                  _detailRow('Monthly EMI', formatAmount(loan.emiAmount),
-                                      valueColor: kWarning),
+                                  _detailRow(
+                                    'Outstanding',
+                                    formatAmount(loan.outstandingBalance),
+                                    valueColor: kDanger,
+                                  ),
+                                  _detailRow(
+                                    'Monthly EMI',
+                                    formatAmount(loan.emiAmount),
+                                    valueColor: kWarning,
+                                  ),
                                 ],
                               ),
                             ),
@@ -1716,13 +2142,17 @@ class LoanController extends GetxController {
                               hint: loan.emiAmount.toString(),
                               prefixText: CurrencyUtils.prefix,
                               initialValue: amount.toString(),
-                              onChanged: (v) => amount = double.tryParse(v) ?? 0,
+                              onChanged: (v) =>
+                                  amount = double.tryParse(v) ?? 0,
                               validator: (v) {
-                                if (v == null || v.isEmpty) return 'Amount required';
+                                if (v == null || v.isEmpty)
+                                  return 'Amount required';
                                 final val = double.tryParse(v);
                                 if (val == null) return 'Invalid amount';
-                                if (val <= 0) return 'Amount must be greater than 0';
-                                if (val > loan.outstandingBalance) return 'Amount exceeds outstanding balance';
+                                if (val <= 0)
+                                  return 'Amount must be greater than 0';
+                                if (val > loan.outstandingBalance)
+                                  return 'Amount exceeds outstanding balance';
                                 return null;
                               },
                               keyboardType: TextInputType.number,
@@ -1771,7 +2201,9 @@ class LoanController extends GetxController {
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: isProcessing.value ? null : () => Get.back(),
+                            onPressed: isProcessing.value
+                                ? null
+                                : () => Get.back(),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: kPrimary,
                               side: const BorderSide(color: kPrimary),
@@ -1792,47 +2224,54 @@ class LoanController extends GetxController {
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: Obx(() => ElevatedButton(
-                            onPressed: isProcessing.value
-                                ? null
-                                : () {
-                                    if (formKey.currentState!.validate()) {
-                                      Get.back();
-                                      recordPayment(
-                                        loanId: loan.id,
-                                        amount: amount,
-                                        paymentDate: paymentDate,
-                                        reference: reference,
-                                        notes: notes,
-                                      );
-                                    }
-                                  },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: kSuccess,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                          child: Obx(
+                            () => ElevatedButton(
+                              onPressed: isProcessing.value
+                                  ? null
+                                  : () {
+                                      if (formKey.currentState!.validate()) {
+                                        Get.back();
+                                        recordPayment(
+                                          loanId: loan.id,
+                                          amount: amount,
+                                          paymentDate: paymentDate,
+                                          reference: reference,
+                                          notes: notes,
+                                        );
+                                      }
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: kSuccess,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
+                              child: isProcessing.value
+                                  ? SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            const AlwaysStoppedAnimation<Color>(
+                                              Colors.black,
+                                            ),
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Record Payment',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.black,
+                                      ),
+                                    ),
                             ),
-                            child: isProcessing.value
-                                ? SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.black),
-                                    ),
-                                  )
-                                : const Text(
-                                    'Record Payment',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                          )),
+                          ),
                         ),
                       ],
                     ),
@@ -1846,7 +2285,6 @@ class LoanController extends GetxController {
     );
   }
 
-  // ─── SHOW ADD LOAN DIALOG ──────────────────────────────────────────
   void showAddLoanDialog() {
     final formKey = GlobalKey<FormState>();
     String loanType = 'Bank Loan';
@@ -1857,9 +2295,16 @@ class LoanController extends GetxController {
     int tenureMonths = 12;
     String purpose = '';
     String collateral = '';
-    String accountNumber = '';
     String? selectedBankAccountId;
     String notes = '';
+
+    loanSaved.value = false; // reset
+
+    final worker = ever(loanSaved, (bool saved) {
+      if (saved) {
+        if (Get.isDialogOpen ?? false) Get.back();
+      }
+    });
 
     Get.dialog(
       Dialog(
@@ -1934,7 +2379,12 @@ class LoanController extends GetxController {
                         ),
                         IconButton(
                           icon: const Icon(Icons.close, size: 20),
-                          onPressed: isProcessing.value ? null : () => Get.back(),
+                          onPressed: isProcessing.value
+                              ? null
+                              : () {
+                                  worker.dispose(); // ✅
+                                  Get.back();
+                                },
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                         ),
@@ -1963,25 +2413,25 @@ class LoanController extends GetxController {
                               onChanged: (v) => setState(() => loanType = v!),
                             ),
                             const SizedBox(height: 16),
-
                             _buildTextField(
                               label: 'Lender/Bank Name *',
                               hint: 'Enter lender name',
                               onChanged: (v) => lenderName = v,
-                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                              validator: (v) =>
+                                  v?.isEmpty == true ? 'Required' : null,
                             ),
                             const SizedBox(height: 16),
-
                             _buildTextField(
                               label: 'Loan Amount *',
                               hint: 'Enter loan amount',
                               prefixText: CurrencyUtils.prefix,
-                              onChanged: (v) => loanAmount = double.tryParse(v) ?? 0,
-                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                              onChanged: (v) =>
+                                  loanAmount = double.tryParse(v) ?? 0,
+                              validator: (v) =>
+                                  v?.isEmpty == true ? 'Required' : null,
                               keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 16),
-
                             _buildDatePickerField(
                               'Disbursement Date *',
                               disbursementDate,
@@ -1989,53 +2439,44 @@ class LoanController extends GetxController {
                               context,
                             ),
                             const SizedBox(height: 16),
-
                             _buildTextField(
                               label: 'Interest Rate (%) *',
                               hint: 'Enter annual interest rate',
-                              onChanged: (v) => interestRate = double.tryParse(v) ?? 0,
-                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                              onChanged: (v) =>
+                                  interestRate = double.tryParse(v) ?? 0,
+                              validator: (v) =>
+                                  v?.isEmpty == true ? 'Required' : null,
                               keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 16),
-
                             _buildTextField(
                               label: 'Tenure (months) *',
                               hint: 'Enter loan tenure in months',
-                              onChanged: (v) => tenureMonths = int.tryParse(v) ?? 12,
-                              validator: (v) => v?.isEmpty == true ? 'Required' : null,
+                              onChanged: (v) =>
+                                  tenureMonths = int.tryParse(v) ?? 12,
+                              validator: (v) =>
+                                  v?.isEmpty == true ? 'Required' : null,
                               keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 16),
-
                             _buildTextField(
                               label: 'Purpose',
                               hint: 'Purpose of loan',
                               onChanged: (v) => purpose = v,
                             ),
                             const SizedBox(height: 16),
-
                             _buildTextField(
                               label: 'Collateral',
                               hint: 'Collateral/security provided',
                               onChanged: (v) => collateral = v,
                             ),
                             const SizedBox(height: 16),
-
-                            _buildTextField(
-                              label: 'Account Number',
-                              hint: 'Loan account number',
-                              onChanged: (v) => accountNumber = v,
-                            ),
-                            const SizedBox(height: 16),
-
                             _buildBankAccountDropdown(
                               selectedBankAccountId,
                               (v) => setState(() => selectedBankAccountId = v),
                               bankAccounts.toList(),
                             ),
                             const SizedBox(height: 16),
-
                             _buildTextField(
                               label: 'Notes',
                               hint: 'Additional notes',
@@ -2063,7 +2504,12 @@ class LoanController extends GetxController {
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: isProcessing.value ? null : () => Get.back(),
+                            onPressed: isProcessing.value
+                                ? null
+                                : () {
+                                    worker.dispose(); // ✅
+                                    Get.back();
+                                  },
                             style: OutlinedButton.styleFrom(
                               foregroundColor: kPrimary,
                               side: const BorderSide(color: kPrimary),
@@ -2072,7 +2518,7 @@ class LoanController extends GetxController {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: Text(
+                            child: const Text(
                               'Cancel',
                               style: TextStyle(
                                 fontSize: 14,
@@ -2084,52 +2530,58 @@ class LoanController extends GetxController {
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: Obx(() => ElevatedButton(
-                            onPressed: isProcessing.value
-                                ? null
-                                : () {
-                                    if (formKey.currentState!.validate()) {
-                                      createLoan(
-                                        loanType: loanType,
-                                        lenderName: lenderName,
-                                        loanAmount: loanAmount,
-                                        disbursementDate: disbursementDate,
-                                        interestRate: interestRate,
-                                        tenureMonths: tenureMonths,
-                                        purpose: purpose,
-                                        collateral: collateral,
-                                        accountNumber: accountNumber,
-                                        bankAccountId: selectedBankAccountId,
-                                        notes: notes,
-                                      );
-                                    }
-                                  },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: kPrimary,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                          child: Obx(
+                            () => ElevatedButton(
+                              onPressed: isProcessing.value
+                                  ? null
+                                  : () {
+                                      if (formKey.currentState!.validate()) {
+                                        createLoan(
+                                          loanType: loanType,
+                                          lenderName: lenderName,
+                                          loanAmount: loanAmount,
+                                          disbursementDate: disbursementDate,
+                                          interestRate: interestRate,
+                                          tenureMonths: tenureMonths,
+                                          purpose: purpose,
+                                          collateral: collateral,
+                                          bankAccountId: selectedBankAccountId,
+                                          notes: notes,
+                                        );
+                                      }
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: kPrimary,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
+                              child: isProcessing.value
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.black,
+                                            ),
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Add Loan',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.black,
+                                      ),
+                                    ),
                             ),
-                            child: isProcessing.value
-                                ? SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.black),
-                                    ),
-                                  )
-                                : const Text(
-                                    'Add Loan',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                      color: Colors.black,
-                                    ),
-                                  ),
-                          )),
+                          ),
                         ),
                       ],
                     ),
@@ -2140,10 +2592,10 @@ class LoanController extends GetxController {
           ),
         ),
       ),
-    );
+      barrierDismissible: false,
+    ).then((_) => worker.dispose()); // ✅ cleanup
   }
 
-  // ─── SHOW LOAN DETAILS ──────────────────────────────────────────
   void showLoanDetails(Loan loan) {
     showModalBottomSheet(
       context: Get.context!,
@@ -2184,7 +2636,9 @@ class LoanController extends GetxController {
                             width: 52,
                             height: 52,
                             decoration: BoxDecoration(
-                              color: getLoanTypeColor(loan.loanType).withOpacity(0.12),
+                              color: getLoanTypeColor(
+                                loan.loanType,
+                              ).withOpacity(0.12),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Icon(
@@ -2224,8 +2678,8 @@ class LoanController extends GetxController {
                                         color: loan.status == 'Active'
                                             ? kPrimary.withOpacity(0.08)
                                             : loan.status == 'Fully Paid'
-                                                ? kSuccess.withOpacity(0.08)
-                                                : kDanger.withOpacity(0.08),
+                                            ? kSuccess.withOpacity(0.08)
+                                            : kDanger.withOpacity(0.08),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
@@ -2236,8 +2690,8 @@ class LoanController extends GetxController {
                                           color: loan.status == 'Active'
                                               ? kPrimary
                                               : loan.status == 'Fully Paid'
-                                                  ? kSuccess
-                                                  : kDanger,
+                                              ? kSuccess
+                                              : kDanger,
                                         ),
                                       ),
                                     ),
@@ -2290,18 +2744,37 @@ class LoanController extends GetxController {
                       // Details
                       _detailRow('Lender', loan.lenderName),
                       _detailRow('Loan Type', loan.loanType),
-                      _detailRow('Disbursement Date', DateFormat('dd MMM yyyy').format(loan.disbursementDate)),
-                      _detailRow('Interest Rate', '${loan.interestRate.toStringAsFixed(1)}%'),
+                      _detailRow(
+                        'Disbursement Date',
+                        DateFormat('dd MMM yyyy').format(loan.disbursementDate),
+                      ),
+                      _detailRow(
+                        'Interest Rate',
+                        '${loan.interestRate.toStringAsFixed(1)}%',
+                      ),
                       _detailRow('Tenure', '${loan.tenureMonths} months'),
                       _detailRow('Total Paid', formatAmount(loan.totalPaid)),
                       if (loan.nextPaymentDate != null)
-                        _detailRow('Next Payment', DateFormat('dd MMM yyyy').format(loan.nextPaymentDate!)),
+                        _detailRow(
+                          'Next Payment',
+                          DateFormat(
+                            'dd MMM yyyy',
+                          ).format(loan.nextPaymentDate!),
+                        ),
                       if (loan.lastPaymentDate != null)
-                        _detailRow('Last Payment', DateFormat('dd MMM yyyy').format(loan.lastPaymentDate!)),
+                        _detailRow(
+                          'Last Payment',
+                          DateFormat(
+                            'dd MMM yyyy',
+                          ).format(loan.lastPaymentDate!),
+                        ),
                       _detailRow('Purpose', loan.purpose),
-                      _detailRow('Collateral', loan.collateral.isEmpty ? 'None' : loan.collateral),
-                      _detailRow('Account Number', loan.accountNumber),
-                      if (loan.notes.isNotEmpty) _detailRow('Notes', loan.notes),
+                      _detailRow(
+                        'Collateral',
+                        loan.collateral.isEmpty ? 'None' : loan.collateral,
+                      ),
+                      if (loan.notes.isNotEmpty)
+                        _detailRow('Notes', loan.notes),
 
                       const SizedBox(height: 16),
                       Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
@@ -2318,72 +2791,84 @@ class LoanController extends GetxController {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        ...loan.payments.map((payment) => Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: kBgLight,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: Colors.grey.withOpacity(0.1),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                        ...loan.payments
+                            .map(
+                              (payment) => Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: kBgLight,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: Colors.grey.withOpacity(0.1),
+                                  ),
+                                ),
+                                child: Row(
                                   children: [
-                                    Text(
-                                      DateFormat('dd MMM yyyy').format(payment.date),
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: kText,
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            DateFormat(
+                                              'dd MMM yyyy',
+                                            ).format(payment.date),
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: kText,
+                                            ),
+                                          ),
+                                          Text(
+                                            payment.type == 'Prepayment'
+                                                ? 'Prepayment'
+                                                : 'EMI Payment',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: kSubText,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                     Text(
-                                      payment.type == 'Prepayment' ? 'Prepayment' : 'EMI Payment',
+                                      formatAmount(payment.amount),
                                       style: TextStyle(
-                                        fontSize: 11,
-                                        color: kSubText,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: kSuccess,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 3,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: kSuccess.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: Text(
+                                        payment.status,
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                          color: kSuccess,
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                              Text(
-                                formatAmount(payment.amount),
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: kSuccess,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: kSuccess.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  payment.status,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: kSuccess,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )).toList(),
+                            )
+                            .toList(),
                         const SizedBox(height: 16),
-                        Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                        Divider(
+                          height: 1,
+                          color: Colors.grey.withOpacity(0.12),
+                        ),
                         const SizedBox(height: 16),
                       ],
 
@@ -2553,9 +3038,7 @@ class LoanController extends GetxController {
         labelText: label,
         hintText: hint,
         prefixText: prefixText,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
@@ -2581,9 +3064,7 @@ class LoanController extends GetxController {
       value: value,
       decoration: InputDecoration(
         labelText: label,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
@@ -2608,10 +3089,10 @@ class LoanController extends GetxController {
       isExpanded: true,
       value: selectedId,
       decoration: InputDecoration(
-        labelText: 'Bank Account (Optional)',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        labelText: 'Disbursement Bank Account',
+        helperText: 'Loan amount will be credited to this account',
+        helperMaxLines: 2,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 12,
           vertical: 10,
@@ -2622,10 +3103,7 @@ class LoanController extends GetxController {
       style: const TextStyle(fontSize: 13, color: Colors.black),
       dropdownColor: kCardBg,
       items: [
-        const DropdownMenuItem<String>(
-          value: '',
-          child: Text('None'),
-        ),
+        const DropdownMenuItem<String>(value: '', child: Text('None')),
         ...bankAccounts.map((account) {
           return DropdownMenuItem<String>(
             value: (account['_id'] ?? account['id']).toString(),
@@ -2696,11 +3174,7 @@ class LoanController extends GetxController {
                 ],
               ),
             ),
-            Icon(
-              Icons.arrow_drop_down,
-              size: 20,
-              color: kSubText,
-            ),
+            Icon(Icons.arrow_drop_down, size: 20, color: kSubText),
           ],
         ),
       ),

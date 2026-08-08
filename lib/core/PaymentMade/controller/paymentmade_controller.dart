@@ -1,10 +1,10 @@
 // core/paymentsMade/controller/payment_made_controller.dart
 // COMPLETE WITH LAZY LOADING & PAGINATION (NO WEB)
 
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -16,14 +16,14 @@ class PaymentMadeController extends GetxController {
   var suppliers = <SupplierForPayment>[].obs;
   var bankAccounts = <BankAccount>[].obs;
   var unpaidBills = <BillForPayment>[].obs;
-  
+
   var isLoading = true.obs;
   var isLoadingMore = false.obs;
   var isRecording = false.obs;
   var selectedFilter = 'All'.obs;
   var selectedDateRange = Rxn<DateTimeRange>();
   var searchQuery = ''.obs;
-  
+
   // ✅ Pagination variables
   var currentPage = 1.obs;
   var totalPages = 1.obs;
@@ -32,38 +32,38 @@ class PaymentMadeController extends GetxController {
   var hasPrevPage = false.obs;
   var itemsPerPage = 20.obs;
   var serverSupportsPagination = false.obs;
-  
+
   // Multi-bill selection
   var selectedBillIds = <String>[].obs;
   var totalSelectedOutstanding = 0.0.obs;
   var totalSelectedAmount = 0.0.obs;
-  
+
   // Summary data
   var totalPaid = 0.0.obs;
   var thisMonthTotal = 0.0.obs;
   var thisWeekTotal = 0.0.obs;
   var todayTotal = 0.0.obs;
   var pendingCount = 0.obs;
-  
+
   // Loading states
   var isLoadingBills = false.obs;
   var currentSupplierId = ''.obs;
   var currentBills = <BillForPayment>[].obs;
-  
+
   // Filter options
   final List<String> filterOptions = [
-    'All', 
-    'Today', 
-    'This Week', 
-    'This Month', 
+    'All',
+    'Today',
+    'This Week',
+    'This Month',
   ];
-  
+
   // ✅ Search & Scroll Controllers
   final TextEditingController searchController = TextEditingController();
   final ScrollController scrollController = ScrollController();
-  
+
   final ApiClient _api = Get.find<ApiClient>();
-  
+
   @override
   void onInit() {
     super.onInit();
@@ -73,7 +73,7 @@ class PaymentMadeController extends GetxController {
     loadPayments(resetPage: true);
     loadSummary();
   }
-  
+
   @override
   void onClose() {
     searchController.removeListener(_onSearchChanged);
@@ -81,16 +81,16 @@ class PaymentMadeController extends GetxController {
     scrollController.dispose();
     super.onClose();
   }
-  
+
   void _onSearchChanged() {
     searchQuery.value = searchController.text;
     loadPayments(resetPage: true);
   }
-  
+
   String formatAmount(double amount) {
     return CurrencyUtils.format(amount);
   }
-  
+
   // ─── LOAD PAYMENTS WITH PAGINATION ──────────────────────────────
   Future<void> loadPayments({bool resetPage = true}) async {
     try {
@@ -100,34 +100,40 @@ class PaymentMadeController extends GetxController {
       } else {
         isLoadingMore.value = true;
       }
-      
+
       Map<String, dynamic> params = {};
-      
+
       if (serverSupportsPagination.value) {
         params['page'] = currentPage.value;
         params['limit'] = itemsPerPage.value;
       }
-      
+
       if (selectedDateRange.value != null) {
-        params['startDate'] = DateFormat('yyyy-MM-dd').format(selectedDateRange.value!.start);
-        params['endDate'] = DateFormat('yyyy-MM-dd').format(selectedDateRange.value!.end);
+        params['startDate'] = DateFormat(
+          'yyyy-MM-dd',
+        ).format(selectedDateRange.value!.start);
+        params['endDate'] = DateFormat(
+          'yyyy-MM-dd',
+        ).format(selectedDateRange.value!.end);
       }
-      
+
       if (searchQuery.value.isNotEmpty) {
         params['search'] = searchQuery.value;
       }
-      
+
       final response = await _api.get(
         '/api/payments-made',
         queryParameters: params.isNotEmpty ? params : null,
       );
-      
+
       if (response.success) {
         final data = response.data;
         if (data['success'] == true) {
           List<dynamic> paymentsData = data['data'] ?? [];
-          final newPayments = paymentsData.map((json) => PaymentMade.fromJson(json)).toList();
-          
+          final newPayments = paymentsData
+              .map((json) => PaymentMade.fromJson(json))
+              .toList();
+
           if (resetPage) {
             allPayments.value = newPayments;
             payments.value = newPayments;
@@ -135,14 +141,24 @@ class PaymentMadeController extends GetxController {
             allPayments.addAll(newPayments);
             payments.addAll(newPayments);
           }
-          
+
           // Parse pagination info
           if (data['pagination'] != null) {
             final pagination = data['pagination'];
-            totalPages.value = pagination['pages'] ?? pagination['totalPages'] ?? 1;
-            totalItems.value = pagination['total'] ?? pagination['totalItems'] ?? newPayments.length;
-            hasNextPage.value = pagination['hasNext'] ?? pagination['nextPage'] != null ?? false;
-            hasPrevPage.value = pagination['hasPrev'] ?? pagination['prevPage'] != null ?? false;
+            totalPages.value =
+                pagination['pages'] ?? pagination['totalPages'] ?? 1;
+            totalItems.value =
+                pagination['total'] ??
+                pagination['totalItems'] ??
+                newPayments.length;
+            hasNextPage.value =
+                pagination['hasNext'] ??
+                pagination['nextPage'] != null ??
+                false;
+            hasPrevPage.value =
+                pagination['hasPrev'] ??
+                pagination['prevPage'] != null ??
+                false;
             serverSupportsPagination.value = true;
           } else if (data['total'] != null) {
             totalPages.value = data['pages'] ?? 1;
@@ -153,17 +169,19 @@ class PaymentMadeController extends GetxController {
           } else if (data['totalCount'] != null) {
             totalItems.value = data['totalCount'];
             totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
-            hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+            hasNextPage.value =
+                (currentPage.value * itemsPerPage.value) < totalItems.value;
             hasPrevPage.value = currentPage.value > 1;
             serverSupportsPagination.value = false;
           } else {
             totalItems.value = payments.length;
             totalPages.value = (totalItems.value / itemsPerPage.value).ceil();
-            hasNextPage.value = (currentPage.value * itemsPerPage.value) < totalItems.value;
+            hasNextPage.value =
+                (currentPage.value * itemsPerPage.value) < totalItems.value;
             hasPrevPage.value = currentPage.value > 1;
             serverSupportsPagination.value = false;
           }
-          
+
           _updateSummaryForFiltered(payments.value);
           payments.refresh();
         }
@@ -177,7 +195,7 @@ class PaymentMadeController extends GetxController {
       isLoadingMore.value = false;
     }
   }
-  
+
   // ─── LOAD MORE DATA (LAZY LOADING) ──────────────────────────────
   Future<void> loadMoreData() async {
     if (hasNextPage.value && !isLoadingMore.value && !isLoading.value) {
@@ -185,7 +203,7 @@ class PaymentMadeController extends GetxController {
       await loadPayments(resetPage: false);
     }
   }
-  
+
   // ─── LOAD SUPPLIERS ──────────────────────────────────────────────
   Future<void> loadSuppliers() async {
     try {
@@ -194,14 +212,16 @@ class PaymentMadeController extends GetxController {
         final data = response.data;
         if (data['success'] == true) {
           List<dynamic> suppliersData = data['data'] ?? [];
-          suppliers.value = suppliersData.map((json) => SupplierForPayment.fromJson(json)).toList();
+          suppliers.value = suppliersData
+              .map((json) => SupplierForPayment.fromJson(json))
+              .toList();
         }
       }
     } catch (e) {
       print('Error loading suppliers: $e');
     }
   }
-  
+
   // ─── LOAD BANK ACCOUNTS ──────────────────────────────────────────
   Future<void> loadBankAccounts() async {
     try {
@@ -218,21 +238,25 @@ class PaymentMadeController extends GetxController {
       print('Error loading bank accounts: $e');
     }
   }
-  
+
   // ─── LOAD SUMMARY ──────────────────────────────────────────────────
   Future<void> loadSummary() async {
     try {
       Map<String, dynamic> params = {};
       if (selectedDateRange.value != null) {
-        params['startDate'] = DateFormat('yyyy-MM-dd').format(selectedDateRange.value!.start);
-        params['endDate'] = DateFormat('yyyy-MM-dd').format(selectedDateRange.value!.end);
+        params['startDate'] = DateFormat(
+          'yyyy-MM-dd',
+        ).format(selectedDateRange.value!.start);
+        params['endDate'] = DateFormat(
+          'yyyy-MM-dd',
+        ).format(selectedDateRange.value!.end);
       }
-      
+
       final response = await _api.get(
         '/api/payments-made/summary',
         queryParameters: params.isNotEmpty ? params : null,
       );
-      
+
       if (response.success) {
         final data = response.data['data'] ?? {};
         totalPaid.value = (data['totalPaid'] ?? 0).toDouble();
@@ -245,18 +269,20 @@ class PaymentMadeController extends GetxController {
       print('Error loading summary: $e');
     }
   }
-  
+
   // ─── GET UNPAID BILLS ──────────────────────────────────────────────
   Future<List<BillForPayment>> getUnpaidBills(String supplierId) async {
     if (supplierId.isEmpty) return [];
-    
+
     try {
       currentSupplierId.value = supplierId;
       isLoadingBills.value = true;
       clearBillSelections();
-      
-      final response = await _api.get('/api/payments-made/bills/unpaid/$supplierId');
-      
+
+      final response = await _api.get(
+        '/api/payments-made/bills/unpaid/$supplierId',
+      );
+
       if (response.success) {
         final data = response.data;
         if (data['success'] == true) {
@@ -266,7 +292,9 @@ class PaymentMadeController extends GetxController {
             currentBills.value = [];
             return [];
           }
-          final bills = billsData.map((json) => BillForPayment.fromJson(json)).toList();
+          final bills = billsData
+              .map((json) => BillForPayment.fromJson(json))
+              .toList();
           currentBills.value = bills;
           return bills;
         } else {
@@ -284,7 +312,7 @@ class PaymentMadeController extends GetxController {
       isLoadingBills.value = false;
     }
   }
-  
+
   // ─── TOGGLE BILL SELECTION ────────────────────────────────────────
   void toggleBillSelection(String billId, double outstanding) {
     if (selectedBillIds.contains(billId)) {
@@ -296,14 +324,14 @@ class PaymentMadeController extends GetxController {
     }
     totalSelectedAmount.value = totalSelectedOutstanding.value;
   }
-  
+
   // ─── CLEAR BILL SELECTIONS ────────────────────────────────────────
   void clearBillSelections() {
     selectedBillIds.clear();
     totalSelectedOutstanding.value = 0;
     totalSelectedAmount.value = 0;
   }
-  
+
   // ─── RECORD PAYMENT WITH LOADING DIALOG ──────────────────────────
   Future<void> recordPayment({
     required String supplierId,
@@ -319,17 +347,18 @@ class PaymentMadeController extends GetxController {
       _showError('Please select at least one bill');
       return;
     }
-    
+
     if (amount <= 0) {
       _showError('Please enter a valid payment amount');
       return;
     }
-    
-    if (paymentMethod == 'Bank Transfer' && (bankAccountId == null || bankAccountId.isEmpty)) {
+
+    if (paymentMethod == 'Bank Transfer' &&
+        (bankAccountId == null || bankAccountId.isEmpty)) {
       _showError('Please select a bank account');
       return;
     }
-    
+
     // Show loading dialog
     Get.dialog(
       Center(
@@ -372,10 +401,10 @@ class PaymentMadeController extends GetxController {
       ),
       barrierDismissible: false,
     );
-    
+
     try {
       isRecording.value = true;
-      
+
       final Map<String, dynamic> paymentData = {
         'supplierId': supplierId,
         'billIds': billIds,
@@ -385,16 +414,18 @@ class PaymentMadeController extends GetxController {
         'reference': reference ?? '',
         'notes': notes ?? '',
       };
-      
-      if (bankAccountId != null && bankAccountId.isNotEmpty && paymentMethod == 'Bank Transfer') {
+
+      if (bankAccountId != null &&
+          bankAccountId.isNotEmpty &&
+          paymentMethod == 'Bank Transfer') {
         paymentData['bankAccountId'] = bankAccountId;
       }
-      
+
       final response = await _api.post('/api/payments-made', body: paymentData);
-      
+
       // Close loading dialog
       Get.back();
-      
+
       if (response.success) {
         AppSnackbar.success(
           kSuccess,
@@ -409,7 +440,11 @@ class PaymentMadeController extends GetxController {
           await getUnpaidBills(supplierId);
         }
       } else {
-        _showError(response.message.isNotEmpty ? response.message : 'Failed to record payment');
+        _showError(
+          response.message.isNotEmpty
+              ? response.message
+              : 'Failed to record payment',
+        );
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
@@ -418,7 +453,7 @@ class PaymentMadeController extends GetxController {
       isRecording.value = false;
     }
   }
-  
+
   // ─── DELETE PAYMENT WITH LOADING DIALOG ──────────────────────────
   Future<void> deletePayment(String paymentId) async {
     // Show loading dialog
@@ -463,13 +498,13 @@ class PaymentMadeController extends GetxController {
       ),
       barrierDismissible: false,
     );
-    
+
     try {
       final response = await _api.delete('/api/payments-made/$paymentId');
-      
+
       // Close loading dialog
       Get.back();
-      
+
       if (response.success) {
         AppSnackbar.success(
           kSuccess,
@@ -479,14 +514,18 @@ class PaymentMadeController extends GetxController {
         await loadPayments(resetPage: true);
         await loadSummary();
       } else {
-        _showError(response.message.isNotEmpty ? response.message : 'Failed to delete payment');
+        _showError(
+          response.message.isNotEmpty
+              ? response.message
+              : 'Failed to delete payment',
+        );
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
       _showError('Error deleting payment: $e');
     }
   }
-  
+
   // ─── CLEAR CHEQUE PAYMENT WITH LOADING DIALOG ────────────────────
   Future<void> clearChequePayment(String paymentId) async {
     // Show loading dialog
@@ -531,13 +570,13 @@ class PaymentMadeController extends GetxController {
       ),
       barrierDismissible: false,
     );
-    
+
     try {
       final response = await _api.post('/api/payments-made/$paymentId/clear');
-      
+
       // Close loading dialog
       Get.back();
-      
+
       if (response.success) {
         AppSnackbar.success(
           kSuccess,
@@ -547,18 +586,22 @@ class PaymentMadeController extends GetxController {
         await loadPayments(resetPage: true);
         await loadSummary();
       } else {
-        _showError(response.message.isNotEmpty ? response.message : 'Failed to clear cheque');
+        _showError(
+          response.message.isNotEmpty
+              ? response.message
+              : 'Failed to clear cheque',
+        );
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
       _showError('Error clearing cheque: $e');
     }
   }
-  
+
   // ─── APPLY FILTERS ──────────────────────────────────────────────────
   void applyDateFilter(String filter) {
     selectedFilter.value = filter;
-    
+
     if (filter == 'Custom Range') {
       selectDateRange();
     } else {
@@ -568,11 +611,11 @@ class PaymentMadeController extends GetxController {
       loadSummary();
     }
   }
-  
+
   void _applyDateFilter(String filter) {
     final now = DateTime.now();
     DateTime start;
-    
+
     switch (filter) {
       case 'Today':
         start = DateTime(now.year, now.month, now.day);
@@ -590,7 +633,7 @@ class PaymentMadeController extends GetxController {
         selectedDateRange.value = null;
     }
   }
-  
+
   Future<void> selectDateRange() async {
     final picked = await Get.dialog<DateTimeRange>(
       DateRangePickerDialog(
@@ -599,7 +642,7 @@ class PaymentMadeController extends GetxController {
         initialDateRange: selectedDateRange.value,
       ),
     );
-    
+
     if (picked != null) {
       selectedDateRange.value = picked;
       selectedFilter.value = 'Custom Range';
@@ -607,41 +650,53 @@ class PaymentMadeController extends GetxController {
       loadSummary();
     }
   }
-  
+
   void clearDateRange() {
     selectedDateRange.value = null;
     selectedFilter.value = 'All';
     loadPayments(resetPage: true);
     loadSummary();
   }
-  
+
   // ─── SEARCH ──────────────────────────────────────────────────────────
   void searchPayments(String query) {
     searchQuery.value = query;
     loadPayments(resetPage: true);
   }
-  
+
   void _updateSummaryForFiltered(List<PaymentMade> filteredPayments) {
     totalPaid.value = filteredPayments.fold(0.0, (sum, p) => sum + p.amount);
-    
+
     final now = DateTime.now();
     final todayStart = DateTime(now.year, now.month, now.day);
     final thisWeekStart = now.subtract(Duration(days: now.weekday - 1));
     final thisMonthStart = DateTime(now.year, now.month, 1);
-    
+
     todayTotal.value = filteredPayments
-        .where((p) => p.paymentDate.isAfter(todayStart.subtract(const Duration(days: 1))))
+        .where(
+          (p) => p.paymentDate.isAfter(
+            todayStart.subtract(const Duration(days: 1)),
+          ),
+        )
         .fold(0.0, (sum, p) => sum + p.amount);
-        
+
     thisWeekTotal.value = filteredPayments
-        .where((p) => p.paymentDate.isAfter(thisWeekStart.subtract(const Duration(days: 1))))
+        .where(
+          (p) => p.paymentDate.isAfter(
+            thisWeekStart.subtract(const Duration(days: 1)),
+          ),
+        )
         .fold(0.0, (sum, p) => sum + p.amount);
-        
+
     thisMonthTotal.value = filteredPayments
-        .where((p) => p.paymentDate.isAfter(thisMonthStart.subtract(const Duration(days: 1))))
+        .where(
+          (p) => p.paymentDate.isAfter(
+            thisMonthStart.subtract(const Duration(days: 1)),
+          ),
+        )
         .fold(0.0, (sum, p) => sum + p.amount);
   }
-  
+
   // ─── EXPORT ──────────────────────────────────────────────────────────
   void exportPayments() {
     Get.bottomSheet(
@@ -721,7 +776,7 @@ class PaymentMadeController extends GetxController {
       backgroundColor: kCardBg,
     );
   }
-  
+
   Widget _exportOptionCard({
     required IconData icon,
     required String label,
@@ -760,26 +815,26 @@ class PaymentMadeController extends GetxController {
             ),
             Text(
               subtitle,
-              style: TextStyle(
-                fontSize: 10,
-                color: color.withOpacity(0.7),
-              ),
+              style: TextStyle(fontSize: 10, color: color.withOpacity(0.7)),
             ),
           ],
         ),
       ),
     );
   }
-  
+
   // ─── HELPER METHODS ──────────────────────────────────────────────────
   void _showError(String message) {
     AppSnackbar.error(kDanger, 'Error', message);
   }
-  
+
   void printVoucher(PaymentMade payment) {
-    AppSnackbar.info('Print', 'Printing payment voucher for ${payment.paymentNumber}');
+    AppSnackbar.info(
+      'Print',
+      'Printing payment voucher for ${payment.paymentNumber}',
+    );
   }
-  
+
   void viewBill(PaymentMade payment) {
     // Navigate to bill details
     Get.toNamed('/bill-details', arguments: payment.billId);
@@ -831,12 +886,16 @@ class PaymentMade {
     return PaymentMade(
       id: json['id'] ?? json['_id'] ?? '',
       paymentNumber: json['paymentNumber'] ?? '',
-      paymentDate: json['paymentDate'] != null 
-          ? DateTime.parse(json['paymentDate']) 
+      paymentDate: json['paymentDate'] != null
+          ? DateTime.parse(json['paymentDate'])
           : DateTime.now(),
-      supplierId: json['supplierId'] is Map ? json['supplierId']['id'] : json['supplierId'] ?? '',
+      supplierId: json['supplierId'] is Map
+          ? json['supplierId']['id']
+          : json['supplierId'] ?? '',
       supplierName: json['supplierName'] ?? '',
-      billId: json['billId'] is Map ? json['billId']['id'] : json['billId'] ?? '',
+      billId: json['billId'] is Map
+          ? json['billId']['id']
+          : json['billId'] ?? '',
       billNumber: json['billNumber'] ?? '',
       billAmount: (json['billAmount'] ?? 0).toDouble(),
       amount: (json['amount'] ?? 0).toDouble(),
@@ -846,11 +905,11 @@ class PaymentMade {
       bankAccountName: json['bankAccountName'] ?? '',
       notes: json['notes'] ?? '',
       status: json['status'] ?? 'Pending',
-      createdAt: json['createdAt'] != null 
-          ? DateTime.parse(json['createdAt']) 
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
           : DateTime.now(),
-      updatedAt: json['updatedAt'] != null 
-          ? DateTime.parse(json['updatedAt']) 
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'])
           : DateTime.now(),
     );
   }
@@ -930,8 +989,12 @@ class BillForPayment {
     return BillForPayment(
       id: json['id'] ?? json['_id'] ?? '',
       billNumber: json['billNumber'] ?? '',
-      date: json['date'] != null ? DateTime.parse(json['date']) : DateTime.now(),
-      dueDate: json['dueDate'] != null ? DateTime.parse(json['dueDate']) : DateTime.now(),
+      date: json['date'] != null
+          ? DateTime.parse(json['date'])
+          : DateTime.now(),
+      dueDate: json['dueDate'] != null
+          ? DateTime.parse(json['dueDate'])
+          : DateTime.now(),
       totalAmount: (json['totalAmount'] ?? 0).toDouble(),
       paidAmount: (json['paidAmount'] ?? 0).toDouble(),
       outstanding: (json['outstanding'] ?? 0).toDouble(),

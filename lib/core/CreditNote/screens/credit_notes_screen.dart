@@ -1,10 +1,10 @@
 // screens/creditnote_screen.dart - COMPLETE PROFESSIONAL MOBILE DESIGN
 
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/CreditNote/controllers/creditnote_controller.dart';
-import 'package:LedgerPro_app/core/CreditNote/models/credit_note_model.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/CreditNote/controllers/creditnote_controller.dart';
+import 'package:BisonsTechs_app/core/CreditNote/models/credit_note_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -24,7 +24,8 @@ class CreditNotesScreen extends StatelessWidget {
           _buildTopHeader(context, controller),
           Expanded(
             child: Obx(() {
-              if (controller.isLoading.value && controller.creditNotes.isEmpty) {
+              if (controller.isLoading.value &&
+                  controller.creditNotes.isEmpty) {
                 return Center(
                   child: LoadingAnimationWidget.discreteCircle(
                     color: kPrimary,
@@ -38,9 +39,7 @@ class CreditNotesScreen extends StatelessWidget {
                   children: [
                     _buildSummaryCards(controller),
                     const SizedBox(height: 8),
-                    Expanded(
-                      child: _buildListView(controller, context),
-                    ),
+                    Expanded(child: _buildListView(controller, context)),
                   ],
                 ),
               );
@@ -73,7 +72,10 @@ class CreditNotesScreen extends StatelessWidget {
   // TOP HEADER
   // ═══════════════════════════════════════════════════════════════
 
-  Widget _buildTopHeader(BuildContext context, CreditNoteController controller) {
+  Widget _buildTopHeader(
+    BuildContext context,
+    CreditNoteController controller,
+  ) {
     return Container(
       color: kPrimary,
       child: SafeArea(
@@ -176,7 +178,10 @@ class CreditNotesScreen extends StatelessWidget {
                       ),
                       child: TextField(
                         onChanged: (value) => controller.searchNotes(value),
-                        style: const TextStyle(fontSize: 13, color: Colors.black87),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black87,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Search credit notes...',
                           hintStyle: TextStyle(
@@ -189,7 +194,9 @@ class CreditNotesScreen extends StatelessWidget {
                             color: Colors.grey.shade400,
                           ),
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                          ),
                         ),
                       ),
                     ),
@@ -214,9 +221,14 @@ class CreditNotesScreen extends StatelessWidget {
                         () => DropdownButton<String>(
                           value: controller.selectedFilter.value,
                           icon: const Icon(Icons.arrow_drop_down, size: 20),
-                          style: const TextStyle(fontSize: 12, color: Colors.black87),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black87,
+                          ),
                           underline: const SizedBox.shrink(),
-                          items: ['All', 'Issued', 'Applied', 'Expired'].map((f) {
+                          items: ['All', 'Issued', 'Applied', 'Expired'].map((
+                            f,
+                          ) {
                             return DropdownMenuItem(value: f, child: Text(f));
                           }).toList(),
                           onChanged: (v) {
@@ -389,7 +401,10 @@ class CreditNotesScreen extends StatelessWidget {
                 onPressed: () => controller.showCreateCreditNoteDialog(),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kWarning,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 10,
+                  ),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -460,10 +475,11 @@ class CreditNotesScreen extends StatelessWidget {
     final statusColor = note.status == 'Issued'
         ? kWarning
         : note.status == 'Applied'
-            ? kSuccess
-            : kDanger;
+        ? kSuccess
+        : kDanger;
 
-    final isExpiringSoon = note.status == 'Issued' &&
+    final isExpiringSoon =
+        note.status == 'Issued' &&
         note.expiryDate != null &&
         note.expiryDate!.difference(DateTime.now()).inDays <= 7;
 
@@ -473,10 +489,7 @@ class CreditNotesScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: statusColor.withOpacity(0.2),
-          width: 1.5,
-        ),
+        border: Border.all(color: statusColor.withOpacity(0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -629,7 +642,8 @@ class CreditNotesScreen extends StatelessWidget {
                       const SizedBox(width: 10),
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () => controller.showApplyCreditNoteDialog(note),
+                          onPressed: () =>
+                              controller.showApplyCreditNoteDialog(note),
                           icon: const Icon(
                             Icons.check_circle,
                             size: 14,
@@ -670,7 +684,11 @@ class CreditNotesScreen extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.warning_amber_rounded, size: 14, color: kDanger),
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          size: 14,
+                          color: kDanger,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           'Expires: ${DateFormat('dd MMM yyyy').format(note.expiryDate!)}',
@@ -710,10 +728,7 @@ class CreditNotesScreen extends StatelessWidget {
           Container(
             width: 5,
             height: 5,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 4),
           Text(

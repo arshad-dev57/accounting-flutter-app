@@ -1,4 +1,4 @@
-import 'package:LedgerPro_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -43,8 +43,11 @@ class User {
       isActive: json['isActive'] ?? true,
       createdAt: json['createdAt'] ?? '',
       managerId: json['managerId'],
-      userRole: json['userRole'] != null ? UserRole.fromJson(json['userRole']) : null,
-      permissions: (json['permissions'] as List?)
+      userRole: json['userRole'] != null
+          ? UserRole.fromJson(json['userRole'])
+          : null,
+      permissions:
+          (json['permissions'] as List?)
               ?.map((p) => UserPermission.fromJson(p))
               .toList() ??
           [],
@@ -59,11 +62,7 @@ class UserRole {
   final String name;
   final String? description;
 
-  UserRole({
-    required this.id,
-    required this.name,
-    this.description,
-  });
+  UserRole({required this.id, required this.name, this.description});
 
   factory UserRole.fromJson(Map<String, dynamic> json) {
     return UserRole(
@@ -195,11 +194,7 @@ class Role {
   final String name;
   final String? description;
 
-  Role({
-    required this.id,
-    required this.name,
-    this.description,
-  });
+  Role({required this.id, required this.name, this.description});
 
   factory Role.fromJson(Map<String, dynamic> json) {
     return Role(
@@ -225,8 +220,10 @@ class UserManagementController extends GetxController {
   final RxString roleFilter = 'all'.obs;
 
   // Module permissions state
-  final RxMap<String, ModulePermission> modulePermissions = <String, ModulePermission>{}.obs;
-  final RxMap<String, Map<String, SubPagePermission>> subPagePermissions = <String, Map<String, SubPagePermission>>{}.obs;
+  final RxMap<String, ModulePermission> modulePermissions =
+      <String, ModulePermission>{}.obs;
+  final RxMap<String, Map<String, SubPagePermission>> subPagePermissions =
+      <String, Map<String, SubPagePermission>>{}.obs;
 
   // Module configurations
   static final List<ModuleConfig> moduleConfigs = [
@@ -236,30 +233,126 @@ class UserManagementController extends GetxController {
       description: 'Manage financial records, invoices, and reports',
       icon: Icons.account_balance,
       subPages: [
-        SubPagePermission(page: 'dashboard', displayName: 'Dashboard', icon: Icons.dashboard),
-        SubPagePermission(page: 'chart-of-accounts', displayName: 'Chart of Accounts', icon: Icons.account_tree),
-        SubPagePermission(page: 'bank-accounts', displayName: 'Bank Accounts', icon: Icons.account_balance),
-        SubPagePermission(page: 'invoices', displayName: 'Invoices', icon: Icons.receipt_long),
-        SubPagePermission(page: 'payments', displayName: 'Payments', icon: Icons.payment),
-        SubPagePermission(page: 'payments-received', displayName: 'Payments Received', icon: Icons.arrow_downward),
-        SubPagePermission(page: 'payments-made', displayName: 'Payments Made', icon: Icons.arrow_upward),
-        SubPagePermission(page: 'accounts-receivable', displayName: 'Accounts Receivable', icon: Icons.receipt),
-        SubPagePermission(page: 'accounts-payable', displayName: 'Accounts Payable', icon: Icons.send),
-        SubPagePermission(page: 'credit-notes', displayName: 'Credit Notes', icon: Icons.note),
-        SubPagePermission(page: 'bills', displayName: 'Bills', icon: Icons.description),
-        SubPagePermission(page: 'expenses', displayName: 'Expenses', icon: Icons.money_off),
-        SubPagePermission(page: 'revenue', displayName: 'Revenue', icon: Icons.trending_up),
-        SubPagePermission(page: 'income', displayName: 'Income', icon: Icons.attach_money),
-        SubPagePermission(page: 'journal-entries', displayName: 'Journal Entries', icon: Icons.book),
-        SubPagePermission(page: 'general-ledger', displayName: 'General Ledger', icon: Icons.menu_book),
-        SubPagePermission(page: 'trial-balance', displayName: 'Trial Balance', icon: Icons.balance),
-        SubPagePermission(page: 'fixed-assets', displayName: 'Fixed Assets', icon: Icons.business),
-        SubPagePermission(page: 'loans-borrowings', displayName: 'Loans & Borrowings', icon: Icons.savings),
-        SubPagePermission(page: 'capital-equity', displayName: 'Capital & Equity', icon: Icons.pie_chart),
-        SubPagePermission(page: 'balance-sheet', displayName: 'Balance Sheet', icon: Icons.table_chart),
-        SubPagePermission(page: 'profit-loss', displayName: 'Profit & Loss', icon: Icons.show_chart),
-        SubPagePermission(page: 'cash-flow', displayName: 'Cash Flow', icon: Icons.swap_horiz),
-        SubPagePermission(page: 'aged-receivables', displayName: 'Aged Receivables', icon: Icons.history),
+        SubPagePermission(
+          page: 'dashboard',
+          displayName: 'Dashboard',
+          icon: Icons.dashboard,
+        ),
+        SubPagePermission(
+          page: 'chart-of-accounts',
+          displayName: 'Chart of Accounts',
+          icon: Icons.account_tree,
+        ),
+        SubPagePermission(
+          page: 'bank-accounts',
+          displayName: 'Bank Accounts',
+          icon: Icons.account_balance,
+        ),
+        SubPagePermission(
+          page: 'invoices',
+          displayName: 'Invoices',
+          icon: Icons.receipt_long,
+        ),
+        SubPagePermission(
+          page: 'payments',
+          displayName: 'Payments',
+          icon: Icons.payment,
+        ),
+        SubPagePermission(
+          page: 'payments-received',
+          displayName: 'Payments Received',
+          icon: Icons.arrow_downward,
+        ),
+        SubPagePermission(
+          page: 'payments-made',
+          displayName: 'Payments Made',
+          icon: Icons.arrow_upward,
+        ),
+        SubPagePermission(
+          page: 'accounts-receivable',
+          displayName: 'Accounts Receivable',
+          icon: Icons.receipt,
+        ),
+        SubPagePermission(
+          page: 'accounts-payable',
+          displayName: 'Accounts Payable',
+          icon: Icons.send,
+        ),
+        SubPagePermission(
+          page: 'credit-notes',
+          displayName: 'Credit Notes',
+          icon: Icons.note,
+        ),
+        SubPagePermission(
+          page: 'bills',
+          displayName: 'Bills',
+          icon: Icons.description,
+        ),
+        SubPagePermission(
+          page: 'expenses',
+          displayName: 'Expenses',
+          icon: Icons.money_off,
+        ),
+        SubPagePermission(
+          page: 'revenue',
+          displayName: 'Revenue',
+          icon: Icons.trending_up,
+        ),
+        SubPagePermission(
+          page: 'income',
+          displayName: 'Income',
+          icon: Icons.attach_money,
+        ),
+        SubPagePermission(
+          page: 'journal-entries',
+          displayName: 'Journal Entries',
+          icon: Icons.book,
+        ),
+        SubPagePermission(
+          page: 'general-ledger',
+          displayName: 'General Ledger',
+          icon: Icons.menu_book,
+        ),
+        SubPagePermission(
+          page: 'trial-balance',
+          displayName: 'Trial Balance',
+          icon: Icons.balance,
+        ),
+        SubPagePermission(
+          page: 'fixed-assets',
+          displayName: 'Fixed Assets',
+          icon: Icons.business,
+        ),
+        SubPagePermission(
+          page: 'loans-borrowings',
+          displayName: 'Loans & Borrowings',
+          icon: Icons.savings,
+        ),
+        SubPagePermission(
+          page: 'capital-equity',
+          displayName: 'Capital & Equity',
+          icon: Icons.pie_chart,
+        ),
+        SubPagePermission(
+          page: 'balance-sheet',
+          displayName: 'Balance Sheet',
+          icon: Icons.table_chart,
+        ),
+        SubPagePermission(
+          page: 'profit-loss',
+          displayName: 'Profit & Loss',
+          icon: Icons.show_chart,
+        ),
+        SubPagePermission(
+          page: 'cash-flow',
+          displayName: 'Cash Flow',
+          icon: Icons.swap_horiz,
+        ),
+        SubPagePermission(
+          page: 'aged-receivables',
+          displayName: 'Aged Receivables',
+          icon: Icons.history,
+        ),
       ],
     ),
     ModuleConfig(
@@ -268,14 +361,46 @@ class UserManagementController extends GetxController {
       description: 'Manage inventory, products, and stock',
       icon: Icons.warehouse,
       subPages: [
-        SubPagePermission(page: 'products', displayName: 'Products', icon: Icons.inventory_2),
-        SubPagePermission(page: 'categories', displayName: 'Categories', icon: Icons.category),
-        SubPagePermission(page: 'suppliers', displayName: 'Suppliers', icon: Icons.local_shipping),
-        SubPagePermission(page: 'stock-movement', displayName: 'Stock Movement', icon: Icons.swap_vert),
-        SubPagePermission(page: 'customers', displayName: 'Customers', icon: Icons.people),
-        SubPagePermission(page: 'orders', displayName: 'Orders', icon: Icons.shopping_bag),
-        SubPagePermission(page: 'returns', displayName: 'Returns', icon: Icons.assignment_return),
-        SubPagePermission(page: 'refunds', displayName: 'Refunds', icon: Icons.money_off),
+        SubPagePermission(
+          page: 'products',
+          displayName: 'Products',
+          icon: Icons.inventory_2,
+        ),
+        SubPagePermission(
+          page: 'categories',
+          displayName: 'Categories',
+          icon: Icons.category,
+        ),
+        SubPagePermission(
+          page: 'suppliers',
+          displayName: 'Suppliers',
+          icon: Icons.local_shipping,
+        ),
+        SubPagePermission(
+          page: 'stock-movement',
+          displayName: 'Stock Movement',
+          icon: Icons.swap_vert,
+        ),
+        SubPagePermission(
+          page: 'customers',
+          displayName: 'Customers',
+          icon: Icons.people,
+        ),
+        SubPagePermission(
+          page: 'orders',
+          displayName: 'Orders',
+          icon: Icons.shopping_bag,
+        ),
+        SubPagePermission(
+          page: 'returns',
+          displayName: 'Returns',
+          icon: Icons.assignment_return,
+        ),
+        SubPagePermission(
+          page: 'refunds',
+          displayName: 'Refunds',
+          icon: Icons.money_off,
+        ),
       ],
     ),
     ModuleConfig(
@@ -284,16 +409,56 @@ class UserManagementController extends GetxController {
       description: 'Manage sales orders, quotations, and customers',
       icon: Icons.shopping_cart,
       subPages: [
-        SubPagePermission(page: 'dashboard', displayName: 'Dashboard', icon: Icons.dashboard),
-        SubPagePermission(page: 'products', displayName: 'Products', icon: Icons.inventory_2),
-        SubPagePermission(page: 'orders', displayName: 'Orders', icon: Icons.shopping_bag),
-        SubPagePermission(page: 'quotations', displayName: 'Quotations', icon: Icons.description),
-        SubPagePermission(page: 'customers', displayName: 'Customers', icon: Icons.people),
-        SubPagePermission(page: 'deliveries', displayName: 'Deliveries', icon: Icons.local_shipping),
-        SubPagePermission(page: 'invoices', displayName: 'Invoices', icon: Icons.receipt_long),
-        SubPagePermission(page: 'sales-payments', displayName: 'Sales Payments', icon: Icons.payment),
-        SubPagePermission(page: 'sales-returns', displayName: 'Sales Returns', icon: Icons.assignment_return),
-        SubPagePermission(page: 'refunds', displayName: 'Refunds', icon: Icons.money_off),
+        SubPagePermission(
+          page: 'dashboard',
+          displayName: 'Dashboard',
+          icon: Icons.dashboard,
+        ),
+        SubPagePermission(
+          page: 'products',
+          displayName: 'Products',
+          icon: Icons.inventory_2,
+        ),
+        SubPagePermission(
+          page: 'orders',
+          displayName: 'Orders',
+          icon: Icons.shopping_bag,
+        ),
+        SubPagePermission(
+          page: 'quotations',
+          displayName: 'Quotations',
+          icon: Icons.description,
+        ),
+        SubPagePermission(
+          page: 'customers',
+          displayName: 'Customers',
+          icon: Icons.people,
+        ),
+        SubPagePermission(
+          page: 'deliveries',
+          displayName: 'Deliveries',
+          icon: Icons.local_shipping,
+        ),
+        SubPagePermission(
+          page: 'invoices',
+          displayName: 'Invoices',
+          icon: Icons.receipt_long,
+        ),
+        SubPagePermission(
+          page: 'sales-payments',
+          displayName: 'Sales Payments',
+          icon: Icons.payment,
+        ),
+        SubPagePermission(
+          page: 'sales-returns',
+          displayName: 'Sales Returns',
+          icon: Icons.assignment_return,
+        ),
+        SubPagePermission(
+          page: 'refunds',
+          displayName: 'Refunds',
+          icon: Icons.money_off,
+        ),
       ],
     ),
     ModuleConfig(
@@ -302,13 +467,41 @@ class UserManagementController extends GetxController {
       description: 'Manage purchase orders and suppliers',
       icon: Icons.receipt,
       subPages: [
-        SubPagePermission(page: 'dashboard', displayName: 'Dashboard', icon: Icons.dashboard),
-        SubPagePermission(page: 'purchase-orders', displayName: 'Purchase Orders', icon: Icons.receipt),
-        SubPagePermission(page: 'suppliers', displayName: 'Suppliers', icon: Icons.local_shipping),
-        SubPagePermission(page: 'goods-receiving', displayName: 'Goods Receiving', icon: Icons.inventory),
-        SubPagePermission(page: 'purchase-invoices', displayName: 'Purchase Invoices', icon: Icons.description),
-        SubPagePermission(page: 'purchase-payments', displayName: 'Purchase Payments', icon: Icons.payment),
-        SubPagePermission(page: 'purchase-returns', displayName: 'Purchase Returns', icon: Icons.assignment_return),
+        SubPagePermission(
+          page: 'dashboard',
+          displayName: 'Dashboard',
+          icon: Icons.dashboard,
+        ),
+        SubPagePermission(
+          page: 'purchase-orders',
+          displayName: 'Purchase Orders',
+          icon: Icons.receipt,
+        ),
+        SubPagePermission(
+          page: 'suppliers',
+          displayName: 'Suppliers',
+          icon: Icons.local_shipping,
+        ),
+        SubPagePermission(
+          page: 'goods-receiving',
+          displayName: 'Goods Receiving',
+          icon: Icons.inventory,
+        ),
+        SubPagePermission(
+          page: 'purchase-invoices',
+          displayName: 'Purchase Invoices',
+          icon: Icons.description,
+        ),
+        SubPagePermission(
+          page: 'purchase-payments',
+          displayName: 'Purchase Payments',
+          icon: Icons.payment,
+        ),
+        SubPagePermission(
+          page: 'purchase-returns',
+          displayName: 'Purchase Returns',
+          icon: Icons.assignment_return,
+        ),
       ],
     ),
     ModuleConfig(
@@ -317,9 +510,21 @@ class UserManagementController extends GetxController {
       description: 'Manage user accounts and permissions',
       icon: Icons.admin_panel_settings,
       subPages: [
-        SubPagePermission(page: 'user-management', displayName: 'User Management', icon: Icons.people),
-        SubPagePermission(page: 'roles', displayName: 'Roles', icon: Icons.admin_panel_settings),
-        SubPagePermission(page: 'permissions', displayName: 'Permissions', icon: Icons.security),
+        SubPagePermission(
+          page: 'user-management',
+          displayName: 'User Management',
+          icon: Icons.people,
+        ),
+        SubPagePermission(
+          page: 'roles',
+          displayName: 'Roles',
+          icon: Icons.admin_panel_settings,
+        ),
+        SubPagePermission(
+          page: 'permissions',
+          displayName: 'Permissions',
+          icon: Icons.security,
+        ),
       ],
     ),
   ];
@@ -495,9 +700,7 @@ class UserManagementController extends GetxController {
       final response = await _apiClient.put(
         '/api/admin/users/$userId/permissions',
         requiresAuth: true,
-        body: {
-          'permissions': permissions.map((p) => p.toJson()).toList(),
-        },
+        body: {'permissions': permissions.map((p) => p.toJson()).toList()},
       );
 
       if (response.success) {
@@ -596,9 +799,8 @@ class UserManagementController extends GetxController {
       final page = perm.page.toLowerCase();
 
       // Check if this is a module-level permission
-      final moduleConfig = UserManagementController.moduleConfigs.firstWhereOrNull(
-        (config) => config.module == page
-      );
+      final moduleConfig = UserManagementController.moduleConfigs
+          .firstWhereOrNull((config) => config.module == page);
 
       if (moduleConfig != null) {
         // Module-level permission
@@ -617,20 +819,19 @@ class UserManagementController extends GetxController {
 
           if (subPagePermissions.containsKey(module)) {
             // Find matching sub-page
-            final config = UserManagementController.moduleConfigs.firstWhereOrNull(
-              (c) => c.module == module
-            );
+            final config = UserManagementController.moduleConfigs
+                .firstWhereOrNull((c) => c.module == module);
 
             if (config != null) {
               final matchingSubPage = config.subPages.firstWhereOrNull(
-                (sp) => sp.page.toLowerCase() == subPageSlug
+                (sp) => sp.page.toLowerCase() == subPageSlug,
               );
 
               if (matchingSubPage != null) {
-                subPagePermissions[module]![matchingSubPage.page] = 
-                  subPagePermissions[module]![matchingSubPage.page]!.copyWith(
-                    canView: perm.canView,
-                  );
+                subPagePermissions[module]![matchingSubPage.page] =
+                    subPagePermissions[module]![matchingSubPage.page]!.copyWith(
+                      canView: perm.canView,
+                    );
               }
             }
           }
@@ -651,10 +852,10 @@ class UserManagementController extends GetxController {
 
   // Update sub-page permission
   void updateSubPagePermission(String module, String subPage, bool canView) {
-    if (subPagePermissions.containsKey(module) && 
+    if (subPagePermissions.containsKey(module) &&
         subPagePermissions[module]!.containsKey(subPage)) {
-      subPagePermissions[module]![subPage] = 
-        subPagePermissions[module]![subPage]!.copyWith(canView: canView);
+      subPagePermissions[module]![subPage] =
+          subPagePermissions[module]![subPage]!.copyWith(canView: canView);
     }
   }
 
@@ -665,14 +866,16 @@ class UserManagementController extends GetxController {
     // Add module-level permissions
     for (var entry in modulePermissions.entries) {
       if (entry.value.hasAccess) {
-        permissions.add(UserPermission(
-          id: '$userId-${entry.key}',
-          page: entry.key,
-          canView: entry.value.canView,
-          canCreate: false,
-          canEdit: false,
-          canDelete: false,
-        ));
+        permissions.add(
+          UserPermission(
+            id: '$userId-${entry.key}',
+            page: entry.key,
+            canView: entry.value.canView,
+            canCreate: false,
+            canEdit: false,
+            canDelete: false,
+          ),
+        );
       }
     }
 
@@ -681,14 +884,16 @@ class UserManagementController extends GetxController {
       for (var subPageEntry in moduleEntry.value.entries) {
         if (subPageEntry.value.canView) {
           final pageIdentifier = '${moduleEntry.key}-${subPageEntry.key}';
-          permissions.add(UserPermission(
-            id: '$userId-$pageIdentifier',
-            page: pageIdentifier,
-            canView: true,
-            canCreate: false,
-            canEdit: false,
-            canDelete: false,
-          ));
+          permissions.add(
+            UserPermission(
+              id: '$userId-$pageIdentifier',
+              page: pageIdentifier,
+              canView: true,
+              canCreate: false,
+              canEdit: false,
+              canDelete: false,
+            ),
+          );
         }
       }
     }

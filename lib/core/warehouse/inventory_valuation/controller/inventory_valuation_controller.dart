@@ -1,8 +1,8 @@
-import 'package:LedgerPro_app/core/warehouse/inventory_valuation/model/inventory_valuation_model.dart';
+import 'package:BisonsTechs_app/core/warehouse/inventory_valuation/model/inventory_valuation_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 
 class InventoryValuationController extends GetxController {
   final ApiClient _apiClient = Get.find<ApiClient>();

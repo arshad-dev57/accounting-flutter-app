@@ -1,10 +1,10 @@
 // screens/loans_borrowings_screen.dart - COMPLETE PROFESSIONAL MOBILE DESIGN
 
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/loanBorrowing/controller/loan_controller.dart';
-import 'package:LedgerPro_app/core/loanBorrowing/models/loan_model.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/loanBorrowing/controller/loan_controller.dart';
+import 'package:BisonsTechs_app/core/loanBorrowing/models/loan_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -38,9 +38,7 @@ class LoansBorrowingsScreen extends StatelessWidget {
                   children: [
                     _buildSummaryCards(controller),
                     const SizedBox(height: 8),
-                    Expanded(
-                      child: _buildListView(controller, context),
-                    ),
+                    Expanded(child: _buildListView(controller, context)),
                   ],
                 ),
               );
@@ -176,7 +174,10 @@ class LoansBorrowingsScreen extends StatelessWidget {
                       ),
                       child: TextField(
                         onChanged: (value) => controller.searchLoans(value),
-                        style: const TextStyle(fontSize: 13, color: Colors.black87),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black87,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Search loans...',
                           hintStyle: TextStyle(
@@ -189,7 +190,9 @@ class LoansBorrowingsScreen extends StatelessWidget {
                             color: Colors.grey.shade400,
                           ),
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                          ),
                         ),
                       ),
                     ),
@@ -214,11 +217,24 @@ class LoansBorrowingsScreen extends StatelessWidget {
                         () => DropdownButton<String>(
                           value: controller.selectedFilter.value,
                           icon: const Icon(Icons.arrow_drop_down, size: 20),
-                          style: const TextStyle(fontSize: 12, color: Colors.black87),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black87,
+                          ),
                           underline: const SizedBox.shrink(),
-                          items: ['All', 'Active', 'Fully Paid', 'Overdue', 'Defaulted'].map((f) {
-                            return DropdownMenuItem(value: f, child: Text(f));
-                          }).toList(),
+                          items:
+                              [
+                                'All',
+                                'Active',
+                                'Fully Paid',
+                                'Overdue',
+                                'Defaulted',
+                              ].map((f) {
+                                return DropdownMenuItem(
+                                  value: f,
+                                  child: Text(f),
+                                );
+                              }).toList(),
                           onChanged: (v) {
                             if (v != null) controller.applyFilter(v);
                           },
@@ -257,7 +273,9 @@ class LoansBorrowingsScreen extends StatelessWidget {
             const SizedBox(width: 8),
             _buildProfessionalCard(
               title: 'Outstanding',
-              amount: controller.formatAmount(controller.totalOutstanding.value),
+              amount: controller.formatAmount(
+                controller.totalOutstanding.value,
+              ),
               color: kDanger,
               icon: Icons.payment,
               bgColor: kDanger.withOpacity(0.08),
@@ -389,7 +407,10 @@ class LoansBorrowingsScreen extends StatelessWidget {
                 onPressed: () => controller.showAddLoanDialog(),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimary,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 10,
+                  ),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -460,13 +481,14 @@ class LoansBorrowingsScreen extends StatelessWidget {
     final statusColor = loan.status == 'Active'
         ? kPrimary
         : loan.status == 'Fully Paid'
-            ? kSuccess
-            : kDanger;
+        ? kSuccess
+        : kDanger;
     final typeColor = controller.getLoanTypeColor(loan.loanType);
     final paidPercent = loan.loanAmount > 0
         ? (loan.totalPaid / loan.loanAmount).clamp(0.0, 1.0)
         : 0.0;
-    final isOverdue = loan.nextPaymentDate != null &&
+    final isOverdue =
+        loan.nextPaymentDate != null &&
         loan.nextPaymentDate!.isBefore(DateTime.now()) &&
         loan.status == 'Active';
 
@@ -476,10 +498,7 @@ class LoansBorrowingsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: statusColor.withOpacity(0.2),
-          width: 1.5,
-        ),
+        border: Border.all(color: statusColor.withOpacity(0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -647,7 +666,11 @@ class LoansBorrowingsScreen extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.warning_amber_rounded, size: 14, color: kDanger),
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          size: 14,
+                          color: kDanger,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           'Payment Overdue!',
@@ -721,7 +744,8 @@ class LoansBorrowingsScreen extends StatelessWidget {
                       const SizedBox(width: 10),
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () => controller.showRecordPaymentDialog(loan),
+                          onPressed: () =>
+                              controller.showRecordPaymentDialog(loan),
                           icon: const Icon(
                             Icons.payment,
                             size: 14,
@@ -774,10 +798,7 @@ class LoansBorrowingsScreen extends StatelessWidget {
           Container(
             width: 5,
             height: 5,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 4),
           Text(

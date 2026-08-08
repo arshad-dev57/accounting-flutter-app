@@ -1,11 +1,11 @@
 // screens/payments_received_screen.dart - PROFESSIONAL MOBILE DESIGN (NO WEB)
 
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/paymentRecieved/controller/payment_recieved_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/invoice/screen/warehouse_invoice_screen.dart';
-import 'package:LedgerPro_app/core/warehousecustomer/warehouse_customer_screen.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/paymentRecieved/controller/payment_recieved_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/invoice/screen/warehouse_invoice_screen.dart';
+import 'package:BisonsTechs_app/core/warehousecustomer/warehouse_customer_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -49,9 +49,7 @@ class PaymentsReceivedScreen extends StatelessWidget {
                   children: [
                     _buildSummaryCards(controller),
                     const SizedBox(height: 8),
-                    Expanded(
-                      child: _buildListView(controller, context),
-                    ),
+                    Expanded(child: _buildListView(controller, context)),
                   ],
                 ),
               );
@@ -84,7 +82,10 @@ class PaymentsReceivedScreen extends StatelessWidget {
   // TOP HEADER
   // ═══════════════════════════════════════════════════════════════
 
-  Widget _buildTopHeader(BuildContext context, PaymentReceivedController controller) {
+  Widget _buildTopHeader(
+    BuildContext context,
+    PaymentReceivedController controller,
+  ) {
     return Container(
       color: kPrimary,
       child: SafeArea(
@@ -187,7 +188,10 @@ class PaymentsReceivedScreen extends StatelessWidget {
                       ),
                       child: TextField(
                         onChanged: (value) => controller.searchPayments(value),
-                        style: const TextStyle(fontSize: 13, color: Colors.black87),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black87,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Search payments...',
                           hintStyle: TextStyle(
@@ -200,7 +204,9 @@ class PaymentsReceivedScreen extends StatelessWidget {
                             color: Colors.grey.shade400,
                           ),
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                          ),
                         ),
                       ),
                     ),
@@ -225,11 +231,19 @@ class PaymentsReceivedScreen extends StatelessWidget {
                         () => DropdownButton<String>(
                           value: controller.selectedFilter.value,
                           icon: const Icon(Icons.arrow_drop_down, size: 20),
-                          style: const TextStyle(fontSize: 12, color: Colors.black87),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black87,
+                          ),
                           underline: const SizedBox.shrink(),
-                          items: ['All', 'Today', 'This Week', 'This Month'].map((f) {
-                            return DropdownMenuItem(value: f, child: Text(f));
-                          }).toList(),
+                          items: ['All', 'Today', 'This Week', 'This Month']
+                              .map((f) {
+                                return DropdownMenuItem(
+                                  value: f,
+                                  child: Text(f),
+                                );
+                              })
+                              .toList(),
                           onChanged: (v) {
                             if (v != null) controller.changeFilter(v);
                           },
@@ -376,7 +390,10 @@ class PaymentsReceivedScreen extends StatelessWidget {
   // LIST VIEW WITH LAZY LOADING
   // ═══════════════════════════════════════════════════════════════
 
-  Widget _buildListView(PaymentReceivedController controller, BuildContext context) {
+  Widget _buildListView(
+    PaymentReceivedController controller,
+    BuildContext context,
+  ) {
     return Obx(() {
       final payments = controller.payments;
 
@@ -400,7 +417,10 @@ class PaymentsReceivedScreen extends StatelessWidget {
                 onPressed: () => _showRecordPaymentDialog(controller, context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kSuccess,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 10,
+                  ),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -476,10 +496,7 @@ class PaymentsReceivedScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: statusColor.withOpacity(0.2),
-          width: 1.5,
-        ),
+        border: Border.all(color: statusColor.withOpacity(0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -563,10 +580,7 @@ class PaymentsReceivedScreen extends StatelessWidget {
                             children: [
                               _statusBadge(payment.status, statusColor),
                               _badge(payment.paymentMethod, kPrimary),
-                              _badge(
-                                'Inv: ${payment.invoiceNumber}',
-                                kSubText,
-                              ),
+                              _badge('Inv: ${payment.invoiceNumber}', kSubText),
                             ],
                           ),
                         ],
@@ -584,7 +598,30 @@ class PaymentsReceivedScreen extends StatelessWidget {
                             letterSpacing: -0.3,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
+                        if (payment.invoiceAmount - payment.amount > 0.001)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: kWarning.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: kWarning.withOpacity(0.3),
+                              ),
+                            ),
+                            child: Text(
+                              'Due: ${_formatAmount(payment.invoiceAmount - payment.amount)}',
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: kWarning,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 2),
                         Text(
                           DateFormat('dd MMM yy').format(payment.paymentDate),
                           style: TextStyle(
@@ -604,7 +641,8 @@ class PaymentsReceivedScreen extends StatelessWidget {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _showPaymentDetails(payment, controller, context),
+                        onPressed: () =>
+                            _showPaymentDetails(payment, controller, context),
                         icon: Icon(
                           Icons.visibility_outlined,
                           size: 14,
@@ -791,10 +829,11 @@ class PaymentsReceivedScreen extends StatelessWidget {
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(8),
                                       ),
-                                      contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 10,
-                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 10,
+                                          ),
                                       isDense: true,
                                       labelStyle: TextStyle(
                                         fontSize: 12,
@@ -846,7 +885,9 @@ class PaymentsReceivedScreen extends StatelessWidget {
                                   child: IconButton(
                                     onPressed: () {
                                       Navigator.pop(context);
-                                      Get.to(() => const WarehouseCustomerScreen());
+                                      Get.to(
+                                        () => const WarehouseCustomerScreen(),
+                                      );
                                     },
                                     icon: const Icon(
                                       Icons.add,
@@ -898,12 +939,17 @@ class PaymentsReceivedScreen extends StatelessWidget {
                                       Container(
                                         decoration: BoxDecoration(
                                           color: kPrimary,
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
                                         child: IconButton(
                                           onPressed: () {
                                             Navigator.pop(context);
-                                            Get.to(() => const WarehouseInvoiceScreen());
+                                            Get.to(
+                                              () =>
+                                                  const WarehouseInvoiceScreen(),
+                                            );
                                           },
                                           icon: const Icon(
                                             Icons.add,
@@ -933,15 +979,36 @@ class PaymentsReceivedScreen extends StatelessWidget {
                                     value: selectedInvoiceId.isEmpty
                                         ? null
                                         : selectedInvoiceId,
+                                    isExpanded: true,
+                                    itemHeight: 56,
+                                    selectedItemBuilder: (context) => controller
+                                        .unpaidInvoices
+                                        .map(
+                                          (inv) => Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: Text(
+                                              '${inv.invoiceNumber}  •  ${_formatAmount(inv.outstanding)}',
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.black,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 1,
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
                                     decoration: InputDecoration(
                                       labelText: 'Select Invoice *',
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(8),
                                       ),
-                                      contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 10,
-                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 10,
+                                          ),
                                       isDense: true,
                                       labelStyle: TextStyle(
                                         fontSize: 12,
@@ -975,7 +1042,9 @@ class PaymentsReceivedScreen extends StatelessWidget {
                                                     fontWeight: FontWeight.w600,
                                                     color: Colors.black,
                                                   ),
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  maxLines: 1,
                                                 ),
                                                 Text(
                                                   'Due: ${_formatAmount(inv.outstanding)} • ${DateFormat('dd MMM yyyy').format(inv.dueDate)}',
@@ -983,6 +1052,9 @@ class PaymentsReceivedScreen extends StatelessWidget {
                                                     fontSize: 10,
                                                     color: kSubText,
                                                   ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  maxLines: 1,
                                                 ),
                                               ],
                                             ),
@@ -1037,8 +1109,9 @@ class PaymentsReceivedScreen extends StatelessWidget {
                                 amount = double.tryParse(v) ?? 0;
                                 setState(() {});
                               },
-                              validator: (v) =>
-                                  v == null || v.isEmpty ? 'Amount required' : null,
+                              validator: (v) => v == null || v.isEmpty
+                                  ? 'Amount required'
+                                  : null,
                             ),
                             const SizedBox(height: 16),
 
@@ -1082,7 +1155,8 @@ class PaymentsReceivedScreen extends StatelessWidget {
                                   child: Text('Credit Card'),
                                 ),
                               ],
-                              onChanged: (v) => setState(() => paymentMethod = v!),
+                              onChanged: (v) =>
+                                  setState(() => paymentMethod = v!),
                             ),
                             const SizedBox(height: 16),
 
@@ -1119,6 +1193,26 @@ class PaymentsReceivedScreen extends StatelessWidget {
                                   value: selectedBankAccountId.isEmpty
                                       ? null
                                       : selectedBankAccountId,
+                                  isExpanded: true,
+                                  itemHeight: 56,
+                                  selectedItemBuilder: (context) => controller
+                                      .bankAccounts
+                                      .map(
+                                        (acc) => Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Text(
+                                            '${acc.name}  •  ${_formatAmount(acc.balance)}',
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.black,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                            maxLines: 1,
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
                                   decoration: InputDecoration(
                                     labelText: 'Deposit To *',
                                     border: OutlineInputBorder(
@@ -1162,6 +1256,7 @@ class PaymentsReceivedScreen extends StatelessWidget {
                                                   color: Colors.black,
                                                 ),
                                                 overflow: TextOverflow.ellipsis,
+                                                maxLines: 1,
                                               ),
                                               Text(
                                                 '${acc.number} • Balance: ${_formatAmount(acc.balance)}',
@@ -1169,6 +1264,8 @@ class PaymentsReceivedScreen extends StatelessWidget {
                                                   fontSize: 10,
                                                   color: kSubText,
                                                 ),
+                                                overflow: TextOverflow.ellipsis,
+                                                maxLines: 1,
                                               ),
                                             ],
                                           ),
@@ -1267,7 +1364,8 @@ class PaymentsReceivedScreen extends StatelessWidget {
                               onPressed: controller.isRecording.value
                                   ? null
                                   : () async {
-                                      if (!formKey.currentState!.validate()) return;
+                                      if (!formKey.currentState!.validate())
+                                        return;
 
                                       if (selectedInvoiceId.isEmpty) {
                                         AppSnackbar.error(
@@ -1302,7 +1400,8 @@ class PaymentsReceivedScreen extends StatelessWidget {
                                           .firstWhere(
                                             (i) => i.id == selectedInvoiceId,
                                           );
-                                      if (amount > selectedInvoice.outstanding) {
+                                      if (amount >
+                                          selectedInvoice.outstanding) {
                                         AppSnackbar.error(
                                           kDanger,
                                           'Error',
@@ -1319,8 +1418,8 @@ class PaymentsReceivedScreen extends StatelessWidget {
                                         paymentDate: DateTime.now(),
                                         paymentMethod: paymentMethod,
                                         reference: reference,
-                                        bankAccountId: selectedBankAccountId
-                                            .isEmpty
+                                        bankAccountId:
+                                            selectedBankAccountId.isEmpty
                                             ? null
                                             : selectedBankAccountId,
                                         notes: notes,
@@ -1329,7 +1428,9 @@ class PaymentsReceivedScreen extends StatelessWidget {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: kSuccess,
                                 elevation: 0,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -1342,7 +1443,8 @@ class PaymentsReceivedScreen extends StatelessWidget {
                                         strokeWidth: 2,
                                         valueColor:
                                             const AlwaysStoppedAnimation<Color>(
-                                                Colors.black),
+                                              Colors.black,
+                                            ),
                                       ),
                                     )
                                   : const Text(
@@ -1488,24 +1590,30 @@ class PaymentsReceivedScreen extends StatelessWidget {
                       Row(
                         children: [
                           _miniKpi(
-                            'Amount',
+                            'Paid',
                             _formatAmount(payment.amount),
                             kSuccess,
                             Icons.attach_money,
                           ),
                           const SizedBox(width: 8),
                           _miniKpi(
-                            'Invoice',
-                            payment.invoiceNumber,
+                            'Invoice Total',
+                            _formatAmount(payment.invoiceAmount),
                             kPrimary,
                             Icons.receipt,
                           ),
                           const SizedBox(width: 8),
                           _miniKpi(
-                            'Method',
-                            payment.paymentMethod,
-                            kSubText,
-                            Icons.payment,
+                            'Balance Due',
+                            _formatAmount(
+                              payment.invoiceAmount - payment.amount,
+                            ),
+                            payment.invoiceAmount - payment.amount > 0.001
+                                ? kWarning
+                                : kSuccess,
+                            payment.invoiceAmount - payment.amount > 0.001
+                                ? Icons.pending_outlined
+                                : Icons.check_circle_outline,
                           ),
                         ],
                       ),
@@ -1517,8 +1625,21 @@ class PaymentsReceivedScreen extends StatelessWidget {
                       _detailRow('Customer', payment.customerName),
                       _detailRow('Invoice #', payment.invoiceNumber),
                       _detailRow(
-                        'Invoice Amount',
+                        'Invoice Total',
                         _formatAmount(payment.invoiceAmount),
+                      ),
+                      _detailRow(
+                        'Amount Paid',
+                        _formatAmount(payment.amount),
+                        valueColor: kSuccess,
+                      ),
+                      _detailRow(
+                        'Balance Due',
+                        _formatAmount(payment.invoiceAmount - payment.amount),
+                        valueColor:
+                            payment.invoiceAmount - payment.amount > 0.001
+                            ? kWarning
+                            : kSuccess,
                       ),
                       _detailRow('Payment Method', payment.paymentMethod),
                       if (payment.reference.isNotEmpty)
@@ -1529,9 +1650,9 @@ class PaymentsReceivedScreen extends StatelessWidget {
                         _detailRow('Notes', payment.notes),
                       _detailRow(
                         'Recorded At',
-                        DateFormat('dd MMM yyyy, hh:mm a').format(
-                          payment.createdAt,
-                        ),
+                        DateFormat(
+                          'dd MMM yyyy, hh:mm a',
+                        ).format(payment.createdAt),
                       ),
                       const SizedBox(height: 16),
                       Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
@@ -1550,7 +1671,9 @@ class PaymentsReceivedScreen extends StatelessWidget {
                                     Navigator.pop(context);
                                     final confirm = await Get.dialog<bool>(
                                       AlertDialog(
-                                        title: const Text('Clear Cheque Payment'),
+                                        title: const Text(
+                                          'Clear Cheque Payment',
+                                        ),
                                         content: Text(
                                           'Clear cheque payment ${payment.paymentNumber}?',
                                         ),
@@ -1824,10 +1947,7 @@ class PaymentsReceivedScreen extends StatelessWidget {
           Container(
             width: 5,
             height: 5,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 4),
           Text(

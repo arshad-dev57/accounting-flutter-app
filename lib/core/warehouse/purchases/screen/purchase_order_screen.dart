@@ -1,9 +1,8 @@
-
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/currency_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/purchases/controller/purchase_order_controller.dart';
-import 'package:LedgerPro_app/core/warehouse/purchases/model/purchase_model.dart';
-import 'package:LedgerPro_app/core/warehouse/supplier/screen/supplier_screen.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/purchases/controller/purchase_order_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/purchases/model/purchase_model.dart';
+import 'package:BisonsTechs_app/core/warehouse/supplier/screen/supplier_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -98,26 +97,42 @@ class PurchaseOrderScreen extends StatelessWidget {
                             letterSpacing: -0.3,
                           ),
                         ),
-                        Obx(() => Text(
-                          '${controller.totalRecords.value} orders',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.black.withOpacity(0.55),
-                            fontWeight: FontWeight.w500,
+                        Obx(
+                          () => Text(
+                            '${controller.totalRecords.value} orders',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.black.withOpacity(0.55),
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        )),
+                        ),
                       ],
                     ),
                   ),
-                  Obx(() => Row(
-                    children: [
-                      _compactKpi('Draft', controller.statusCounts.value.draft.toString(), Colors.orange.shade800),
-                      const SizedBox(width: 6),
-                      _compactKpi('Sent', controller.statusCounts.value.sent.toString(), Colors.blue.shade800),
-                      const SizedBox(width: 6),
-                      _compactKpi('Approved', controller.statusCounts.value.approved.toString(), Colors.green.shade800),
-                    ],
-                  )),
+                  Obx(
+                    () => Row(
+                      children: [
+                        _compactKpi(
+                          'Draft',
+                          controller.statusCounts.value.draft.toString(),
+                          Colors.orange.shade800,
+                        ),
+                        const SizedBox(width: 6),
+                        _compactKpi(
+                          'Sent',
+                          controller.statusCounts.value.sent.toString(),
+                          Colors.blue.shade800,
+                        ),
+                        const SizedBox(width: 6),
+                        _compactKpi(
+                          'Approved',
+                          controller.statusCounts.value.approved.toString(),
+                          Colors.green.shade800,
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(width: 10),
                   GestureDetector(
                     onTap: controller.refreshOrders,
@@ -128,7 +143,11 @@ class PurchaseOrderScreen extends StatelessWidget {
                         color: Colors.black.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(9),
                       ),
-                      child: Icon(Icons.refresh_rounded, size: 17, color: Colors.black.withOpacity(0.65)),
+                      child: Icon(
+                        Icons.refresh_rounded,
+                        size: 17,
+                        color: Colors.black.withOpacity(0.65),
+                      ),
                     ),
                   ),
                 ],
@@ -152,19 +171,41 @@ class PurchaseOrderScreen extends StatelessWidget {
                 child: _SearchField(controller: controller),
               ),
             ),
-            Obx(() => SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-              child: Row(
-                children: [
-                  _filterChip('All', controller.selectedFilter.value == 'all', () => controller.filterOrders('all')),
-                  _filterChip('Draft', controller.selectedFilter.value == 'Draft', () => controller.filterOrders('Draft')),
-                  _filterChip('Sent', controller.selectedFilter.value == 'Sent', () => controller.filterOrders('Sent')),
-                  _filterChip('Approved', controller.selectedFilter.value == 'Approved', () => controller.filterOrders('Approved')),
-                  _filterChip('Cancelled', controller.selectedFilter.value == 'Cancelled', () => controller.filterOrders('Cancelled')),
-                ],
+            Obx(
+              () => SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                child: Row(
+                  children: [
+                    _filterChip(
+                      'All',
+                      controller.selectedFilter.value == 'all',
+                      () => controller.filterOrders('all'),
+                    ),
+                    _filterChip(
+                      'Draft',
+                      controller.selectedFilter.value == 'Draft',
+                      () => controller.filterOrders('Draft'),
+                    ),
+                    _filterChip(
+                      'Sent',
+                      controller.selectedFilter.value == 'Sent',
+                      () => controller.filterOrders('Sent'),
+                    ),
+                    _filterChip(
+                      'Approved',
+                      controller.selectedFilter.value == 'Approved',
+                      () => controller.filterOrders('Approved'),
+                    ),
+                    _filterChip(
+                      'Cancelled',
+                      controller.selectedFilter.value == 'Cancelled',
+                      () => controller.filterOrders('Cancelled'),
+                    ),
+                  ],
+                ),
               ),
-            )),
+            ),
           ],
         ),
       ),
@@ -175,8 +216,22 @@ class PurchaseOrderScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: color)),
-        Text(label, style: TextStyle(fontSize: 9, color: Colors.black.withOpacity(0.5), fontWeight: FontWeight.w600)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 9,
+            color: Colors.black.withOpacity(0.5),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
     );
   }
@@ -192,7 +247,9 @@ class PurchaseOrderScreen extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected ? Colors.black : Colors.white.withOpacity(0.18),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: selected ? Colors.black : Colors.white.withOpacity(0.4)),
+            border: Border.all(
+              color: selected ? Colors.black : Colors.white.withOpacity(0.4),
+            ),
           ),
           child: Text(
             label,
@@ -207,7 +264,11 @@ class PurchaseOrderScreen extends StatelessWidget {
     );
   }
 
-  void _showDetail(BuildContext context, PurchaseOrderController controller, PurchaseOrderModel item) {
+  void _showDetail(
+    BuildContext context,
+    PurchaseOrderController controller,
+    PurchaseOrderModel item,
+  ) {
     controller.selectOrder(item);
     showModalBottomSheet(
       context: context,
@@ -280,7 +341,9 @@ class _SearchFieldState extends State<_SearchField> {
       controller: _searchCtrl,
       onChanged: (v) {
         setState(() {});
-        v.isEmpty ? widget.controller.clearSearch() : widget.controller.searchOrders(v);
+        v.isEmpty
+            ? widget.controller.clearSearch()
+            : widget.controller.searchOrders(v);
       },
       style: const TextStyle(fontSize: 13, color: Colors.black87),
       decoration: InputDecoration(
@@ -298,7 +361,10 @@ class _SearchFieldState extends State<_SearchField> {
               )
             : null,
         border: InputBorder.none,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 11,
+        ),
         isDense: true,
       ),
     );
@@ -313,10 +379,7 @@ class _CreateOrderWizard extends StatelessWidget {
   final PurchaseOrderController controller;
   final VoidCallback onCancel;
 
-  const _CreateOrderWizard({
-    required this.controller,
-    required this.onCancel,
-  });
+  const _CreateOrderWizard({required this.controller, required this.onCancel});
 
   String _format(double v) {
     final currency = Get.find<CurrencyController>();
@@ -398,333 +461,373 @@ class _CreateOrderWizard extends StatelessWidget {
   // ─── STEP 1: SELECT SUPPLIER ──────────────────────────────────
 
   Widget _stepSelectSupplier(BuildContext context) {
-    return _section(
-      'Select Supplier',
-      Icons.business,
-      [
-        Row(
-          children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: kBgLight,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.grey.shade200),
-                ),
-                child: TextField(
-                  controller: controller.supplierSearchController,
-                  decoration:  InputDecoration(
-                    hintText: 'Search supplier...',
-                    prefixIcon: Icon(Icons.search, size: 18, color: kSubText),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                    isDense: true,
-                  ),
-                  onChanged: controller.searchSuppliers,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              height: 44,
-              width: 44,
+    return _section('Select Supplier', Icons.business, [
+      Row(
+        children: [
+          Expanded(
+            child: Container(
               decoration: BoxDecoration(
-                color: kPrimary,
+                color: kBgLight,
                 borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.grey.shade200),
               ),
-              child: IconButton(
-                icon: const Icon(Icons.add, color: Colors.black, size: 22),
-                onPressed: () {
-                  Get.to(() => const SuppliersScreen())?.then((_) {
-                    controller.supplierSearchResults.clear();
-                    controller.supplierSearchController.clear();
-                  });
-                },
-                padding: EdgeInsets.zero,
+              child: TextField(
+                controller: controller.supplierSearchController,
+                decoration: InputDecoration(
+                  hintText: 'Search supplier...',
+                  prefixIcon: Icon(Icons.search, size: 18, color: kSubText),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                  isDense: true,
+                ),
+                onChanged: controller.searchSuppliers,
               ),
             ),
-          ],
-        ),
-        if (controller.isSearchingSuppliers.value)
-          const Padding(
-            padding: EdgeInsets.all(16),
-            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
           ),
-        ...controller.supplierSearchResults.map(_supplierTile),
-        if (controller.selectedSupplier.value != null)
-          _selectedSupplierCard(controller.selectedSupplier.value!),
-      ],
-    );
+          const SizedBox(width: 8),
+          Container(
+            height: 44,
+            width: 44,
+            decoration: BoxDecoration(
+              color: kPrimary,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.add, color: Colors.black, size: 22),
+              onPressed: () {
+                Get.to(() => const SuppliersScreen())?.then((_) {
+                  controller.supplierSearchResults.clear();
+                  controller.supplierSearchController.clear();
+                });
+              },
+              padding: EdgeInsets.zero,
+            ),
+          ),
+        ],
+      ),
+      if (controller.isSearchingSuppliers.value)
+        const Padding(
+          padding: EdgeInsets.all(16),
+          child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        ),
+      ...controller.supplierSearchResults.map(_supplierTile),
+      if (controller.selectedSupplier.value != null)
+        _selectedSupplierCard(controller.selectedSupplier.value!),
+    ]);
   }
 
   // ─── STEP 2: ADD ITEMS ────────────────────────────────────────
 
   Widget _stepAddItems(BuildContext context) {
-    return _section(
-      'Add Items',
-      Icons.inventory,
-      [
+    return _section('Add Items', Icons.inventory, [
+      Container(
+        decoration: BoxDecoration(
+          color: kBgLight,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: controller.productSearchController,
+                decoration: InputDecoration(
+                  hintText: 'Search products...',
+                  prefixIcon: Icon(Icons.search, size: 18, color: kSubText),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                  isDense: true,
+                ),
+                onChanged: controller.searchProducts,
+              ),
+            ),
+            if (controller.isSearchingProducts.value)
+              const Padding(
+                padding: EdgeInsets.all(8),
+                child: SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+          ],
+        ),
+      ),
+      if (controller.productSearchResults.isNotEmpty)
         Container(
+          constraints: const BoxConstraints(maxHeight: 180),
+          margin: const EdgeInsets.only(top: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: controller.productSearchResults.length,
+            itemBuilder: (context, index) {
+              final product = controller.productSearchResults[index];
+              return ListTile(
+                dense: true,
+                leading: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: kPrimary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(Icons.inventory_2, size: 16, color: kPrimary),
+                ),
+                title: Text(
+                  product['name'] ?? '',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                subtitle: Text(
+                  'SKU: ${product['sku']} • ${_format(product['costPrice']?.toDouble() ?? 0)}',
+                  style: const TextStyle(fontSize: 11),
+                ),
+                trailing: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: kPrimary,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Icon(Icons.add, color: Colors.black, size: 16),
+                ),
+                onTap: () => controller.addProductToOrder(product),
+              );
+            },
+          ),
+        ),
+      const SizedBox(height: 12),
+      if (controller.lineDrafts.isEmpty)
+        Container(
+          padding: EdgeInsets.all(32),
           decoration: BoxDecoration(
             color: kBgLight,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(
+              color: Colors.grey.shade200,
+              style: BorderStyle.solid,
+            ),
           ),
-          child: Row(
+          child: Column(
             children: [
-              Expanded(
-                child: TextField(
-                  controller: controller.productSearchController,
-                  decoration:  InputDecoration(
-                    hintText: 'Search products...',
-                    prefixIcon: Icon(Icons.search, size: 18, color: kSubText),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                    isDense: true,
-                  ),
-                  onChanged: controller.searchProducts,
+              Icon(
+                Icons.inventory_2_outlined,
+                size: 48,
+                color: kSubText.withOpacity(0.3),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'No items added yet',
+                style: TextStyle(color: kSubText, fontSize: 13),
+              ),
+              Text(
+                'Search and add products above',
+                style: TextStyle(
+                  color: kSubText.withOpacity(0.6),
+                  fontSize: 11,
                 ),
               ),
-              if (controller.isSearchingProducts.value)
-                const Padding(
-                  padding: EdgeInsets.all(8),
-                  child: SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                ),
             ],
           ),
-        ),
-        if (controller.productSearchResults.isNotEmpty)
-          Container(
-            constraints: const BoxConstraints(maxHeight: 180),
-            margin: const EdgeInsets.only(top: 8),
+        )
+      else
+        ...List.generate(controller.lineDrafts.length, (index) {
+          final line = controller.lineDrafts[index];
+          return Container(
+            margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(color: Colors.grey.shade200),
             ),
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: controller.productSearchResults.length,
-              itemBuilder: (context, index) {
-                final product = controller.productSearchResults[index];
-                return ListTile(
-                  dense: true,
-                  leading: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: kPrimary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Icon(Icons.inventory_2, size: 16, color: kPrimary),
-                  ),
-                  title: Text(
-                    product['name'] ?? '',
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: Text(
-                    'SKU: ${product['sku']} • ${_format(product['costPrice']?.toDouble() ?? 0)}',
-                    style: const TextStyle(fontSize: 11),
-                  ),
-                  trailing: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: kPrimary,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Icon(Icons.add, color: Colors.black, size: 16),
-                  ),
-                  onTap: () => controller.addProductToOrder(product),
-                );
-              },
-            ),
-          ),
-        const SizedBox(height: 12),
-        if (controller.lineDrafts.isEmpty)
-          Container(
-            padding:  EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: kBgLight,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.grey.shade200, style: BorderStyle.solid),
-            ),
-            child: Column(
-              children: [
-                Icon(Icons.inventory_2_outlined, size: 48, color: kSubText.withOpacity(0.3)),
-                const SizedBox(height: 8),
-                Text(
-                  'No items added yet',
-                  style: TextStyle(color: kSubText, fontSize: 13),
-                ),
-                Text(
-                  'Search and add products above',
-                  style: TextStyle(color: kSubText.withOpacity(0.6), fontSize: 11),
-                ),
-              ],
-            ),
-          )
-        else
-          ...List.generate(controller.lineDrafts.length, (index) {
-            final line = controller.lineDrafts[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.grey.shade200),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: kPrimary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Center(
-                            child: Text(
-                              '${index + 1}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12,
-                                color: kPrimary,
-                              ),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: kPrimary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${index + 1}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                              color: kPrimary,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                line.productName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              line.productName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
                               ),
-                              Text(
-                                'SKU: ${line.sku}',
-                                style: TextStyle(fontSize: 11, color: kSubText),
-                              ),
-                            ],
-                          ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              'SKU: ${line.sku}',
+                              style: TextStyle(fontSize: 11, color: kSubText),
+                            ),
+                          ],
                         ),
-                        IconButton(
-                          icon: Icon(Icons.close, size: 18, color: Colors.red.shade400),
-                          onPressed: () => controller.removeProductFromOrder(index),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.close,
+                          size: 18,
+                          color: Colors.red.shade400,
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: _buildField(
-                            label: 'Qty',
-                            value: line.quantity.toString(),
-                            onChanged: (v) {
-                              final q = int.tryParse(v) ?? 1;
-                              controller.updateProductQuantity(index, q.clamp(1, 9999));
-                            },
-                          ),
+                        onPressed: () =>
+                            controller.removeProductFromOrder(index),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: _buildField(
+                          label: 'Qty',
+                          value: line.quantity.toString(),
+                          onChanged: (v) {
+                            final q = int.tryParse(v) ?? 1;
+                            controller.updateProductQuantity(
+                              index,
+                              q.clamp(1, 9999),
+                            );
+                          },
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          flex: 2,
-                          child: _buildField(
-                            label: 'Unit Price',
-                            value: line.unitPrice.toString(),
-                            onChanged: (v) {
-                              final p = double.tryParse(v) ?? 0;
-                              controller.updateProductUnitPrice(index, p);
-                            },
-                          ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 2,
+                        child: _buildField(
+                          label: 'Unit Price',
+                          value: line.unitPrice.toString(),
+                          onChanged: (v) {
+                            final p = double.tryParse(v) ?? 0;
+                            controller.updateProductUnitPrice(index, p);
+                          },
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          flex: 1,
-                          child: _buildField(
-                            label: 'Disc%',
-                            value: line.discount.toString(),
-                            onChanged: (v) {
-                              final d = double.tryParse(v) ?? 0;
-                              controller.updateProductDiscount(index, d.clamp(0, 100));
-                            },
-                          ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 1,
+                        child: _buildField(
+                          label: 'Disc%',
+                          value: line.discount.toString(),
+                          onChanged: (v) {
+                            final d = double.tryParse(v) ?? 0;
+                            controller.updateProductDiscount(
+                              index,
+                              d.clamp(0, 100),
+                            );
+                          },
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          flex: 1,
-                          child: _buildField(
-                            label: 'Tax%',
-                            value: line.taxRate.toString(),
-                            onChanged: (v) {
-                              final t = double.tryParse(v) ?? 0;
-                              controller.updateProductTaxRate(index, t.clamp(0, 100));
-                            },
-                          ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 1,
+                        child: _buildField(
+                          label: 'Tax%',
+                          value: line.taxRate.toString(),
+                          onChanged: (v) {
+                            final t = double.tryParse(v) ?? 0;
+                            controller.updateProductTaxRate(
+                              index,
+                              t.clamp(0, 100),
+                            );
+                          },
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Text('Line Total: ', style: TextStyle(fontSize: 12, color: kSubText)),
-                        Text(
-                          _format(line.lineTotal),
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
-                            color: kPrimary,
-                          ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        'Line Total: ',
+                        style: TextStyle(fontSize: 12, color: kSubText),
+                      ),
+                      Text(
+                        _format(line.lineTotal),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: kPrimary,
                         ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            );
-          }),
-        if (controller.lineDrafts.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: kPrimary.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(10),
             ),
-            child: Column(
-              children: [
-                _summaryRow('Subtotal', _format(controller.selectedSubtotal)),
-                _summaryRow('Discount', '-${_format(controller.selectedTotalDiscount)}', color: Colors.red),
-                _summaryRow('Tax', _format(controller.selectedTotalTax), color: Colors.blue),
-                _summaryRow('Total Items', controller.totalItems.toString()),
-                const Divider(height: 16),
-                _summaryRow('Grand Total', _format(controller.selectedGrandTotal), bold: true),
-              ],
-            ),
+          );
+        }),
+      if (controller.lineDrafts.isNotEmpty) ...[
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: kPrimary.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(10),
           ),
-        ],
+          child: Column(
+            children: [
+              _summaryRow('Subtotal', _format(controller.selectedSubtotal)),
+              _summaryRow(
+                'Discount',
+                '-${_format(controller.selectedTotalDiscount)}',
+                color: Colors.red,
+              ),
+              _summaryRow(
+                'Tax',
+                _format(controller.selectedTotalTax),
+                color: Colors.blue,
+              ),
+              _summaryRow('Total Items', controller.totalItems.toString()),
+              const Divider(height: 16),
+              _summaryRow(
+                'Grand Total',
+                _format(controller.selectedGrandTotal),
+                bold: true,
+              ),
+            ],
+          ),
+        ),
       ],
-    );
+    ]);
   }
 
   Widget _buildField({
@@ -739,9 +842,7 @@ class _CreateOrderWizard extends StatelessWidget {
         labelText: label,
         labelStyle: const TextStyle(fontSize: 11),
         isDense: true,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(6),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
       ),
       style: const TextStyle(fontSize: 12),
@@ -752,53 +853,56 @@ class _CreateOrderWizard extends StatelessWidget {
   // ─── STEP 3: ORDER DETAILS ────────────────────────────────────
 
   Widget _stepDetails(BuildContext context) {
-    return _section(
-      'Order Details',
-      Icons.description,
-      [
-        _buildDateField(
-          controller: controller.orderDateController,
-          label: 'Order Date *',
-          onTap: () => controller.selectOrderDate(context),
+    return _section('Order Details', Icons.description, [
+      _buildDateField(
+        controller: controller.orderDateController,
+        label: 'Order Date *',
+        onTap: () => controller.selectOrderDate(context),
+      ),
+      const SizedBox(height: 12),
+      _buildDateField(
+        controller: controller.expectedDeliveryDateController,
+        label: 'Expected Delivery',
+        onTap: () => controller.selectExpectedDeliveryDate(context),
+      ),
+      const SizedBox(height: 12),
+      _buildTextField(
+        controller: controller.notesController,
+        label: 'Notes',
+        maxLines: 2,
+      ),
+      const SizedBox(height: 12),
+      _buildTextField(
+        controller: controller.termsConditionsController,
+        label: 'Terms & Conditions',
+        maxLines: 2,
+      ),
+      const SizedBox(height: 16),
+      Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: kPrimary.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: kPrimary.withOpacity(0.15)),
         ),
-        const SizedBox(height: 12),
-        _buildDateField(
-          controller: controller.expectedDeliveryDateController,
-          label: 'Expected Delivery',
-          onTap: () => controller.selectExpectedDeliveryDate(context),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _summaryRow(
+              'Supplier',
+              controller.selectedSupplier.value?['name'] ?? '',
+            ),
+            _summaryRow('Items', controller.totalItems.toString()),
+            const Divider(height: 16),
+            _summaryRow(
+              'Grand Total',
+              _format(controller.selectedGrandTotal),
+              bold: true,
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
-        _buildTextField(
-          controller: controller.notesController,
-          label: 'Notes',
-          maxLines: 2,
-        ),
-        const SizedBox(height: 12),
-        _buildTextField(
-          controller: controller.termsConditionsController,
-          label: 'Terms & Conditions',
-          maxLines: 2,
-        ),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: kPrimary.withOpacity(0.06),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: kPrimary.withOpacity(0.15)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _summaryRow('Supplier', controller.selectedSupplier.value?['name'] ?? ''),
-              _summaryRow('Items', controller.totalItems.toString()),
-              const Divider(height: 16),
-              _summaryRow('Grand Total', _format(controller.selectedGrandTotal), bold: true),
-            ],
-          ),
-        ),
-      ],
-    );
+      ),
+    ]);
   }
 
   Widget _buildDateField({
@@ -854,7 +958,10 @@ class _CreateOrderWizard extends StatelessWidget {
           hintText: label,
           hintStyle: TextStyle(color: kSubText, fontSize: 13),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 12,
+          ),
           isDense: true,
         ),
       ),
@@ -914,7 +1021,12 @@ class _CreateOrderWizard extends StatelessWidget {
     );
   }
 
-  Widget _summaryRow(String label, String value, {bool bold = false, Color? color}) {
+  Widget _summaryRow(
+    String label,
+    String value, {
+    bool bold = false,
+    Color? color,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -995,12 +1107,21 @@ class _CreateOrderWizard extends StatelessWidget {
               children: [
                 Text(
                   supplier['name'] ?? '',
-                  style: TextStyle(fontWeight: FontWeight.w700, color: kPrimary),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: kPrimary,
+                  ),
                 ),
                 if (supplier['email'] != null)
-                  Text(supplier['email'], style: TextStyle(fontSize: 12, color: kSubText)),
+                  Text(
+                    supplier['email'],
+                    style: TextStyle(fontSize: 12, color: kSubText),
+                  ),
                 if (supplier['phone'] != null)
-                  Text(supplier['phone'], style: TextStyle(fontSize: 12, color: kSubText)),
+                  Text(
+                    supplier['phone'],
+                    style: TextStyle(fontSize: 12, color: kSubText),
+                  ),
               ],
             ),
           ),
@@ -1030,7 +1151,10 @@ class _CreateOrderWizard extends StatelessWidget {
             OutlinedButton(
               onPressed: controller.previousStep,
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 14,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -1040,7 +1164,13 @@ class _CreateOrderWizard extends StatelessWidget {
                 children: [
                   Icon(Icons.arrow_back, size: 16, color: kSubText),
                   const SizedBox(width: 4),
-                  Text('Back', style: TextStyle(color: kSubText, fontWeight: FontWeight.w600)),
+                  Text(
+                    'Back',
+                    style: TextStyle(
+                      color: kSubText,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1050,7 +1180,10 @@ class _CreateOrderWizard extends StatelessWidget {
               onPressed: controller.nextStep,
               style: ElevatedButton.styleFrom(
                 backgroundColor: kPrimary,
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 14,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -1058,7 +1191,13 @@ class _CreateOrderWizard extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Text('Next', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
+                  Text(
+                    'Next',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   const SizedBox(width: 4),
                   Icon(Icons.arrow_forward, size: 16, color: Colors.black),
                 ],
@@ -1066,10 +1205,15 @@ class _CreateOrderWizard extends StatelessWidget {
             )
           else
             ElevatedButton(
-              onPressed: controller.isSubmitting.value ? null : controller.createOrder,
+              onPressed: controller.isSubmitting.value
+                  ? null
+                  : controller.createOrder,
               style: ElevatedButton.styleFrom(
                 backgroundColor: kPrimary,
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 14,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -1079,13 +1223,22 @@ class _CreateOrderWizard extends StatelessWidget {
                   ? const SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.black,
+                      ),
                     )
                   : Row(
                       children: [
                         Icon(Icons.check, size: 18, color: Colors.black),
                         const SizedBox(width: 6),
-                        Text('Create Order', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
+                        Text(
+                          'Create Order',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ],
                     ),
             ),
@@ -1118,7 +1271,10 @@ class _OrderDetailSheetState extends State<_OrderDetailSheet> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final current = widget.controller.orders.firstWhereOrNull((o) => o.id == widget.orderItem.id) ??
+      final current =
+          widget.controller.orders.firstWhereOrNull(
+            (o) => o.id == widget.orderItem.id,
+          ) ??
           widget.orderItem;
 
       return Column(
@@ -1161,7 +1317,10 @@ class _OrderDetailSheetState extends State<_OrderDetailSheet> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: _statusColor(current.status).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
@@ -1193,10 +1352,7 @@ class _OrderDetailSheetState extends State<_OrderDetailSheet> {
             children: [
               const Text(
                 'Items',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                ),
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
               ),
               Text(
                 '${current.totalItems} items',
@@ -1205,48 +1361,50 @@ class _OrderDetailSheetState extends State<_OrderDetailSheet> {
             ],
           ),
           const SizedBox(height: 8),
-          ...current.items.map((item) => Container(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: Colors.grey.withOpacity(0.06)),
+          ...current.items.map(
+            (item) => Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: Colors.grey.withOpacity(0.06)),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.productName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                        Text(
+                          'Qty: ${item.quantity} × ${_format(item.unitPrice)}',
+                          style: TextStyle(fontSize: 11, color: kSubText),
+                        ),
+                        if (item.discount > 0)
+                          Text(
+                            'Disc: ${item.discount}% • Tax: ${item.taxRate}%',
+                            style: TextStyle(fontSize: 10, color: Colors.blue),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    _format(item.lineTotal),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
               ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.productName,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                      Text(
-                        'Qty: ${item.quantity} × ${_format(item.unitPrice)}',
-                        style: TextStyle(fontSize: 11, color: kSubText),
-                      ),
-                      if (item.discount > 0)
-                        Text(
-                          'Disc: ${item.discount}% • Tax: ${item.taxRate}%',
-                          style: TextStyle(fontSize: 10, color: Colors.blue),
-                        ),
-                    ],
-                  ),
-                ),
-                Text(
-                  _format(item.lineTotal),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          )),
+          ),
 
           const SizedBox(height: 12),
 
@@ -1261,11 +1419,23 @@ class _OrderDetailSheetState extends State<_OrderDetailSheet> {
               children: [
                 _summaryRow('Subtotal', _format(current.subtotal)),
                 if (current.totalDiscount > 0)
-                  _summaryRow('Discount', '-${_format(current.totalDiscount)}', color: Colors.red),
+                  _summaryRow(
+                    'Discount',
+                    '-${_format(current.totalDiscount)}',
+                    color: Colors.red,
+                  ),
                 if (current.totalTax > 0)
-                  _summaryRow('Tax', _format(current.totalTax), color: Colors.blue),
+                  _summaryRow(
+                    'Tax',
+                    _format(current.totalTax),
+                    color: Colors.blue,
+                  ),
                 const Divider(height: 12),
-                _summaryRow('Grand Total', _format(current.grandTotal), bold: true),
+                _summaryRow(
+                  'Grand Total',
+                  _format(current.grandTotal),
+                  bold: true,
+                ),
               ],
             ),
           ),
@@ -1281,7 +1451,9 @@ class _OrderDetailSheetState extends State<_OrderDetailSheet> {
                     onPressed: widget.controller.isSubmitting.value
                         ? null
                         : () async {
-                            final ok = await widget.controller.sendOrder(current.id);
+                            final ok = await widget.controller.sendOrder(
+                              current.id,
+                            );
                             if (ok) widget.onClose();
                           },
                     style: ElevatedButton.styleFrom(
@@ -1308,7 +1480,8 @@ class _OrderDetailSheetState extends State<_OrderDetailSheet> {
                       onPressed: widget.controller.isSubmitting.value
                           ? null
                           : () async {
-                              final ok = await widget.controller.updateOrderStatus(current.id, 'Approved');
+                              final ok = await widget.controller
+                                  .updateOrderStatus(current.id, 'Approved');
                               if (ok) widget.onClose();
                             },
                       style: ElevatedButton.styleFrom(
@@ -1340,7 +1513,9 @@ class _OrderDetailSheetState extends State<_OrderDetailSheet> {
                     onPressed: widget.controller.isSubmitting.value
                         ? null
                         : () async {
-                            final ok = await widget.controller.cancelOrder(current.id);
+                            final ok = await widget.controller.cancelOrder(
+                              current.id,
+                            );
                             if (ok) widget.onClose();
                           },
                     style: ElevatedButton.styleFrom(
@@ -1365,7 +1540,9 @@ class _OrderDetailSheetState extends State<_OrderDetailSheet> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () async {
-                        final ok = await widget.controller.deleteOrder(current.id);
+                        final ok = await widget.controller.deleteOrder(
+                          current.id,
+                        );
                         if (ok) widget.onClose();
                       },
                       style: OutlinedButton.styleFrom(
@@ -1400,10 +1577,7 @@ class _OrderDetailSheetState extends State<_OrderDetailSheet> {
             ),
             child: Text(
               'Close',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: kSubText,
-              ),
+              style: TextStyle(fontWeight: FontWeight.w600, color: kSubText),
             ),
           ),
         ],
@@ -1433,14 +1607,36 @@ class _OrderDetailSheetState extends State<_OrderDetailSheet> {
 
   Widget _detailGrid(PurchaseOrderModel current) {
     final items = [
-      {'label': 'Supplier', 'value': current.supplierName, 'icon': Icons.business},
+      {
+        'label': 'Supplier',
+        'value': current.supplierName,
+        'icon': Icons.business,
+      },
       if (current.supplierEmail != null && current.supplierEmail!.isNotEmpty)
-        {'label': 'Email', 'value': current.supplierEmail!, 'icon': Icons.email},
+        {
+          'label': 'Email',
+          'value': current.supplierEmail!,
+          'icon': Icons.email,
+        },
       if (current.supplierPhone != null && current.supplierPhone!.isNotEmpty)
-        {'label': 'Phone', 'value': current.supplierPhone!, 'icon': Icons.phone},
-      {'label': 'Order Date', 'value': DateFormat('dd MMM yyyy').format(current.orderDate), 'icon': Icons.calendar_today},
+        {
+          'label': 'Phone',
+          'value': current.supplierPhone!,
+          'icon': Icons.phone,
+        },
+      {
+        'label': 'Order Date',
+        'value': DateFormat('dd MMM yyyy').format(current.orderDate),
+        'icon': Icons.calendar_today,
+      },
       if (current.expectedDeliveryDate != null)
-        {'label': 'Expected Delivery', 'value': DateFormat('dd MMM yyyy').format(current.expectedDeliveryDate!), 'icon': Icons.calendar_today},
+        {
+          'label': 'Expected Delivery',
+          'value': DateFormat(
+            'dd MMM yyyy',
+          ).format(current.expectedDeliveryDate!),
+          'icon': Icons.calendar_today,
+        },
     ];
 
     return Column(
@@ -1456,7 +1652,11 @@ class _OrderDetailSheetState extends State<_OrderDetailSheet> {
                   color: kPrimary.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Icon(item['icon'] as IconData, size: 14, color: kPrimary),
+                child: Icon(
+                  item['icon'] as IconData,
+                  size: 14,
+                  color: kPrimary,
+                ),
               ),
               const SizedBox(width: 10),
               SizedBox(
@@ -1481,7 +1681,12 @@ class _OrderDetailSheetState extends State<_OrderDetailSheet> {
     );
   }
 
-  Widget _summaryRow(String label, String value, {bool bold = false, Color? color}) {
+  Widget _summaryRow(
+    String label,
+    String value, {
+    bool bold = false,
+    Color? color,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -1597,7 +1802,10 @@ class _OrderListView extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimary,
                   elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -1647,7 +1855,9 @@ class _OrderListView extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
-                          item.isApproved ? Icons.check_circle : Icons.receipt_long,
+                          item.isApproved
+                              ? Icons.check_circle
+                              : Icons.receipt_long,
                           color: color,
                           size: 22,
                         ),
@@ -1670,10 +1880,7 @@ class _OrderListView extends StatelessWidget {
                             const SizedBox(height: 3),
                             Text(
                               item.supplierName,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: kText,
-                              ),
+                              style: TextStyle(fontSize: 12, color: kText),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -1718,7 +1925,9 @@ class _OrderListView extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  DateFormat('dd MMM yyyy').format(item.orderDate),
+                                  DateFormat(
+                                    'dd MMM yyyy',
+                                  ).format(item.orderDate),
                                   style: TextStyle(
                                     fontSize: 9,
                                     color: kSubText,

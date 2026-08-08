@@ -1,6 +1,6 @@
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/responsive_utils.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -10,37 +10,41 @@ class TermsOfServiceScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isWeb = ResponsiveUtils.isWeb(context);
-    
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F8FC),
       // ✅ AppBar for mobile - this fixes the missing app bar issue
-      appBar: isWeb ? null : AppBar(
-        title: const Text(
-          'Terms of Service',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: kPrimary,
-        elevation: 0,
-        centerTitle: false,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
-          onPressed: () => Get.back(),
-        ),
-      ),
-      body: isWeb
-          ? _buildWebLayout(context)
-          : _buildMobileLayout(context),
+      appBar: isWeb
+          ? null
+          : AppBar(
+              title: const Text(
+                'Terms of Service',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+              backgroundColor: kPrimary,
+              elevation: 0,
+              centerTitle: false,
+              leading: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                onPressed: () => Get.back(),
+              ),
+            ),
+      body: isWeb ? _buildWebLayout(context) : _buildMobileLayout(context),
     );
   }
 
   // ==================== MOBILE LAYOUT ====================
   Widget _buildMobileLayout(BuildContext context) {
     final isWeb = ResponsiveUtils.isWeb(context);
-    
+
     return SingleChildScrollView(
       padding: EdgeInsets.all(isWeb ? 32 : 20),
       child: Column(
@@ -50,47 +54,58 @@ class TermsOfServiceScreen extends StatelessWidget {
           const SizedBox(height: 20),
           _buildSection(
             title: '1. Acceptance of Terms',
-            content: 'By downloading, accessing, or using LedgerPro Pro ("the App"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the App.',
+            content:
+                'By downloading, accessing, or using BisonsTechs Pro ("the App"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the App.',
           ),
           _buildSection(
             title: '2. Description of Service',
-            content: 'LedgerPro Pro provides financial management tools including but not limited to: income/expense tracking, invoice generation, bank account management, financial reporting, and data backup services.',
+            content:
+                'BisonsTechs Pro provides financial management tools including but not limited to: income/expense tracking, invoice generation, bank account management, financial reporting, and data backup services.',
           ),
           _buildSection(
             title: '3. User Accounts',
-            content: '• You must provide accurate and complete information when creating an account\n• You are responsible for maintaining the confidentiality of your password\n• You are responsible for all activities that occur under your account\n• Notify us immediately of any unauthorized use of your account',
+            content:
+                '• You must provide accurate and complete information when creating an account\n• You are responsible for maintaining the confidentiality of your password\n• You are responsible for all activities that occur under your account\n• Notify us immediately of any unauthorized use of your account',
           ),
           _buildSection(
             title: '4. Subscription and Billing',
-            content: '• The App offers a 30-day free trial period\n• After the trial, a subscription is required to continue using the service\n• Subscription fees are billed in advance on a monthly or yearly basis\n• All payments are non-refundable except as required by law',
+            content:
+                '• The App offers a 30-day free trial period\n• After the trial, a subscription is required to continue using the service\n• Subscription fees are billed in advance on a monthly or yearly basis\n• All payments are non-refundable except as required by law',
           ),
           _buildSection(
             title: '5. User Responsibilities',
-            content: '• You agree to use the App only for lawful purposes\n• You are responsible for the accuracy of all data you enter\n• You will not attempt to hack, disrupt, or damage the App\n• You will not use the App to store illegal or harmful content',
+            content:
+                '• You agree to use the App only for lawful purposes\n• You are responsible for the accuracy of all data you enter\n• You will not attempt to hack, disrupt, or damage the App\n• You will not use the App to store illegal or harmful content',
           ),
           _buildSection(
             title: '6. Data Ownership and Privacy',
-            content: '• You retain ownership of all data you enter into the App\n• We do not share your data with third parties without your consent\n• We implement security measures to protect your data\n• For more details, please review our Privacy Policy',
+            content:
+                '• You retain ownership of all data you enter into the App\n• We do not share your data with third parties without your consent\n• We implement security measures to protect your data\n• For more details, please review our Privacy Policy',
           ),
           _buildSection(
             title: '7. Intellectual Property',
-            content: 'The App, including its code, design, logo, and content, is owned by Zoltech Solutions and is protected by copyright and intellectual property laws.',
+            content:
+                'The App, including its code, design, logo, and content, is owned by Zoltech Solutions and is protected by copyright and intellectual property laws.',
           ),
           _buildSection(
             title: '8. Limitation of Liability',
-            content: 'To the maximum extent permitted by law, Zoltech Solutions shall not be liable for any indirect, incidental, or consequential damages arising from your use of the App.',
+            content:
+                'To the maximum extent permitted by law, Zoltech Solutions shall not be liable for any indirect, incidental, or consequential damages arising from your use of the App.',
           ),
           _buildSection(
             title: '9. Termination',
-            content: 'We may terminate or suspend your account immediately, without prior notice, for conduct that violates these Terms of Service or for other harmful conduct.',
+            content:
+                'We may terminate or suspend your account immediately, without prior notice, for conduct that violates these Terms of Service or for other harmful conduct.',
           ),
           _buildSection(
             title: '10. Changes to Terms',
-            content: 'We reserve the right to modify these terms at any time. We will notify users of any material changes via email or through the App.',
+            content:
+                'We reserve the right to modify these terms at any time. We will notify users of any material changes via email or through the App.',
           ),
           _buildSection(
             title: '11. Contact Information',
-            content: 'For questions about these Terms of Service, please contact us at:\n📧 legal@ledgerpro.com\n📞 +92 300 1234567',
+            content:
+                'For questions about these Terms of Service, please contact us at:\n📧 legal@BisonsTechs.com\n📞 +92 300 1234567',
           ),
           _buildAcknowledgement(),
           const SizedBox(height: 20),
@@ -103,7 +118,7 @@ class TermsOfServiceScreen extends StatelessWidget {
   // ==================== WEB LAYOUT ====================
   Widget _buildWebLayout(BuildContext context) {
     final isWeb = ResponsiveUtils.isWeb(context);
-    
+
     return Row(
       children: [
         Expanded(
@@ -116,57 +131,68 @@ class TermsOfServiceScreen extends StatelessWidget {
                 const SizedBox(height: 30),
                 _buildWebSection(
                   title: '1. Acceptance of Terms',
-                  content: 'By downloading, accessing, or using LedgerPro ("the Platform"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Platform.',
+                  content:
+                      'By downloading, accessing, or using BisonsTechs ("the Platform"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Platform.',
                 ),
                 const SizedBox(height: 24),
                 _buildWebSection(
                   title: '2. Description of Service',
-                  content: 'LedgerPro provides cloud-based financial management tools including but not limited to: income/expense tracking, invoice generation, bank account management, financial reporting, real-time analytics, and secure data backup services.',
+                  content:
+                      'BisonsTechs provides cloud-based financial management tools including but not limited to: income/expense tracking, invoice generation, bank account management, financial reporting, real-time analytics, and secure data backup services.',
                 ),
                 const SizedBox(height: 24),
                 _buildWebSection(
                   title: '3. User Accounts',
-                  content: '• You must provide accurate and complete information when creating an account\n• You are responsible for maintaining the confidentiality of your password\n• You are responsible for all activities that occur under your account\n• Notify us immediately of any unauthorized use of your account\n• Multi-factor authentication is recommended for enhanced security',
+                  content:
+                      '• You must provide accurate and complete information when creating an account\n• You are responsible for maintaining the confidentiality of your password\n• You are responsible for all activities that occur under your account\n• Notify us immediately of any unauthorized use of your account\n• Multi-factor authentication is recommended for enhanced security',
                 ),
                 const SizedBox(height: 24),
                 _buildWebSection(
                   title: '4. Subscription and Billing',
-                  content: '• The Platform offers a 30-day free trial period\n• After the trial, a subscription is required to continue using the service\n• Subscription fees are billed in advance on a monthly or yearly basis\n• All payments are processed securely via our payment partners\n• Subscriptions automatically renew unless cancelled before the renewal date\n• All payments are non-refundable except as required by law',
+                  content:
+                      '• The Platform offers a 30-day free trial period\n• After the trial, a subscription is required to continue using the service\n• Subscription fees are billed in advance on a monthly or yearly basis\n• All payments are processed securely via our payment partners\n• Subscriptions automatically renew unless cancelled before the renewal date\n• All payments are non-refundable except as required by law',
                 ),
                 const SizedBox(height: 24),
                 _buildWebSection(
                   title: '5. User Responsibilities',
-                  content: '• You agree to use the Platform only for lawful purposes\n• You are responsible for the accuracy of all data you enter\n• You will not attempt to hack, disrupt, or damage the Platform\n• You will not use the Platform to store illegal or harmful content\n• You will comply with all applicable laws and regulations',
+                  content:
+                      '• You agree to use the Platform only for lawful purposes\n• You are responsible for the accuracy of all data you enter\n• You will not attempt to hack, disrupt, or damage the Platform\n• You will not use the Platform to store illegal or harmful content\n• You will comply with all applicable laws and regulations',
                 ),
                 const SizedBox(height: 24),
                 _buildWebSection(
                   title: '6. Data Ownership and Privacy',
-                  content: '• You retain ownership of all data you enter into the Platform\n• We do not share your data with third parties without your consent\n• We implement industry-standard security measures to protect your data\n• For more details, please review our Privacy Policy\n• You can export your data at any time',
+                  content:
+                      '• You retain ownership of all data you enter into the Platform\n• We do not share your data with third parties without your consent\n• We implement industry-standard security measures to protect your data\n• For more details, please review our Privacy Policy\n• You can export your data at any time',
                 ),
                 const SizedBox(height: 24),
                 _buildWebSection(
                   title: '7. Intellectual Property',
-                  content: 'The Platform, including its code, design, logo, and content, is owned by Zoltech Solutions and is protected by copyright and intellectual property laws.',
+                  content:
+                      'The Platform, including its code, design, logo, and content, is owned by Zoltech Solutions and is protected by copyright and intellectual property laws.',
                 ),
                 const SizedBox(height: 24),
                 _buildWebSection(
                   title: '8. Limitation of Liability',
-                  content: 'To the maximum extent permitted by law, Zoltech Solutions shall not be liable for any indirect, incidental, or consequential damages arising from your use of the Platform.',
+                  content:
+                      'To the maximum extent permitted by law, Zoltech Solutions shall not be liable for any indirect, incidental, or consequential damages arising from your use of the Platform.',
                 ),
                 const SizedBox(height: 24),
                 _buildWebSection(
                   title: '9. Termination',
-                  content: 'We may terminate or suspend your account immediately, without prior notice, for conduct that violates these Terms of Service or for other harmful conduct.',
+                  content:
+                      'We may terminate or suspend your account immediately, without prior notice, for conduct that violates these Terms of Service or for other harmful conduct.',
                 ),
                 const SizedBox(height: 24),
                 _buildWebSection(
                   title: '10. Changes to Terms',
-                  content: 'We reserve the right to modify these terms at any time. We will notify users of any material changes via email or through the Platform.',
+                  content:
+                      'We reserve the right to modify these terms at any time. We will notify users of any material changes via email or through the Platform.',
                 ),
                 const SizedBox(height: 24),
                 _buildWebSection(
                   title: '11. Contact Information',
-                  content: 'For questions about these Terms of Service, please contact us at:\n📧 legal@ledgerpro.com\n📞 +92 300 1234567\n📍 Suite 123, Technology Park, Karachi, Pakistan',
+                  content:
+                      'For questions about these Terms of Service, please contact us at:\n📧 legal@BisonsTechs.com\n📞 +92 300 1234567\n📍 Suite 123, Technology Park, Karachi, Pakistan',
                 ),
                 const SizedBox(height: 30),
                 _buildWebAcknowledgement(),
@@ -204,7 +230,11 @@ class TermsOfServiceScreen extends StatelessWidget {
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.description, color: Colors.white, size: 28),
+                child: const Icon(
+                  Icons.description,
+                  color: Colors.white,
+                  size: 28,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -222,16 +252,16 @@ class TermsOfServiceScreen extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       'Last Updated: April 28, 2026',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.white70,
-                      ),
+                      style: TextStyle(fontSize: 13, color: Colors.white70),
                     ),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(20),
@@ -251,7 +281,7 @@ class TermsOfServiceScreen extends StatelessWidget {
           const Divider(color: Colors.white24),
           const SizedBox(height: 12),
           Text(
-            'These terms govern your use of LedgerPro\'s services and form a legally binding agreement.',
+            'These terms govern your use of BisonsTechs\'s services and form a legally binding agreement.',
             style: TextStyle(
               fontSize: 14,
               color: Colors.white.withOpacity(0.9),
@@ -327,10 +357,7 @@ class TermsOfServiceScreen extends StatelessWidget {
           Expanded(
             child: Text(
               'By using this platform, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.',
-              style: const TextStyle(
-                fontSize: 13,
-                color: Color(0xFFE65100),
-              ),
+              style: const TextStyle(fontSize: 13, color: Color(0xFFE65100)),
             ),
           ),
         ],
@@ -348,7 +375,11 @@ class TermsOfServiceScreen extends StatelessWidget {
             child: ElevatedButton(
               onPressed: () {
                 Get.back();
-                AppSnackbar.success(Colors.green, 'Accepted', 'You have accepted the Terms of Service');
+                AppSnackbar.success(
+                  Colors.green,
+                  'Accepted',
+                  'You have accepted the Terms of Service',
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: kPrimary,
@@ -375,10 +406,7 @@ class TermsOfServiceScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                'Decline',
-                style: TextStyle(fontSize: 15),
-              ),
+              child: const Text('Decline', style: TextStyle(fontSize: 15)),
             ),
           ),
         ),
@@ -483,10 +511,7 @@ class TermsOfServiceScreen extends StatelessWidget {
           Expanded(
             child: Text(
               'By using this app, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.',
-              style: const TextStyle(
-                fontSize: 12,
-                color: Color(0xFFE65100),
-              ),
+              style: const TextStyle(fontSize: 12, color: Color(0xFFE65100)),
             ),
           ),
         ],
@@ -501,7 +526,11 @@ class TermsOfServiceScreen extends StatelessWidget {
       child: ElevatedButton(
         onPressed: () {
           Get.back();
-          AppSnackbar.success(Colors.green, 'Accepted', 'You have accepted the Terms of Service');
+          AppSnackbar.success(
+            Colors.green,
+            'Accepted',
+            'You have accepted the Terms of Service',
+          );
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: kPrimary,

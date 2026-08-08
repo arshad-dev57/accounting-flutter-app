@@ -1,7 +1,7 @@
 // lib/core/purchasedashboard/purchase_controller.dart
 
-import 'package:LedgerPro_app/Services/api_client.dart';
-import 'package:LedgerPro_app/core/purchasedashboard/purchase_dashboard_model.dart';
+import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/purchasedashboard/purchase_dashboard_model.dart';
 import 'package:get/get.dart';
 
 class PurchaseController extends GetxController {
@@ -11,17 +11,26 @@ class PurchaseController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxString period = 'month'.obs;
 
-  final Rx<PurchaseDashboardModel?> dashboard = Rx<PurchaseDashboardModel?>(null);
-  final RxList<PurchaseSpendPoint>   spendTrend    = <PurchaseSpendPoint>[].obs;
-  final RxList<PurchaseOrderStatus>  orderStatuses = <PurchaseOrderStatus>[].obs;
-  final RxList<PurchaseSupplier>     topSuppliers  = <PurchaseSupplier>[].obs;
-  final RxList<PurchaseActivity>     activities    = <PurchaseActivity>[].obs;
+  final Rx<PurchaseDashboardModel?> dashboard = Rx<PurchaseDashboardModel?>(
+    null,
+  );
+  final RxList<PurchaseSpendPoint> spendTrend = <PurchaseSpendPoint>[].obs;
+  final RxList<PurchaseOrderStatus> orderStatuses = <PurchaseOrderStatus>[].obs;
+  final RxList<PurchaseSupplier> topSuppliers = <PurchaseSupplier>[].obs;
+  final RxList<PurchaseActivity> activities = <PurchaseActivity>[].obs;
 
   // Custom date
   final Rx<DateTime?> customStart = Rx<DateTime?>(null);
-  final Rx<DateTime?> customEnd   = Rx<DateTime?>(null);
+  final Rx<DateTime?> customEnd = Rx<DateTime?>(null);
 
-  static const periods = ['today', 'week', 'month', 'year'];
+  static const periods = [
+    'today',
+    'week',
+    'month',
+    'last_month',
+    'quarter',
+    'year',
+  ];
 
   @override
   void onInit() {
@@ -35,29 +44,41 @@ class PurchaseController extends GetxController {
     period.value = p;
     if (p == 'custom') {
       customStart.value = start;
-      customEnd.value   = end;
+      customEnd.value = end;
     } else {
       customStart.value = null;
-      customEnd.value   = null;
+      customEnd.value = null;
     }
     fetchDashboard();
   }
 
-  Map<String, dynamic> get _periodParams {
-    final params = <String, dynamic>{'period': period.value};
+  Map<String, String> get _periodParams {
+    final params = <String, String>{'period': period.value};
     if (period.value == 'custom') {
-      if (customStart.value != null) params['startDate'] = customStart.value!.toIso8601String();
-      if (customEnd.value   != null) params['endDate']   = customEnd.value!.toIso8601String();
+      if (customStart.value != null) {
+        params['startDate'] = customStart.value!.toIso8601String();
+      }
+      if (customEnd.value != null) {
+        params['endDate'] = customEnd.value!.toIso8601String();
+      }
     }
     return params;
   }
 
   String getPeriodLabel() {
     switch (period.value) {
-      case 'today': return 'Today';
-      case 'week':  return 'This Week';
-      case 'month': return 'This Month';
-      case 'year':  return 'This Year';
+      case 'today':
+        return 'Today';
+      case 'week':
+        return 'This Week';
+      case 'month':
+        return 'This Month';
+      case 'last_month':
+        return 'Last Month';
+      case 'quarter':
+        return 'This Quarter';
+      case 'year':
+        return 'This Year';
       case 'custom':
         if (customStart.value != null && customEnd.value != null) {
           final s = customStart.value!;
@@ -65,7 +86,8 @@ class PurchaseController extends GetxController {
           return '${s.day}/${s.month} - ${e.day}/${e.month}';
         }
         return 'Custom';
-      default: return 'This Month';
+      default:
+        return 'This Month';
     }
   }
 
@@ -74,6 +96,9 @@ class PurchaseController extends GetxController {
   Future<void> fetchDashboard() async {
     try {
       isLoading.value = true;
+      print(
+        '🔵 [PurchaseDashboard] fetch period=${period.value} params=$_periodParams',
+      );
 
       await Future.wait([
         _fetchMetrics(),
@@ -82,8 +107,17 @@ class PurchaseController extends GetxController {
         _fetchTopSuppliers(),
         _fetchActivities(),
       ]);
+
+      print(
+        '✅ [PurchaseDashboard] loaded '
+        'spend=${dashboard.value?.invoices.totalSpend} '
+        'orders=${dashboard.value?.orders.total} '
+        'trend=${spendTrend.length} '
+        'activities=${activities.length}',
+      );
     } catch (e) {
       print('Purchase dashboard fetch error: $e');
+      Get.snackbar('Purchase Dashboard', 'Failed to load dashboard data');
     } finally {
       isLoading.value = false;
     }
@@ -96,6 +130,7 @@ class PurchaseController extends GetxController {
         requiresAuth: true,
         queryParameters: _periodParams,
       );
+      print('🔵 [PurchaseDashboard] metrics success=${res.success}');
       if (res.success && res.data != null) {
         final data = Map<String, dynamic>.from(res.data['data'] ?? {});
         dashboard.value = PurchaseDashboardModel.fromMetrics(data);
@@ -115,7 +150,9 @@ class PurchaseController extends GetxController {
       if (res.success && res.data != null) {
         final list = res.data['data'] as List? ?? [];
         spendTrend.value = list
-            .map((e) => PurchaseSpendPoint.fromJson(Map<String, dynamic>.from(e)))
+            .map(
+              (e) => PurchaseSpendPoint.fromJson(Map<String, dynamic>.from(e)),
+            )
             .toList();
       }
     } catch (e) {
@@ -133,7 +170,9 @@ class PurchaseController extends GetxController {
       if (res.success && res.data != null) {
         final list = res.data['data'] as List? ?? [];
         orderStatuses.value = list
-            .map((e) => PurchaseOrderStatus.fromJson(Map<String, dynamic>.from(e)))
+            .map(
+              (e) => PurchaseOrderStatus.fromJson(Map<String, dynamic>.from(e)),
+            )
             .toList();
       }
     } catch (e) {

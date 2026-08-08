@@ -1,9 +1,8 @@
-
-import 'package:LedgerPro_app/Utils/currency_utils.dart';
-import 'package:LedgerPro_app/Utils/colors.dart';
-import 'package:LedgerPro_app/Utils/toast_utils.dart';
-import 'package:LedgerPro_app/core/chartofaccounts/controller/chart_of_account_controller.dart';
-import 'package:LedgerPro_app/core/journalEntries/Screens/journal_entries_screen.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/chartofaccounts/controller/chart_of_account_controller.dart';
+import 'package:BisonsTechs_app/core/journalEntries/Screens/journal_entries_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
@@ -44,7 +43,10 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
             child: Obx(() {
               if (controller.isLoading.value && controller.accounts.isEmpty) {
                 return Center(
-                  child: LoadingAnimationWidget.discreteCircle(color: kPrimary, size: 40),
+                  child: LoadingAnimationWidget.discreteCircle(
+                    color: kPrimary,
+                    size: 40,
+                  ),
                 );
               }
               return Padding(
@@ -52,7 +54,8 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                 child: NotificationListener<ScrollNotification>(
                   onNotification: (scrollInfo) {
                     if (!controller.isLoadingMore.value &&
-                        scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent - 200) {
+                        scrollInfo.metrics.pixels >=
+                            scrollInfo.metrics.maxScrollExtent - 200) {
                       controller.loadMoreData();
                     }
                     return false;
@@ -116,39 +119,42 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                       ],
                     ),
                   ),
-                  Obx(() => controller.hasIncorrectCashAccounts.value
-                      ? GestureDetector(
-                          onTap: () => _showFixCashAccountsDialog(context, controller),
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: Colors.orange.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(8),
+                  Obx(
+                    () => controller.hasIncorrectCashAccounts.value
+                        ? GestureDetector(
+                            onTap: () =>
+                                _showFixCashAccountsDialog(context, controller),
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.warning_amber_rounded,
+                                size: 18,
+                                color: Colors.orange.shade800,
+                              ),
                             ),
-                            child: Icon(
-                              Icons.warning_amber_rounded,
-                              size: 18,
-                              color: Colors.orange.shade800,
+                          )
+                        : GestureDetector(
+                            onTap: controller.fetchAccounts,
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.refresh_rounded,
+                                size: 18,
+                                color: Colors.black.withOpacity(0.65),
+                              ),
                             ),
                           ),
-                        )
-                      : GestureDetector(
-                          onTap: controller.fetchAccounts,
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              Icons.refresh_rounded,
-                              size: 18,
-                              color: Colors.black.withOpacity(0.65),
-                            ),
-                          ),
-                        )),
+                  ),
                 ],
               ),
             ),
@@ -218,41 +224,52 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                 child: Row(
-                  children: ['All', 'Assets', 'Liabilities', 'Equity', 'Income', 'Expenses'].map((filter) {
-                    final isSelected = controller.selectedFilter.value == filter;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 6),
-                      child: GestureDetector(
-                        onTap: () => controller.changeFilter(filter),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? Colors.black
-                                : Colors.white.withOpacity(0.18),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: isSelected
-                                  ? Colors.black
-                                  : Colors.white.withOpacity(0.4),
+                  children:
+                      [
+                        'All',
+                        'Assets',
+                        'Liabilities',
+                        'Equity',
+                        'Income',
+                        'Expenses',
+                      ].map((filter) {
+                        final isSelected =
+                            controller.selectedFilter.value == filter;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: GestureDetector(
+                            onTap: () => controller.changeFilter(filter),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? Colors.black
+                                    : Colors.white.withOpacity(0.18),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? Colors.black
+                                      : Colors.white.withOpacity(0.4),
+                                ),
+                              ),
+                              child: Text(
+                                filter,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.black87,
+                                ),
+                              ),
                             ),
                           ),
-                          child: Text(
-                            filter,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: isSelected ? Colors.white : Colors.black87,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                        );
+                      }).toList(),
                 ),
               ),
             ),
@@ -288,9 +305,10 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
     );
   }
 
-
-
-  Widget _buildAccountsList(ChartOfAccountController controller, BuildContext context) {
+  Widget _buildAccountsList(
+    ChartOfAccountController controller,
+    BuildContext context,
+  ) {
     return Column(
       children: [
         Expanded(
@@ -301,18 +319,32 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.account_balance, size: 64, color: kSubText.withOpacity(0.5)),
+                    Icon(
+                      Icons.account_balance,
+                      size: 64,
+                      color: kSubText.withOpacity(0.5),
+                    ),
                     const SizedBox(height: 16),
-                    Text('No accounts found', style: TextStyle(fontSize: 16, color: kSubText)),
+                    Text(
+                      'No accounts found',
+                      style: TextStyle(fontSize: 16, color: kSubText),
+                    ),
                     const SizedBox(height: 12),
                     ElevatedButton(
-                      onPressed: () => _showAddAccountDialog(context, controller),
+                      onPressed: () =>
+                          _showAddAccountDialog(context, controller),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: kPrimary,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 10,
+                        ),
                         elevation: 0,
                       ),
-                      child: const Text('Add Account', style: TextStyle(fontSize: 13, color: Colors.white)),
+                      child: const Text(
+                        'Add Account',
+                        style: TextStyle(fontSize: 13, color: Colors.white),
+                      ),
                     ),
                   ],
                 ),
@@ -331,19 +363,28 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
             );
           }),
         ),
-        Obx(() => controller.isLoadingMore.value
-            ? Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Center(
-                  child: LoadingAnimationWidget.discreteCircle(color: kPrimary, size: 30),
-                ),
-              )
-            : const SizedBox.shrink()),
+        Obx(
+          () => controller.isLoadingMore.value
+              ? Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Center(
+                    child: LoadingAnimationWidget.discreteCircle(
+                      color: kPrimary,
+                      size: 30,
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
       ],
     );
   }
 
-  Widget _buildAccountCard(BuildContext context, Map<String, dynamic> account, ChartOfAccountController controller) {
+  Widget _buildAccountCard(
+    BuildContext context,
+    Map<String, dynamic> account,
+    ChartOfAccountController controller,
+  ) {
     final isDebit = account['balanceType'] == 'Debit';
     final isIncorrect = controller.isIncorrectCashAccount(account);
     final typeColor = account['typeColor'] as Color;
@@ -392,7 +433,7 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                           Expanded(
                             child: Text(
                               account['name'],
-                              style:  TextStyle(
+                              style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
                                 color: kText,
@@ -402,14 +443,21 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                             ),
                           ),
                           if (isIncorrect)
-                            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 16),
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              color: Colors.orange,
+                              size: 16,
+                            ),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: typeColor.withOpacity(0.08),
                               borderRadius: BorderRadius.circular(4),
@@ -427,7 +475,7 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                           const SizedBox(width: 6),
                           Text(
                             '• ${account['type']}',
-                            style:  TextStyle(fontSize: 11, color: kSubText),
+                            style: TextStyle(fontSize: 11, color: kSubText),
                           ),
                         ],
                       ),
@@ -449,9 +497,14 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
 
                     const SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
-                        color: isDebit ? kSuccess.withOpacity(0.1) : kDanger.withOpacity(0.1),
+                        color: isDebit
+                            ? kSuccess.withOpacity(0.1)
+                            : kDanger.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -474,7 +527,10 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
   }
 
   // ─── Show Fix Cash Accounts Dialog ──────────────────────────────
-  void _showFixCashAccountsDialog(BuildContext context, ChartOfAccountController controller) {
+  void _showFixCashAccountsDialog(
+    BuildContext context,
+    ChartOfAccountController controller,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -483,7 +539,10 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 24),
             const SizedBox(width: 8),
-            const Text('Fix Cash Accounts', style: TextStyle(fontWeight: FontWeight.w700)),
+            const Text(
+              'Fix Cash Accounts',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
           ],
         ),
         content: const Column(
@@ -519,7 +578,9 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
             ),
             child: const Text('Fix All', style: TextStyle(color: Colors.white)),
           ),
@@ -528,7 +589,11 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
     );
   }
 
-  void _showAccountDetails(BuildContext context, Map<String, dynamic> account, ChartOfAccountController controller) {
+  void _showAccountDetails(
+    BuildContext context,
+    Map<String, dynamic> account,
+    ChartOfAccountController controller,
+  ) {
     final isDebit = account['balanceType'] == 'Debit';
     final isIncorrect = controller.isIncorrectCashAccount(account);
     final typeColor = account['typeColor'] as Color;
@@ -591,7 +656,7 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                                     Expanded(
                                       child: Text(
                                         account['name'],
-                                        style:  TextStyle(
+                                        style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w800,
                                           color: kText,
@@ -599,14 +664,21 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                                       ),
                                     ),
                                     if (isIncorrect)
-                                      Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 20),
+                                      Icon(
+                                        Icons.warning_amber_rounded,
+                                        color: Colors.orange,
+                                        size: 20,
+                                      ),
                                   ],
                                 ),
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: typeColor.withOpacity(0.08),
                                         borderRadius: BorderRadius.circular(4),
@@ -624,7 +696,10 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                                     const SizedBox(width: 6),
                                     Text(
                                       '• ${account['type']}',
-                                      style:  TextStyle(fontSize: 11, color: kSubText),
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: kSubText,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -655,16 +730,24 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                             'Status',
                             account['isActive'] ? 'Active' : 'Inactive',
                             account['isActive'] ? kSuccess : kSubText,
-                            account['isActive'] ? Icons.check_circle : Icons.cancel,
+                            account['isActive']
+                                ? Icons.check_circle
+                                : Icons.cancel,
                           ),
                         ],
                       ),
                       const SizedBox(height: 16),
                       Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
                       const SizedBox(height: 16),
-                      _detailRow('Parent Account', account['parentAccount'] ?? 'N/A'),
+                      _detailRow(
+                        'Parent Account',
+                        account['parentAccount'] ?? 'N/A',
+                      ),
                       _detailRow('Tax Code', account['taxCode'] ?? 'N/A'),
-                      _detailRow('Description', account['description'] ?? 'No description'),
+                      _detailRow(
+                        'Description',
+                        account['description'] ?? 'No description',
+                      ),
                       if (isIncorrect) ...[
                         const SizedBox(height: 12),
                         Container(
@@ -672,7 +755,9 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                           decoration: BoxDecoration(
                             color: Colors.orange.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                            border: Border.all(
+                              color: Colors.orange.withOpacity(0.3),
+                            ),
                           ),
                           child: Row(
                             children: [
@@ -701,7 +786,10 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                           child: ElevatedButton.icon(
                             onPressed: () {
                               Navigator.pop(context);
-                              controller.fixAccountType(account['id'], 'Assets');
+                              controller.fixAccountType(
+                                account['id'],
+                                'Assets',
+                              );
                             },
                             icon: const Icon(Icons.account_balance, size: 18),
                             label: const Text('Fix Account Type'),
@@ -716,76 +804,80 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                           ),
                         ),
                       ],
-                   Row(
-  children: [
-    const SizedBox(width: 10),
+                      Row(
+                        children: [
+                          const SizedBox(width: 10),
 
-    Expanded(
-      child: SizedBox(
-        height: 46,
-        child: OutlinedButton(
-          onPressed: () {
-            Navigator.pop(context);
-            _showEditAccountDialog(context, account, controller);
-          },
-          style: OutlinedButton.styleFrom(
-            foregroundColor: kPrimary,
-            side: const BorderSide(color: kPrimary),
-            minimumSize: const Size.fromHeight(46),
-            padding: EdgeInsets.zero,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          child: const Text(
-            'Edit',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: Colors.black,
-            ),
-          ),
-        ),
-      ),
-    ),
+                          Expanded(
+                            child: SizedBox(
+                              height: 46,
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  _showEditAccountDialog(
+                                    context,
+                                    account,
+                                    controller,
+                                  );
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: kPrimary,
+                                  side: const BorderSide(color: kPrimary),
+                                  minimumSize: const Size.fromHeight(46),
+                                  padding: EdgeInsets.zero,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Edit',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
 
-    const SizedBox(width: 10),
+                          const SizedBox(width: 10),
 
-    Expanded(
-      child: SizedBox(
-        height: 46,
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.pop(context);
-            Get.to(() => const JournalEntriesScreen());
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: kPrimary,
-            elevation: 0,
-            minimumSize: const Size.fromHeight(46),
-            padding: EdgeInsets.zero,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          child: const Text(
-            'View Ledger',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Colors.black,
-            ),
-          ),
-        ),
-      ),
-    ),
-  ],
-)
+                          Expanded(
+                            child: SizedBox(
+                              height: 46,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  Get.to(() => const JournalEntriesScreen());
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: kPrimary,
+                                  elevation: 0,
+                                  minimumSize: const Size.fromHeight(46),
+                                  padding: EdgeInsets.zero,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'View Ledger',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -821,10 +913,7 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            Text(
-              label,
-              style:  TextStyle(fontSize: 10, color: kSubText),
-            ),
+            Text(label, style: TextStyle(fontSize: 10, color: kSubText)),
           ],
         ),
       ),
@@ -841,7 +930,7 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
             width: 110,
             child: Text(
               label,
-              style:  TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 color: kSubText,
                 fontWeight: FontWeight.w500,
@@ -851,7 +940,7 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
           Expanded(
             child: Text(
               value,
-              style:  TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 color: kText,
                 fontWeight: FontWeight.w500,
@@ -864,7 +953,10 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
   }
 
   // ─── ✅ PROFESSIONAL: Add Account Dialog ──────────────────────
-  void _showAddAccountDialog(BuildContext context, ChartOfAccountController controller) {
+  void _showAddAccountDialog(
+    BuildContext context,
+    ChartOfAccountController controller,
+  ) {
     final formKey = GlobalKey<FormState>();
     String accountCode = '';
     String accountName = '';
@@ -874,7 +966,7 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
     String taxCode = 'N/A';
     double openingBalance = 0.0;
     String? typeError;
-    
+
     bool isSaving = false;
 
     final Map<String, List<String>> parentAccountMapping = {
@@ -891,12 +983,15 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
           final parentAccounts = parentAccountMapping[accountType] ?? [];
-          if (parentAccount.isNotEmpty && !parentAccounts.contains(parentAccount)) {
+          if (parentAccount.isNotEmpty &&
+              !parentAccounts.contains(parentAccount)) {
             parentAccount = '';
           }
 
           return Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
             child: Container(
               width: double.infinity,
               constraints: BoxConstraints(
@@ -915,7 +1010,9 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
                     decoration: BoxDecoration(
                       color: kPrimary.withOpacity(0.05),
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(20),
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -926,18 +1023,14 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                             color: kPrimary.withOpacity(0.12),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Icon(
-                            Icons.add,
-                            color: kPrimary,
-                            size: 22,
-                          ),
+                          child: Icon(Icons.add, color: kPrimary, size: 22),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                               Text(
+                              Text(
                                 'Add New Account',
                                 style: TextStyle(
                                   fontSize: 18,
@@ -947,17 +1040,16 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                               ),
                               Text(
                                 'Create a new chart of account',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: kSubText,
-                                ),
+                                style: TextStyle(fontSize: 12, color: kSubText),
                               ),
                             ],
                           ),
                         ),
                         IconButton(
                           icon: const Icon(Icons.close, size: 20),
-                          onPressed: isSaving ? null : () => Navigator.pop(context),
+                          onPressed: isSaving
+                              ? null
+                              : () => Navigator.pop(context),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                         ),
@@ -973,47 +1065,74 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            _proFormField('Account Code', 'e.g., 1010', (v) => accountCode = v,
-                                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                                enabled: !isSaving, isRequired: true),
+                            _proFormField(
+                              'Account Code',
+                              'e.g., 1010',
+                              (v) => accountCode = v,
+                              validator: (v) =>
+                                  v == null || v.isEmpty ? 'Required' : null,
+                              enabled: !isSaving,
+                              isRequired: true,
+                            ),
                             const SizedBox(height: 16),
-                            _proFormField('Account Name', 'e.g., Cash in Hand', (v) {
-                              accountName = v;
-                              final nameLower = v.toLowerCase();
-                              final isCashOrBank = nameLower.contains('cash') || 
-                                                  nameLower.contains('bank') || 
-                                                  nameLower.contains('money');
-                              if (isCashOrBank && accountType != 'Assets') {
-                                setState(() {
-                                  typeError = 'Cash/Bank accounts must be of type "Assets"';
-                                });
-                              } else {
-                                setState(() {
-                                  typeError = null;
-                                });
-                              }
-                            }, validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                                enabled: !isSaving, isRequired: true),
+                            _proFormField(
+                              'Account Name',
+                              'e.g., Cash in Hand',
+                              (v) {
+                                accountName = v;
+                                final nameLower = v.toLowerCase();
+                                final isCashOrBank =
+                                    nameLower.contains('cash') ||
+                                    nameLower.contains('bank') ||
+                                    nameLower.contains('money');
+                                if (isCashOrBank && accountType != 'Assets') {
+                                  setState(() {
+                                    typeError =
+                                        'Cash/Bank accounts must be of type "Assets"';
+                                  });
+                                } else {
+                                  setState(() {
+                                    typeError = null;
+                                  });
+                                }
+                              },
+                              validator: (v) =>
+                                  v == null || v.isEmpty ? 'Required' : null,
+                              enabled: !isSaving,
+                              isRequired: true,
+                            ),
                             const SizedBox(height: 16),
                             _proDropdownField<String>(
                               label: 'Account Type',
                               value: accountType,
-                              items: const ['Assets', 'Liabilities', 'Equity', 'Income', 'Expenses'],
-                              onChanged: isSaving ? null : (v) {
-                                setState(() {
-                                  accountType = v!;
-                                  parentAccount = '';
-                                  final nameLower = accountName.toLowerCase();
-                                  final isCashOrBank = nameLower.contains('cash') || 
-                                                      nameLower.contains('bank') || 
-                                                      nameLower.contains('money');
-                                  if (isCashOrBank && accountType != 'Assets') {
-                                    typeError = 'Cash/Bank accounts must be of type "Assets"';
-                                  } else {
-                                    typeError = null;
-                                  }
-                                });
-                              },
+                              items: const [
+                                'Assets',
+                                'Liabilities',
+                                'Equity',
+                                'Income',
+                                'Expenses',
+                              ],
+                              onChanged: isSaving
+                                  ? null
+                                  : (v) {
+                                      setState(() {
+                                        accountType = v!;
+                                        parentAccount = '';
+                                        final nameLower = accountName
+                                            .toLowerCase();
+                                        final isCashOrBank =
+                                            nameLower.contains('cash') ||
+                                            nameLower.contains('bank') ||
+                                            nameLower.contains('money');
+                                        if (isCashOrBank &&
+                                            accountType != 'Assets') {
+                                          typeError =
+                                              'Cash/Bank accounts must be of type "Assets"';
+                                        } else {
+                                          typeError = null;
+                                        }
+                                      });
+                                    },
                               isRequired: true,
                             ),
                             if (typeError != null) ...[
@@ -1023,16 +1142,26 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                                 decoration: BoxDecoration(
                                   color: Colors.red.withOpacity(0.08),
                                   borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: Colors.red.withOpacity(0.2)),
+                                  border: Border.all(
+                                    color: Colors.red.withOpacity(0.2),
+                                  ),
                                 ),
                                 child: Row(
                                   children: [
-                                    Icon(Icons.warning_amber_rounded, color: Colors.red, size: 18),
+                                    Icon(
+                                      Icons.warning_amber_rounded,
+                                      color: Colors.red,
+                                      size: 18,
+                                    ),
                                     const SizedBox(width: 10),
                                     Expanded(
                                       child: Text(
                                         typeError!,
-                                        style: TextStyle(fontSize: 12, color: Colors.red.shade800, fontWeight: FontWeight.w600),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.red.shade800,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -1042,25 +1171,51 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                             const SizedBox(height: 16),
                             _proDropdownField<String>(
                               label: 'Parent Account',
-                              value: parentAccount.isEmpty ? null : parentAccount,
+                              value: parentAccount.isEmpty
+                                  ? null
+                                  : parentAccount,
                               items: parentAccounts,
-                              onChanged: isSaving ? null : (v) => setState(() => parentAccount = v!),
+                              onChanged: isSaving
+                                  ? null
+                                  : (v) => setState(() => parentAccount = v!),
                             ),
                             const SizedBox(height: 16),
-                            _proFormField('Opening Balance', '0.00', (v) => openingBalance = double.tryParse(v) ?? 0.0,
-                                keyboardType: TextInputType.number, prefixText: CurrencyUtils.prefix,
-                                enabled: !isSaving),
+                            _proFormField(
+                              'Opening Balance',
+                              '0.00',
+                              (v) => openingBalance = double.tryParse(v) ?? 0.0,
+                              keyboardType: TextInputType.number,
+                              prefixText: CurrencyUtils.prefix,
+                              enabled: !isSaving,
+                            ),
                             const SizedBox(height: 16),
                             _proDropdownField<String>(
                               label: 'Tax Code',
                               value: taxCode,
-                              items: const ['N/A', 'GST-13%', 'GST-5%', 'WHT-10%'],
-                              onChanged: isSaving ? null : (v) => setState(() => taxCode = v!),
-                              displayLabels: const ['N/A - No Tax', 'GST 13% (Standard)', 'GST 5% (Reduced)', 'WHT 10%'],
+                              items: const [
+                                'N/A',
+                                'GST-13%',
+                                'GST-5%',
+                                'WHT-10%',
+                              ],
+                              onChanged: isSaving
+                                  ? null
+                                  : (v) => setState(() => taxCode = v!),
+                              displayLabels: const [
+                                'N/A - No Tax',
+                                'GST 13% (Standard)',
+                                'GST 5% (Reduced)',
+                                'WHT 10%',
+                              ],
                             ),
                             const SizedBox(height: 16),
-                            _proFormField('Description', 'Account description', (v) => description = v, maxLines: 3,
-                                enabled: !isSaving),
+                            _proFormField(
+                              'Description',
+                              'Account description',
+                              (v) => description = v,
+                              maxLines: 3,
+                              enabled: !isSaving,
+                            ),
                           ],
                         ),
                       ),
@@ -1071,22 +1226,36 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
                     decoration: BoxDecoration(
                       color: Colors.grey.shade50,
-                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+                      borderRadius: const BorderRadius.vertical(
+                        bottom: Radius.circular(20),
+                      ),
                     ),
                     child: Row(
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: isSaving ? null : () => Navigator.pop(context),
+                            onPressed: isSaving
+                                ? null
+                                : () => Navigator.pop(context),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              side: BorderSide(color: isSaving ? Colors.grey.withOpacity(0.3) : Colors.grey.shade400),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              side: BorderSide(
+                                color: isSaving
+                                    ? Colors.grey.withOpacity(0.3)
+                                    : Colors.grey.shade400,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                               foregroundColor: kText,
                             ),
                             child: Text(
                               'Cancel',
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: isSaving ? Colors.grey : kText),
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: isSaving ? Colors.grey : kText,
+                              ),
                             ),
                           ),
                         ),
@@ -1097,14 +1266,18 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                                 ? null
                                 : () async {
                                     if (typeError != null) {
-                                      AppSnackbar.error(Colors.red, 'Error', typeError!);
+                                      AppSnackbar.error(
+                                        Colors.red,
+                                        'Error',
+                                        typeError!,
+                                      );
                                       return;
                                     }
                                     if (formKey.currentState!.validate()) {
                                       setState(() {
                                         isSaving = true;
                                       });
-                                      
+
                                       await controller.createAccount({
                                         'code': accountCode,
                                         'name': accountName,
@@ -1114,14 +1287,18 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                                         'description': description,
                                         'taxCode': taxCode,
                                       });
-                                      
+
                                       Navigator.pop(context);
                                     }
                                   },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: isSaving ? Colors.grey : kPrimary,
+                              backgroundColor: isSaving
+                                  ? Colors.grey
+                                  : kPrimary,
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                               elevation: 0,
                             ),
                             child: Row(
@@ -1140,7 +1317,13 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                                 ],
                                 Text(
                                   isSaving ? 'Saving...' : 'Save Account',
-                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isSaving ? Colors.white70 : Colors.white),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: isSaving
+                                        ? Colors.white70
+                                        : Colors.white,
+                                  ),
                                 ),
                               ],
                             ),
@@ -1159,7 +1342,11 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
   }
 
   // ─── ✅ PROFESSIONAL: Edit Account Dialog ──────────────────────
-  void _showEditAccountDialog(BuildContext context, Map<String, dynamic> account, ChartOfAccountController controller) {
+  void _showEditAccountDialog(
+    BuildContext context,
+    Map<String, dynamic> account,
+    ChartOfAccountController controller,
+  ) {
     final formKey = GlobalKey<FormState>();
     String accountCode = account['code'];
     String accountName = account['name'];
@@ -1169,7 +1356,7 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
     String taxCode = account['taxCode'] ?? 'N/A';
     double openingBalance = account['balance'];
     String? typeError;
-    
+
     bool isSaving = false;
 
     final Map<String, List<String>> parentAccountMapping = {
@@ -1186,12 +1373,15 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
           final parentAccounts = parentAccountMapping[accountType] ?? [];
-          if (parentAccount.isNotEmpty && !parentAccounts.contains(parentAccount)) {
+          if (parentAccount.isNotEmpty &&
+              !parentAccounts.contains(parentAccount)) {
             parentAccount = '';
           }
 
           return Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
             child: Container(
               width: double.infinity,
               constraints: BoxConstraints(
@@ -1210,7 +1400,9 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
                     decoration: BoxDecoration(
                       color: kPrimary.withOpacity(0.05),
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(20),
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -1221,18 +1413,14 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                             color: kPrimary.withOpacity(0.12),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Icon(
-                            Icons.edit,
-                            color: kPrimary,
-                            size: 22,
-                          ),
+                          child: Icon(Icons.edit, color: kPrimary, size: 22),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                               Text(
+                              Text(
                                 'Edit Account',
                                 style: TextStyle(
                                   fontSize: 18,
@@ -1242,17 +1430,16 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                               ),
                               Text(
                                 'Update account details',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: kSubText,
-                                ),
+                                style: TextStyle(fontSize: 12, color: kSubText),
                               ),
                             ],
                           ),
                         ),
                         IconButton(
                           icon: const Icon(Icons.close, size: 20),
-                          onPressed: isSaving ? null : () => Navigator.pop(context),
+                          onPressed: isSaving
+                              ? null
+                              : () => Navigator.pop(context),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                         ),
@@ -1268,49 +1455,76 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            _proFormField('Account Code', 'e.g., 1010', (v) => accountCode = v,
-                                initialValue: accountCode,
-                                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                                enabled: !isSaving, isRequired: true),
+                            _proFormField(
+                              'Account Code',
+                              'e.g., 1010',
+                              (v) => accountCode = v,
+                              initialValue: accountCode,
+                              validator: (v) =>
+                                  v == null || v.isEmpty ? 'Required' : null,
+                              enabled: !isSaving,
+                              isRequired: true,
+                            ),
                             const SizedBox(height: 16),
-                            _proFormField('Account Name', 'e.g., Cash in Hand', (v) {
-                              accountName = v;
-                              final nameLower = v.toLowerCase();
-                              final isCashOrBank = nameLower.contains('cash') || 
-                                                  nameLower.contains('bank') || 
-                                                  nameLower.contains('money');
-                              if (isCashOrBank && accountType != 'Assets') {
-                                setState(() {
-                                  typeError = 'Cash/Bank accounts must be of type "Assets"';
-                                });
-                              } else {
-                                setState(() {
-                                  typeError = null;
-                                });
-                              }
-                            }, initialValue: accountName,
-                                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                                enabled: !isSaving, isRequired: true),
+                            _proFormField(
+                              'Account Name',
+                              'e.g., Cash in Hand',
+                              (v) {
+                                accountName = v;
+                                final nameLower = v.toLowerCase();
+                                final isCashOrBank =
+                                    nameLower.contains('cash') ||
+                                    nameLower.contains('bank') ||
+                                    nameLower.contains('money');
+                                if (isCashOrBank && accountType != 'Assets') {
+                                  setState(() {
+                                    typeError =
+                                        'Cash/Bank accounts must be of type "Assets"';
+                                  });
+                                } else {
+                                  setState(() {
+                                    typeError = null;
+                                  });
+                                }
+                              },
+                              initialValue: accountName,
+                              validator: (v) =>
+                                  v == null || v.isEmpty ? 'Required' : null,
+                              enabled: !isSaving,
+                              isRequired: true,
+                            ),
                             const SizedBox(height: 16),
                             _proDropdownField<String>(
                               label: 'Account Type',
                               value: accountType,
-                              items: const ['Assets', 'Liabilities', 'Equity', 'Income', 'Expenses'],
-                              onChanged: isSaving ? null : (v) {
-                                setState(() {
-                                  accountType = v!;
-                                  parentAccount = '';
-                                  final nameLower = accountName.toLowerCase();
-                                  final isCashOrBank = nameLower.contains('cash') || 
-                                                      nameLower.contains('bank') || 
-                                                      nameLower.contains('money');
-                                  if (isCashOrBank && accountType != 'Assets') {
-                                    typeError = 'Cash/Bank accounts must be of type "Assets"';
-                                  } else {
-                                    typeError = null;
-                                  }
-                                });
-                              },
+                              items: const [
+                                'Assets',
+                                'Liabilities',
+                                'Equity',
+                                'Income',
+                                'Expenses',
+                              ],
+                              onChanged: isSaving
+                                  ? null
+                                  : (v) {
+                                      setState(() {
+                                        accountType = v!;
+                                        parentAccount = '';
+                                        final nameLower = accountName
+                                            .toLowerCase();
+                                        final isCashOrBank =
+                                            nameLower.contains('cash') ||
+                                            nameLower.contains('bank') ||
+                                            nameLower.contains('money');
+                                        if (isCashOrBank &&
+                                            accountType != 'Assets') {
+                                          typeError =
+                                              'Cash/Bank accounts must be of type "Assets"';
+                                        } else {
+                                          typeError = null;
+                                        }
+                                      });
+                                    },
                               isRequired: true,
                             ),
                             if (typeError != null) ...[
@@ -1320,16 +1534,26 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                                 decoration: BoxDecoration(
                                   color: Colors.red.withOpacity(0.08),
                                   borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: Colors.red.withOpacity(0.2)),
+                                  border: Border.all(
+                                    color: Colors.red.withOpacity(0.2),
+                                  ),
                                 ),
                                 child: Row(
                                   children: [
-                                    Icon(Icons.warning_amber_rounded, color: Colors.red, size: 18),
+                                    Icon(
+                                      Icons.warning_amber_rounded,
+                                      color: Colors.red,
+                                      size: 18,
+                                    ),
                                     const SizedBox(width: 10),
                                     Expanded(
                                       child: Text(
                                         typeError!,
-                                        style: TextStyle(fontSize: 12, color: Colors.red.shade800, fontWeight: FontWeight.w600),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.red.shade800,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -1339,27 +1563,53 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                             const SizedBox(height: 16),
                             _proDropdownField<String>(
                               label: 'Parent Account',
-                              value: parentAccount.isEmpty ? null : parentAccount,
+                              value: parentAccount.isEmpty
+                                  ? null
+                                  : parentAccount,
                               items: parentAccounts,
-                              onChanged: isSaving ? null : (v) => setState(() => parentAccount = v!),
+                              onChanged: isSaving
+                                  ? null
+                                  : (v) => setState(() => parentAccount = v!),
                             ),
                             const SizedBox(height: 16),
-                            _proFormField('Opening Balance', '0.00', (v) => openingBalance = double.tryParse(v) ?? 0.0,
-                                keyboardType: TextInputType.number, prefixText: CurrencyUtils.prefix,
-                                initialValue: openingBalance.toString(),
-                                enabled: !isSaving),
+                            _proFormField(
+                              'Opening Balance',
+                              '0.00',
+                              (v) => openingBalance = double.tryParse(v) ?? 0.0,
+                              keyboardType: TextInputType.number,
+                              prefixText: CurrencyUtils.prefix,
+                              initialValue: openingBalance.toString(),
+                              enabled: !isSaving,
+                            ),
                             const SizedBox(height: 16),
                             _proDropdownField<String>(
                               label: 'Tax Code',
                               value: taxCode,
-                              items: const ['N/A', 'GST-13%', 'GST-5%', 'WHT-10%'],
-                              onChanged: isSaving ? null : (v) => setState(() => taxCode = v!),
-                              displayLabels: const ['N/A - No Tax', 'GST 13% (Standard)', 'GST 5% (Reduced)', 'WHT 10%'],
+                              items: const [
+                                'N/A',
+                                'GST-13%',
+                                'GST-5%',
+                                'WHT-10%',
+                              ],
+                              onChanged: isSaving
+                                  ? null
+                                  : (v) => setState(() => taxCode = v!),
+                              displayLabels: const [
+                                'N/A - No Tax',
+                                'GST 13% (Standard)',
+                                'GST 5% (Reduced)',
+                                'WHT 10%',
+                              ],
                             ),
                             const SizedBox(height: 16),
-                            _proFormField('Description', 'Account description', (v) => description = v,
-                                initialValue: description, maxLines: 3,
-                                enabled: !isSaving),
+                            _proFormField(
+                              'Description',
+                              'Account description',
+                              (v) => description = v,
+                              initialValue: description,
+                              maxLines: 3,
+                              enabled: !isSaving,
+                            ),
                           ],
                         ),
                       ),
@@ -1370,22 +1620,36 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
                     decoration: BoxDecoration(
                       color: Colors.grey.shade50,
-                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+                      borderRadius: const BorderRadius.vertical(
+                        bottom: Radius.circular(20),
+                      ),
                     ),
                     child: Row(
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: isSaving ? null : () => Navigator.pop(context),
+                            onPressed: isSaving
+                                ? null
+                                : () => Navigator.pop(context),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              side: BorderSide(color: isSaving ? Colors.grey.withOpacity(0.3) : Colors.grey.shade400),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              side: BorderSide(
+                                color: isSaving
+                                    ? Colors.grey.withOpacity(0.3)
+                                    : Colors.grey.shade400,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                               foregroundColor: kText,
                             ),
                             child: Text(
                               'Cancel',
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: isSaving ? Colors.grey : kText),
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: isSaving ? Colors.grey : kText,
+                              ),
                             ),
                           ),
                         ),
@@ -1396,31 +1660,40 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                                 ? null
                                 : () async {
                                     if (typeError != null) {
-                                      AppSnackbar.error(Colors.red, 'Error', typeError!);
+                                      AppSnackbar.error(
+                                        Colors.red,
+                                        'Error',
+                                        typeError!,
+                                      );
                                       return;
                                     }
                                     if (formKey.currentState!.validate()) {
                                       setState(() {
                                         isSaving = true;
                                       });
-                                      
-                                      await controller.updateAccount(account['id'], {
-                                        'code': accountCode,
-                                        'name': accountName,
-                                        'type': accountType,
-                                        'parentAccount': parentAccount,
-                                        'openingBalance': openingBalance,
-                                        'description': description,
-                                        'taxCode': taxCode,
-                                      });
-                                      
+
+                                      await controller
+                                          .updateAccount(account['id'], {
+                                            'code': accountCode,
+                                            'name': accountName,
+                                            'type': accountType,
+                                            'parentAccount': parentAccount,
+                                            'openingBalance': openingBalance,
+                                            'description': description,
+                                            'taxCode': taxCode,
+                                          });
+
                                       Navigator.pop(context);
                                     }
                                   },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: isSaving ? Colors.grey : kPrimary,
+                              backgroundColor: isSaving
+                                  ? Colors.grey
+                                  : kPrimary,
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                               elevation: 0,
                             ),
                             child: Row(
@@ -1439,7 +1712,13 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                                 ],
                                 Text(
                                   isSaving ? 'Updating...' : 'Update Account',
-                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isSaving ? Colors.white70 : Colors.white),
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: isSaving
+                                        ? Colors.white70
+                                        : Colors.white,
+                                  ),
                                 ),
                               ],
                             ),
@@ -1458,13 +1737,19 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
   }
 
   // ─── Search Dialog ──────────────────────────────────────────────
-  void _showSearchDialog(BuildContext context, ChartOfAccountController controller) {
+  void _showSearchDialog(
+    BuildContext context,
+    ChartOfAccountController controller,
+  ) {
     final searchController = TextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text('Search Accounts', style: TextStyle(fontWeight: FontWeight.w700)),
+        title: const Text(
+          'Search Accounts',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
         content: TextField(
           controller: searchController,
           autofocus: true,
@@ -1474,7 +1759,10 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
             prefixIcon: Icon(Icons.search),
             isDense: true,
           ),
-          onSubmitted: (value) { controller.searchAccounts(value); Navigator.pop(context); },
+          onSubmitted: (value) {
+            controller.searchAccounts(value);
+            Navigator.pop(context);
+          },
         ),
         actions: [
           TextButton(
@@ -1482,7 +1770,10 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
             child: const Text('Cancel', style: TextStyle(color: Colors.black)),
           ),
           TextButton(
-            onPressed: () { controller.searchAccounts(searchController.text); Navigator.pop(context); },
+            onPressed: () {
+              controller.searchAccounts(searchController.text);
+              Navigator.pop(context);
+            },
             child: const Text('Search', style: TextStyle(color: Colors.black)),
           ),
         ],
@@ -1491,12 +1782,18 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
   }
 
   // ─── Filter Dialog ──────────────────────────────────────────────
-  void _showFilterDialog(BuildContext context, ChartOfAccountController controller) {
+  void _showFilterDialog(
+    BuildContext context,
+    ChartOfAccountController controller,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text('Filter Accounts', style: TextStyle(fontWeight: FontWeight.w700)),
+        title: const Text(
+          'Filter Accounts',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1555,10 +1852,24 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
         children: [
           SizedBox(
             width: 100,
-            child: Text(label, style: TextStyle(fontSize: 13, color: kSubText, fontWeight: FontWeight.w500)),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                color: kSubText,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
           Expanded(
-            child: Text(value, style: TextStyle(fontSize: 13, color: kText, fontWeight: FontWeight.w500)),
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 13,
+                color: kText,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
         ],
       ),
@@ -1633,7 +1944,10 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide(color: Colors.red.shade400, width: 2),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
             isDense: true,
           ),
           style: TextStyle(
@@ -1704,7 +2018,10 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide(color: kPrimary, width: 2),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
             isDense: true,
           ),
           style: TextStyle(
@@ -1713,13 +2030,22 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
             fontWeight: FontWeight.w500,
           ),
           icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey.shade600),
-          items: items.asMap().entries.map((e) => DropdownMenuItem<T>(
-            value: e.value,
-            child: Text(
-              displayLabels != null ? displayLabels[e.key] : '${e.value}',
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-            ),
-          )).toList(),
+          items: items
+              .asMap()
+              .entries
+              .map(
+                (e) => DropdownMenuItem<T>(
+                  value: e.value,
+                  child: Text(
+                    displayLabels != null ? displayLabels[e.key] : '${e.value}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
           onChanged: onChanged,
         ),
       ],
@@ -1745,13 +2071,16 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
         hintText: hint,
         prefixText: prefixText,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
         isDense: true,
         filled: true,
         fillColor: enabled ? Colors.white : Colors.grey.shade50,
       ),
       style: TextStyle(
-        fontSize: 13, 
+        fontSize: 13,
         color: enabled ? Colors.black87 : Colors.grey.shade600,
       ),
       keyboardType: keyboardType,
@@ -1775,19 +2104,30 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
         isDense: true,
         filled: true,
         fillColor: isEnabled ? Colors.white : Colors.grey.shade50,
       ),
       style: TextStyle(
-        fontSize: 13, 
+        fontSize: 13,
         color: isEnabled ? Colors.black87 : Colors.grey.shade600,
       ),
-      items: items.asMap().entries.map((e) => DropdownMenuItem<T>(
-        value: e.value,
-        child: Text(displayLabels != null ? displayLabels[e.key] : '${e.value}'),
-      )).toList(),
+      items: items
+          .asMap()
+          .entries
+          .map(
+            (e) => DropdownMenuItem<T>(
+              value: e.value,
+              child: Text(
+                displayLabels != null ? displayLabels[e.key] : '${e.value}',
+              ),
+            ),
+          )
+          .toList(),
       onChanged: onChanged,
     );
   }
