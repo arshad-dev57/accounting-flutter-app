@@ -65,12 +65,15 @@ class PurchaseOrderModel {
   bool get isDraft => status == 'Draft';
   bool get isSent => status == 'Sent';
   bool get isApproved => status == 'Approved';
+  bool get isPartiallyReceived => status == 'Partially Received';
+  bool get isReceived => status == 'Received';
   bool get isCancelled => status == 'Cancelled';
   
   bool get canEdit => isDraft || isSent;
   bool get canSend => isDraft && supplierEmail != null && supplierEmail!.isNotEmpty;
   bool get canApprove => isSent;
-  bool get canCancel => isDraft || isSent || isApproved;
+  bool get canCancel =>
+      isDraft || isSent || isApproved || isPartiallyReceived;
   bool get canDelete => isDraft || isCancelled;
 
   // ─── CALCULATIONS ──────────────────────────────────────
@@ -86,6 +89,10 @@ class PurchaseOrderModel {
         return '#42A5F5'; // Blue
       case 'Approved':
         return '#66BB6A'; // Green
+      case 'Partially Received':
+        return '#26A69A'; // Teal
+      case 'Received':
+        return '#5C6BC0'; // Indigo
       case 'Cancelled':
         return '#EF5350'; // Red
       default:
@@ -356,6 +363,8 @@ class PurchaseOrderStatusCounts {
   final int draft;
   final int sent;
   final int approved;
+  final int partiallyReceived;
+  final int received;
   final int cancelled;
   final int total;
 
@@ -363,6 +372,8 @@ class PurchaseOrderStatusCounts {
     required this.draft,
     required this.sent,
     required this.approved,
+    this.partiallyReceived = 0,
+    this.received = 0,
     required this.cancelled,
     required this.total,
   });
@@ -374,6 +385,8 @@ class PurchaseOrderStatusCounts {
       draft: (status['draft'] as num?)?.toInt() ?? 0,
       sent: (status['sent'] as num?)?.toInt() ?? 0,
       approved: (status['approved'] as num?)?.toInt() ?? 0,
+      partiallyReceived: (status['partiallyReceived'] as num?)?.toInt() ?? 0,
+      received: (status['received'] as num?)?.toInt() ?? 0,
       cancelled: (status['cancelled'] as num?)?.toInt() ?? 0,
       total: (status['total'] as num?)?.toInt() ?? 0,
     );

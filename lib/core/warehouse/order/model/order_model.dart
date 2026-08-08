@@ -127,7 +127,9 @@ class OrderModel {
       orderStatus: json['orderStatus']?.toString() ??
           json['status']?.toString() ??
           'Pending',
-      paymentStatus: json['paymentStatus']?.toString() ?? 'Pending',
+      paymentStatus: _normalizePaymentStatus(
+        json['paymentStatus']?.toString() ?? 'Pending',
+      ),
       paymentMethod: json['paymentMethod']?.toString(),
       orderType: json['orderType']?.toString() ?? 'Standard',
       priority: json['priority']?.toString() ?? 'Medium',
@@ -158,6 +160,16 @@ class OrderModel {
   static Map<String, dynamic>? _readMap(dynamic value) {
     if (value is Map) return Map<String, dynamic>.from(value);
     return null;
+  }
+
+  static String _normalizePaymentStatus(String status) {
+    final s = status.trim().toLowerCase();
+    if (s == 'paid') return 'Paid';
+    if (s == 'partial' || s == 'partially paid') return 'Partial';
+    if (s == 'refunded') return 'Refunded';
+    if (s == 'cancelled' || s == 'canceled') return 'Cancelled';
+    if (s == 'unpaid' || s == 'pending') return 'Pending';
+    return status.isEmpty ? 'Pending' : status;
   }
 
   static String _readId(dynamic value) => value?.toString() ?? '';

@@ -37,7 +37,7 @@ class PurchaseReturnController extends GetxController {
   final Rx<DateTime?> fromDate = Rx<DateTime?>(null);
   final Rx<DateTime?> toDate = Rx<DateTime?>(null);
 
-  final List<String> filters = ['all', 'Draft', 'Processed', 'Cancelled'];
+  final List<String> filters = ['all', 'Processed', 'Cancelled'];
 
   // ─── STATS ────────────────────────────────────────────────────
   final Rx<PurchaseReturnStats> stats = PurchaseReturnStats(
@@ -390,6 +390,17 @@ class PurchaseReturnController extends GetxController {
   }
 
   void selectInvoice(InvoiceForReturn invoice) {
+    final status = invoice.invoiceStatus;
+    if (status != 'Posted' &&
+        status != 'Partially Paid' &&
+        status != 'Paid') {
+      Get.snackbar(
+        'Invoice Not Posted',
+        'Only posted invoices can be returned.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
     selectedInvoice.value = invoice;
     fetchInvoiceProducts(invoice.id);
   }
@@ -564,7 +575,7 @@ class PurchaseReturnController extends GetxController {
         'items': items,
       };
 
-      print('🔵 [PurchaseReturnController] Creating draft return...');
+      print('🔵 [PurchaseReturnController] Creating return...');
       final response = await _api.post(
         '/api/purchase/returns/draft',
         body: payload,
@@ -572,17 +583,17 @@ class PurchaseReturnController extends GetxController {
       );
 
       if (response.success) {
-        print('✅ [PurchaseReturnController] Draft return created successfully');
-        Get.snackbar('Success', 'Draft return created successfully');
+        print('✅ [PurchaseReturnController] Return created successfully');
+        Get.snackbar('Success', 'Purchase return created successfully');
         closeCreateForm();
         await fetchReturns(resetPage: true);
         return true;
       }
 
-      print('❌ [PurchaseReturnController] Failed to create draft return');
+      print('❌ [PurchaseReturnController] Failed to create return');
       Get.snackbar(
         'Error',
-        response.message ?? 'Failed to create draft return',
+        response.message ?? 'Failed to create return',
       );
       return false;
     } catch (e) {

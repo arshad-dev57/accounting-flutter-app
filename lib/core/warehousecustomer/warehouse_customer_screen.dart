@@ -63,11 +63,15 @@ class WarehouseCustomerScreen extends StatelessWidget {
           ],
         );
       }),
-      floatingActionButton: FloatingActionButton(
-        onPressed: controller.openCreateForm,
-        backgroundColor: kPrimary,
-        elevation: 2,
-        child: const Icon(Icons.person_add, color: Colors.black, size: 24),
+      floatingActionButton: Obx(
+        () => controller.showCreateForm.value
+            ? const SizedBox.shrink()
+            : FloatingActionButton(
+                onPressed: controller.openCreateForm,
+                backgroundColor: kPrimary,
+                elevation: 2,
+                child: const Icon(Icons.person_add, color: Colors.black, size: 24),
+              ),
       ),
     );
   }
@@ -640,78 +644,94 @@ class _CreateCustomerForm extends StatelessWidget {
   }
 
   Widget _buildActionButtons(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: OutlinedButton(
-              onPressed: onCancel,
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: onCancel,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  minimumSize: const Size(0, 44),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  side: BorderSide(color: Colors.grey.shade300),
                 ),
-                side: BorderSide(color: Colors.grey.shade300),
-              ),
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: kSubText, fontWeight: FontWeight.w600),
+                child: Text(
+                  'Cancel',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: kSubText,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            flex: 2,
-            child: ElevatedButton(
-              onPressed: controller.isSubmitting.value
-                  ? null
-                  : controller.createCustomer,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kSuccess,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+            const SizedBox(width: 10),
+            Expanded(
+              flex: 2,
+              child: ElevatedButton(
+                onPressed: controller.isSubmitting.value
+                    ? null
+                    : controller.createCustomer,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kSuccess,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 12,
+                  ),
+                  minimumSize: const Size(0, 44),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 0,
                 ),
-                elevation: 0,
-              ),
-              child: controller.isSubmitting.value
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.black,
-                      ),
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.save, color: Colors.black, size: 18),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Save Customer',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.black,
-                            fontWeight: FontWeight.w700,
-                          ),
+                child: controller.isSubmitting.value
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.black,
                         ),
-                      ],
-                    ),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.save, color: Colors.black, size: 18),
+                          const SizedBox(width: 6),
+                          const Flexible(
+                            child: Text(
+                              'Save Customer',
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.black,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -808,10 +828,6 @@ class _CustomerDetailSheetState extends State<_CustomerDetailSheet> {
                       fontWeight: FontWeight.w800,
                       color: kPrimary,
                     ),
-                  ),
-                  Text(
-                    customer.customerNumber,
-                    style: TextStyle(fontSize: 12, color: kSubText),
                   ),
                 ],
               ),
@@ -1588,13 +1604,7 @@ class _CustomerListView extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 3),
-                            Text(
-                              item.customerNumber,
-                              style: TextStyle(fontSize: 11, color: kSubText),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+
                             Row(
                               children: [
                                 Container(

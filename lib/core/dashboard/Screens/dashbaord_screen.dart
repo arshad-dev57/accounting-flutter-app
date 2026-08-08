@@ -731,7 +731,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _controller.totalRevenue.value,
           _kGreen,
           _kGreenBg,
-          'Sales + Income − Credit Notes',
+          'Sales paid + Income − Credit Notes',
         ),
         _BarItem(
           'Sales',
@@ -1194,7 +1194,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     const sources = [
       ('Sales', 'Paid sales invoices in selected period'),
       ('Purchases', 'Purchase invoices in selected period'),
-      ('Revenue', 'Sales invoiced + Income − Credit Notes (period)'),
+      ('Revenue', 'Sales paid + Income − Credit Notes (period)'),
       ('Expenses', 'Expense screen Posted in selected period'),
       ('Net Profit', 'Revenue − Purchases − Expenses (period)'),
       ('Bank Balance', 'Bank Accounts (active, current balance)'),

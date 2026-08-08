@@ -36,6 +36,12 @@ class SalesOrderController extends GetxController {
   final RxString orderTypeFilter = 'all'.obs;
   final RxString priorityFilter = 'all'.obs;
 
+  // KPI counts from API (synced after invoice payment)
+  final RxInt kpiPending = 0.obs;
+  final RxInt kpiProcessing = 0.obs;
+  final RxInt kpiDelivered = 0.obs;
+  final RxInt kpiPaid = 0.obs;
+
   // ─── Filters List ─────────────────────────────────────────────
   final List<String> filters = [
     'all',
@@ -296,6 +302,23 @@ class SalesOrderController extends GetxController {
         orders.value = data
             .map((e) => OrderModel.fromJson(Map<String, dynamic>.from(e)))
             .toList();
+
+        final kpi = payload['kpi'] as Map<String, dynamic>?;
+        if (kpi != null) {
+          kpiPending.value = (kpi['pending'] as num?)?.toInt() ?? 0;
+          kpiProcessing.value = (kpi['processing'] as num?)?.toInt() ?? 0;
+          kpiDelivered.value = (kpi['delivered'] as num?)?.toInt() ?? 0;
+          kpiPaid.value = (kpi['paid'] as num?)?.toInt() ?? 0;
+        } else {
+          kpiPending.value =
+              orders.where((o) => o.orderStatus == 'Pending').length;
+          kpiProcessing.value =
+              orders.where((o) => o.orderStatus == 'Processing').length;
+          kpiDelivered.value =
+              orders.where((o) => o.orderStatus == 'Delivered').length;
+          kpiPaid.value =
+              orders.where((o) => o.paymentStatus == 'Paid').length;
+        }
 
         currentPage.value = (pagination['page'] as num?)?.toInt() ?? 1;
         pageLimit.value = (pagination['limit'] as num?)?.toInt() ?? 10;
@@ -1217,6 +1240,7 @@ class SalesOrderController extends GetxController {
   Color getPaymentColor(String status) {
     switch (status) {
       case 'Pending':
+      case 'Unpaid':
         return const Color(0xFFF39C12);
       case 'Paid':
         return const Color(0xFF2ECC71);

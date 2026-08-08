@@ -62,15 +62,19 @@ class PurchaseReturnScreen extends StatelessWidget {
           ],
         );
       }),
-      floatingActionButton: FloatingActionButton(
-        onPressed: controller.openCreateForm,
-        backgroundColor: kPrimary,
-        elevation: 2,
-        child: const Icon(
-          Icons.assignment_return,
-          color: Colors.black,
-          size: 24,
-        ),
+      floatingActionButton: Obx(
+        () => controller.showCreateForm.value
+            ? const SizedBox.shrink()
+            : FloatingActionButton(
+                onPressed: controller.openCreateForm,
+                backgroundColor: kPrimary,
+                elevation: 2,
+                child: const Icon(
+                  Icons.assignment_return,
+                  color: Colors.black,
+                  size: 24,
+                ),
+              ),
       ),
     );
   }
@@ -114,30 +118,36 @@ class PurchaseReturnScreen extends StatelessWidget {
                     ),
                   ),
                   Obx(
-                    () => Row(
-                      children: [
-                        _compactKpi(
-                          'Today',
-                          controller.formatCurrency(
-                            controller.stats.value.todayAmount,
-                          ),
-                          Colors.green.shade800,
+                    () => Flexible(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        reverse: true,
+                        child: Row(
+                          children: [
+                            _compactKpi(
+                              'Today',
+                              controller.formatCurrency(
+                                controller.stats.value.todayAmount,
+                              ),
+                              Colors.green.shade800,
+                            ),
+                            const SizedBox(width: 8),
+                            _compactKpi(
+                              'Month',
+                              controller.formatCurrency(
+                                controller.stats.value.monthAmount,
+                              ),
+                              Colors.blue.shade800,
+                            ),
+                            const SizedBox(width: 8),
+                            _compactKpi(
+                              'Processed',
+                              controller.stats.value.draftCount.toString(),
+                              Colors.green.shade800,
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        _compactKpi(
-                          'Month',
-                          controller.formatCurrency(
-                            controller.stats.value.monthAmount,
-                          ),
-                          Colors.blue.shade800,
-                        ),
-                        const SizedBox(width: 8),
-                        _compactKpi(
-                          'Draft',
-                          controller.stats.value.draftCount.toString(),
-                          Colors.orange.shade800,
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -188,11 +198,6 @@ class PurchaseReturnScreen extends StatelessWidget {
                       'All',
                       controller.selectedFilter.value == 'all',
                       () => controller.filterReturns('all'),
-                    ),
-                    _filterChip(
-                      'Draft',
-                      controller.selectedFilter.value == 'Draft',
-                      () => controller.filterReturns('Draft'),
                     ),
                     _filterChip(
                       'Processed',
@@ -1002,79 +1007,95 @@ class _CreateReturnForm extends StatelessWidget {
   }
 
   Widget _buildActionButtons(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: OutlinedButton(
-              onPressed: onCancel,
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: onCancel,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  minimumSize: const Size(0, 44),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  side: BorderSide(color: Colors.grey.shade300),
                 ),
-                side: BorderSide(color: Colors.grey.shade300),
-              ),
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: kSubText, fontWeight: FontWeight.w600),
+                child: Text(
+                  'Cancel',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: kSubText,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            flex: 2,
-            child: ElevatedButton(
-              onPressed:
-                  controller.isSubmitting.value || !controller.canCreateReturn
-                  ? null
-                  : controller.createDraftReturn,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kSuccess,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+            const SizedBox(width: 10),
+            Expanded(
+              flex: 2,
+              child: ElevatedButton(
+                onPressed:
+                    controller.isSubmitting.value || !controller.canCreateReturn
+                    ? null
+                    : controller.createDraftReturn,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kSuccess,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 12,
+                  ),
+                  minimumSize: const Size(0, 44),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 0,
                 ),
-                elevation: 0,
-              ),
-              child: controller.isSubmitting.value
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.black,
-                      ),
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.save, color: Colors.black, size: 18),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Save Draft',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.black,
-                            fontWeight: FontWeight.w700,
-                          ),
+                child: controller.isSubmitting.value
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.black,
                         ),
-                      ],
-                    ),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.save, color: Colors.black, size: 18),
+                          const SizedBox(width: 6),
+                          const Flexible(
+                            child: Text(
+                              'Create Return',
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.black,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1827,7 +1848,11 @@ class _ReturnListView extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            Row(
+                            const SizedBox(height: 6),
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
+                              crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 Container(
                                   padding: const EdgeInsets.symmetric(
@@ -1847,7 +1872,6 @@ class _ReturnListView extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 6),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 6,
@@ -1866,26 +1890,27 @@ class _ReturnListView extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.purple.shade50,
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    item.purchaseInvoiceNumber,
-                                    style: TextStyle(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.purple.shade800,
+                                if (item.purchaseInvoiceNumber.isNotEmpty)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.purple.shade50,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      item.purchaseInvoiceNumber,
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.purple.shade800,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 6),
                                 Text(
                                   DateFormat(
                                     'dd MMM yyyy',
@@ -1900,24 +1925,33 @@ class _ReturnListView extends StatelessWidget {
                           ],
                         ),
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            _format(item.grandTotal),
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                              color: color,
+                      const SizedBox(width: 8),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 96),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerRight,
+                              child: Text(
+                                _format(item.grandTotal),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: color,
+                                ),
+                                maxLines: 1,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Icon(
-                            Icons.chevron_right,
-                            size: 18,
-                            color: Colors.grey.shade400,
-                          ),
-                        ],
+                            const SizedBox(height: 4),
+                            Icon(
+                              Icons.chevron_right,
+                              size: 18,
+                              color: Colors.grey.shade400,
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

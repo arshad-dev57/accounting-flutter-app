@@ -64,11 +64,15 @@ class GoodsReceivingScreen extends StatelessWidget {
           ],
         );
       }),
-      floatingActionButton: FloatingActionButton(
-        onPressed: controller.openCreateWizard,
-        backgroundColor: kPrimary,
-        elevation: 2,
-        child: const Icon(Icons.add, color: Colors.black, size: 24),
+      floatingActionButton: Obx(
+        () => controller.showCreateWizard.value
+            ? const SizedBox.shrink()
+            : FloatingActionButton(
+                onPressed: controller.openCreateWizard,
+                backgroundColor: kPrimary,
+                elevation: 2,
+                child: const Icon(Icons.add, color: Colors.black, size: 24),
+              ),
       ),
     );
   }
@@ -114,12 +118,6 @@ class GoodsReceivingScreen extends StatelessWidget {
                   Obx(
                     () => Row(
                       children: [
-                        _compactKpi(
-                          'Draft',
-                          controller.stats.value.draftCount.toString(),
-                          Colors.orange.shade800,
-                        ),
-                        const SizedBox(width: 6),
                         _compactKpi(
                           'Partial',
                           controller.stats.value.partiallyReceivedCount
@@ -183,11 +181,6 @@ class GoodsReceivingScreen extends StatelessWidget {
                       'All',
                       controller.selectedFilter.value == 'all',
                       () => controller.filterGRNs('all'),
-                    ),
-                    _filterChip(
-                      'Draft',
-                      controller.selectedFilter.value == 'Draft',
-                      () => controller.filterGRNs('Draft'),
                     ),
                     _filterChip(
                       'Partial',
@@ -457,18 +450,33 @@ class _CreateGRNWizard extends StatelessWidget {
       TextField(
         controller: controller.orderSearchController,
         decoration: const InputDecoration(
-          hintText: 'Search order # or supplier...',
+          hintText: 'Search order # or supplier (or tap to list)...',
           prefixIcon: Icon(Icons.search),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(10)),
           ),
         ),
         onChanged: controller.searchOrders,
+        onTap: () {
+          if (controller.orderSearchResults.isEmpty) {
+            controller.searchOrders(controller.orderSearchController.text);
+          }
+        },
       ),
       if (controller.isSearchingOrders.value)
         const Padding(
           padding: EdgeInsets.all(8),
           child: Center(child: CircularProgressIndicator()),
+        ),
+      if (!controller.isSearchingOrders.value &&
+          controller.orderSearchResults.isEmpty &&
+          controller.selectedOrder.value == null)
+        const Padding(
+          padding: EdgeInsets.only(top: 8),
+          child: Text(
+            'No receivable POs found. Approve a purchase order first.',
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+          ),
         ),
       ...controller.orderSearchResults.map(_orderTile),
       if (controller.selectedOrder.value != null)
@@ -924,116 +932,120 @@ class _CreateGRNWizard extends StatelessWidget {
   }
 
   Widget _buildNavButtons(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          if (controller.wizardStep.value > 0)
-            OutlinedButton(
-              onPressed: controller.previousStep,
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                side: BorderSide(color: Colors.grey.shade300),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.arrow_back, size: 16, color: kSubText),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Back',
-                    style: TextStyle(
-                      color: kSubText,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
+    final step = controller.wizardStep.value;
+    final canGoBack = step > 0;
+    final isLast = step >= 2;
+
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
             ),
-          const Spacer(),
-          if (controller.wizardStep.value < 2)
-            ElevatedButton(
-              onPressed: controller.nextStep,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kPrimary,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 28,
-                  vertical: 14,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                elevation: 0,
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    'Next',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w700,
-                    ),
+          ],
+        ),
+        child: Row(
+          children: [
+            if (canGoBack)
+              OutlinedButton(
+                onPressed: controller.previousStep,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
                   ),
-                  const SizedBox(width: 4),
-                  Icon(Icons.arrow_forward, size: 16, color: Colors.black),
-                ],
-              ),
-            )
-          else
-            ElevatedButton(
-              onPressed: controller.isSubmitting.value
-                  ? null
-                  : controller.createGRN,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kPrimary,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 28,
-                  vertical: 14,
+                  minimumSize: const Size(0, 44),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  side: BorderSide(color: Colors.grey.shade300),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                elevation: 0,
-              ),
-              child: controller.isSubmitting.value
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.black,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.arrow_back, size: 16, color: kSubText),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Back',
+                      style: TextStyle(
+                        color: kSubText,
+                        fontWeight: FontWeight.w600,
                       ),
-                    )
-                  : Row(
-                      children: [
-                        Icon(Icons.save, size: 18, color: Colors.black),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Save Draft',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
                     ),
+                  ],
+                ),
+              ),
+            if (canGoBack) const SizedBox(width: 10),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: isLast
+                    ? (controller.isSubmitting.value
+                          ? null
+                          : controller.createGRN)
+                    : controller.nextStep,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kPrimary,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                  minimumSize: const Size(0, 44),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 0,
+                ),
+                child: controller.isSubmitting.value && isLast
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.black,
+                        ),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (isLast) ...[
+                            const Icon(
+                              Icons.check_circle_outline,
+                              size: 18,
+                              color: Colors.black,
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          Flexible(
+                            child: Text(
+                              isLast ? 'Receive Goods' : 'Next',
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          if (!isLast) ...[
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.arrow_forward,
+                              size: 16,
+                              color: Colors.black,
+                            ),
+                          ],
+                        ],
+                      ),
+              ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }

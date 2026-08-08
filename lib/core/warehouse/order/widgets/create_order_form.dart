@@ -4,6 +4,7 @@ import 'package:BisonsTechs_app/core/warehouse/order/model/order_model.dart';
 import 'package:BisonsTechs_app/core/warehouse/order/widgets/customer_picker_sheet.dart';
 import 'package:BisonsTechs_app/core/warehouse/order/widgets/product_search_field.dart';
 import 'package:BisonsTechs_app/core/warehouse/order/widgets/setting_dropdown_field.dart';
+import 'package:BisonsTechs_app/core/warehouse/products/screen/product_screen.dart';
 import 'package:BisonsTechs_app/core/warehousesettings/warehouse_settings_screen.dart'
     hide kBg;
 import 'package:flutter/material.dart';
@@ -382,7 +383,7 @@ class CreateOrderForm extends StatelessWidget {
               const Spacer(),
               // Plus icon to navigate to Settings
               GestureDetector(
-                onTap: () => _navigateToSettings(context),
+                onTap: () => Get.to(ProductsScreen()),
                 child: Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(

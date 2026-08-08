@@ -25,127 +25,105 @@ class WarehouseInvoiceListView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        TextField(
-          decoration: InputDecoration(
-            hintText: 'Search invoices...',
-            hintStyle: TextStyle(color: kSubText, fontSize: 13),
-            prefixIcon: Icon(Icons.search, color: kSubText, size: 20),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide.none,
-            ),
-            filled: true,
-            fillColor: kCardBg,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
-          ),
-          onChanged: controller.applySearch,
-        ),
-        const SizedBox(height: 12),
-
-        // Invoice type: All / Sales / Purchase
-        Obx(() {
-          return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: WarehouseInvoiceController.invoiceTypeFilters.map((
-                filter,
-              ) {
-                final isSelected = controller.invoiceTypeFilter.value == filter;
-                final label = filter == 'all'
-                    ? 'All'
-                    : (filter == 'sales' ? 'Sales' : 'Purchase');
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: GestureDetector(
-                    onTap: () => controller.applyInvoiceTypeFilter(filter),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected ? kPrimary : kCardBg,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isSelected
-                              ? kPrimary
-                              : Colors.grey.withOpacity(0.25),
-                        ),
-                      ),
-                      child: Text(
-                        label,
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : kSubText,
-                          fontWeight: isSelected
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
+        // Search + Actions
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search invoices...',
+                  hintStyle: TextStyle(color: kSubText, fontSize: 13),
+                  prefixIcon: Icon(Icons.search, color: kSubText, size: 20),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
                   ),
-                );
-              }).toList(),
+                  filled: true,
+                  fillColor: kCardBg,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+                onChanged: controller.applySearch,
+              ),
             ),
-          );
-        }),
+            const SizedBox(width: 8),
+            PopupMenuButton<String>(
+              tooltip: 'Actions',
+              onSelected: (value) {
+                if (value == 'create') onCreate();
+                if (value == 'import') onImportOrder();
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem(
+                  value: 'create',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.add, size: 20),
+                    title: Text('Create Invoice'),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'import',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.download, size: 20),
+                    title: Text('From Order'),
+                  ),
+                ),
+              ],
+              child: Container(
+                height: 44,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: kPrimary,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.add, color: Colors.white, size: 18),
+                    SizedBox(width: 4),
+                    Icon(Icons.arrow_drop_down, color: Colors.white, size: 20),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: 10),
 
-        // ✅ FIXED Filter Chips
+        // Filters as compact dropdowns
         Obx(() {
-          return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: WarehouseInvoiceController.statusFilters.map((filter) {
-                final isSelected = controller.statusFilter.value == filter;
-                final label = filter == 'all' ? 'All Status' : filter;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: GestureDetector(
-                    onTap: () => controller.applyStatusFilter(filter),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected ? kPrimary : kCardBg,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isSelected
-                              ? kPrimary
-                              : Colors.grey.withOpacity(0.25),
-                        ),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: kPrimary.withOpacity(0.25),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ]
-                            : [],
-                      ),
-                      child: Text(
-                        label,
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : kSubText,
-                          fontWeight: isSelected
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
+          final type = controller.invoiceTypeFilter.value;
+          final status = controller.statusFilter.value;
+          return Row(
+            children: [
+              Expanded(
+                child: _filterDropdown<String>(
+                  label: 'Type',
+                  value: type,
+                  items: WarehouseInvoiceController.invoiceTypeFilters,
+                  itemLabel: (v) => v == 'all'
+                      ? 'All Types'
+                      : (v == 'sales' ? 'Sales' : 'Purchase'),
+                  onChanged: controller.applyInvoiceTypeFilter,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _filterDropdown<String>(
+                  label: 'Status',
+                  value: status,
+                  items: WarehouseInvoiceController.statusFilters,
+                  itemLabel: (v) => v == 'all' ? 'All Status' : v,
+                  onChanged: controller.applyStatusFilter,
+                ),
+              ),
+            ],
           );
         }),
         const SizedBox(height: 12),
@@ -185,74 +163,7 @@ class WarehouseInvoiceListView extends StatelessWidget {
             ],
           );
         }),
-        const SizedBox(height: 10),
-
-        // Status count chips
-        Obx(() {
-          final s = controller.stats.value;
-          return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _statChip('All', s.total, kPrimary),
-                _statChip('Unpaid', s.unpaid, Colors.orange),
-                _statChip('Partial', s.partial, Colors.blue),
-                _statChip('Paid', s.paid, kSuccess),
-                _statChip('Overdue', s.overdue, kDanger),
-              ],
-            ),
-          );
-        }),
         const SizedBox(height: 12),
-
-        // Action Buttons
-        Row(
-          children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: onCreate,
-                icon: const Icon(Icons.add, size: 16, color: Colors.white),
-                label: const Text(
-                  'Create Invoice',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  elevation: 0,
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: onImportOrder,
-                icon: Icon(Icons.download, size: 16, color: kPrimary),
-                label: Text(
-                  'From Order',
-                  style: TextStyle(
-                    color: kPrimary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  side: BorderSide(color: kPrimary),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
 
         // Invoices List
         Expanded(
@@ -350,6 +261,59 @@ class WarehouseInvoiceListView extends StatelessWidget {
     );
   }
 
+  Widget _filterDropdown<T>({
+    required String label,
+    required T value,
+    required List<T> items,
+    required String Function(T) itemLabel,
+    required ValueChanged<T> onChanged,
+  }) {
+    return InputDecorator(
+      decoration: InputDecoration(
+        labelText: label,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        filled: true,
+        fillColor: kCardBg,
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<T>(
+          value: value,
+          isExpanded: true,
+          isDense: true,
+          icon: Icon(Icons.keyboard_arrow_down, size: 18, color: kSubText),
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: kText,
+          ),
+          items: items
+              .map(
+                (item) => DropdownMenuItem<T>(
+                  value: item,
+                  child: Text(
+                    itemLabel(item),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              )
+              .toList(),
+          onChanged: (v) {
+            if (v != null) onChanged(v);
+          },
+        ),
+      ),
+    );
+  }
+
   Widget _amountSummaryCard(
     String label,
     String amount,
@@ -388,26 +352,6 @@ class WarehouseInvoiceListView extends StatelessWidget {
           const SizedBox(height: 2),
           Text(subtitle, style: TextStyle(fontSize: 9, color: kSubText)),
         ],
-      ),
-    );
-  }
-
-  Widget _statChip(String label, int count, Color color) {
-    return Container(
-      margin: const EdgeInsets.only(right: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.25)),
-      ),
-      child: Text(
-        '$label: $count',
-        style: TextStyle(
-          fontSize: 10,
-          color: color,
-          fontWeight: FontWeight.w700,
-        ),
       ),
     );
   }
@@ -750,10 +694,46 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
           onPressed: () => controller.selectedInvoice.value = null,
         ),
         actions: [
-          if (!invoice.isPurchase && (invoice.isUnpaid || invoice.isPartial))
-            IconButton(
-              icon: const Icon(Icons.payment, color: Colors.white),
-              onPressed: () => _showPaymentDialog(controller, invoice),
+          if (!invoice.isPurchase)
+            PopupMenuButton<String>(
+              tooltip: 'Actions',
+              icon: const Icon(Icons.more_vert, color: Colors.white),
+              onSelected: (value) {
+                if (value == 'pay') {
+                  _showPaymentDialog(controller, invoice);
+                } else if (value == 'delete') {
+                  _showDeleteConfirm(controller, invoice);
+                }
+              },
+              itemBuilder: (context) => [
+                if (invoice.isUnpaid || invoice.isPartial)
+                  const PopupMenuItem(
+                    value: 'pay',
+                    child: ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(Icons.payment, size: 20),
+                      title: Text('Record Payment'),
+                    ),
+                  ),
+                if (!invoice.isPaid && !invoice.isCancelled)
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(
+                        Icons.delete_outline,
+                        size: 20,
+                        color: Colors.red,
+                      ),
+                      title: Text(
+                        'Delete Invoice',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ),
+              ],
             ),
         ],
       ),
@@ -1377,52 +1357,6 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
               ),
             ),
 
-            // ── Action Buttons (sales invoices only) ──
-            const SizedBox(height: 20),
-            if (!invoice.isPurchase && (invoice.isUnpaid || invoice.isPartial))
-              ElevatedButton.icon(
-                onPressed: () => _showPaymentDialog(controller, invoice),
-                icon: const Icon(Icons.payment, color: Colors.white),
-                label: const Text(
-                  'Record Payment',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kSuccess,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-              ),
-            if (!invoice.isPurchase &&
-                !invoice.isPaid &&
-                !invoice.isCancelled) ...[
-              const SizedBox(height: 10),
-              OutlinedButton.icon(
-                onPressed: () => _showDeleteConfirm(controller, invoice),
-                icon: const Icon(Icons.delete_outline, color: Colors.red),
-                label: const Text(
-                  'Delete Invoice',
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  side: const BorderSide(color: Colors.red),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ],
             const SizedBox(height: 24),
           ],
         ),

@@ -64,11 +64,15 @@ class PurchasePaymentScreen extends StatelessWidget {
           ],
         );
       }),
-      floatingActionButton: FloatingActionButton(
-        onPressed: controller.openCreateForm,
-        backgroundColor: kPrimary,
-        elevation: 2,
-        child: const Icon(Icons.payment, color: Colors.black, size: 24),
+      floatingActionButton: Obx(
+        () => controller.showCreateForm.value
+            ? const SizedBox.shrink()
+            : FloatingActionButton(
+                onPressed: controller.openCreateForm,
+                backgroundColor: kPrimary,
+                elevation: 2,
+                child: const Icon(Icons.payment, color: Colors.black, size: 24),
+              ),
       ),
     );
   }
@@ -112,24 +116,29 @@ class PurchasePaymentScreen extends StatelessWidget {
                     ),
                   ),
                   Obx(
-                    () => Row(
-                      children: [
-                        _compactKpi(
-                          'Today',
-                          controller.formatCurrency(
-                            controller.stats.value.todayAmount,
-                          ),
-                          Colors.green.shade800,
+                    () => Flexible(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _compactKpi(
+                              'Today',
+                              controller.formatCurrency(
+                                controller.stats.value.todayAmount,
+                              ),
+                              Colors.green.shade800,
+                            ),
+                            const SizedBox(width: 8),
+                            _compactKpi(
+                              'Month',
+                              controller.formatCurrency(
+                                controller.stats.value.monthAmount,
+                              ),
+                              Colors.blue.shade800,
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        _compactKpi(
-                          'Month',
-                          controller.formatCurrency(
-                            controller.stats.value.monthAmount,
-                          ),
-                          Colors.blue.shade800,
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -509,6 +518,7 @@ class _CreatePaymentForm extends StatelessWidget {
             // Payment Method
             DropdownButtonFormField<String>(
               value: controller.paymentMethod.value,
+              isExpanded: true,
               decoration: const InputDecoration(
                 labelText: 'Payment Method *',
                 border: OutlineInputBorder(
@@ -522,22 +532,31 @@ class _CreatePaymentForm extends StatelessWidget {
               ),
               items: PurchasePaymentController.paymentMethods
                   .map(
-                    (method) =>
-                        DropdownMenuItem(value: method, child: Text(method)),
+                    (method) => DropdownMenuItem(
+                      value: method,
+                      child: Text(
+                        method,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   )
                   .toList(),
               onChanged: (value) {
                 if (value != null) {
                   controller.paymentMethod.value = value;
+                  if (value == 'Cash') {
+                    controller.selectedBankAccount.value = null;
+                  }
                 }
               },
             ),
             const SizedBox(height: 12),
 
-            // Bank Account (for Bank Transfer)
-            if (controller.paymentMethod.value == 'Bank Transfer') ...[
+            // Bank Account (required for non-cash methods)
+            if (controller.paymentMethod.value != 'Cash') ...[
               DropdownButtonFormField<Map<String, dynamic>>(
                 value: controller.selectedBankAccount.value,
+                isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Select Bank Account *',
                   border: OutlineInputBorder(
@@ -550,13 +569,41 @@ class _CreatePaymentForm extends StatelessWidget {
                   isDense: true,
                 ),
                 items: controller.bankAccounts.map((account) {
+                  final name =
+                      (account['accountName'] ??
+                              account['name'] ??
+                              'Account')
+                          .toString();
+                  final bank = (account['bankName'] ?? '').toString();
+                  final label = bank.isEmpty ? name : '$name - $bank';
                   return DropdownMenuItem(
                     value: account,
                     child: Text(
-                      '${account['accountName']} - ${account['bankName']}',
+                      label,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
                   );
                 }).toList(),
+                selectedItemBuilder: (context) {
+                  return controller.bankAccounts.map((account) {
+                    final name =
+                        (account['accountName'] ??
+                                account['name'] ??
+                                'Account')
+                            .toString();
+                    final bank = (account['bankName'] ?? '').toString();
+                    final label = bank.isEmpty ? name : '$name - $bank';
+                    return Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        label,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    );
+                  }).toList();
+                },
                 onChanged: (value) {
                   controller.selectedBankAccount.value = value;
                 },
@@ -733,14 +780,21 @@ class _CreatePaymentForm extends StatelessWidget {
 
   Widget _invoiceTile(PurchaseInvoiceForPayment invoice, bool isSelected) {
     final color = invoice.isOverdue ? Colors.red : Colors.blue;
+    final canPay = invoice.payable;
 
-    return Container(
+    return Opacity(
+      opacity: canPay ? 1 : 0.75,
+      child: Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: isSelected ? kPrimary.withOpacity(0.05) : Colors.white,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: isSelected ? kPrimary : Colors.grey.withOpacity(0.2),
+          color: !canPay
+              ? Colors.orange.withOpacity(0.45)
+              : isSelected
+                  ? kPrimary
+                  : Colors.grey.withOpacity(0.2),
           width: isSelected ? 2 : 1,
         ),
       ),
@@ -765,6 +819,19 @@ class _CreatePaymentForm extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                           fontSize: 13,
                           color: kPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        invoice.isDraft
+                            ? 'Not payable'
+                            : '${invoice.paymentStatus.isNotEmpty ? invoice.paymentStatus : invoice.invoiceStatus}',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: invoice.isDraft
+                              ? Colors.orange.shade800
+                              : Colors.green.shade700,
                         ),
                       ),
                       if (invoice.supplierInvoiceNo != null)
@@ -820,7 +887,7 @@ class _CreatePaymentForm extends StatelessWidget {
                 ),
               ],
             ),
-            if (isSelected) ...[
+            if (isSelected && canPay) ...[
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -862,6 +929,7 @@ class _CreatePaymentForm extends StatelessWidget {
           ],
         ),
       ),
+      ),
     );
   }
 
@@ -885,79 +953,99 @@ class _CreatePaymentForm extends StatelessWidget {
   }
 
   Widget _buildActionButtons(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: OutlinedButton(
-              onPressed: onCancel,
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: onCancel,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  minimumSize: const Size(0, 44),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  side: BorderSide(color: Colors.grey.shade300),
                 ),
-                side: BorderSide(color: Colors.grey.shade300),
-              ),
-              child: Text(
-                'Cancel',
-                style: TextStyle(color: kSubText, fontWeight: FontWeight.w600),
+                child: Text(
+                  'Cancel',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: kSubText,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            flex: 2,
-            child: ElevatedButton(
-              onPressed:
-                  controller.isSubmitting.value || !controller.canMakePayment
-                  ? null
-                  : controller.makePayment,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kSuccess,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+            const SizedBox(width: 10),
+            Expanded(
+              flex: 2,
+              child: ElevatedButton(
+                onPressed:
+                    controller.isSubmitting.value || !controller.canMakePayment
+                    ? null
+                    : controller.makePayment,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kSuccess,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 12,
+                  ),
+                  minimumSize: const Size(0, 44),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 0,
                 ),
-                elevation: 0,
-              ),
-              child: controller.isSubmitting.value
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.black,
-                      ),
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.payment, color: Colors.black, size: 18),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Make Payment',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.black,
-                            fontWeight: FontWeight.w700,
-                          ),
+                child: controller.isSubmitting.value
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.black,
                         ),
-                      ],
-                    ),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.payment,
+                            color: Colors.black,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 6),
+                          const Flexible(
+                            child: Text(
+                              'Make Payment',
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.black,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

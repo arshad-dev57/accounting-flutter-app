@@ -104,29 +104,26 @@ class SalesOrdersScreen extends StatelessWidget {
                       children: [
                         _compactKpi(
                           'Pending',
-                          controller.orders
-                              .where((o) => o.orderStatus == 'Pending')
-                              .length
-                              .toString(),
+                          controller.kpiPending.value.toString(),
                           Colors.orange.shade800,
                         ),
                         const SizedBox(width: 12),
                         _compactKpi(
                           'Processing',
-                          controller.orders
-                              .where((o) => o.orderStatus == 'Processing')
-                              .length
-                              .toString(),
+                          controller.kpiProcessing.value.toString(),
                           Colors.blue.shade800,
                         ),
                         const SizedBox(width: 12),
                         _compactKpi(
-                          'Done',
-                          controller.orders
-                              .where((o) => o.orderStatus == 'Delivered')
-                              .length
-                              .toString(),
+                          'Paid',
+                          controller.kpiPaid.value.toString(),
                           Colors.green.shade800,
+                        ),
+                        const SizedBox(width: 12),
+                        _compactKpi(
+                          'Done',
+                          controller.kpiDelivered.value.toString(),
+                          Colors.teal.shade800,
                         ),
                       ],
                     ),
