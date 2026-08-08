@@ -11,6 +11,7 @@ import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/Services/notification_Service.dart';
 import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
+import 'package:BisonsTechs_app/core/settings/controller/pdf_report_settings_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -223,6 +224,11 @@ class LoginOtpController extends GetxController {
         if (userEmail.isNotEmpty) {
           await prefs.setString('user_email', userEmail);
         }
+
+        // Restore PDF branding after logout cleared local prefs
+        await PdfReportSettingsController.persistFromLogin(
+          data['pdfReportSettings'] ?? user['pdfReportSettings'],
+        );
       } else {
         print('Warning: User data is null');
       }

@@ -17,6 +17,36 @@ import 'package:shared_preferences/shared_preferences.dart';
 class PdfReportSettingsController extends GetxController {
   static const String prefsKey = 'pdf_report_settings';
 
+  /// Persist PDF settings from login / API payload into local prefs.
+  /// Call after logout clears prefs so exports work immediately after login.
+  static Future<void> persistFromLogin(dynamic raw) async {
+    if (raw == null) return;
+    try {
+      final Map<String, dynamic> map;
+      if (raw is Map<String, dynamic>) {
+        map = Map<String, dynamic>.from(raw);
+      } else if (raw is Map) {
+        map = Map<String, dynamic>.from(raw);
+      } else {
+        return;
+      }
+      if (map.isEmpty) return;
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        prefsKey,
+        json.encode({
+          ...map,
+          'updatedAt':
+              map['updatedAt']?.toString() ?? DateTime.now().toIso8601String(),
+        }),
+      );
+      debugPrint('✅ PDF report settings cached from login');
+    } catch (e) {
+      debugPrint('PDF settings login cache error: $e');
+    }
+  }
+
   final ApiClient _api = Get.find<ApiClient>();
 
   final isLoading = false.obs;

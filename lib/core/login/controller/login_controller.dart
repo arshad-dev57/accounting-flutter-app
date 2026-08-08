@@ -12,6 +12,7 @@ import 'package:BisonsTechs_app/core/dashboard/Screens/dashbaord_screen.dart';
 import 'package:BisonsTechs_app/core/loginOtp/screen/login_otp_screen.dart';
 import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
+import 'package:BisonsTechs_app/core/settings/controller/pdf_report_settings_controller.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/Services/notification_Service.dart';
 import 'package:flutter/material.dart';
@@ -325,6 +326,10 @@ class LoginController extends GetxController {
         if (userData['email'] != null) {
           await prefs.setString('user_email', userData['email']);
         }
+
+        await PdfReportSettingsController.persistFromLogin(
+          data['pdfReportSettings'] ?? userData['pdfReportSettings'],
+        );
       }
     } catch (e) {
       print('Error saving user data: $e');
