@@ -1,10 +1,13 @@
 // lib/core/dashboard/widgets/profile_dropdown.dart
 
+import 'dart:convert';
+import 'dart:io';
 import 'package:BisonsTechs_app/core/companyprofile/controller/profile_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const _kPageBg = Color(0xFFF5F6FA);
 const _kCardBg = Color(0xFFFFFFFF);
@@ -37,10 +40,12 @@ class _ProfileDropdownState extends State<ProfileDropdown>
   late AnimationController _animCtrl;
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
+  String _businessLogo = '';
 
   @override
   void initState() {
     super.initState();
+    _loadBusinessLogo();
     _animCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 200),
@@ -50,6 +55,30 @@ class _ProfileDropdownState extends State<ProfileDropdown>
       begin: const Offset(0, -0.04),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeOutCubic));
+  }
+
+  Future<void> _loadBusinessLogo() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userDataString = prefs.getString('user_data');
+      
+      if (userDataString != null) {
+        final userData = json.decode(userDataString) as Map<String, dynamic>;
+        final businessDetails = userData['businessDetails'] as Map<String, dynamic>?;
+        
+        if (businessDetails != null && businessDetails['logo'] != null) {
+          final logo = businessDetails['logo'] as String;
+          if (logo.isNotEmpty) {
+            setState(() {
+              _businessLogo = logo;
+            });
+            print('✅ [ProfileDropdown] Business logo loaded: $logo');
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ [ProfileDropdown] Error loading business logo: $e');
+    }
   }
 
   @override
@@ -121,11 +150,38 @@ class _ProfileDropdownState extends State<ProfileDropdown>
                     ]
                   : [],
             ),
-            child: const Icon(
-              Icons.person_rounded,
-              color: Colors.white,
-              size: 18,
-            ),
+            child: _businessLogo.isNotEmpty
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: _businessLogo.startsWith('http')
+                        ? Image.network(
+                            _businessLogo,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(
+                                Icons.person_rounded,
+                                color: Colors.white,
+                                size: 18,
+                              );
+                            },
+                          )
+                        : Image.file(
+                            File(_businessLogo),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(
+                                Icons.person_rounded,
+                                color: Colors.white,
+                                size: 18,
+                              );
+                            },
+                          ),
+                  )
+                : const Icon(
+                    Icons.person_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
           ),
         ),
       ),
@@ -205,10 +261,12 @@ class _ProfileDropdownCardState extends State<_ProfileDropdownCard> {
       _emailCtrl,
       _phoneCtrl,
       _websiteCtrl;
+  String _businessLogo = '';
 
   @override
   void initState() {
     super.initState();
+    _loadBusinessLogo();
     final p = widget.profileCtrl;
     _orgCtrl = TextEditingController(text: p.organizationName.value);
     _personCtrl = TextEditingController(text: p.personName.value);
@@ -216,6 +274,30 @@ class _ProfileDropdownCardState extends State<_ProfileDropdownCard> {
     _emailCtrl = TextEditingController(text: p.email.value);
     _phoneCtrl = TextEditingController(text: p.contactNo.value);
     _websiteCtrl = TextEditingController(text: p.websiteLink.value);
+  }
+
+  Future<void> _loadBusinessLogo() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userDataString = prefs.getString('user_data');
+      
+      if (userDataString != null) {
+        final userData = json.decode(userDataString) as Map<String, dynamic>;
+        final businessDetails = userData['businessDetails'] as Map<String, dynamic>?;
+        
+        if (businessDetails != null && businessDetails['logo'] != null) {
+          final logo = businessDetails['logo'] as String;
+          if (logo.isNotEmpty) {
+            setState(() {
+              _businessLogo = logo;
+            });
+            print('✅ [ProfileDropdownCard] Business logo loaded: $logo');
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ [ProfileDropdownCard] Error loading business logo: $e');
+    }
   }
 
   @override
@@ -250,7 +332,7 @@ class _ProfileDropdownCardState extends State<_ProfileDropdownCard> {
     p.emailController.text = _emailCtrl.text;
     p.contactNoController.text = _phoneCtrl.text;
     p.websiteController.text = _websiteCtrl.text;
-    if (p.validateForm()) await p.saveProfile();
+    await p.saveProfile();
     setState(() => _isEditing = false);
   }
 
@@ -317,11 +399,38 @@ class _ProfileDropdownCardState extends State<_ProfileDropdownCard> {
                 width: 1.5,
               ),
             ),
-            child: const Icon(
-              Icons.business_center_rounded,
-              color: Colors.white,
-              size: 20,
-            ),
+            child: _businessLogo.isNotEmpty
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: _businessLogo.startsWith('http')
+                        ? Image.network(
+                            _businessLogo,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(
+                                Icons.business_center_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              );
+                            },
+                          )
+                        : Image.file(
+                            File(_businessLogo),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(
+                                Icons.business_center_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              );
+                            },
+                          ),
+                  )
+                : const Icon(
+                    Icons.business_center_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
           ),
           const SizedBox(width: 10),
           Expanded(

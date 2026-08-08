@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/Notifications/screens/notification_screen.dart';
 import 'package:BisonsTechs_app/core/warehouse/dashboard/warehouse_dashboard_controller.dart';
@@ -6,6 +8,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 
 const _kPageBg = Color(0xFFF5F6FA);
@@ -53,11 +56,38 @@ class _WarehouseDashboardState extends State<WarehouseDashboard> {
     'This Month',
     'This Year',
   ];
+  
+  String _businessLogo = '';
 
   @override
   void initState() {
     super.initState();
     _controller = Get.put(WarehouseDashboardController());
+    _loadBusinessLogo();
+  }
+  
+  Future<void> _loadBusinessLogo() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userDataString = prefs.getString('user_data');
+      
+      if (userDataString != null) {
+        final userData = json.decode(userDataString) as Map<String, dynamic>;
+        final businessDetails = userData['businessDetails'] as Map<String, dynamic>?;
+        
+        if (businessDetails != null && businessDetails['logo'] != null) {
+          final logo = businessDetails['logo'] as String;
+          if (logo.isNotEmpty) {
+            setState(() {
+              _businessLogo = logo;
+            });
+            print('✅ [WarehouseDashboard] Business logo loaded: $logo');
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ [WarehouseDashboard] Error loading business logo: $e');
+    }
   }
 
   @override
@@ -126,19 +156,69 @@ class _WarehouseDashboardState extends State<WarehouseDashboard> {
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              color: kPrimary,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(
-              Icons.warehouse_rounded,
-              size: 16,
-              color: Colors.white,
-            ),
-          ),
+          _businessLogo.isNotEmpty
+              ? Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: _businessLogo.startsWith('http')
+                        ? Image.network(
+                            _businessLogo,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                width: 30,
+                                height: 30,
+                                decoration: BoxDecoration(
+                                  color: kPrimary,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.warehouse_rounded,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              );
+                            },
+                          )
+                        : Image.file(
+                            File(_businessLogo),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                width: 30,
+                                height: 30,
+                                decoration: BoxDecoration(
+                                  color: kPrimary,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.warehouse_rounded,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                )
+              : Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: kPrimary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.warehouse_rounded,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                ),
           const SizedBox(width: 8),
           const Text(
             'Inventory',
@@ -230,222 +310,8 @@ class _WarehouseDashboardState extends State<WarehouseDashboard> {
 
   // ─── Hero Card ────────────────────────────────────────────────────────────
   Widget _buildHeroCard() {
-    return Obx(
-      () => Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [_kHeroBg, _kHeroBgEnd],
-          ),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: _kHeroBorder),
-          boxShadow: [
-            BoxShadow(
-              color: kPrimary.withOpacity(0.10),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: _kPrimaryBg,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.inventory_2_rounded,
-                              size: 14,
-                              color: kPrimary,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Stock Overview · $_selectedPeriod',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: _kTextSub,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        _controller.formatCurrency(
-                          _controller.totalStockValue.value,
-                        ),
-                        style: const TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: _kTextPrimary,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${_controller.totalProducts.value} products · ${_controller.lowStockCount.value} low stock',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: _kTextSub,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _controller.lowStockCount.value > 0
-                              ? _kOrangeBg
-                              : _kGreenBg,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              _controller.lowStockCount.value > 0
-                                  ? Icons.warning_amber_rounded
-                                  : Icons.check_circle_outline_rounded,
-                              size: 10,
-                              color: _controller.lowStockCount.value > 0
-                                  ? _kOrange
-                                  : _kGreen,
-                            ),
-                            const SizedBox(width: 3),
-                            Text(
-                              _controller.lowStockCount.value > 0
-                                  ? '${_controller.lowStockCount.value} items need restocking'
-                                  : 'All stock levels healthy',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: _controller.lowStockCount.value > 0
-                                    ? _kOrange
-                                    : _kGreen,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => _controller.refreshDashboard(),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _kHeroIcon,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: _kHeroBorder),
-                    ),
-                    child: const Icon(
-                      Icons.refresh_rounded,
-                      size: 16,
-                      color: _kTextSub,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Container(height: 0.5, color: _kCardBorder),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                _heroStat(
-                  'Stock In Today',
-                  '${_controller.todayStockIn.value}',
-                  Icons.arrow_downward_rounded,
-                  _kGreen,
-                  _kGreenBg,
-                ),
-                _heroDivider(),
-                _heroStat(
-                  'Stock Out Today',
-                  '${_controller.todayStockOut.value}',
-                  Icons.arrow_upward_rounded,
-                  _kRed,
-                  _kRedBg,
-                ),
-                _heroDivider(),
-                _heroStat(
-                  'Low Stock',
-                  '${_controller.lowStockCount.value}',
-                  Icons.warning_amber_rounded,
-                  _kOrange,
-                  _kOrangeBg,
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
+    return _HeroCardWrapper(controller: _controller, selectedPeriod: _selectedPeriod);
   }
-
-  Widget _heroStat(
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-    Color bg,
-  ) {
-    return Expanded(
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: bg,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, size: 14, color: color),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: _kTextPrimary,
-              letterSpacing: -0.2,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 9, color: _kTextMuted),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _heroDivider() =>
-      Container(width: 0.5, height: 44, color: _kCardBorder);
 
   // ─── Period Chips ─────────────────────────────────────────────────────────
   Widget _buildPeriodChips() {
@@ -1342,6 +1208,294 @@ class _WarehouseDashboardState extends State<WarehouseDashboard> {
   }
 }
 
+// ─── Hero Card Wrapper ─────────────────────────────────────────────────────
+class _HeroCardWrapper extends StatefulWidget {
+  final WarehouseDashboardController controller;
+  final String selectedPeriod;
+  
+  const _HeroCardWrapper({required this.controller, required this.selectedPeriod});
+
+  @override
+  State<_HeroCardWrapper> createState() => _HeroCardWrapperState();
+}
+
+class _HeroCardWrapperState extends State<_HeroCardWrapper> {
+  String _businessLogo = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBusinessLogo();
+  }
+
+  Future<void> _loadBusinessLogo() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userDataString = prefs.getString('user_data');
+      
+      if (userDataString != null) {
+        final userData = json.decode(userDataString) as Map<String, dynamic>;
+        final businessDetails = userData['businessDetails'] as Map<String, dynamic>?;
+        
+        if (businessDetails != null && businessDetails['logo'] != null) {
+          final logo = businessDetails['logo'] as String;
+          if (logo.isNotEmpty) {
+            setState(() {
+              _businessLogo = logo;
+            });
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ [_HeroCardWrapper] Error loading business logo: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      () => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [_kHeroBg, _kHeroBgEnd],
+          ),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: _kHeroBorder),
+          boxShadow: [
+            BoxShadow(
+              color: kPrimary.withOpacity(0.10),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            // Business logo background
+            if (_businessLogo.isNotEmpty)
+              Positioned.fill(
+                child: Opacity(
+                  opacity: 0.05,
+                  child: _businessLogo.startsWith('http')
+                      ? Image.network(
+                          _businessLogo,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                        )
+                      : Image.file(
+                          File(_businessLogo),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                        ),
+                ),
+              ),
+            // Card content
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: _kPrimaryBg,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.inventory_2_rounded,
+                                  size: 14,
+                                  color: kPrimary,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Stock Overview · ${widget.selectedPeriod}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: _kTextSub,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            widget.controller.formatCurrency(
+                              widget.controller.totalStockValue.value,
+                            ),
+                            style: const TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w800,
+                              color: _kTextPrimary,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${widget.controller.totalProducts.value} products · ${widget.controller.lowStockCount.value} low stock',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: _kTextSub,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: widget.controller.lowStockCount.value > 0
+                                  ? _kOrangeBg
+                                  : _kGreenBg,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  widget.controller.lowStockCount.value > 0
+                                      ? Icons.warning_amber_rounded
+                                      : Icons.check_circle_outline_rounded,
+                                  size: 10,
+                                  color: widget.controller.lowStockCount.value > 0
+                                      ? _kOrange
+                                      : _kGreen,
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  widget.controller.lowStockCount.value > 0
+                                      ? '${widget.controller.lowStockCount.value} items need restocking'
+                                      : 'All stock levels healthy',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: widget.controller.lowStockCount.value > 0
+                                        ? _kOrange
+                                        : _kGreen,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => widget.controller.refreshDashboard(),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: _kHeroIcon,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: _kHeroBorder),
+                        ),
+                        child: const Icon(
+                          Icons.refresh_rounded,
+                          size: 16,
+                          color: _kTextSub,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Container(height: 0.5, color: _kCardBorder),
+                const SizedBox(height: 14),
+                Row(
+                  children: [
+                    _heroStatHero(
+                      'Stock In Today',
+                      '${widget.controller.todayStockIn.value}',
+                      Icons.arrow_downward_rounded,
+                      _kGreen,
+                      _kGreenBg,
+                    ),
+                    _heroDividerHero(),
+                    _heroStatHero(
+                      'Stock Out Today',
+                      '${widget.controller.todayStockOut.value}',
+                      Icons.arrow_upward_rounded,
+                      _kRed,
+                      _kRedBg,
+                    ),
+                    _heroDividerHero(),
+                    _heroStatHero(
+                      'Low Stock',
+                      '${widget.controller.lowStockCount.value}',
+                      Icons.warning_amber_rounded,
+                      _kOrange,
+                      _kOrangeBg,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ─── Helper Functions for _HeroCardWrapperState ───────────────────────────
+  Widget _heroStatHero(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+    Color bg,
+  ) {
+    return Expanded(
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 14, color: color),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: _kTextPrimary,
+              letterSpacing: -0.2,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 9, color: _kTextMuted),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _heroDividerHero() =>
+      Container(width: 0.5, height: 44, color: _kCardBorder);
+}
+
+// ─── Section Card ──────────────────────────────────────────────────────────
 class _SectionCard extends StatelessWidget {
   final String title;
   final Widget? trailing;
@@ -1383,6 +1537,7 @@ class _SectionCard extends StatelessWidget {
   }
 }
 
+// ─── KPI Classes ──────────────────────────────────────────────────────────
 class _KpiItem {
   final String label;
   final String value;
@@ -1493,6 +1648,7 @@ class _KpiCard extends StatelessWidget {
   }
 }
 
+// ─── Bar Item ──────────────────────────────────────────────────────────────
 class _BarItem {
   final String label;
   final String value;
@@ -1511,6 +1667,7 @@ class _BarItem {
   ]);
 }
 
+// ─── Health Entry ──────────────────────────────────────────────────────────
 class _HealthEntry {
   final String label;
   final int count;

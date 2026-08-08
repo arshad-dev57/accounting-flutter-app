@@ -1046,9 +1046,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: controller.isSaving.value
                 ? null
                 : () {
-                    if (controller.validateForm()) {
-                      controller.saveProfile();
-                    }
+                    controller.saveProfile();
                   },
             style: ElevatedButton.styleFrom(
               backgroundColor: kPrimary,

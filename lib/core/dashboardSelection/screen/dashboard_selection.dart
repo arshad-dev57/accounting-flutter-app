@@ -1,5 +1,8 @@
 // lib/core/dashboard/screens/dashboard_selection_screen.dart
 
+import 'dart:io';
+import 'dart:convert';
+
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
@@ -12,17 +15,14 @@ import 'package:BisonsTechs_app/core/Feedback/feedback_screen.dart';
 import 'package:BisonsTechs_app/core/ReportIsuue/Report_issue_screen.dart';
 import 'package:BisonsTechs_app/core/Sales/screens/sales_dashbaord_screen.dart';
 import 'package:BisonsTechs_app/core/UserGuide/screen/user_guide_screen.dart';
-import 'package:BisonsTechs_app/core/Users/screen/user_form_screen.dart';
 import 'package:BisonsTechs_app/core/Users/screen/user_list_screen.dart';
 import 'package:BisonsTechs_app/core/changepassword/screen/change_password_screen.dart';
 import 'package:BisonsTechs_app/core/companyprofile/controller/profile_controller.dart';
 import 'package:BisonsTechs_app/core/companyprofile/screen/company_profile_screen.dart';
 import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
-import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:BisonsTechs_app/core/purchasedashboard/purchase_dashboard_screen.dart';
 import 'package:BisonsTechs_app/core/settings/screens/currency_screen.dart';
-import 'package:BisonsTechs_app/widgets/profile_dropdown.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -222,11 +222,11 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
       CarouselSliderController();
   int _selectedIndex = 0;
 
-  final ProfileController _profileCtrl = Get.isRegistered<ProfileController>()
-      ? Get.find<ProfileController>()
-      : Get.put(ProfileController());
+  final ProfileController _profileCtrl = Get.put(ProfileController());
 
   late final SupportController _supportCtrl;
+  
+  String _businessLogo = '';
 
   @override
   void initState() {
@@ -234,6 +234,31 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
     _supportCtrl = Get.isRegistered<SupportController>()
         ? Get.find<SupportController>()
         : Get.put(SupportController());
+    _loadBusinessLogo();
+  }
+  
+  Future<void> _loadBusinessLogo() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userDataString = prefs.getString('user_data');
+      
+      if (userDataString != null) {
+        final userData = json.decode(userDataString) as Map<String, dynamic>;
+        final businessDetails = userData['businessDetails'] as Map<String, dynamic>?;
+        
+        if (businessDetails != null && businessDetails['logo'] != null) {
+          final logo = businessDetails['logo'] as String;
+          if (logo.isNotEmpty) {
+            setState(() {
+              _businessLogo = logo;
+            });
+            print('✅ [DashboardSelection] Business logo loaded: $logo');
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ [DashboardSelection] Error loading business logo: $e');
+    }
   }
 
   final List<Map<String, dynamic>> _banners = [
@@ -339,14 +364,45 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.account_balance, color: kPrimary, size: 20),
+                  _businessLogo.isNotEmpty
+                      ? Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: _businessLogo.startsWith('http')
+                                ? Image.network(
+                                    _businessLogo,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Icon(Icons.account_balance, color: kPrimary, size: 20);
+                                    },
+                                  )
+                                : Image.file(
+                                    File(_businessLogo),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Icon(Icons.account_balance, color: kPrimary, size: 20);
+                                    },
+                                  ),
+                          ),
+                        )
+                      : Icon(Icons.account_balance, color: kPrimary, size: 20),
                   const SizedBox(width: 6),
-                  Text(
-                    'BisonsTechs',
-                    style: TextStyle(
-                      fontSize: 13.sp,
-                      fontWeight: FontWeight.w800,
-                      color: kPrimary,
+                  Obx(
+                    () => Text(
+                      _profileCtrl.organizationName.value.isEmpty
+                          ? 'Company'
+                          : _profileCtrl.organizationName.value,
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w800,
+                        color: kPrimary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -356,14 +412,45 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
       title: isMobile
           ? Row(
               children: [
-                Icon(Icons.account_balance, color: kPrimary, size: 18),
+                _businessLogo.isNotEmpty
+                    ? Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: _businessLogo.startsWith('http')
+                              ? Image.network(
+                                  _businessLogo,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Icon(Icons.account_balance, color: kPrimary, size: 18);
+                                  },
+                                )
+                              : Image.file(
+                                  File(_businessLogo),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Icon(Icons.account_balance, color: kPrimary, size: 18);
+                                  },
+                                ),
+                        ),
+                      )
+                    : Icon(Icons.account_balance, color: kPrimary, size: 18),
                 const SizedBox(width: 6),
-                Text(
-                  'BisonsTechs',
-                  style: TextStyle(
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w800,
-                    color: kPrimary,
+                Obx(
+                  () => Text(
+                    _profileCtrl.organizationName.value.isEmpty
+                        ? 'Company'
+                        : _profileCtrl.organizationName.value,
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w800,
+                      color: kPrimary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -410,9 +497,24 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 12),
-          child: ProfileDropdown(
-            profileCtrl: _profileCtrl,
-            onLogout: _showLogoutDialog,
+          child: IconButton(
+            icon: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.person_rounded,
+                color: Colors.black87,
+                size: 20,
+              ),
+            ),
+            onPressed: () {
+              Get.to(() => const ProfileScreen());
+            },
+            tooltip: 'Profile',
           ),
         ),
       ],
@@ -425,68 +527,6 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
 
   void _toggleSupportDropdown() {
     _supportCtrl.toggleDropdown();
-  }
-
-  void _showLogoutDialog() {
-    Get.dialog(
-      Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.logout_rounded,
-                  color: Colors.red,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Sign Out',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Are you sure you want to sign out?',
-                style: TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Get.back(),
-                      child: const Text('Cancel'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        Get.back();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('Sign Out'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   Widget _topBarAction({
@@ -928,7 +968,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
       backgroundColor: Colors.white,
       child: Column(
         children: [
-          _DrawerHeader(),
+          _DrawerHeader(profileCtrl: _profileCtrl),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.only(top: 8, bottom: 8),
@@ -1016,7 +1056,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
               ],
             ),
           ),
-          _DrawerFooter(),
+          _DrawerFooter(profileCtrl: _profileCtrl),
         ],
       ),
     );
@@ -1928,12 +1968,51 @@ class _SidebarItemWidgetState extends State<_SidebarItemWidget> {
   }
 }
 
-class _DrawerHeader extends StatelessWidget {
+class _DrawerHeader extends StatefulWidget {
+  final ProfileController profileCtrl;
+  
+  const _DrawerHeader({required this.profileCtrl});
+
+  @override
+  State<_DrawerHeader> createState() => _DrawerHeaderState();
+}
+
+class _DrawerHeaderState extends State<_DrawerHeader> {
+  String _businessLogo = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBusinessLogo();
+  }
+
+  Future<void> _loadBusinessLogo() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userDataString = prefs.getString('user_data');
+      
+      if (userDataString != null) {
+        final userData = json.decode(userDataString) as Map<String, dynamic>;
+        final businessDetails = userData['businessDetails'] as Map<String, dynamic>?;
+        
+        if (businessDetails != null && businessDetails['logo'] != null) {
+          final logo = businessDetails['logo'] as String;
+          if (logo.isNotEmpty) {
+            setState(() {
+              _businessLogo = logo;
+            });
+            print('✅ [DrawerHeader] Business logo loaded: $logo');
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ [DrawerHeader] Error loading business logo: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final profileCtrl = Get.isRegistered<ProfileController>()
-        ? Get.find<ProfileController>()
-        : Get.put(ProfileController());
+    final profileCtrl = widget.profileCtrl;
 
     return Container(
       width: double.infinity,
@@ -1974,13 +2053,44 @@ class _DrawerHeader extends StatelessWidget {
                   color: Colors.black.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Center(
-                  child: Icon(
-                    Icons.account_balance_rounded,
-                    color: Colors.black87,
-                    size: 22,
-                  ),
-                ),
+                child: _businessLogo.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: _businessLogo.startsWith('http')
+                            ? Image.network(
+                                _businessLogo,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Center(
+                                    child: Icon(
+                                      Icons.account_balance_rounded,
+                                      color: Colors.black87,
+                                      size: 22,
+                                    ),
+                                  );
+                                },
+                              )
+                            : Image.file(
+                                File(_businessLogo),
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Center(
+                                    child: Icon(
+                                      Icons.account_balance_rounded,
+                                      color: Colors.black87,
+                                      size: 22,
+                                    ),
+                                  );
+                                },
+                              ),
+                      )
+                    : const Center(
+                        child: Icon(
+                          Icons.account_balance_rounded,
+                          color: Colors.black87,
+                          size: 22,
+                        ),
+                      ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -2323,137 +2433,9 @@ class _NavItem extends StatelessWidget {
 }
 
 class _DrawerFooter extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade100, width: 1)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // User card
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.grey.shade100),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [kPrimary, kPrimaryDark]),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'U',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'User',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
-                          color: Colors.black87,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        'Premium Account',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey.shade500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.10),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 5,
-                        height: 5,
-                        decoration: const BoxDecoration(
-                          color: Colors.green,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Text(
-                        'Active',
-                        style: TextStyle(
-                          fontSize: 9,
-                          color: Colors.green,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          // Logout button
-          InkWell(
-            onTap: () => _showLogoutDialog(context),
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-              decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.red.withOpacity(0.12)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Iconify(Mdi.logout, color: Colors.red.shade400, size: 16),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Sign Out',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.red.shade400,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  final ProfileController profileCtrl;
+  
+  const _DrawerFooter({required this.profileCtrl});
 
   void _showLogoutDialog(BuildContext context) {
     Get.dialog(
@@ -2554,6 +2536,147 @@ class _DrawerFooter extends StatelessWidget {
         ),
       ),
       barrierDismissible: true,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey.shade100, width: 1)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // User card
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.grey.shade100),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: [kPrimary, kPrimaryDark]),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'U',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Obx(
+                        () => Text(
+                          profileCtrl.firstName.value.isEmpty
+                              ? 'User'
+                              : '${profileCtrl.firstName.value} ${profileCtrl.lastName.value}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                            color: Colors.black87,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Obx(
+                        () => Text(
+                          profileCtrl.organizationName.value.isEmpty
+                              ? 'Premium Account'
+                              : profileCtrl.organizationName.value,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey.shade500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.10),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 5,
+                        height: 5,
+                        decoration: const BoxDecoration(
+                          color: Colors.green,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Text(
+                        'Active',
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: Colors.green,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Logout button
+          InkWell(
+            onTap: () => _showLogoutDialog(context),
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.red.withOpacity(0.12)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Iconify(Mdi.logout, color: Colors.red.shade400, size: 16),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Sign Out',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.red.shade400,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

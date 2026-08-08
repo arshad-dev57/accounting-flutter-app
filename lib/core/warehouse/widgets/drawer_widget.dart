@@ -1,5 +1,7 @@
 // lib/core/warehouse/widgets/drawer_widget.dart
 
+import 'dart:io';
+import 'dart:convert';
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
@@ -204,7 +206,44 @@ class WarehouseDrawer extends StatelessWidget {
 // Warehouse-specific Header
 // ══════════════════════════════════════════════════════════════════
 
-class _WarehouseDrawerHeader extends StatelessWidget {
+class _WarehouseDrawerHeader extends StatefulWidget {
+  @override
+  State<_WarehouseDrawerHeader> createState() => _WarehouseDrawerHeaderState();
+}
+
+class _WarehouseDrawerHeaderState extends State<_WarehouseDrawerHeader> {
+  String _businessLogo = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBusinessLogo();
+  }
+
+  Future<void> _loadBusinessLogo() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userDataString = prefs.getString('user_data');
+      
+      if (userDataString != null) {
+        final userData = json.decode(userDataString) as Map<String, dynamic>;
+        final businessDetails = userData['businessDetails'] as Map<String, dynamic>?;
+        
+        if (businessDetails != null && businessDetails['logo'] != null) {
+          final logo = businessDetails['logo'] as String;
+          if (logo.isNotEmpty) {
+            setState(() {
+              _businessLogo = logo;
+            });
+            print('✅ [WarehouseDrawerHeader] Business logo loaded: $logo');
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ [WarehouseDrawerHeader] Error loading business logo: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -246,13 +285,44 @@ class _WarehouseDrawerHeader extends StatelessWidget {
                   color: Colors.black.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Center(
-                  child: Icon(
-                    Icons.warehouse_rounded,
-                    color: Colors.black87,
-                    size: 22,
-                  ),
-                ),
+                child: _businessLogo.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: _businessLogo.startsWith('http')
+                            ? Image.network(
+                                _businessLogo,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Center(
+                                    child: Icon(
+                                      Icons.warehouse_rounded,
+                                      color: Colors.black87,
+                                      size: 22,
+                                    ),
+                                  );
+                                },
+                              )
+                            : Image.file(
+                                File(_businessLogo),
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Center(
+                                    child: Icon(
+                                      Icons.warehouse_rounded,
+                                      color: Colors.black87,
+                                      size: 22,
+                                    ),
+                                  );
+                                },
+                              ),
+                      )
+                    : const Center(
+                        child: Icon(
+                          Icons.warehouse_rounded,
+                          color: Colors.black87,
+                          size: 22,
+                        ),
+                      ),
               ),
               const SizedBox(width: 10),
               Expanded(

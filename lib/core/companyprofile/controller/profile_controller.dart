@@ -8,6 +8,8 @@ import 'package:get/get.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:BisonsTechs_app/Utils/signature_dialog.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:BisonsTechs_app/Services/permission_service.dart';
 
 class ProfileController extends GetxController {
   // Observable variables
@@ -82,6 +84,7 @@ class ProfileController extends GetxController {
     super.onInit();
     _initializeControllers();
     loadProfile();
+    loadBusinessLogoFromPrefs();
   }
 
   void _initializeControllers() {
@@ -103,6 +106,30 @@ class ProfileController extends GetxController {
     signatureController = TextEditingController();
     industryController = TextEditingController();
     businessTypeController = TextEditingController();
+  }
+
+  // ─── LOAD BUSINESS LOGO FROM SHARED PREFERENCES ─────────────────
+  Future<void> loadBusinessLogoFromPrefs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userDataString = prefs.getString('user_data');
+      
+      if (userDataString != null) {
+        final userData = json.decode(userDataString) as Map<String, dynamic>;
+        final businessDetails = userData['businessDetails'] as Map<String, dynamic>?;
+        
+        if (businessDetails != null && businessDetails['logo'] != null) {
+          final logo = businessDetails['logo'] as String;
+          if (logo.isNotEmpty) {
+            businessLogo.value = logo;
+            businessLogoController.text = logo;
+            print('✅ [ProfileController] Business logo loaded from SharedPreferences: $logo');
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ [ProfileController] Error loading business logo from SharedPreferences: $e');
+    }
   }
 
   // ─── IMAGE PICKER METHODS ──────────────────────────────────────
@@ -206,34 +233,74 @@ class ProfileController extends GetxController {
   }
 
   // ════════════════════════════════════════════════════════════════
-  // SAVE PROFILE
+  // SAVE PROFILE - PARTIAL UPDATE (only changed fields)
   // ════════════════════════════════════════════════════════════════
   Future<void> saveProfile() async {
     try {
       isSaving.value = true;
 
-      // ─── BUILD REQUEST BODY ──────────────────────────────────────
-      final Map<String, String> fields = {
-        // Personal Info
-        'firstName': firstNameController.text.trim(),
-        'lastName': lastNameController.text.trim(),
-        'email': emailController.text.trim(),
-        'phone': phoneController.text.trim(),
-        'country': countryController.text.trim(),
+      // ─── BUILD REQUEST BODY - ONLY CHANGED FIELDS ─────────────────
+      final Map<String, String> fields = {};
 
-        // Address & Contact
-        'address': addressController.text.trim(),
-        'contactNo': contactNoController.text.trim(),
-        'websiteLink': websiteController.text.trim(),
-        'organizationName': orgNameController.text.trim(),
+      // Personal Info - only add if changed and not empty
+      if (firstNameController.text.trim() != firstName.value &&
+          firstNameController.text.trim().isNotEmpty) {
+        fields['firstName'] = firstNameController.text.trim();
+      }
+      if (lastNameController.text.trim() != lastName.value &&
+          lastNameController.text.trim().isNotEmpty) {
+        fields['lastName'] = lastNameController.text.trim();
+      }
+      if (emailController.text.trim() != email.value &&
+          emailController.text.trim().isNotEmpty) {
+        fields['email'] = emailController.text.trim();
+      }
+      if (phoneController.text.trim() != phone.value &&
+          phoneController.text.trim().isNotEmpty) {
+        fields['phone'] = phoneController.text.trim();
+      }
+      if (countryController.text.trim() != country.value &&
+          countryController.text.trim().isNotEmpty) {
+        fields['country'] = countryController.text.trim();
+      }
 
-        // Business Details
-        'fiscalYear': fiscalYearController.text.trim(),
-        'taxRegistrationNumber': taxRegistrationController.text.trim(),
-        'industry': industryController.text.trim(),
-        'businessType': businessTypeController.text.trim(),
-      };
+      // Address & Contact - only add if changed and not empty
+      if (addressController.text.trim() != address.value &&
+          addressController.text.trim().isNotEmpty) {
+        fields['address'] = addressController.text.trim();
+      }
+      if (contactNoController.text.trim() != contactNo.value &&
+          contactNoController.text.trim().isNotEmpty) {
+        fields['contactNo'] = contactNoController.text.trim();
+      }
+      if (websiteController.text.trim() != websiteLink.value &&
+          websiteController.text.trim().isNotEmpty) {
+        fields['websiteLink'] = websiteController.text.trim();
+      }
+      if (orgNameController.text.trim() != organizationName.value &&
+          orgNameController.text.trim().isNotEmpty) {
+        fields['organizationName'] = orgNameController.text.trim();
+      }
 
+      // Business Details - only add if changed and not empty
+      if (fiscalYearController.text.trim() != fiscalYear.value &&
+          fiscalYearController.text.trim().isNotEmpty) {
+        fields['fiscalYear'] = fiscalYearController.text.trim();
+      }
+      if (taxRegistrationController.text.trim() != taxRegistrationNumber.value &&
+          taxRegistrationController.text.trim().isNotEmpty) {
+        fields['taxRegistrationNumber'] = taxRegistrationController.text.trim();
+      }
+      if (industryController.text.trim() != industry.value &&
+          industryController.text.trim().isNotEmpty) {
+        fields['industry'] = industryController.text.trim();
+      }
+      if (businessTypeController.text.trim() != businessType.value &&
+          businessTypeController.text.trim().isNotEmpty) {
+        fields['businessType'] = businessTypeController.text.trim();
+      }
+
+      // File uploads - always include if new local file
       final Map<String, String> filePaths = {};
       if (businessLogoController.text.isNotEmpty &&
           !businessLogoController.text.startsWith('http')) {
@@ -242,6 +309,32 @@ class ProfileController extends GetxController {
       if (signatureController.text.isNotEmpty &&
           !signatureController.text.startsWith('http')) {
         filePaths['signature'] = signatureController.text;
+      }
+
+      // Validate email format if email is being updated
+      if (fields.containsKey('email')) {
+        if (!fields['email']!.contains('@') ||
+            !fields['email']!.contains('.')) {
+          _showError('Please enter a valid email');
+          isSaving.value = false;
+          return;
+        }
+      }
+
+      // Validate contact number format if being updated
+      if (fields.containsKey('contactNo')) {
+        if (fields['contactNo']!.length < 10) {
+          _showError('Please enter a valid contact number');
+          isSaving.value = false;
+          return;
+        }
+      }
+
+      // If no fields to update, just exit edit mode
+      if (fields.isEmpty && filePaths.isEmpty) {
+        _showError('No changes to save');
+        isSaving.value = false;
+        return;
       }
 
       final response = await _api.putMultipart(
@@ -255,29 +348,65 @@ class ProfileController extends GetxController {
       if (response.success) {
         final data = response.data;
 
-        // ─── UPDATE OBSERVABLES ────────────────────────────────────
-        organizationName.value = orgNameController.text.trim();
-        firstName.value = firstNameController.text.trim();
-        lastName.value = lastNameController.text.trim();
-        address.value = addressController.text.trim();
-        email.value = emailController.text.trim();
-        contactNo.value = contactNoController.text.trim();
-        phone.value = phoneController.text.trim();
-        websiteLink.value = websiteController.text.trim();
-        country.value = countryController.text.trim();
+        // ─── UPDATE OBSERVABLES (only for fields that were sent) ─────
+        if (fields.containsKey('organizationName')) {
+          organizationName.value = orgNameController.text.trim();
+        }
+        if (fields.containsKey('firstName')) {
+          firstName.value = firstNameController.text.trim();
+        }
+        if (fields.containsKey('lastName')) {
+          lastName.value = lastNameController.text.trim();
+        }
+        if (fields.containsKey('address')) {
+          address.value = addressController.text.trim();
+        }
+        if (fields.containsKey('email')) {
+          email.value = emailController.text.trim();
+        }
+        if (fields.containsKey('contactNo')) {
+          contactNo.value = contactNoController.text.trim();
+        }
+        if (fields.containsKey('phone')) {
+          phone.value = phoneController.text.trim();
+        }
+        if (fields.containsKey('websiteLink')) {
+          websiteLink.value = websiteController.text.trim();
+        }
+        if (fields.containsKey('country')) {
+          country.value = countryController.text.trim();
+        }
 
         // ─── UPDATE BUSINESS OBSERVABLES ───────────────────────────
-        businessLogo.value = businessLogoController.text.trim();
-        fiscalYear.value = fiscalYearController.text.trim();
-        taxRegistrationNumber.value = taxRegistrationController.text.trim();
-        signature.value = signatureController.text.trim();
-        industry.value = industryController.text.trim();
-        businessType.value = businessTypeController.text.trim();
+        if (filePaths.containsKey('logo')) {
+          businessLogo.value = businessLogoController.text.trim();
+        }
+        if (fields.containsKey('fiscalYear')) {
+          fiscalYear.value = fiscalYearController.text.trim();
+        }
+        if (fields.containsKey('taxRegistrationNumber')) {
+          taxRegistrationNumber.value = taxRegistrationController.text.trim();
+        }
+        if (filePaths.containsKey('signature')) {
+          signature.value = signatureController.text.trim();
+        }
+        if (fields.containsKey('industry')) {
+          industry.value = industryController.text.trim();
+        }
+        if (fields.containsKey('businessType')) {
+          businessType.value = businessTypeController.text.trim();
+        }
 
-        // Update personName
-        personName.value = '${firstName.value} ${lastName.value}'.trim();
+        // Update personName if name fields changed
+        if (fields.containsKey('firstName') || fields.containsKey('lastName')) {
+          personName.value = '${firstName.value} ${lastName.value}'.trim();
+        }
 
         _showSuccess(data['message'] ?? 'Profile updated successfully!');
+        
+        // Update SharedPreferences with new profile data
+        await _updateSharedPreferencesUserData();
+        
         toggleEdit(); // Exit edit mode
       } else {
         _showError(
@@ -293,19 +422,33 @@ class ProfileController extends GetxController {
   }
 
   // ════════════════════════════════════════════════════════════════
-  // SAVE BUSINESS DETAILS ONLY
+  // SAVE BUSINESS DETAILS ONLY - PARTIAL UPDATE
   // ════════════════════════════════════════════════════════════════
   Future<void> saveBusinessDetails() async {
     try {
       isSaving.value = true;
 
-      final Map<String, String> fields = {
-        'fiscalYear': fiscalYearController.text.trim(),
-        'taxRegistrationNumber': taxRegistrationController.text.trim(),
-        'industry': industryController.text.trim(),
-        'businessType': businessTypeController.text.trim(),
-      };
+      // ─── BUILD REQUEST BODY - ONLY CHANGED FIELDS ─────────────────
+      final Map<String, String> fields = {};
 
+      if (fiscalYearController.text.trim() != fiscalYear.value &&
+          fiscalYearController.text.trim().isNotEmpty) {
+        fields['fiscalYear'] = fiscalYearController.text.trim();
+      }
+      if (taxRegistrationController.text.trim() != taxRegistrationNumber.value &&
+          taxRegistrationController.text.trim().isNotEmpty) {
+        fields['taxRegistrationNumber'] = taxRegistrationController.text.trim();
+      }
+      if (industryController.text.trim() != industry.value &&
+          industryController.text.trim().isNotEmpty) {
+        fields['industry'] = industryController.text.trim();
+      }
+      if (businessTypeController.text.trim() != businessType.value &&
+          businessTypeController.text.trim().isNotEmpty) {
+        fields['businessType'] = businessTypeController.text.trim();
+      }
+
+      // File uploads - always include if new local file
       final Map<String, String> filePaths = {};
       if (businessLogoController.text.isNotEmpty &&
           !businessLogoController.text.startsWith('http')) {
@@ -314,6 +457,13 @@ class ProfileController extends GetxController {
       if (signatureController.text.isNotEmpty &&
           !signatureController.text.startsWith('http')) {
         filePaths['signature'] = signatureController.text;
+      }
+
+      // If no fields to update, just exit edit mode
+      if (fields.isEmpty && filePaths.isEmpty) {
+        _showError('No changes to save');
+        isSaving.value = false;
+        return;
       }
 
       final response = await _api.putMultipart(
@@ -325,17 +475,33 @@ class ProfileController extends GetxController {
       if (response.success) {
         final data = response.data;
 
-        // Update observables
-        businessLogo.value = businessLogoController.text.trim();
-        fiscalYear.value = fiscalYearController.text.trim();
-        taxRegistrationNumber.value = taxRegistrationController.text.trim();
-        signature.value = signatureController.text.trim();
-        industry.value = industryController.text.trim();
-        businessType.value = businessTypeController.text.trim();
+        // Update observables (only for fields that were sent)
+        if (filePaths.containsKey('logo')) {
+          businessLogo.value = businessLogoController.text.trim();
+        }
+        if (fields.containsKey('fiscalYear')) {
+          fiscalYear.value = fiscalYearController.text.trim();
+        }
+        if (fields.containsKey('taxRegistrationNumber')) {
+          taxRegistrationNumber.value = taxRegistrationController.text.trim();
+        }
+        if (filePaths.containsKey('signature')) {
+          signature.value = signatureController.text.trim();
+        }
+        if (fields.containsKey('industry')) {
+          industry.value = industryController.text.trim();
+        }
+        if (fields.containsKey('businessType')) {
+          businessType.value = businessTypeController.text.trim();
+        }
 
         _showSuccess(
           data['message'] ?? 'Business details updated successfully!',
         );
+        
+        // Update SharedPreferences with new business details
+        await _updateSharedPreferencesUserData();
+        
         toggleEdit();
       } else {
         _showError(response.message ?? 'Failed to update business details.');
@@ -345,6 +511,71 @@ class ProfileController extends GetxController {
       _showError('error. Server Down. Please try again later.');
     } finally {
       isSaving.value = false;
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  // UPDATE SHARED PREFERENCES USER DATA
+  // ════════════════════════════════════════════════════════════════
+  Future<void> _updateSharedPreferencesUserData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      
+      // Get existing user data
+      final existingUserDataString = prefs.getString('user_data');
+      Map<String, dynamic> userData = {};
+      
+      if (existingUserDataString != null) {
+        userData = json.decode(existingUserDataString) as Map<String, dynamic>;
+      }
+      
+      // Update user data with current profile values
+      userData['organizationName'] = organizationName.value;
+      userData['firstName'] = firstName.value;
+      userData['lastName'] = lastName.value;
+      userData['address'] = address.value;
+      userData['email'] = email.value;
+      userData['contactNo'] = contactNo.value;
+      userData['phone'] = phone.value;
+      userData['websiteLink'] = websiteLink.value;
+      userData['country'] = country.value;
+      
+      // Update business details
+      if (userData['businessDetails'] == null) {
+        userData['businessDetails'] = {};
+      }
+      userData['businessDetails']['logo'] = businessLogo.value;
+      userData['businessDetails']['fiscalYear'] = fiscalYear.value;
+      userData['businessDetails']['taxRegistrationNumber'] = taxRegistrationNumber.value;
+      userData['businessDetails']['signature'] = signature.value;
+      userData['businessDetails']['industry'] = industry.value;
+      userData['businessDetails']['businessType'] = businessType.value;
+      
+      // Save updated user data
+      await prefs.setString('user_data', json.encode(userData));
+      print('✅ [ProfileController] User data updated in SharedPreferences');
+      
+      // Update PermissionService user data if available
+      try {
+        final permissionService = Get.find<PermissionService>();
+        if (permissionService.user.value != null) {
+          final updatedUserData = UserData(
+            id: permissionService.user.value!.id,
+            firstName: firstName.value,
+            lastName: lastName.value,
+            email: email.value,
+            role: permissionService.user.value!.role,
+            permissions: permissionService.user.value!.permissions,
+          );
+          await permissionService.saveUserData(updatedUserData);
+          print('✅ [ProfileController] PermissionService user data updated');
+        }
+      } catch (e) {
+        print('⚠️ [ProfileController] Could not update PermissionService: $e');
+      }
+      
+    } catch (e) {
+      print('❌ [ProfileController] Error updating SharedPreferences: $e');
     }
   }
 
@@ -377,46 +608,6 @@ class ProfileController extends GetxController {
     signatureController.text = signature.value;
     industryController.text = industry.value;
     businessTypeController.text = businessType.value;
-  }
-
-  // ════════════════════════════════════════════════════════════════
-  // VALIDATE FORM
-  // ════════════════════════════════════════════════════════════════
-  bool validateForm() {
-    if (orgNameController.text.trim().isEmpty) {
-      _showError('Please enter organization name');
-      return false;
-    }
-    if (firstNameController.text.trim().isEmpty) {
-      _showError('Please enter first name');
-      return false;
-    }
-    if (lastNameController.text.trim().isEmpty) {
-      _showError('Please enter last name');
-      return false;
-    }
-    if (addressController.text.trim().isEmpty) {
-      _showError('Please enter address');
-      return false;
-    }
-    if (emailController.text.trim().isEmpty) {
-      _showError('Please enter email');
-      return false;
-    }
-    if (!emailController.text.contains('@') ||
-        !emailController.text.contains('.')) {
-      _showError('Please enter a valid email');
-      return false;
-    }
-    if (contactNoController.text.trim().isEmpty) {
-      _showError('Please enter contact number');
-      return false;
-    }
-    if (contactNoController.text.trim().length < 10) {
-      _showError('Please enter a valid contact number');
-      return false;
-    }
-    return true;
   }
 
   // ════════════════════════════════════════════════════════════════

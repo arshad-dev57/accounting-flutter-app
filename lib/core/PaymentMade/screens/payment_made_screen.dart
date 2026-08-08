@@ -67,10 +67,6 @@ class PaymentsMadeScreen extends StatelessWidget {
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // TOP HEADER
-  // ═══════════════════════════════════════════════════════════════
-
   Widget _buildTopHeader(
     BuildContext context,
     PaymentMadeController controller,
