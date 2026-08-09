@@ -279,6 +279,8 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
     return Obx(() {
       final data = controller.dashboard.value;
       final fmt = Get.find<CurrencyController>().formatAmount;
+      final logo = controller.businessLogo.value;
+      final hasLogo = logo.isNotEmpty;
 
       final totalSpend = data?.invoices.totalSpend ?? 0.0;
       final outstanding = data?.invoices.outstanding ?? 0.0;
@@ -286,7 +288,6 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
       final totalOrders = data?.orders.total ?? 0;
 
       return Container(
-        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
@@ -303,168 +304,179 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
             ),
           ],
         ),
-        child: Stack(
-          children: [
-            if (controller.businessLogo.value.isNotEmpty)
-              Positioned.fill(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
-                  child: Opacity(
-                    opacity: 0.05,
-                    child: controller.businessLogo.value.startsWith('http')
-                        ? Image.network(
-                            controller.businessLogo.value,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const SizedBox.shrink(),
-                          )
-                        : Image.file(
-                            File(controller.businessLogo.value),
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const SizedBox.shrink(),
-                          ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(17),
+          child: Stack(
+            children: [
+              if (hasLogo)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Opacity(
+                      opacity: 0.07,
+                      child: logo.startsWith('http')
+                          ? Image.network(
+                              logo,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                              alignment: Alignment.center,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const SizedBox.shrink(),
+                            )
+                          : Image.file(
+                              File(logo),
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                              alignment: Alignment.center,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const SizedBox.shrink(),
+                            ),
+                    ),
                   ),
                 ),
-              ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: _kPrimaryBg,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(
-                                  Icons.shopping_bag_outlined,
-                                  size: 14,
-                                  color: kPrimary,
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: _kPrimaryBg,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.shopping_bag_outlined,
+                                      size: 14,
+                                      color: kPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Total Spend · ${controller.selectedTimePeriodLabel.value}',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: _kTextSub,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                fmt(totalSpend),
+                                style: const TextStyle(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w800,
+                                  color: _kTextPrimary,
+                                  letterSpacing: -0.5,
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(height: 4),
                               Text(
-                                'Total Spend · ${controller.selectedTimePeriodLabel.value}',
+                                '${fmt(paidAmount)} paid · ${fmt(outstanding)} outstanding',
                                 style: const TextStyle(
                                   fontSize: 11,
                                   color: _kTextSub,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _kPrimaryBg,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.receipt_long_outlined,
+                                      size: 10,
+                                      color: kPrimary,
+                                    ),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      '$totalOrders purchase order${totalOrders == 1 ? '' : 's'}',
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: kPrimary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
-                          const SizedBox(height: 10),
-                          Text(
-                            fmt(totalSpend),
-                            style: const TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w800,
-                              color: _kTextPrimary,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${fmt(paidAmount)} paid · ${fmt(outstanding)} outstanding',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: _kTextSub,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
+                        ),
+                        GestureDetector(
+                          onTap: controller.refreshDashboard,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: _kPrimaryBg,
-                              borderRadius: BorderRadius.circular(20),
+                              color: _kHeroIcon,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: _kHeroBorder),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.receipt_long_outlined,
-                                  size: 10,
-                                  color: kPrimary,
-                                ),
-                                const SizedBox(width: 3),
-                                Text(
-                                  '$totalOrders purchase order${totalOrders == 1 ? '' : 's'}',
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: kPrimary,
-                                  ),
-                                ),
-                              ],
+                            child: const Icon(
+                              Icons.refresh_rounded,
+                              size: 16,
+                              color: _kTextSub,
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    GestureDetector(
-                      onTap: controller.refreshDashboard,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: _kHeroIcon,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: _kHeroBorder),
+                    const SizedBox(height: 16),
+                    Container(height: 0.5, color: _kCardBorder),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        _heroStat(
+                          'Orders',
+                          '$totalOrders',
+                          Icons.receipt_long_outlined,
+                          kPrimary,
+                          _kPrimaryBg,
                         ),
-                        child: const Icon(
-                          Icons.refresh_rounded,
-                          size: 16,
-                          color: _kTextSub,
+                        _heroDivider(),
+                        _heroStat(
+                          'Paid',
+                          fmt(paidAmount),
+                          Icons.check_circle_outline_rounded,
+                          _kGreen,
+                          _kGreenBg,
                         ),
-                      ),
+                        _heroDivider(),
+                        _heroStat(
+                          'Outstanding',
+                          fmt(outstanding),
+                          Icons.schedule_rounded,
+                          _kOrange,
+                          _kOrangeBg,
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Container(height: 0.5, color: _kCardBorder),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    _heroStat(
-                      'Orders',
-                      '$totalOrders',
-                      Icons.receipt_long_outlined,
-                      kPrimary,
-                      _kPrimaryBg,
-                    ),
-                    _heroDivider(),
-                    _heroStat(
-                      'Paid',
-                      fmt(paidAmount),
-                      Icons.check_circle_outline_rounded,
-                      _kGreen,
-                      _kGreenBg,
-                    ),
-                    _heroDivider(),
-                    _heroStat(
-                      'Outstanding',
-                      fmt(outstanding),
-                      Icons.schedule_rounded,
-                      _kOrange,
-                      _kOrangeBg,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       );
     });

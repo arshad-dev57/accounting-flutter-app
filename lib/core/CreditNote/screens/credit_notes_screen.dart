@@ -2,26 +2,44 @@
 
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/CreditNote/controllers/creditnote_controller.dart';
 import 'package:BisonsTechs_app/core/CreditNote/models/credit_note_model.dart';
+import 'package:BisonsTechs_app/widgets/sales_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class CreditNotesScreen extends StatelessWidget {
-  const CreditNotesScreen({super.key});
+  final bool fromSales;
+  final String title;
+  final bool showDrawerButton;
+
+  const CreditNotesScreen({
+    super.key,
+    this.fromSales = false,
+    this.title = 'Credit Notes',
+    this.showDrawerButton = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(CreditNoteController());
+    final controller = Get.isRegistered<CreditNoteController>()
+        ? Get.find<CreditNoteController>()
+        : Get.put(CreditNoteController());
+    final isMobile = ResponsiveUtils.isMobile(context);
+    final useSalesDrawer = fromSales && (showDrawerButton || isMobile);
 
     return Scaffold(
       backgroundColor: kBgLight,
+      drawer: useSalesDrawer
+          ? const SalesDrawer(currentRoute: '/sales/credits')
+          : null,
       body: Column(
         children: [
-          _buildTopHeader(context, controller),
+          _buildTopHeader(context, controller, useSalesDrawer),
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value &&
@@ -38,6 +56,10 @@ class CreditNotesScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     _buildSummaryCards(controller),
+                    if (fromSales) ...[
+                      const SizedBox(height: 8),
+                      _buildAccountingLinkBanner(),
+                    ],
                     const SizedBox(height: 8),
                     Expanded(child: _buildListView(controller, context)),
                   ],
@@ -68,6 +90,35 @@ class CreditNotesScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildAccountingLinkBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: kPrimary.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: kPrimary.withOpacity(0.15)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.account_balance_outlined, size: 16, color: kPrimary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Posts to accounting: AR, contra-revenue, tax & stock (returns). Same ledger as Credit Notes.',
+              style: TextStyle(
+                fontSize: 11,
+                color: kPrimary.withOpacity(0.9),
+                fontWeight: FontWeight.w500,
+                height: 1.3,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ═══════════════════════════════════════════════════════════════
   // TOP HEADER
   // ═══════════════════════════════════════════════════════════════
@@ -75,6 +126,7 @@ class CreditNotesScreen extends StatelessWidget {
   Widget _buildTopHeader(
     BuildContext context,
     CreditNoteController controller,
+    bool useSalesDrawer,
   ) {
     return Container(
       color: kPrimary,
@@ -88,18 +140,32 @@ class CreditNotesScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
               child: Row(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
+                  if (useSalesDrawer)
+                    Builder(
+                      builder: (ctx) => IconButton(
+                        icon: const Icon(Icons.menu_rounded, color: Colors.white),
+                        onPressed: () => Scaffold.of(ctx).openDrawer(),
+                      ),
+                    )
+                  else
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () {
+                        if (fromSales) {
+                          Get.offNamed('/warehouse/sales');
+                        } else {
+                          Navigator.of(context).pop();
+                        }
+                      },
+                    ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Credit Notes',
-                          style: TextStyle(
+                        Text(
+                          title,
+                          style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w800,
                             color: Colors.white,
@@ -107,7 +173,9 @@ class CreditNotesScreen extends StatelessWidget {
                         ),
                         Obx(
                           () => Text(
-                            '${controller.creditNotes.length} notes',
+                            fromSales
+                                ? '${controller.creditNotes.length} credits · linked to invoices & GL'
+                                : '${controller.creditNotes.length} notes',
                             style: TextStyle(
                               fontSize: 11,
                               color: Colors.white.withOpacity(0.7),

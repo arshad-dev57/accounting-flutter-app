@@ -81,11 +81,18 @@ class PermissionService extends GetxService {
     // Admin has all sub-page access
     if (_currentUser!.role == 'admin') return true;
 
-    // Check specific sub-page permission
-    final pageIdentifier =
-        '$module-${subPage.toLowerCase().replaceAll(' ', '-')}';
+    final moduleLower = module.toLowerCase();
+    final sub = subPage.toLowerCase().replaceAll(' ', '-');
+    final candidates = <String>{
+      '$moduleLower-$sub',
+      sub,
+      '$moduleLower-$moduleLower-$sub',
+      if (sub.startsWith('$moduleLower-')) sub,
+      if (sub.startsWith('$moduleLower-')) '$moduleLower-$sub',
+    };
+
     final permission = _currentUser!.permissions.firstWhereOrNull(
-      (p) => p.page.toLowerCase() == pageIdentifier,
+      (p) => candidates.contains(p.page.toLowerCase()),
     );
 
     return permission?.canView ?? false;

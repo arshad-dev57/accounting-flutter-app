@@ -83,12 +83,17 @@ class SalesInvoiceScreen extends StatelessWidget {
           ],
         );
       }),
-      floatingActionButton: FloatingActionButton(
-        onPressed: controller.openCreateWizard,
-        backgroundColor: kPrimary,
-        elevation: 2,
-        child: const Icon(Icons.add, color: Colors.white, size: 24),
-      ),
+      floatingActionButton: Obx(() {
+        if (controller.showCreateWizard.value) {
+          return const SizedBox.shrink();
+        }
+        return FloatingActionButton(
+          onPressed: controller.openCreateWizard,
+          backgroundColor: kPrimary,
+          elevation: 2,
+          child: const Icon(Icons.add, color: Colors.white, size: 24),
+        );
+      }),
     );
   }
 
@@ -531,20 +536,37 @@ class _CreateInvoiceWizard extends StatelessWidget {
       TextField(
         controller: controller.orderSearchController,
         decoration: const InputDecoration(
-          hintText: 'Search order # or customer',
+          hintText: 'Search order #, customer, email, phone…',
           prefixIcon: Icon(Icons.search),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(10)),
           ),
         ),
         onChanged: controller.searchOrders,
+        onTap: () {
+          if (controller.orderSearchResults.isEmpty &&
+              controller.selectedOrder.value == null) {
+            controller.searchOrders('');
+          }
+        },
       ),
       if (controller.isSearchingOrders.value)
         const Padding(
           padding: EdgeInsets.all(8),
           child: Center(child: CircularProgressIndicator()),
         ),
-      ...controller.orderSearchResults.map(_orderTile),
+      if (controller.selectedOrder.value == null &&
+          controller.orderSearchResults.isEmpty &&
+          !controller.isSearchingOrders.value)
+        Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: Text(
+            'Tap the search field to load recent orders ready for invoicing.',
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          ),
+        ),
+      if (controller.selectedOrder.value == null)
+        ...controller.orderSearchResults.map(_orderTile),
       if (controller.selectedOrder.value != null)
         _selectedOrderCard(controller.selectedOrder.value!),
     ]);
@@ -874,38 +896,272 @@ class _CreateInvoiceWizard extends StatelessWidget {
   }
 
   Widget _orderTile(Map<String, dynamic> order) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(
-        order['orderNumber'] ?? '',
-        style: const TextStyle(fontWeight: FontWeight.w600),
+    final dateRaw = order['orderDate']?.toString();
+    final date = dateRaw != null ? DateTime.tryParse(dateRaw) : null;
+    final dateStr = date != null
+        ? DateFormat('dd MMM yyyy').format(date)
+        : '—';
+    final grandTotal = (order['grandTotal'] is num)
+        ? (order['grandTotal'] as num).toDouble()
+        : double.tryParse(order['grandTotal']?.toString() ?? '') ?? 0;
+    final itemCount = order['totalItems'] ?? order['items']?.length ?? 0;
+    final qty = order['totalQuantity'] ?? itemCount;
+    final status = order['orderStatus']?.toString() ?? '';
+    final payStatus = order['paymentStatus']?.toString() ?? '';
+    final email = order['customerEmail']?.toString() ?? '';
+    final phone = order['customerPhone']?.toString() ?? '';
+    final contact = [email, phone].where((e) => e.isNotEmpty).join(' · ');
+
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.shade200),
       ),
-      subtitle: Text(
-        '${order['customerName']} • ${order['items']?.length ?? 0} items',
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: () => controller.selectOrderForInvoice(order),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      order['orderNumber']?.toString() ?? '',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                        color: kPrimary,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    _format(grandTotal),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                order['customerName']?.toString() ?? '',
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+              ),
+              if (contact.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  contact,
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                ),
+              ],
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  _chip(dateStr, Icons.calendar_today_outlined),
+                  _chip('$itemCount items · qty $qty', Icons.inventory_2_outlined),
+                  if (status.isNotEmpty) _chip(status, Icons.flag_outlined),
+                  if (payStatus.isNotEmpty) _chip(payStatus, Icons.payments_outlined),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
-      trailing: Icon(Icons.chevron_right, color: kSubText),
-      onTap: () => controller.selectOrderForInvoice(order),
+    );
+  }
+
+  Widget _chip(String label, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: kBgLight,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: kSubText),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade700,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _selectedOrderCard(Map<String, dynamic> order) {
+    final dateRaw = order['orderDate']?.toString();
+    final date = dateRaw != null ? DateTime.tryParse(dateRaw) : null;
+    final dateStr =
+        date != null ? DateFormat('dd MMM yyyy').format(date) : '—';
+    final grandTotal = (order['grandTotal'] is num)
+        ? (order['grandTotal'] as num).toDouble()
+        : double.tryParse(order['grandTotal']?.toString() ?? '') ?? 0;
+    final subtotal = (order['subtotal'] is num)
+        ? (order['subtotal'] as num).toDouble()
+        : double.tryParse(order['subtotal']?.toString() ?? '') ?? 0;
+    final tax = (order['taxTotal'] is num)
+        ? (order['taxTotal'] as num).toDouble()
+        : double.tryParse(order['taxTotal']?.toString() ?? '') ?? 0;
+    final discount = (order['discountTotal'] is num)
+        ? (order['discountTotal'] as num).toDouble()
+        : double.tryParse(order['discountTotal']?.toString() ?? '') ?? 0;
+    final items = (order['items'] as List?) ?? [];
+    final shipping = order['shippingAddress'];
+    String shippingLine = '';
+    if (shipping is Map) {
+      shippingLine = [
+        shipping['street'],
+        shipping['city'],
+        shipping['state'],
+        shipping['country'],
+      ].where((e) => e != null && e.toString().trim().isNotEmpty).join(', ');
+    }
+
     return Container(
-      margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: kPrimary.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: kPrimary.withOpacity(0.3)),
+        color: kPrimary.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: kPrimary.withOpacity(0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            order['orderNumber'] ?? '',
-            style: TextStyle(fontWeight: FontWeight.w700, color: kPrimary),
+          Row(
+            children: [
+              const Icon(Icons.check_circle, color: kSuccess, size: 18),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  order['orderNumber']?.toString() ?? '',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: kPrimary,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+              Text(
+                _format(grandTotal),
+                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+              ),
+            ],
           ),
-          Text(order['customerName'] ?? ''),
-          Text('${order['items']?.length ?? 0} items ready for invoicing'),
+          const SizedBox(height: 8),
+          Text(
+            order['customerName']?.toString() ?? '',
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+          ),
+          if ((order['customerEmail'] ?? '').toString().isNotEmpty ||
+              (order['customerPhone'] ?? '').toString().isNotEmpty)
+            Text(
+              [
+                order['customerEmail'],
+                order['customerPhone'],
+              ].where((e) => e != null && e.toString().isNotEmpty).join(' · '),
+              style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+            ),
+          const SizedBox(height: 8),
+          Text(
+            'Date $dateStr · ${order['orderStatus'] ?? ''} · ${order['paymentStatus'] ?? ''}',
+            style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+          ),
+          if (shippingLine.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Ship to: $shippingLine',
+              style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+            ),
+          ],
+          const SizedBox(height: 10),
+          Text(
+            'Items (${items.length})',
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+          ),
+          const SizedBox(height: 6),
+          ...items.take(5).map((raw) {
+            final item = Map<String, dynamic>.from(raw as Map);
+            final name = item['productName']?.toString() ?? 'Item';
+            final qty = item['quantity'] ?? 0;
+            final price = (item['unitPrice'] is num)
+                ? (item['unitPrice'] as num).toDouble()
+                : double.tryParse(item['unitPrice']?.toString() ?? '') ?? 0;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '$name × $qty',
+                      style: const TextStyle(fontSize: 12),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text(
+                    _format(price * (qty is num ? qty.toDouble() : 0)),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+          if (items.length > 5)
+            Text(
+              '+ ${items.length - 5} more items',
+              style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+            ),
+          const Divider(height: 16),
+          _miniTotal('Subtotal', _format(subtotal)),
+          if (discount > 0) _miniTotal('Discount', '-${_format(discount)}'),
+          if (tax > 0) _miniTotal('Tax', _format(tax)),
+          _miniTotal('Grand Total', _format(grandTotal), bold: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _miniTotal(String label, String value, {bool bold = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 2),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+                color: kSubText,
+              ),
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: bold ? FontWeight.w800 : FontWeight.w600,
+              color: bold ? kPrimary : kText,
+            ),
+          ),
         ],
       ),
     );
@@ -926,12 +1182,12 @@ class _CreateInvoiceWizard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          if (controller.wizardStep.value > 0)
+          if (controller.wizardStep.value > 0) ...[
             OutlinedButton(
               onPressed: controller.previousStep,
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
+                  horizontal: 16,
                   vertical: 12,
                 ),
                 shape: RoundedRectangleBorder(
@@ -941,62 +1197,68 @@ class _CreateInvoiceWizard extends StatelessWidget {
               ),
               child: Text('Back', style: TextStyle(color: kSubText)),
             ),
-          const Spacer(),
-          if (controller.wizardStep.value < 2)
-            ElevatedButton(
-              onPressed: controller.nextStep,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kPrimary,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                elevation: 0,
-              ),
-              child: const Text(
-                'Next',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            )
-          else
-            ElevatedButton(
-              onPressed: controller.isSubmitting.value
-                  ? null
-                  : controller.createInvoice,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kPrimary,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                elevation: 0,
-              ),
-              child: controller.isSubmitting.value
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
+            const SizedBox(width: 10),
+          ],
+          Expanded(
+            child: controller.wizardStep.value < 2
+                ? ElevatedButton(
+                    onPressed: controller.nextStep,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kPrimary,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
                       ),
-                    )
-                  : const Text(
-                      'Create Invoice',
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'Next',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-            ),
+                  )
+                : ElevatedButton(
+                    onPressed: controller.isSubmitting.value
+                        ? null
+                        : controller.createInvoice,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kPrimary,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: controller.isSubmitting.value
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              'Create Invoice',
+                              maxLines: 1,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                  ),
+          ),
         ],
       ),
     );

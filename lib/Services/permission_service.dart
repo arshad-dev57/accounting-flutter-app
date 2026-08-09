@@ -193,10 +193,19 @@ class PermissionService extends GetxController {
     // Admin has all sub-page access
     if (isAdmin) return true;
     
-    // Check specific sub-page permission
-    final pageIdentifier = '${module}-${subPage.toLowerCase().replaceAll(' ', '-')}';
+    final moduleLower = module.toLowerCase();
+    final sub = subPage.toLowerCase().replaceAll(' ', '-');
+    // Accept common stored formats used by access management + legacy doubles
+    final candidates = <String>{
+      '$moduleLower-$sub', // sales-credits
+      sub, // credits
+      '$moduleLower-$moduleLower-$sub', // sales-sales-credits (legacy)
+      if (sub.startsWith('$moduleLower-')) sub,
+      if (sub.startsWith('$moduleLower-')) '$moduleLower-$sub',
+    };
+
     final permission = user.value!.permissions.firstWhereOrNull(
-      (p) => p.page.toLowerCase() == pageIdentifier,
+      (p) => candidates.contains(p.page.toLowerCase()),
     );
     
     return permission?.canView ?? false;

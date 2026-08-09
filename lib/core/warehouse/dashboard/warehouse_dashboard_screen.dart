@@ -1163,8 +1163,9 @@ class _HeroCardWrapper extends GetView<WarehouseDashboardController> {
   Widget build(BuildContext context) {
     return Obx(() {
       final logo = controller.businessLogo.value;
+      final hasLogo = logo.isNotEmpty;
+
       return Container(
-        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
@@ -1181,177 +1182,191 @@ class _HeroCardWrapper extends GetView<WarehouseDashboardController> {
             ),
           ],
         ),
-        child: Stack(
-          children: [
-            if (logo.isNotEmpty)
-              Positioned.fill(
-                child: Opacity(
-                  opacity: 0.05,
-                  child: logo.startsWith('http')
-                      ? Image.network(
-                          logo,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const SizedBox.shrink(),
-                        )
-                      : Image.file(
-                          File(logo),
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const SizedBox.shrink(),
-                        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(17),
+          child: Stack(
+            children: [
+              if (hasLogo)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Opacity(
+                      opacity: 0.07,
+                      child: logo.startsWith('http')
+                          ? Image.network(
+                              logo,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                              alignment: Alignment.center,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const SizedBox.shrink(),
+                            )
+                          : Image.file(
+                              File(logo),
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                              alignment: Alignment.center,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const SizedBox.shrink(),
+                            ),
+                    ),
+                  ),
                 ),
-              ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: _kPrimaryBg,
-                                  borderRadius: BorderRadius.circular(8),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: _kPrimaryBg,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.inventory_2_rounded,
+                                      size: 14,
+                                      color: kPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Stock Overview · ${controller.selectedPeriodLabel.value}',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: _kTextSub,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                controller.formatCurrency(
+                                  controller.totalStockValue.value,
                                 ),
-                                child: const Icon(
-                                  Icons.inventory_2_rounded,
-                                  size: 14,
-                                  color: kPrimary,
+                                style: const TextStyle(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w800,
+                                  color: _kTextPrimary,
+                                  letterSpacing: -0.5,
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(height: 4),
                               Text(
-                                'Stock Overview · ${controller.selectedPeriodLabel.value}',
+                                '${controller.totalProducts.value} products · ${controller.lowStockCount.value} low stock',
                                 style: const TextStyle(
                                   fontSize: 11,
                                   color: _kTextSub,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: controller.lowStockCount.value > 0
+                                      ? _kOrangeBg
+                                      : _kGreenBg,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      controller.lowStockCount.value > 0
+                                          ? Icons.warning_amber_rounded
+                                          : Icons.check_circle_outline_rounded,
+                                      size: 10,
+                                      color: controller.lowStockCount.value > 0
+                                          ? _kOrange
+                                          : _kGreen,
+                                    ),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      controller.lowStockCount.value > 0
+                                          ? '${controller.lowStockCount.value} items need restocking'
+                                          : 'All stock levels healthy',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: controller.lowStockCount.value > 0
+                                            ? _kOrange
+                                            : _kGreen,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
-                          const SizedBox(height: 10),
-                          Text(
-                            controller.formatCurrency(
-                              controller.totalStockValue.value,
-                            ),
-                            style: const TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w800,
-                              color: _kTextPrimary,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${controller.totalProducts.value} products · ${controller.lowStockCount.value} low stock',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: _kTextSub,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
+                        ),
+                        GestureDetector(
+                          onTap: () => controller.refreshDashboard(),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: controller.lowStockCount.value > 0
-                                  ? _kOrangeBg
-                                  : _kGreenBg,
-                              borderRadius: BorderRadius.circular(20),
+                              color: _kHeroIcon,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: _kHeroBorder),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  controller.lowStockCount.value > 0
-                                      ? Icons.warning_amber_rounded
-                                      : Icons.check_circle_outline_rounded,
-                                  size: 10,
-                                  color: controller.lowStockCount.value > 0
-                                      ? _kOrange
-                                      : _kGreen,
-                                ),
-                                const SizedBox(width: 3),
-                                Text(
-                                  controller.lowStockCount.value > 0
-                                      ? '${controller.lowStockCount.value} items need restocking'
-                                      : 'All stock levels healthy',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: controller.lowStockCount.value > 0
-                                        ? _kOrange
-                                        : _kGreen,
-                                  ),
-                                ),
-                              ],
+                            child: const Icon(
+                              Icons.refresh_rounded,
+                              size: 16,
+                              color: _kTextSub,
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    GestureDetector(
-                      onTap: () => controller.refreshDashboard(),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: _kHeroIcon,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: _kHeroBorder),
+                    const SizedBox(height: 16),
+                    Container(height: 0.5, color: _kCardBorder),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        _heroStatHero(
+                          'Stock In Today',
+                          '${controller.todayStockIn.value}',
+                          Icons.arrow_downward_rounded,
+                          _kGreen,
+                          _kGreenBg,
                         ),
-                        child: const Icon(
-                          Icons.refresh_rounded,
-                          size: 16,
-                          color: _kTextSub,
+                        _heroDividerHero(),
+                        _heroStatHero(
+                          'Stock Out Today',
+                          '${controller.todayStockOut.value}',
+                          Icons.arrow_upward_rounded,
+                          _kRed,
+                          _kRedBg,
                         ),
-                      ),
+                        _heroDividerHero(),
+                        _heroStatHero(
+                          'Low Stock',
+                          '${controller.lowStockCount.value}',
+                          Icons.warning_amber_rounded,
+                          _kOrange,
+                          _kOrangeBg,
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Container(height: 0.5, color: _kCardBorder),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    _heroStatHero(
-                      'Stock In Today',
-                      '${controller.todayStockIn.value}',
-                      Icons.arrow_downward_rounded,
-                      _kGreen,
-                      _kGreenBg,
-                    ),
-                    _heroDividerHero(),
-                    _heroStatHero(
-                      'Stock Out Today',
-                      '${controller.todayStockOut.value}',
-                      Icons.arrow_upward_rounded,
-                      _kRed,
-                      _kRedBg,
-                    ),
-                    _heroDividerHero(),
-                    _heroStatHero(
-                      'Low Stock',
-                      '${controller.lowStockCount.value}',
-                      Icons.warning_amber_rounded,
-                      _kOrange,
-                      _kOrangeBg,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       );
     });

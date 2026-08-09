@@ -805,64 +805,62 @@ class AccountsReceivableScreen extends StatelessWidget {
   Widget _buildWebKpiStrip(AccountsReceivableController controller) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final tiles = [
-          _buildWebKpiTile(
-            'Total Outstanding',
-            _formatAmount(controller.totalOutstanding.value),
-            kDanger,
-            Icons.receipt,
-          ),
-          _buildWebKpiTile(
-            'Overdue',
-            _formatAmount(controller.totalOverdue.value),
-            kWarning,
-            Icons.warning,
-          ),
-          _buildWebKpiTile(
-            'Due This Week',
-            _formatAmount(controller.totalDueThisWeek.value),
-            kPrimary,
-            Icons.view_week,
-          ),
-          _buildWebKpiTile(
-            'Due This Month',
-            _formatAmount(controller.totalDueThisMonth.value),
-            kPrimary,
-            Icons.calendar_month,
-          ),
-          _buildWebKpiTile(
-            'Active Customers',
-            controller.activeCustomers.value.toString(),
-            kSuccess,
-            Icons.people,
-          ),
-        ];
+        return Obx(() {
+          final tiles = [
+            _buildWebKpiTile(
+              'Total Outstanding',
+              _formatAmount(controller.totalOutstanding.value),
+              kDanger,
+              Icons.receipt,
+            ),
+            _buildWebKpiTile(
+              'Overdue',
+              _formatAmount(controller.totalOverdue.value),
+              kWarning,
+              Icons.warning,
+            ),
+            _buildWebKpiTile(
+              'Due This Week',
+              _formatAmount(controller.totalDueThisWeek.value),
+              kPrimary,
+              Icons.view_week,
+            ),
+            _buildWebKpiTile(
+              'Due This Month',
+              _formatAmount(controller.totalDueThisMonth.value),
+              kPrimary,
+              Icons.calendar_month,
+            ),
+            _buildWebKpiTile(
+              'Active Customers',
+              controller.activeCustomers.value.toString(),
+              kSuccess,
+              Icons.people,
+            ),
+          ];
 
-        if (constraints.maxWidth < 1000) {
-          return Obx(
-            () => SingleChildScrollView(
+          if (constraints.maxWidth < 1000) {
+            return SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
                   for (int i = 0; i < tiles.length; i++) ...[
-                    tiles[i],
+                    SizedBox(width: 180, child: tiles[i]),
                     if (i < tiles.length - 1) _kpiDivider(),
                   ],
                 ],
               ),
-            ),
-          );
-        }
-        return Obx(
-          () => Row(
+            );
+          }
+          return Row(
             children: [
               for (int i = 0; i < tiles.length; i++) ...[
                 Expanded(child: tiles[i]),
                 if (i < tiles.length - 1) _kpiDivider(),
               ],
             ],
-          ),
-        );
+          );
+        });
       },
     );
   }
@@ -873,46 +871,44 @@ class AccountsReceivableScreen extends StatelessWidget {
     Color color,
     IconData icon,
   ) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-        child: Row(
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: color),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: kSubText,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-              child: Icon(icon, size: 16, color: color),
-            ),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: kSubText,
-                    fontWeight: FontWeight.w500,
-                  ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: color,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: color,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

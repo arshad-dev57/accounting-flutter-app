@@ -256,6 +256,7 @@ class OrderAddress {
   String state;
   String postalCode;
   String country;
+  String countryFlag;
 
   OrderAddress({
     this.street = '',
@@ -263,6 +264,7 @@ class OrderAddress {
     this.state = '',
     this.postalCode = '',
     this.country = 'Pakistan',
+    this.countryFlag = '🇵🇰',
   });
 
   Map<String, dynamic> toJson() => {
@@ -271,6 +273,7 @@ class OrderAddress {
         'state': state,
         'postalCode': postalCode,
         'country': country,
+        if (countryFlag.isNotEmpty) 'countryFlag': countryFlag,
       };
 
   factory OrderAddress.fromMap(Map<String, dynamic>? map) {
@@ -281,6 +284,7 @@ class OrderAddress {
       state: map['state']?.toString() ?? '',
       postalCode: map['postalCode']?.toString() ?? '',
       country: map['country']?.toString() ?? 'Pakistan',
+      countryFlag: map['countryFlag']?.toString() ?? '',
     );
   }
 }

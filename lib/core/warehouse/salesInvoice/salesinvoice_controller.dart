@@ -431,6 +431,7 @@ class SalesInvoiceController extends GetxController {
     print('🟢 [SalesInvoiceController] openCreateWizard called');
     _resetWizard();
     showCreateWizard.value = true;
+    searchOrders('');
     print(
       '🟢 [SalesInvoiceController] showCreateWizard: ${showCreateWizard.value}',
     );
@@ -470,21 +471,21 @@ class SalesInvoiceController extends GetxController {
   Future<void> searchOrders(String query) async {
     print('🔵 [SalesInvoiceController] searchOrders called with: "$query"');
 
-    if (query.trim().length < 2) {
-      print('🔵 [SalesInvoiceController] Query too short, clearing results');
-      orderSearchResults.clear();
-      return;
-    }
-
     try {
       isSearchingOrders.value = true;
-      final encoded = Uri.encodeComponent(query.trim());
+      final params = <String, String>{'limit': '15'};
+      if (query.trim().length >= 2) {
+        params['search'] = query.trim();
+      }
+      final qs = params.entries
+          .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+          .join('&');
       print(
-        '🔵 [SalesInvoiceController] API Request: GET /api/sales/invoices/available-orders?search=$encoded&limit=10',
+        '🔵 [SalesInvoiceController] API Request: GET /api/sales/invoices/available-orders?$qs',
       );
 
       final response = await _api.get(
-        '/api/sales/invoices/available-orders?search=$encoded&limit=10',
+        '/api/sales/invoices/available-orders?$qs',
         requiresAuth: true,
       );
 
@@ -521,15 +522,28 @@ class SalesInvoiceController extends GetxController {
 
     // Create line drafts from order items
     final items = order['items'] as List? ?? [];
-    lineDrafts.value = items.map((item) {
+    double toD(dynamic v) {
+      if (v is num) return v.toDouble();
+      return double.tryParse(v?.toString() ?? '') ?? 0;
+    }
+
+    int toI(dynamic v) {
+      if (v is num) return v.toInt();
+      return int.tryParse(v?.toString() ?? '') ?? 0;
+    }
+
+    lineDrafts.value = items.map((raw) {
+      final item = Map<String, dynamic>.from(raw as Map);
       return InvoiceLineDraft(
-        productId: item['productId'] ?? '',
-        productName: item['productName'] ?? '',
-        sku: item['sku'] ?? '',
-        quantity: item['quantity'] ?? 0,
-        unitPrice: item['unitPrice']?.toDouble() ?? 0,
-        discount: item['discount']?.toDouble() ?? 0,
-        taxRate: item['taxRate']?.toDouble() ?? 0,
+        productId: item['productId']?.toString() ?? '',
+        productName: item['productName']?.toString() ??
+            item['product']?['name']?.toString() ??
+            '',
+        sku: item['sku']?.toString() ?? '',
+        quantity: toI(item['quantity']).clamp(1, 999999),
+        unitPrice: toD(item['unitPrice']),
+        discount: toD(item['discount']),
+        taxRate: toD(item['taxRate']),
       );
     }).toList();
 

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
@@ -74,6 +75,11 @@ class SalesDashboardScreen extends GetView<SalesController> {
                 _buildPeriodChips(),
                 const SizedBox(height: 16),
                 _buildKpiGrid(isTablet),
+                if (PermissionService.to.isAdmin ||
+                    PermissionService.to.hasSubPageAccess('sales', 'credits')) ...[
+                  const SizedBox(height: 16),
+                  _buildCreditsStrip(),
+                ],
                 const SizedBox(height: 16),
                 _buildFinancialOverview(),
                 const SizedBox(height: 16),
@@ -230,15 +236,18 @@ class SalesDashboardScreen extends GetView<SalesController> {
           children: [
             _shimmerBox(height: 180, radius: 18),
             const SizedBox(height: 14),
-            Row(
-              children: List.generate(
-                4,
-                (i) => Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: _shimmerBox(
-                    height: 34,
-                    width: 80 + (i * 10).toDouble(),
-                    radius: 20,
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: List.generate(
+                  4,
+                  (i) => Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: _shimmerBox(
+                      height: 34,
+                      width: 80 + (i * 10).toDouble(),
+                      radius: 20,
+                    ),
                   ),
                 ),
               ),
@@ -286,6 +295,8 @@ class SalesDashboardScreen extends GetView<SalesController> {
     return Obx(() {
       final data = controller.dashboard.value;
       final fmt = Get.find<CurrencyController>().formatAmount;
+      final logo = controller.businessLogo.value;
+      final hasLogo = logo.isNotEmpty;
 
       final todayOrders = data?.orders.todayCount ?? 0;
       final todayRevenue = data?.orders.todayRevenue ?? 0.0;
@@ -293,7 +304,6 @@ class SalesDashboardScreen extends GetView<SalesController> {
       final totalRevenue = data?.orders.revenue ?? 0.0;
 
       return Container(
-        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
@@ -310,168 +320,179 @@ class SalesDashboardScreen extends GetView<SalesController> {
             ),
           ],
         ),
-        child: Stack(
-          children: [
-            if (controller.businessLogo.value.isNotEmpty)
-              Positioned.fill(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
-                  child: Opacity(
-                    opacity: 0.05,
-                    child: controller.businessLogo.value.startsWith('http')
-                        ? Image.network(
-                            controller.businessLogo.value,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const SizedBox.shrink(),
-                          )
-                        : Image.file(
-                            File(controller.businessLogo.value),
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const SizedBox.shrink(),
-                          ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(17),
+          child: Stack(
+            children: [
+              if (hasLogo)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Opacity(
+                      opacity: 0.07,
+                      child: logo.startsWith('http')
+                          ? Image.network(
+                              logo,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                              alignment: Alignment.center,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const SizedBox.shrink(),
+                            )
+                          : Image.file(
+                              File(logo),
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                              alignment: Alignment.center,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const SizedBox.shrink(),
+                            ),
+                    ),
                   ),
                 ),
-              ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: _kPrimaryBg,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(
-                                  Icons.trending_up_rounded,
-                                  size: 14,
-                                  color: kPrimary,
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: _kPrimaryBg,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.trending_up_rounded,
+                                      size: 14,
+                                      color: kPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Sales Revenue · ${controller.selectedTimePeriodLabel.value}',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: _kTextSub,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                fmt(totalRevenue),
+                                style: const TextStyle(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w800,
+                                  color: _kTextPrimary,
+                                  letterSpacing: -0.5,
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(height: 4),
                               Text(
-                                'Sales Revenue · ${controller.selectedTimePeriodLabel.value}',
+                                'Today: ${fmt(todayRevenue)}  ·  Pending: $pending orders',
                                 style: const TextStyle(
                                   fontSize: 11,
                                   color: _kTextSub,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _kGreenBg,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.shopping_cart_outlined,
+                                      size: 10,
+                                      color: _kGreen,
+                                    ),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      '$todayOrders order${todayOrders == 1 ? '' : 's'} today',
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: _kGreen,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
-                          const SizedBox(height: 10),
-                          Text(
-                            fmt(totalRevenue),
-                            style: const TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w800,
-                              color: _kTextPrimary,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Today: ${fmt(todayRevenue)}  ·  Pending: $pending orders',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: _kTextSub,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
+                        ),
+                        GestureDetector(
+                          onTap: controller.fetchDashboard,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: _kGreenBg,
-                              borderRadius: BorderRadius.circular(20),
+                              color: _kHeroIcon,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: _kHeroBorder),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.shopping_cart_outlined,
-                                  size: 10,
-                                  color: _kGreen,
-                                ),
-                                const SizedBox(width: 3),
-                                Text(
-                                  '$todayOrders order${todayOrders == 1 ? '' : 's'} today',
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: _kGreen,
-                                  ),
-                                ),
-                              ],
+                            child: const Icon(
+                              Icons.refresh_rounded,
+                              size: 16,
+                              color: _kTextSub,
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    GestureDetector(
-                      onTap: controller.fetchDashboard,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: _kHeroIcon,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: _kHeroBorder),
+                    const SizedBox(height: 16),
+                    Container(height: 0.5, color: _kCardBorder),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        _heroStat(
+                          'Revenue',
+                          fmt(totalRevenue),
+                          Icons.trending_up_rounded,
+                          _kGreen,
+                          _kGreenBg,
                         ),
-                        child: const Icon(
-                          Icons.refresh_rounded,
-                          size: 16,
-                          color: _kTextSub,
+                        _heroDivider(),
+                        _heroStat(
+                          'Collected',
+                          fmt(data?.invoices.paidAmount ?? 0),
+                          Icons.payments_outlined,
+                          kPrimary,
+                          _kPrimaryBg,
                         ),
-                      ),
+                        _heroDivider(),
+                        _heroStat(
+                          'Outstanding',
+                          fmt(data?.invoices.outstanding ?? 0),
+                          Icons.schedule_rounded,
+                          _kOrange,
+                          _kOrangeBg,
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Container(height: 0.5, color: _kCardBorder),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    _heroStat(
-                      'Revenue',
-                      fmt(totalRevenue),
-                      Icons.trending_up_rounded,
-                      _kGreen,
-                      _kGreenBg,
-                    ),
-                    _heroDivider(),
-                    _heroStat(
-                      'Collected',
-                      fmt(data?.invoices.paidAmount ?? 0),
-                      Icons.payments_outlined,
-                      kPrimary,
-                      _kPrimaryBg,
-                    ),
-                    _heroDivider(),
-                    _heroStat(
-                      'Outstanding',
-                      fmt(data?.invoices.outstanding ?? 0),
-                      Icons.schedule_rounded,
-                      _kOrange,
-                      _kOrangeBg,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       );
     });
@@ -606,6 +627,7 @@ class SalesDashboardScreen extends GetView<SalesController> {
         ),
       ];
 
+      // 5th KPI for credits when present — keep 4-col grid; strip below shows detail
       return GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
@@ -621,6 +643,96 @@ class SalesDashboardScreen extends GetView<SalesController> {
     });
   }
 
+  Widget _buildCreditsStrip() {
+    return Obx(() {
+      final data = controller.dashboard.value;
+      final fmt = Get.find<CurrencyController>().formatAmount;
+      final amount = data?.creditAmount ?? 0;
+      final remaining = data?.creditRemaining ?? 0;
+      final count = data?.creditCount ?? 0;
+
+      return GestureDetector(
+        onTap: () => Get.toNamed('/sales/credits'),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: _kCardBg,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: _kCardBorder),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: _kPurpleBg,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.note_alt_outlined,
+                  color: _kPurple,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Sales Credits',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: _kTextPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      count == 0
+                          ? 'Credit notes · posts to AR & GL'
+                          : '$count notes · ${fmt(amount)} issued',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: _kTextSub,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    fmt(remaining),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: _kPurple,
+                    ),
+                  ),
+                  const Text(
+                    'Unapplied',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: _kTextMuted,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 4),
+              const Icon(Icons.chevron_right_rounded, color: _kTextMuted),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
   // ─── Financial Overview bars ───────────────────────────────────────────────
   Widget _buildFinancialOverview() {
     return Obx(() {
@@ -631,6 +743,7 @@ class SalesDashboardScreen extends GetView<SalesController> {
       final invoiceTotal = data?.invoices.grandTotal ?? 0.0;
       final collected = data?.invoices.paidAmount ?? 0.0;
       final outstanding = data?.invoices.outstanding ?? 0.0;
+      final credits = data?.creditAmount ?? 0.0;
       final todayRev = data?.orders.todayRevenue ?? 0.0;
       final totalOrders = (data?.orders.todayCount ?? 0).toDouble();
 
@@ -639,6 +752,7 @@ class SalesDashboardScreen extends GetView<SalesController> {
         invoiceTotal,
         collected,
         outstanding,
+        credits,
         todayRev,
         totalOrders,
       ].fold<double>(0, (a, b) => b > a ? b : a);
@@ -677,11 +791,19 @@ class SalesDashboardScreen extends GetView<SalesController> {
           'Unpaid invoices',
         ),
         _BarItem(
+          'Sales Credits',
+          fmt(credits),
+          credits,
+          _kPurple,
+          _kPurpleBg,
+          'Credit notes issued (AR / GL)',
+        ),
+        _BarItem(
           'Today Revenue',
           fmt(todayRev),
           todayRev,
-          _kPurple,
-          _kPurpleBg,
+          _kTeal,
+          _kTealBg,
           'Revenue earned today',
         ),
         _BarItem(
@@ -1569,13 +1691,15 @@ class SalesDashboardScreen extends GetView<SalesController> {
         _kOrangeBg,
         () => Get.toNamed('/sales/warehouse-customers'),
       ),
-      _QuickAction(
-        'Reports',
-        Icons.bar_chart_rounded,
-        _kPurple,
-        _kPurpleBg,
-        () => Get.toNamed('/sales/reports'),
-      ),
+      if (PermissionService.to.isAdmin ||
+          PermissionService.to.hasSubPageAccess('sales', 'credits'))
+        _QuickAction(
+          'Credits',
+          Icons.note_alt_outlined,
+          _kPurple,
+          _kPurpleBg,
+          () => Get.toNamed('/sales/credits'),
+        ),
     ];
 
     return _SectionCard(

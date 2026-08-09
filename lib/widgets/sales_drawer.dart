@@ -125,10 +125,19 @@ class SalesDrawer extends StatelessWidget {
                   icon: Mdi.undo_variant,
                   currentRoute: currentRoute,
                   module: 'sales',
-                  permissions: const ['sales-returns', 'refunds'],
+                  permissions: const [
+                    'sales-returns',
+                    'refunds',
+                    'credits',
+                  ],
                   items: const [
                     ('Sales Returns', Mdi.undo_variant, '/sales/returns'),
                     ('Refunds', Mdi.cash_refund, '/sales/refunds'),
+                    (
+                      'Sales Credits',
+                      Mdi.file_undo_outline,
+                      '/sales/credits',
+                    ),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -538,6 +547,9 @@ class _NavSection extends StatelessWidget {
         break;
       case '/sales/refunds':
         Get.toNamed('/sales/refunds');
+        break;
+      case '/sales/credits':
+        Get.toNamed('/sales/credits');
         break;
       case '__currency':
         Get.to(() => const CurrencyScreen());

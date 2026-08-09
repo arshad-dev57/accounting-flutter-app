@@ -4,6 +4,7 @@ import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/core/Onboarding/views/Onboarding_screen.dart';
 import 'package:BisonsTechs_app/core/Register/Views/register_screen.dart';
+import 'package:BisonsTechs_app/core/Sales/screens/sales_credits_screen.dart';
 import 'package:BisonsTechs_app/core/Sales/screens/sales_dashbaord_screen.dart';
 import 'package:BisonsTechs_app/core/Splash/screen/splash_screen.dart';
 import 'package:BisonsTechs_app/core/dashboard/Screens/dashbaord_screen.dart';
@@ -52,6 +53,7 @@ import 'package:BisonsTechs_app/core/warehousecustomer/warehouse_customer_screen
 import 'package:BisonsTechs_app/core/Users/screen/user_list_screen.dart';
 import 'package:BisonsTechs_app/core/Users/screen/user_form_screen.dart';
 import 'package:BisonsTechs_app/core/Users/screen/access_management_screen.dart';
+import 'package:BisonsTechs_app/core/Users/screen/enhanced_access_management_screen.dart';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -302,6 +304,10 @@ class MyApp extends StatelessWidget {
               name: '/sales/refunds',
               page: () => const SalesRefundsScreen(),
             ),
+            GetPage(
+              name: '/sales/credits',
+              page: () => const SalesCreditsScreen(),
+            ),
             // ========== USER MANAGEMENT ROUTES ==========
             GetPage(name: '/admin/users', page: () => const UserListScreen()),
             GetPage(
@@ -319,7 +325,7 @@ class MyApp extends StatelessWidget {
               name: '/admin/users/access/:id',
               page: () {
                 final id = Get.parameters['id'];
-                return AccessManagementScreen(userId: id ?? '');
+                return EnhancedAccessManagementScreen(userId: id ?? '');
               },
             ),
           ],

@@ -40,6 +40,7 @@ class _UserListScreenState extends State<UserListScreen> {
         child: Column(
           children: [
             _buildHeader(),
+            _buildHowToBanner(),
             _buildStatsRow(),
             _buildSearchBar(),
             _buildFilterRow(),
@@ -76,24 +77,89 @@ class _UserListScreenState extends State<UserListScreen> {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(
-                Icons.arrow_back_ios_rounded,
+                Icons.arrow_back_ios_new_rounded,
                 size: 16,
-                color: Colors.black87,
+                color: Colors.black,
               ),
             ),
           ),
           const SizedBox(width: 12),
           const Expanded(
-            child: Text(
-              'Team Members',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: Colors.black87,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Team Members',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  'Add users, then set what they can access',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF8A8FA8)),
+                ),
+              ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildHowToBanner() {
+    return Container(
+      width: double.infinity,
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEAF2F8),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: kPrimary.withValues(alpha: 0.15)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.tips_and_updates_outlined, color: kPrimary, size: 18),
+            ),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'How to give access',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    '1. Add User  →  2. Tap “Set permissions” on their card  →  3. Turn on modules & screens  →  4. Save',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF4A5568),
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -466,157 +532,160 @@ class _UserTile extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(14),
-          onTap: onEdit,
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              children: [
-                // Avatar
-                Stack(
-                  children: [
-                    CircleAvatar(
-                      radius: 24,
-                      backgroundColor: kPrimary.withOpacity(0.12),
-                      child: Text(
-                        user.fullName.isNotEmpty
-                            ? user.fullName[0].toUpperCase()
-                            : 'U',
-                        style: TextStyle(
-                          color: kPrimary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: user.isActive
-                              ? const Color(0xFF27AE60)
-                              : Colors.red,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 12),
-                // Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Stack(
                     children: [
-                      Text(
-                        user.fullName,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        user.email,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade500,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.purple.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
+                      CircleAvatar(
+                        radius: 24,
+                        backgroundColor: kPrimary.withValues(alpha: 0.12),
                         child: Text(
-                          user.role.toUpperCase(),
+                          user.fullName.isNotEmpty
+                              ? user.fullName[0].toUpperCase()
+                              : 'U',
                           style: TextStyle(
-                            fontSize: 10,
+                            color: kPrimary,
                             fontWeight: FontWeight.w700,
-                            color: Colors.purple.shade600,
-                            letterSpacing: 0.5,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: user.isActive
+                                ? const Color(0xFF27AE60)
+                                : Colors.red,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
                           ),
                         ),
                       ),
                     ],
                   ),
-                ),
-                // Action buttons
-                Column(
-                  children: [
-                    _IconBtn(
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user.fullName,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          user.email,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.purple.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            user.role.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.purple.shade600,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _actionChip(
                       icon: Icons.shield_outlined,
+                      label: 'Set permissions',
                       color: kPrimary,
-                      tooltip: 'Permissions',
                       onTap: onPermissions,
                     ),
-                    const SizedBox(height: 6),
-                    _IconBtn(
-                      icon: Icons.edit_outlined,
-                      color: Colors.orange,
-                      tooltip: 'Edit',
-                      onTap: onEdit,
-                    ),
-                    const SizedBox(height: 6),
-                    _IconBtn(
-                      icon: Icons.delete_outline_rounded,
-                      color: Colors.red,
-                      tooltip: 'Delete',
-                      onTap: onDelete,
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                  const SizedBox(width: 8),
+                  _actionChip(
+                    icon: Icons.edit_outlined,
+                    label: 'Edit',
+                    color: const Color(0xFFD97706),
+                    onTap: onEdit,
+                  ),
+                  const SizedBox(width: 8),
+                  _actionChip(
+                    icon: Icons.delete_outline_rounded,
+                    label: 'Delete',
+                    color: const Color(0xFFDC2626),
+                    onTap: onDelete,
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
     );
   }
-}
 
-class _IconBtn extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final String tooltip;
-  final VoidCallback onTap;
-
-  const _IconBtn({
-    required this.icon,
-    required this.color,
-    required this.tooltip,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: GestureDetector(
+  Widget _actionChip({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: color.withValues(alpha: 0.08),
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
         onTap: onTap,
-        child: Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 14, color: color),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
+              ),
+            ],
           ),
-          child: Icon(icon, size: 16, color: color),
         ),
       ),
     );

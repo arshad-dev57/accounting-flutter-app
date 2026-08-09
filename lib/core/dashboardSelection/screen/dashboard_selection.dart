@@ -223,8 +223,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
       CarouselSliderController();
   int _selectedIndex = 0;
 
-  final ProfileController _profileCtrl = Get.put(ProfileController());
-
+  late final ProfileController _profileCtrl;
   late final SupportController _supportCtrl;
   
   String _businessLogo = '';
@@ -232,6 +231,10 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
   @override
   void initState() {
     super.initState();
+    // Keep one shared instance — avoids dispose race that falsely shows "Server Down"
+    _profileCtrl = Get.isRegistered<ProfileController>()
+        ? Get.find<ProfileController>()
+        : Get.put(ProfileController(), permanent: true);
     _supportCtrl = Get.isRegistered<SupportController>()
         ? Get.find<SupportController>()
         : Get.put(SupportController());
@@ -2020,7 +2023,7 @@ class _DrawerHeaderState extends State<_DrawerHeader> {
 
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(color: kPrimary),
+      decoration: const BoxDecoration(color: kPrimary),
       padding: EdgeInsets.only(
         top: MediaQuery.of(context).padding.top + 16,
         left: 16,
@@ -2030,23 +2033,6 @@ class _DrawerHeaderState extends State<_DrawerHeader> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Back button
-          GestureDetector(
-            onTap: () => Get.back(),
-            child: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.arrow_back_rounded,
-                size: 16,
-                color: Colors.black87,
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
           // Company avatar + name
           Row(
             children: [
@@ -2054,7 +2040,7 @@ class _DrawerHeaderState extends State<_DrawerHeader> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.12),
+                  color: Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: _businessLogo.isNotEmpty
@@ -2068,7 +2054,7 @@ class _DrawerHeaderState extends State<_DrawerHeader> {
                                   return const Center(
                                     child: Icon(
                                       Icons.account_balance_rounded,
-                                      color: Colors.black87,
+                                      color: Colors.white,
                                       size: 22,
                                     ),
                                   );
@@ -2081,7 +2067,7 @@ class _DrawerHeaderState extends State<_DrawerHeader> {
                                   return const Center(
                                     child: Icon(
                                       Icons.account_balance_rounded,
-                                      color: Colors.black87,
+                                      color: Colors.white,
                                       size: 22,
                                     ),
                                   );
@@ -2091,7 +2077,7 @@ class _DrawerHeaderState extends State<_DrawerHeader> {
                     : const Center(
                         child: Icon(
                           Icons.account_balance_rounded,
-                          color: Colors.black87,
+                          color: Colors.white,
                           size: 22,
                         ),
                       ),
@@ -2107,7 +2093,7 @@ class _DrawerHeaderState extends State<_DrawerHeader> {
                             ? 'Company'
                             : profileCtrl.organizationName.value,
                         style: const TextStyle(
-                          color: Colors.black,
+                          color: Colors.white,
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.3,
@@ -2119,7 +2105,7 @@ class _DrawerHeaderState extends State<_DrawerHeader> {
                     Text(
                       'Dashboard Selection',
                       style: TextStyle(
-                        color: Colors.black.withOpacity(0.55),
+                        color: Colors.white.withOpacity(0.7),
                         fontSize: 11,
                       ),
                     ),
@@ -2133,16 +2119,19 @@ class _DrawerHeaderState extends State<_DrawerHeader> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.white.withOpacity(0.12),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
-                Iconify(Mdi.shield_account, size: 14, color: Colors.black54),
+                Iconify(Mdi.shield_account, size: 14, color: Colors.white70),
                 const SizedBox(width: 6),
                 Text(
                   'Current Plan',
-                  style: TextStyle(fontSize: 11, color: Colors.black54),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.white.withOpacity(0.7),
+                  ),
                 ),
                 const Spacer(),
                 Container(
