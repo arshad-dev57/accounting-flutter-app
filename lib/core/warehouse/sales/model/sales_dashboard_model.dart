@@ -3,6 +3,7 @@ class SalesDashboardModel {
   final SalesInvoicesSummary invoices;
   final Map<String, dynamic> returns;
   final Map<String, dynamic> refunds;
+  final Map<String, dynamic> credits;
   final SalesComparisonData comparison;
   final List<RecentActivity> recentActivity;
   final List<TopSellingProduct> topProducts;
@@ -14,6 +15,7 @@ class SalesDashboardModel {
     required this.invoices,
     this.returns = const {},
     this.refunds = const {},
+    this.credits = const {},
     required this.comparison,
     this.recentActivity = const [],
     this.topProducts = const [],
@@ -27,6 +29,7 @@ class SalesDashboardModel {
       invoices: SalesInvoicesSummary.fromJson(Map<String, dynamic>.from(json['invoices'] ?? {})),
       returns: Map<String, dynamic>.from(json['returns'] ?? {}),
       refunds: Map<String, dynamic>.from(json['refunds'] ?? {}),
+      credits: Map<String, dynamic>.from(json['credits'] ?? {}),
       comparison: SalesComparisonData.fromJson(Map<String, dynamic>.from(json['comparison'] ?? {})),
       recentActivity: (json['recentActivity'] as List?)
               ?.map((e) => RecentActivity.fromJson(Map<String, dynamic>.from(e)))
@@ -42,6 +45,24 @@ class SalesDashboardModel {
           [],
       revenueBreakdown: SalesRevenueBreakdown.fromJson(Map<String, dynamic>.from(json['revenueBreakdown'] ?? {})),
     );
+  }
+
+  double get creditAmount {
+    final v = credits['creditAmount'];
+    if (v is num) return v.toDouble();
+    return double.tryParse(v?.toString() ?? '') ?? 0;
+  }
+
+  double get creditRemaining {
+    final v = credits['remainingAmount'];
+    if (v is num) return v.toDouble();
+    return double.tryParse(v?.toString() ?? '') ?? 0;
+  }
+
+  int get creditCount {
+    final v = credits['total'];
+    if (v is num) return v.toInt();
+    return int.tryParse(v?.toString() ?? '') ?? 0;
   }
 }
 

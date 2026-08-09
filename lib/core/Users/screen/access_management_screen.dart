@@ -121,6 +121,11 @@ class _AccessManagementScreenState extends State<AccessManagementScreen> {
       icon: Icons.money_off,
     ),
     _PageAccess(
+      name: 'Sales Credits',
+      route: 'sales-credits',
+      icon: Icons.note_alt_outlined,
+    ),
+    _PageAccess(
       name: 'Purchase Dashboard',
       route: '/warehouse/purchase',
       icon: Icons.dashboard,

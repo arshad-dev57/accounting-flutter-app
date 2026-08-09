@@ -18,6 +18,7 @@ class _EnhancedAccessManagementScreenState
   late final UserManagementController _controller;
   User? _selectedUser;
   String? _selectedModule;
+  final RxBool _isSaving = false.obs;
 
   @override
   void initState() {
@@ -29,9 +30,7 @@ class _EnhancedAccessManagementScreenState
   }
 
   void _loadUserData() {
-    if (widget.userId == null || widget.userId!.isEmpty) {
-      return;
-    }
+    if (widget.userId == null || widget.userId!.isEmpty) return;
     _selectedUser = _controller.users.firstWhereOrNull(
       (u) => u.id == widget.userId,
     );
@@ -43,32 +42,35 @@ class _EnhancedAccessManagementScreenState
 
   Future<void> _savePermissions() async {
     if (widget.userId == null || widget.userId!.isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Invalid user ID',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      Get.snackbar('Error', 'Invalid user ID', snackPosition: SnackPosition.BOTTOM);
       return;
     }
+    if (_isSaving.value) return;
 
+    _isSaving.value = true;
     final permissionsList = _controller.buildPermissionsList(widget.userId!);
     final success = await _controller.updateUserPermissions(
       userId: widget.userId!,
       permissions: permissionsList,
     );
+    _isSaving.value = false;
 
     if (success) {
       Get.back();
       Get.snackbar(
-        'Success',
-        'Access permissions updated successfully',
+        'Saved',
+        'Permissions updated. Ask the user to log in again to see new access.',
         snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
       );
     } else {
       Get.snackbar(
         'Error',
         'Failed to update permissions',
         snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: kDanger,
+        colorText: Colors.white,
       );
     }
   }
@@ -81,44 +83,119 @@ class _EnhancedAccessManagementScreenState
         appBar: AppBar(
           backgroundColor: Colors.white,
           elevation: 0,
-          title: const Text('Manage Access'),
+          iconTheme: const IconThemeData(color: Colors.black),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Colors.black),
+            onPressed: () => Get.back(),
+          ),
+          title: const Text(
+            'Set Permissions',
+            style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w700),
+          ),
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
+
+    final inModule = _selectedModule != null;
+    final moduleName = inModule
+        ? UserManagementController.moduleConfigs
+            .firstWhere((c) => c.module == _selectedModule)
+            .displayName
+        : '';
 
     return Scaffold(
       backgroundColor: kBg,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: _selectedModule != null
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () {
-                  setState(() {
-                    _selectedModule = null;
-                  });
-                },
-              )
-            : null,
+        surfaceTintColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.black),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Colors.black),
+          onPressed: () {
+            if (inModule) {
+              setState(() => _selectedModule = null);
+            } else {
+              Get.back();
+            }
+          },
+        ),
         title: Text(
-          _selectedModule != null
-              ? '${UserManagementController.moduleConfigs.firstWhere((c) => c.module == _selectedModule).displayName} Permissions'
-              : 'Manage Access - ${_selectedUser!.fullName}',
+          inModule ? '$moduleName screens' : 'Set Permissions',
+          style: const TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.w700,
+            fontSize: 17,
+          ),
         ),
         actions: [
-          if (_selectedModule == null)
-            TextButton.icon(
-              onPressed: _savePermissions,
-              icon: const Icon(Icons.save, color: kPrimary),
-              label: const Text('Save', style: TextStyle(color: kPrimary)),
-            ),
+          if (!inModule)
+            Obx(() {
+              final saving = _isSaving.value;
+              return TextButton(
+                onPressed: saving ? null : _savePermissions,
+                child: saving
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: kPrimary),
+                      )
+                    : const Text(
+                        'Save',
+                        style: TextStyle(
+                          color: kPrimary,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
+              );
+            }),
         ],
       ),
-      body: _selectedModule == null
-          ? _buildModulesList()
-          : _buildSubPagesList(),
+      body: inModule ? _buildSubPagesList() : _buildModulesList(),
+      bottomNavigationBar: inModule
+          ? null
+          : SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: Obx(() {
+                  final saving = _isSaving.value;
+                  return SizedBox(
+                    height: 50,
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: saving ? null : _savePermissions,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kPrimary,
+                        disabledBackgroundColor: kPrimary.withValues(alpha: 0.7),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: saving
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.4,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Save permissions',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                                color: Colors.white,
+                              ),
+                            ),
+                    ),
+                  );
+                }),
+              ),
+            ),
     );
   }
 
@@ -126,17 +203,24 @@ class _EnhancedAccessManagementScreenState
     return Column(
       children: [
         _buildUserInfoHeader(),
+        _buildStepsBanner(),
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             itemCount: UserManagementController.moduleConfigs.length,
             itemBuilder: (context, index) {
               final config = UserManagementController.moduleConfigs[index];
               final modulePerm = _controller.modulePermissions[config.module];
+              final enabledCount = _controller.subPagePermissions[config.module]
+                      ?.values
+                      .where((p) => p.canView)
+                      .length ??
+                  0;
 
               return _ModulePermissionCard(
                 config: config,
                 permission: modulePerm,
+                enabledCount: enabledCount,
                 onAccessChanged: (hasAccess) {
                   setState(() {
                     _controller.updateModuleAccess(config.module, hasAccess);
@@ -144,9 +228,14 @@ class _EnhancedAccessManagementScreenState
                 },
                 onTap: () {
                   if (modulePerm?.hasAccess == true) {
-                    setState(() {
-                      _selectedModule = config.module;
-                    });
+                    setState(() => _selectedModule = config.module);
+                  } else {
+                    Get.snackbar(
+                      'Turn module on first',
+                      'Enable the switch for ${config.displayName}, then tap to choose screens.',
+                      snackPosition: SnackPosition.BOTTOM,
+                      margin: const EdgeInsets.all(16),
+                    );
                   }
                 },
               );
@@ -190,7 +279,64 @@ class _EnhancedAccessManagementScreenState
             },
           ),
         ),
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: OutlinedButton(
+                onPressed: () => setState(() => _selectedModule = null),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: Colors.grey.shade300),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Back to modules',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
+    );
+  }
+
+  Widget _buildStepsBanner() {
+    return Container(
+      width: double.infinity,
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF8E7),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.25)),
+        ),
+        child: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Quick steps',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            ),
+            SizedBox(height: 6),
+            Text(
+              '1. Turn ON a module (Sales, Accounting…)\n'
+              '2. Tap the module card to pick screens (e.g. Sales Credits)\n'
+              '3. Tap Save permissions at the bottom',
+              style: TextStyle(fontSize: 12, height: 1.4, color: Color(0xFF4A5568)),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -199,7 +345,7 @@ class _EnhancedAccessManagementScreenState
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
+        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
       ),
       child: Row(
         children: [
@@ -222,31 +368,31 @@ class _EnhancedAccessManagementScreenState
                   _selectedUser!.fullName,
                   style: const TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     color: Colors.black87,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
-                  _selectedUser!.email,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(Icons.shield, size: 14, color: Colors.grey[500]),
-                    const SizedBox(width: 4),
-                    Text(
-                      _selectedUser!.role.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+                  'Choose what ${_selectedUser!.firstName} can open in the app',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
               ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.purple.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              _selectedUser!.role.toUpperCase(),
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: Colors.purple.shade600,
+              ),
             ),
           ),
         ],
@@ -259,17 +405,17 @@ class _EnhancedAccessManagementScreenState
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
+        border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: kPrimary.withOpacity(0.1),
+              color: kPrimary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(config.icon, color: kPrimary, size: 24),
+            child: Icon(config.icon, color: kPrimary, size: 22),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -280,14 +426,14 @@ class _EnhancedAccessManagementScreenState
                   config.displayName,
                   style: const TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     color: Colors.black87,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
-                  'Configure sub-page access permissions',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  'Toggle screens this user can open',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
               ],
             ),
@@ -301,12 +447,14 @@ class _EnhancedAccessManagementScreenState
 class _ModulePermissionCard extends StatelessWidget {
   final ModuleConfig config;
   final ModulePermission? permission;
+  final int enabledCount;
   final Function(bool) onAccessChanged;
   final VoidCallback onTap;
 
   const _ModulePermissionCard({
     required this.config,
     required this.permission,
+    required this.enabledCount,
     required this.onAccessChanged,
     required this.onTap,
   });
@@ -316,51 +464,68 @@ class _ModulePermissionCard extends StatelessWidget {
     final hasAccess = permission?.hasAccess ?? false;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: hasAccess ? kPrimary.withOpacity(0.3) : Colors.grey[200]!,
+          color: hasAccess ? kPrimary.withValues(alpha: 0.35) : Colors.grey.shade200,
         ),
       ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: hasAccess ? kPrimary.withOpacity(0.1) : Colors.grey[100],
-            borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: hasAccess
+                      ? kPrimary.withValues(alpha: 0.1)
+                      : Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  config.icon,
+                  color: hasAccess ? kPrimary : Colors.grey.shade500,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      config.displayName,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: hasAccess ? Colors.black87 : Colors.grey.shade600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      hasAccess
+                          ? '$enabledCount screens on · tap to edit'
+                          : 'Off · turn switch on to allow access',
+                      style: TextStyle(fontSize: 11.5, color: Colors.grey.shade500),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: hasAccess,
+                onChanged: onAccessChanged,
+                activeThumbColor: kPrimary,
+              ),
+              if (hasAccess)
+                Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
+            ],
           ),
-          child: Icon(
-            config.icon,
-            color: hasAccess ? kPrimary : Colors.grey[600],
-            size: 24,
-          ),
         ),
-        title: Text(
-          config.displayName,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: hasAccess ? Colors.black87 : Colors.grey[600],
-          ),
-        ),
-        subtitle: Text(
-          '${config.subPages.length} sub-pages',
-          style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Switch(
-              value: hasAccess,
-              onChanged: onAccessChanged,
-              activeColor: kPrimary,
-            ),
-            if (hasAccess) Icon(Icons.chevron_right, color: Colors.grey[400]),
-          ],
-        ),
-        onTap: hasAccess ? onTap : null,
       ),
     );
   }
@@ -383,19 +548,19 @@ class _SubPagePermissionCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: canView ? kPrimary.withOpacity(0.3) : Colors.grey[200]!,
+          color: canView ? kPrimary.withValues(alpha: 0.3) : Colors.grey.shade200,
         ),
       ),
       child: Row(
         children: [
           Icon(
             canView ? Icons.check_circle : Icons.circle_outlined,
-            color: canView ? kPrimary : Colors.grey[400],
+            color: canView ? kPrimary : Colors.grey.shade400,
             size: 20,
           ),
           const SizedBox(width: 12),
@@ -404,15 +569,15 @@ class _SubPagePermissionCard extends StatelessWidget {
               subPage.displayName,
               style: TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: canView ? Colors.black87 : Colors.grey[600],
+                fontWeight: FontWeight.w600,
+                color: canView ? Colors.black87 : Colors.grey.shade600,
               ),
             ),
           ),
           Switch(
             value: canView,
             onChanged: onPermissionChanged,
-            activeColor: kPrimary,
+            activeThumbColor: kPrimary,
           ),
         ],
       ),

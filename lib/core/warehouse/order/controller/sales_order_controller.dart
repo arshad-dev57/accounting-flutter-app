@@ -100,15 +100,6 @@ class SalesOrderController extends GetxController {
     'Cancelled',
   ];
 
-  static const countryOptions = [
-    'Pakistan',
-    'China',
-    'United States',
-    'United Kingdom',
-    'UAE',
-    'Turkey',
-  ];
-
   // ─── Settings dropdown options ────────────────────────────────
   final RxList<String> orderTypes = <String>[
     'Standard',

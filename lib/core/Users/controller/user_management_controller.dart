@@ -459,6 +459,11 @@ class UserManagementController extends GetxController {
           displayName: 'Refunds',
           icon: Icons.money_off,
         ),
+        SubPagePermission(
+          page: 'credits',
+          displayName: 'Sales Credits',
+          icon: Icons.note_alt_outlined,
+        ),
       ],
     ),
     ModuleConfig(
@@ -811,29 +816,36 @@ class UserManagementController extends GetxController {
           );
         }
       } else {
-        // Check if this is a sub-page permission (format: module-subpage)
-        final parts = page.split('-');
-        if (parts.length >= 2) {
-          final module = parts[0];
-          final subPageSlug = parts.sublist(1).join('-');
+        // Sub-page permission formats:
+        //   sales-credits | sales-sales-credits (legacy) | credits
+        for (final config in UserManagementController.moduleConfigs) {
+          final module = config.module;
+          if (!subPagePermissions.containsKey(module)) continue;
 
-          if (subPagePermissions.containsKey(module)) {
-            // Find matching sub-page
-            final config = UserManagementController.moduleConfigs
-                .firstWhereOrNull((c) => c.module == module);
+          final matchingSubPage = config.subPages.firstWhereOrNull((sp) {
+            final spLower = sp.page.toLowerCase();
+            final expected = '$module-$spLower';
+            // Legacy double-prefix when subpage already contained module name
+            final legacy = '$module-$expected';
+            return page == expected ||
+                page == spLower ||
+                page == legacy ||
+                page == '$module-sales-$spLower';
+          });
 
-            if (config != null) {
-              final matchingSubPage = config.subPages.firstWhereOrNull(
-                (sp) => sp.page.toLowerCase() == subPageSlug,
+          if (matchingSubPage != null) {
+            subPagePermissions[module]![matchingSubPage.page] =
+                subPagePermissions[module]![matchingSubPage.page]!.copyWith(
+                  canView: perm.canView,
+                );
+            // Having any sub-page implies module access
+            if (perm.canView) {
+              modulePermissions[module] = modulePermissions[module]!.copyWith(
+                hasAccess: true,
+                canView: true,
               );
-
-              if (matchingSubPage != null) {
-                subPagePermissions[module]![matchingSubPage.page] =
-                    subPagePermissions[module]![matchingSubPage.page]!.copyWith(
-                      canView: perm.canView,
-                    );
-              }
             }
+            break;
           }
         }
       }
@@ -847,6 +859,13 @@ class UserManagementController extends GetxController {
         hasAccess: hasAccess,
         canView: hasAccess,
       );
+      // Cascade so enabling Sales also includes Sales Credits, etc.
+      final subs = subPagePermissions[module];
+      if (subs != null) {
+        for (final key in subs.keys.toList()) {
+          updateSubPagePermission(module, key, hasAccess);
+        }
+      }
     }
   }
 

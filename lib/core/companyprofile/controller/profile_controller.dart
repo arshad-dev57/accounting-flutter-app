@@ -120,9 +120,9 @@ class ProfileController extends GetxController {
         
         if (businessDetails != null && businessDetails['logo'] != null) {
           final logo = businessDetails['logo'] as String;
-          if (logo.isNotEmpty) {
+          if (logo.isNotEmpty && !isClosed) {
             businessLogo.value = logo;
-            businessLogoController.text = logo;
+            _setText(businessLogoController, logo);
             print('✅ [ProfileController] Business logo loaded from SharedPreferences: $logo');
           }
         }
@@ -159,6 +159,37 @@ class ProfileController extends GetxController {
     }
   }
 
+  void _setText(TextEditingController controller, String value) {
+    if (isClosed) return;
+    try {
+      if (controller.text != value) {
+        controller.text = value;
+      }
+    } catch (_) {
+      // Controller may already be disposed during route transitions.
+    }
+  }
+
+  void _syncControllersFromObs() {
+    if (isClosed) return;
+    _setText(orgNameController, organizationName.value);
+    _setText(personNameController, personName.value);
+    _setText(firstNameController, firstName.value);
+    _setText(lastNameController, lastName.value);
+    _setText(addressController, address.value);
+    _setText(emailController, email.value);
+    _setText(contactNoController, contactNo.value);
+    _setText(phoneController, phone.value);
+    _setText(websiteController, websiteLink.value);
+    _setText(countryController, country.value);
+    _setText(businessLogoController, businessLogo.value);
+    _setText(fiscalYearController, fiscalYear.value);
+    _setText(taxRegistrationController, taxRegistrationNumber.value);
+    _setText(signatureController, signature.value);
+    _setText(industryController, industry.value);
+    _setText(businessTypeController, businessType.value);
+  }
+
   // ════════════════════════════════════════════════════════════════
   // LOAD PROFILE
   // ════════════════════════════════════════════════════════════════
@@ -167,6 +198,7 @@ class ProfileController extends GetxController {
       isLoading.value = true;
 
       final response = await _api.get('/api/profile');
+      if (isClosed) return;
 
       print('Profile API Response Status: ${response.statusCode}');
 
@@ -197,25 +229,7 @@ class ProfileController extends GetxController {
           industry.value = businessDetails['industry'] ?? '';
           businessType.value = businessDetails['businessType'] ?? '';
 
-          // ─── UPDATE CONTROLLERS ──────────────────────────────────
-          orgNameController.text = organizationName.value;
-          personNameController.text = personName.value;
-          firstNameController.text = firstName.value;
-          lastNameController.text = lastName.value;
-          addressController.text = address.value;
-          emailController.text = email.value;
-          contactNoController.text = contactNo.value;
-          phoneController.text = phone.value;
-          websiteController.text = websiteLink.value;
-          countryController.text = country.value;
-
-          // ─── BUSINESS CONTROLLERS ─────────────────────────────────
-          businessLogoController.text = businessLogo.value;
-          fiscalYearController.text = fiscalYear.value;
-          taxRegistrationController.text = taxRegistrationNumber.value;
-          signatureController.text = signature.value;
-          industryController.text = industry.value;
-          businessTypeController.text = businessType.value;
+          _syncControllersFromObs();
         } else {
           _showError(data['message'] ?? 'Failed to load profile');
         }
@@ -226,9 +240,15 @@ class ProfileController extends GetxController {
       }
     } catch (e) {
       print('Error loading profile: $e');
-      _showError('error. Server Down. Please try again later.');
+      if (isClosed) return;
+      final msg = e.toString();
+      // Navigation race — not a real API outage
+      if (msg.contains('disposed') || msg.contains('TextEditingController')) {
+        return;
+      }
+      _showError('Unable to load profile. Please try again.');
     } finally {
-      isLoading.value = false;
+      if (!isClosed) isLoading.value = false;
     }
   }
 
@@ -591,23 +611,7 @@ class ProfileController extends GetxController {
   }
 
   void _resetControllers() {
-    orgNameController.text = organizationName.value;
-    personNameController.text = personName.value;
-    firstNameController.text = firstName.value;
-    lastNameController.text = lastName.value;
-    addressController.text = address.value;
-    emailController.text = email.value;
-    contactNoController.text = contactNo.value;
-    phoneController.text = phone.value;
-    websiteController.text = websiteLink.value;
-    countryController.text = country.value;
-
-    businessLogoController.text = businessLogo.value;
-    fiscalYearController.text = fiscalYear.value;
-    taxRegistrationController.text = taxRegistrationNumber.value;
-    signatureController.text = signature.value;
-    industryController.text = industry.value;
-    businessTypeController.text = businessType.value;
+    _syncControllersFromObs();
   }
 
   // ════════════════════════════════════════════════════════════════

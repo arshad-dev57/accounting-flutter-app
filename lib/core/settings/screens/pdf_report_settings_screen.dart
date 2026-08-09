@@ -147,22 +147,21 @@ class _SaveBar extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Obx(
-              () => Text(
-                controller.syncedFromPrefs.value
-                    ? 'PDF branding is stored separately from company profile'
-                    : 'Set branding for PDF exports',
-                style: TextStyle(fontSize: 12, color: kSubText),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final stacked = !isWeb || constraints.maxWidth < 420;
+          final hint = Obx(
+            () => Text(
+              controller.syncedFromPrefs.value
+                  ? 'PDF branding is stored separately from company profile'
+                  : 'Set branding for PDF exports',
+              style: TextStyle(fontSize: 12, color: kSubText),
+              maxLines: stacked ? 2 : 1,
+              overflow: TextOverflow.ellipsis,
+              softWrap: true,
             ),
-          ),
-          const SizedBox(width: 12),
-          Obx(
+          );
+          final saveBtn = Obx(
             () => ElevatedButton.icon(
               onPressed: controller.isSaving.value
                   ? null
@@ -183,6 +182,7 @@ class _SaveBar extends StatelessWidget {
                     ),
               label: Text(
                 controller.isSaving.value ? 'Saving…' : 'Save',
+                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
@@ -191,17 +191,38 @@ class _SaveBar extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: kPrimary,
                 elevation: 0,
+                minimumSize: Size(stacked ? double.infinity : 0, 44),
                 padding: EdgeInsets.symmetric(
-                  horizontal: isWeb ? 20 : 14,
-                  vertical: 14,
+                  horizontal: isWeb ? 20 : 12,
+                  vertical: 12,
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
             ),
-          ),
-        ],
+          );
+
+          if (stacked) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                hint,
+                const SizedBox(height: 10),
+                saveBtn,
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              Expanded(child: hint),
+              const SizedBox(width: 12),
+              saveBtn,
+            ],
+          );
+        },
       ),
     );
   }

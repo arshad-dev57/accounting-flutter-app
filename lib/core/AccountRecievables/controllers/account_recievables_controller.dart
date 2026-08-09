@@ -112,11 +112,18 @@ class AccountsReceivableController extends GetxController {
         final data = response.data;
         if (data['success'] ?? true) {
           customers.value = (data['data'] as List)
-              .map((e) => Customer.fromJson(e))
+              .map((e) => Customer.fromJson(Map<String, dynamic>.from(e as Map)))
               .toList();
           _applyLocalSearch();
-          // ✅ Update summary after customer fetch
           await fetchSummary();
+          // Prefer live sum from customer rows if summary still lags/caches
+          final fromCustomers = customers.fold<double>(
+            0,
+            (s, c) => s + c.outstandingAmount,
+          );
+          if (fromCustomers > 0 && totalOutstanding.value == 0) {
+            totalOutstanding.value = fromCustomers;
+          }
         }
       }
     } catch (e) {
@@ -1165,21 +1172,48 @@ class Customer {
     this.lastPaymentDate,
   });
 
+  static double _d(dynamic v) {
+    if (v == null) return 0;
+    if (v is num) return v.toDouble();
+    return double.tryParse(v.toString()) ?? 0;
+  }
+
+  static int _i(dynamic v) {
+    if (v == null) return 0;
+    if (v is num) return v.toInt();
+    return int.tryParse(v.toString()) ?? 0;
+  }
+
   factory Customer.fromJson(Map<String, dynamic> json) {
+    final invoices = json['invoices'] != null
+        ? (json['invoices'] as List)
+            .map((e) => Invoice.fromJson(Map<String, dynamic>.from(e as Map)))
+            .toList()
+        : <Invoice>[];
+
+    // Prefer API outstanding; fall back to sum of invoice lines
+    double outstanding = _d(
+      json['outstandingAmount'] ?? json['outstanding'],
+    );
+    if (outstanding == 0 && invoices.isNotEmpty) {
+      outstanding = invoices.fold<double>(
+        0,
+        (s, inv) => s + (inv.amount - inv.paidAmount).clamp(0, double.infinity),
+      );
+    }
+
     return Customer(
-      id: json['_id'] ?? json['id'] ?? '',
-      name: json['name'] ?? '',
-      email: json['email'] ?? '',
-      phone: json['phone'] ?? '',
-      totalInvoices: json['invoiceCount'] ?? 0,
-      totalAmount: (json['totalAmount'] ?? 0).toDouble(),
-      paidAmount: (json['paidAmount'] ?? 0).toDouble(),
-      outstandingAmount: (json['outstandingAmount'] ?? 0).toDouble(),
-      invoices: json['invoices'] != null
-          ? (json['invoices'] as List).map((e) => Invoice.fromJson(e)).toList()
-          : [],
+      id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      phone: json['phone']?.toString() ?? '',
+      totalInvoices: _i(json['invoiceCount'] ?? json['totalInvoices'] ?? invoices.length),
+      totalAmount: _d(json['totalAmount']),
+      paidAmount: _d(json['paidAmount']),
+      outstandingAmount: outstanding,
+      invoices: invoices,
       lastPaymentDate: json['lastPaymentDate'] != null
-          ? DateTime.parse(json['lastPaymentDate'])
+          ? DateTime.tryParse(json['lastPaymentDate'].toString())
           : null,
     );
   }
@@ -1202,18 +1236,28 @@ class Invoice {
     required this.status,
   });
 
+  static double _d(dynamic v) {
+    if (v == null) return 0;
+    if (v is num) return v.toDouble();
+    return double.tryParse(v.toString()) ?? 0;
+  }
+
   factory Invoice.fromJson(Map<String, dynamic> json) {
     return Invoice(
-      id: json['invoiceNumber'] ?? json['_id'] ?? '',
-      date: json['date'] != null
-          ? DateTime.parse(json['date'])
-          : DateTime.now(),
-      dueDate: json['dueDate'] != null
-          ? DateTime.parse(json['dueDate'])
-          : DateTime.now(),
-      amount: (json['totalAmount'] ?? 0).toDouble(),
-      paidAmount: (json['paidAmount'] ?? 0).toDouble(),
-      status: json['status'] ?? 'Unpaid',
+      id: json['invoiceNumber']?.toString() ??
+          json['id']?.toString() ??
+          json['_id']?.toString() ??
+          '',
+      date: DateTime.tryParse(json['date']?.toString() ?? '') ??
+          DateTime.tryParse(json['invoiceDate']?.toString() ?? '') ??
+          DateTime.now(),
+      dueDate: DateTime.tryParse(json['dueDate']?.toString() ?? '') ??
+          DateTime.now(),
+      amount: _d(json['totalAmount'] ?? json['amount'] ?? json['grandTotal']),
+      paidAmount: _d(json['paidAmount']),
+      status: json['status']?.toString() ??
+          json['paymentStatus']?.toString() ??
+          'Unpaid',
     );
   }
 }

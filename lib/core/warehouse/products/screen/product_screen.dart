@@ -1,11 +1,15 @@
 // core/warehouse/products/screen/products_screen.dart
 
+import 'dart:io';
+
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/warehouse/category/category_screen.dart';
 import 'package:BisonsTechs_app/core/warehouse/products/controller/product_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/products/screen/product_qr_scan_screen.dart';
 import 'package:BisonsTechs_app/core/warehouse/supplier/screen/supplier_screen.dart';
 import 'package:BisonsTechs_app/core/warehousesettings/warehouse_settings_screen.dart';
+import 'package:country_picker_pro/country_picker_pro.dart';
+import 'package:currency_picker/currency_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -862,7 +866,10 @@ class _AddProductPageState extends State<_AddProductPage> {
   String? _selectedSize;
   String? _selectedShippingClass;
   String _currency = 'PKR';
+  String _currencyName = 'Pakistani Rupee';
+  String _currencySymbol = 'Rs';
   String _countryOfOrigin = 'Pakistan';
+  String _countryFlagEmoji = '🇵🇰';
   String _warrantyUnit = 'Months';
   String _bulkUnit = 'Bale';
 
@@ -1027,7 +1034,16 @@ class _AddProductPageState extends State<_AddProductPage> {
     _isReturnable = p?['isReturnable'] ?? true;
     _warrantyUnit = p?['warrantyUnit'] ?? 'Months';
     _countryOfOrigin = p?['countryOfOriginName'] ?? 'Pakistan';
+    _countryFlagEmoji = p?['countryOfOriginFlag']?.toString() ?? '🇵🇰';
     _currency = p?['currencyCode'] ?? 'PKR';
+    _applyCurrencyFromCode(_currency);
+    if (p?['currencySymbol'] != null &&
+        p!['currencySymbol'].toString().isNotEmpty) {
+      _currencySymbol = p['currencySymbol'].toString();
+    }
+    if (p?['currencyName'] != null && p!['currencyName'].toString().isNotEmpty) {
+      _currencyName = p['currencyName'].toString();
+    }
     _notesCtrl = TextEditingController(text: safeToString(p?['notes']));
 
     // Load barcode if exists
@@ -1353,6 +1369,214 @@ class _AddProductPageState extends State<_AddProductPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  static String? _extractCurrencyCode(String s) {
+    final m = RegExp(r'\(([A-Z]{3})\)').firstMatch(s);
+    return m?.group(1);
+  }
+
+  void _applyCurrencyFromCode(String code) {
+    try {
+      final currency = CurrencyService().findByCode(code);
+      if (currency != null) {
+        _currency = currency.code;
+        _currencyName = currency.name;
+        _currencySymbol = currency.symbol;
+        return;
+      }
+    } catch (_) {}
+    _currency = code;
+  }
+
+  Widget _currencyPickerField() {
+    final hasSelection = _currency.isNotEmpty;
+    String? flagEmoji;
+    if (hasSelection) {
+      try {
+        final c = CurrencyService().findByCode(_currency);
+        if (c != null && c.flag != null) {
+          flagEmoji = CurrencyUtils.currencyToEmoji(c);
+        }
+      } catch (_) {}
+    }
+
+    return GestureDetector(
+      onTap: () {
+        showCurrencyPicker(
+          context: context,
+          showFlag: true,
+          showCurrencyName: true,
+          showCurrencyCode: true,
+          showSearchField: true,
+          favorite: const ['USD', 'EUR', 'GBP', 'PKR', 'SAR', 'AED'],
+          theme: CurrencyPickerThemeData(
+            backgroundColor: Colors.white,
+            flagSize: 26,
+            titleTextStyle: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF2D3748),
+            ),
+            subtitleTextStyle: TextStyle(
+              fontSize: 13,
+              color: Colors.grey.shade600,
+            ),
+            bottomSheetHeight: MediaQuery.of(context).size.height * 0.85,
+            inputDecoration: InputDecoration(
+              hintText: 'Search currency',
+              hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+              prefixIcon: Icon(Icons.search, color: Colors.grey.shade500),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: kPrimary, width: 2),
+              ),
+              filled: true,
+              fillColor: Colors.grey.shade50,
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: 14,
+                horizontal: 16,
+              ),
+            ),
+          ),
+          onSelect: (Currency currency) {
+            setState(() {
+              _currency = currency.code;
+              _currencyName = currency.name;
+              _currencySymbol = currency.symbol;
+            });
+          },
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: kCardBg,
+          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            if (hasSelection && flagEmoji != null) ...[
+              Text(flagEmoji, style: const TextStyle(fontSize: 20)),
+              const SizedBox(width: 10),
+            ] else ...[
+              Icon(Icons.attach_money, color: kSubText.withOpacity(0.5), size: 20),
+              const SizedBox(width: 10),
+            ],
+            Expanded(
+              child: hasSelection
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '$_currency${_currencySymbol.isNotEmpty ? " ($_currencySymbol)" : ""}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black,
+                          ),
+                        ),
+                        if (_currencyName.isNotEmpty)
+                          Text(
+                            _currencyName,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: kSubText.withOpacity(0.8),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
+                    )
+                  : Text(
+                      'Select currency',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: kSubText.withOpacity(0.5),
+                      ),
+                    ),
+            ),
+            Icon(
+              Icons.keyboard_arrow_down,
+              color: kSubText.withOpacity(0.5),
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _countryPickerField() {
+    final hasSelection = _countryOfOrigin.isNotEmpty;
+    return GestureDetector(
+      onTap: () {
+        CountrySelector(
+          context: context,
+          appBarTitle: 'Select Country',
+          showPhoneCode: false,
+          showSearchBox: true,
+          searchBarAutofocus: true,
+          listType: ListType.list,
+          onSelect: (Country selected) {
+            setState(() {
+              _countryOfOrigin = selected.name;
+              _countryFlagEmoji = selected.flagEmoji;
+              final code = _extractCurrencyCode(selected.currency.toString());
+              if (code != null) {
+                _applyCurrencyFromCode(code);
+              }
+            });
+          },
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: kCardBg,
+          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.public, color: kSubText.withOpacity(0.5), size: 18),
+            const SizedBox(width: 10),
+            if (hasSelection && _countryFlagEmoji.isNotEmpty) ...[
+              Text(_countryFlagEmoji, style: const TextStyle(fontSize: 18)),
+              const SizedBox(width: 8),
+            ],
+            Expanded(
+              child: Text(
+                hasSelection ? _countryOfOrigin : 'Select Country',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: hasSelection
+                      ? Colors.black
+                      : kSubText.withOpacity(0.5),
+                  fontWeight:
+                      hasSelection ? FontWeight.w600 : FontWeight.w400,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Icon(
+              Icons.keyboard_arrow_down,
+              color: kSubText.withOpacity(0.5),
+              size: 20,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -2050,12 +2274,7 @@ class _AddProductPageState extends State<_AddProductPage> {
   );
 
   Widget _tab1Pricing() {
-    String sym;
-    try {
-      sym = _c.getCurrencySymbol();
-    } catch (_) {
-      sym = 'Rs';
-    }
+    final sym = _currencySymbol.isNotEmpty ? _currencySymbol : _currency;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2101,12 +2320,7 @@ class _AddProductPageState extends State<_AddProductPage> {
         ),
         _field(
           label: 'Currency',
-          child: _simpleDropdown(
-            hint: 'Select Currency',
-            value: _currency,
-            items: ['PKR', 'USD', 'EUR', 'GBP', 'AUD'],
-            onChanged: (v) => setState(() => _currency = v ?? 'PKR'),
-          ),
+          child: _currencyPickerField(),
         ),
         _sectionHeader('Tax', Icons.receipt_long_outlined),
         _field(
@@ -2647,12 +2861,7 @@ class _AddProductPageState extends State<_AddProductPage> {
       ),
       _field(
         label: 'Country of Origin',
-        child: _simpleDropdown(
-          hint: 'Select Country',
-          value: _countryOfOrigin,
-          items: ['Pakistan', 'China', 'USA', 'Turkey', 'India', 'Bangladesh'],
-          onChanged: (v) => setState(() => _countryOfOrigin = v ?? 'Pakistan'),
-        ),
+        child: _countryPickerField(),
       ),
       _dropdownWithAdd<String>(
         label: 'Shipping Class',
@@ -2830,6 +3039,8 @@ class _AddProductPageState extends State<_AddProductPage> {
       'sellingPrice': _sellCtrl.text.trim(),
       'landingCost': _landingCostCtrl.text.trim(),
       'currencyCode': _currency,
+      'currencyName': _currencyName,
+      'currencySymbol': _currencySymbol,
       'taxRate': _taxRateCtrl.text.trim(),
       'currentStock': _stockCtrl.text.trim(),
       'minimumStock': _minStockCtrl.text.trim(),
@@ -2862,6 +3073,7 @@ class _AddProductPageState extends State<_AddProductPage> {
       'defaultQuantityPerBatch': _defaultBatchQtyCtrl.text.trim(),
       'hsCode': _hsCodeCtrl.text.trim(),
       'countryOfOriginName': _countryOfOrigin,
+      'countryOfOriginFlag': _countryFlagEmoji,
       'freightClass': _freightClassCtrl.text.trim(),
       'stackingLimit': _stackingLimitCtrl.text.trim(),
       'dangerousGoods': _dangerousGoods,

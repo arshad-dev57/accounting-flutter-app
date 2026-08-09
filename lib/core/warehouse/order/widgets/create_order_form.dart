@@ -7,6 +7,7 @@ import 'package:BisonsTechs_app/core/warehouse/order/widgets/setting_dropdown_fi
 import 'package:BisonsTechs_app/core/warehouse/products/screen/product_screen.dart';
 import 'package:BisonsTechs_app/core/warehousesettings/warehouse_settings_screen.dart'
     hide kBg;
+import 'package:country_picker_pro/country_picker_pro.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -101,7 +102,11 @@ class CreateOrderForm extends StatelessWidget {
                   _section('Shipping Address', Icons.local_shipping_outlined, [
                     ..._addressFields(c.shippingAddress.value, (addr) {
                       c.shippingAddress.value = addr;
-                      if (c.sameAsShipping.value) c.billingAddress.value = addr;
+                      c.shippingAddress.refresh();
+                      if (c.sameAsShipping.value) {
+                        c.billingAddress.value = addr;
+                        c.billingAddress.refresh();
+                      }
                     }),
                   ]),
 
@@ -119,6 +124,7 @@ class CreateOrderForm extends StatelessWidget {
                     if (!c.sameAsShipping.value)
                       ..._addressFields(c.billingAddress.value, (addr) {
                         c.billingAddress.value = addr;
+                        c.billingAddress.refresh();
                       }),
                   ]),
 
@@ -812,38 +818,88 @@ class CreateOrderForm extends StatelessWidget {
       field('City', address.city, (v) => address.city = v),
       field('State', address.state, (v) => address.state = v),
       field('Postal Code', address.postalCode, (v) => address.postalCode = v),
-      DropdownButtonFormField<String>(
-        value: SalesOrderController.countryOptions.contains(address.country)
-            ? address.country
-            : 'Pakistan',
-        decoration: InputDecoration(
-          labelText: 'Country',
-          labelStyle: const TextStyle(fontSize: 12),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          isDense: true,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 10,
-          ),
-        ),
-        style: const TextStyle(fontSize: 13),
-        items: SalesOrderController.countryOptions
-            .map(
-              (e) => DropdownMenuItem(
-                value: e,
-                child: Text(e, overflow: TextOverflow.ellipsis),
-              ),
-            )
-            .toList(),
-        onChanged: (v) {
-          if (v != null) {
-            address.country = v;
-            onChanged(address);
-          }
-        },
-        menuMaxHeight: 200,
-      ),
+      _countryPickerField(address, onChanged),
     ];
+  }
+
+  Widget _countryPickerField(
+    OrderAddress address,
+    ValueChanged<OrderAddress> onChanged,
+  ) {
+    final hasSelection = address.country.trim().isNotEmpty;
+    final flag = address.countryFlag.trim();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Country',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade700,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 6),
+          GestureDetector(
+            onTap: () {
+              CountrySelector(
+                context: Get.context!,
+                appBarTitle: 'Select Country',
+                showPhoneCode: false,
+                showSearchBox: true,
+                searchBarAutofocus: true,
+                listType: ListType.list,
+                onSelect: (Country selected) {
+                  address.country = selected.name;
+                  address.countryFlag = selected.flagEmoji;
+                  onChanged(address);
+                },
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade400),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.public, color: Colors.grey.shade400, size: 18),
+                  const SizedBox(width: 10),
+                  if (hasSelection && flag.isNotEmpty) ...[
+                    Text(flag, style: const TextStyle(fontSize: 18)),
+                    const SizedBox(width: 8),
+                  ],
+                  Expanded(
+                    child: Text(
+                      hasSelection ? address.country : 'Select country',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: hasSelection
+                            ? const Color(0xFF2D3748)
+                            : Colors.grey.shade400,
+                        fontWeight:
+                            hasSelection ? FontWeight.w600 : FontWeight.w400,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Icon(
+                    Icons.keyboard_arrow_down,
+                    color: Colors.grey.shade400,
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _textField(

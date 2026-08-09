@@ -312,9 +312,11 @@ class DashboardScreen extends GetView<DashboardController> {
   }
 
   Widget _buildHeroCard() {
-    return Obx(
-      () => Container(
-        padding: const EdgeInsets.all(20),
+    return Obx(() {
+      final logo = controller.businessLogo.value;
+      final hasLogo = logo.isNotEmpty;
+
+      return Container(
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
@@ -331,188 +333,195 @@ class DashboardScreen extends GetView<DashboardController> {
             ),
           ],
         ),
-        child: Stack(
-          children: [
-            if (controller.businessLogo.value.isNotEmpty)
-              Positioned.fill(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
-                  child: Opacity(
-                    opacity: 0.05,
-                    child: controller.businessLogo.value.startsWith('http')
-                        ? Image.network(
-                            controller.businessLogo.value,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const SizedBox.shrink(),
-                          )
-                        : Image.file(
-                            File(controller.businessLogo.value),
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const SizedBox.shrink(),
-                          ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(17),
+          child: Stack(
+            children: [
+              // Full-bleed background — behind padding, covers entire card
+              if (hasLogo)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Opacity(
+                      opacity: 0.07,
+                      child: logo.startsWith('http')
+                          ? Image.network(
+                              logo,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                              alignment: Alignment.center,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const SizedBox.shrink(),
+                            )
+                          : Image.file(
+                              File(logo),
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                              alignment: Alignment.center,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const SizedBox.shrink(),
+                            ),
+                    ),
                   ),
                 ),
-              ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Left: label + big value
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: _kPrimaryBg,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Icon(
-                                  Icons.account_balance_wallet_rounded,
-                                  size: 14,
-                                  color: kPrimary,
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: _kPrimaryBg,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.account_balance_wallet_rounded,
+                                      size: 14,
+                                      color: kPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Net Profit · ${controller.periodLabel}',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: _kTextSub,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                controller.netProfitFormatted.value,
+                                style: TextStyle(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w800,
+                                  color: controller.netProfit.value >= 0
+                                      ? _kTextPrimary
+                                      : _kRed,
+                                  letterSpacing: -0.5,
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              Obx(
-                                () => Text(
-                                  'Net Profit · ${controller.periodLabel}',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: _kTextSub,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${controller.totalRevenueFormatted.value} − ${controller.totalExpensesFormatted.value}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: _kTextSub,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: controller.netProfit.value >= 0
+                                      ? _kGreenBg
+                                      : _kRedBg,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      controller.netProfit.value >= 0
+                                          ? Icons.arrow_upward_rounded
+                                          : Icons.arrow_downward_rounded,
+                                      size: 10,
+                                      color: controller.netProfit.value >= 0
+                                          ? _kGreen
+                                          : _kRed,
+                                    ),
+                                    const SizedBox(width: 3),
+                                    Text(
+                                      controller.netProfit.value >= 0
+                                          ? '${controller.profitMargin.value.abs().toStringAsFixed(1)}% margin'
+                                          : 'Expenses exceed revenue',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: controller.netProfit.value >= 0
+                                            ? _kGreen
+                                            : _kRed,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 10),
-                          Text(
-                            controller.netProfitFormatted.value,
-                            style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w800,
-                              color: controller.netProfit.value >= 0
-                                  ? _kTextPrimary
-                                  : _kRed,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${controller.totalRevenueFormatted.value} − ${controller.totalExpensesFormatted.value}',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: _kTextSub,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
+                        ),
+                        GestureDetector(
+                          onTap: () => controller.refreshData(),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: controller.netProfit.value >= 0
-                                  ? _kGreenBg
-                                  : _kRedBg,
-                              borderRadius: BorderRadius.circular(20),
+                              color: _kHeroIcon,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: _kHeroBorder),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  controller.netProfit.value >= 0
-                                      ? Icons.arrow_upward_rounded
-                                      : Icons.arrow_downward_rounded,
-                                  size: 10,
-                                  color: controller.netProfit.value >= 0
-                                      ? _kGreen
-                                      : _kRed,
-                                ),
-                                const SizedBox(width: 3),
-                                Text(
-                                  controller.netProfit.value >= 0
-                                      ? '${controller.profitMargin.value.abs().toStringAsFixed(1)}% margin'
-                                      : 'Expenses exceed revenue',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: controller.netProfit.value >= 0
-                                        ? _kGreen
-                                        : _kRed,
-                                  ),
-                                ),
-                              ],
+                            child: const Icon(
+                              Icons.refresh_rounded,
+                              size: 16,
+                              color: _kTextSub,
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    // Refresh button
-                    GestureDetector(
-                      onTap: () => controller.refreshData(),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: _kHeroIcon,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: _kHeroBorder),
+                    const SizedBox(height: 16),
+                    Container(height: 0.5, color: _kCardBorder),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        _heroStat(
+                          'Revenue',
+                          controller.totalRevenueFormatted.value,
+                          Icons.trending_up_rounded,
+                          _kGreen,
+                          _kGreenBg,
                         ),
-                        child: const Icon(
-                          Icons.refresh_rounded,
-                          size: 16,
-                          color: _kTextSub,
+                        _heroDivider(),
+                        _heroStat(
+                          'Bank Balance',
+                          controller.totalBankBalanceFormatted.value,
+                          Icons.account_balance_rounded,
+                          kPrimary,
+                          _kPrimaryBg,
                         ),
-                      ),
+                        _heroDivider(),
+                        _heroStat(
+                          'Payables',
+                          controller.payablesFormatted.value,
+                          Icons.receipt_long_rounded,
+                          _kRed,
+                          _kRedBg,
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Container(height: 0.5, color: _kCardBorder),
-                const SizedBox(height: 14),
-                // Bottom 3 stats — accounting balances (not Sales/Purchase ops)
-                Row(
-                  children: [
-                    _heroStat(
-                      'Revenue',
-                      controller.totalRevenueFormatted.value,
-                      Icons.trending_up_rounded,
-                      _kGreen,
-                      _kGreenBg,
-                    ),
-                    _heroDivider(),
-                    _heroStat(
-                      'Bank Balance',
-                      controller.totalBankBalanceFormatted.value,
-                      Icons.account_balance_rounded,
-                      kPrimary,
-                      _kPrimaryBg,
-                    ),
-                    _heroDivider(),
-                    _heroStat(
-                      'Payables',
-                      controller.payablesFormatted.value,
-                      Icons.receipt_long_rounded,
-                      _kRed,
-                      _kRedBg,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   Widget _heroStat(
