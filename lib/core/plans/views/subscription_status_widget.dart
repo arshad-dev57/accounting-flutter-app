@@ -1,3 +1,4 @@
+import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/subscription_controller.dart';
@@ -8,6 +9,8 @@ class SubscriptionStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!PermissionService.to.isAdmin) return const SizedBox.shrink();
+
     final SubscriptionController controller = Get.find<SubscriptionController>();
     
     return Obx(() {

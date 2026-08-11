@@ -182,14 +182,15 @@ class SalesDrawer extends StatelessWidget {
                   currentRoute: currentRoute,
                   items: const [('Feedback', Mdi.feedback, '__feedback')],
                 ),
-                _NavSection(
-                  title: 'Subscription',
-                  icon: Mdi.crown,
-                  currentRoute: currentRoute,
-                  items: const [
-                    ('Subscription Plans', Mdi.crown, '__subscription'),
-                  ],
-                ),
+                if (PermissionService.to.isAdmin)
+                  _NavSection(
+                    title: 'Subscription',
+                    icon: Mdi.crown,
+                    currentRoute: currentRoute,
+                    items: const [
+                      ('Subscription Plans', Mdi.crown, '__subscription'),
+                    ],
+                  ),
                 _NavSection(
                   title: 'About',
                   icon: Mdi.information,
@@ -330,50 +331,52 @@ class _DrawerHeader extends GetView<SalesDrawerController> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Iconify(
-                  Mdi.shield_account,
-                  size: 14,
-                  color: Colors.white.withOpacity(0.7),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'Current Plan',
-                  style: TextStyle(
-                    fontSize: 11,
+          if (PermissionService.to.isAdmin) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Iconify(
+                    Mdi.shield_account,
+                    size: 14,
                     color: Colors.white.withOpacity(0.7),
                   ),
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade600,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'Premium',
+                  const SizedBox(width: 6),
+                  Text(
+                    'Current Plan',
                     style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                      color: Colors.white.withOpacity(0.7),
                     ),
                   ),
-                ),
-              ],
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade600,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'Premium',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -772,13 +775,14 @@ class _DrawerFooter extends StatelessWidget {
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
-                      Text(
-                        'Premium Account',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey.shade500,
+                      if (PermissionService.to.isAdmin)
+                        Text(
+                          'Premium Account',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey.shade500,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),

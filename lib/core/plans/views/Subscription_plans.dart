@@ -1,12 +1,15 @@
+import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
 import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
 import 'package:BisonsTechs_app/core/support/controllers/support_ticket_controller.dart';
 import 'package:BisonsTechs_app/core/support/screens/support_tickets_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SelectPlanScreen extends StatefulWidget {
   const SelectPlanScreen({super.key});
@@ -168,6 +171,21 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Obx(() {
+          if (!PermissionService.to.isAdmin) {
+            if (_subCtrl.isLoading.value && _subCtrl.subscriptionPlan.value.isEmpty) {
+              return const Center(child: CircularProgressIndicator(color: kPrimary));
+            }
+            if (_subCtrl.hasAccess) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (Get.currentRoute != '/dashboard') {
+                  Get.offAllNamed('/dashboard');
+                }
+              });
+              return const Center(child: CircularProgressIndicator(color: kPrimary));
+            }
+            return const _ContactAdminScreen();
+          }
+
           return Column(
             children: [
               _TopBar(
@@ -1291,6 +1309,67 @@ class _CustomPlanSheetState extends State<_CustomPlanSheet> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ContactAdminScreen extends StatelessWidget {
+  const _ContactAdminScreen();
+
+  Future<void> _logout() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      await PermissionService.to.clearUserData();
+    } catch (_) {}
+    Get.offAll(() => const LoginScreen());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'SUBSCRIPTION',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1.6,
+                color: kPrimary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Contact your administrator',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF0A0A0A),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Your company\'s subscription has expired. Only an admin can view plans and renew access. Please ask your administrator to update the subscription.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Color(0xFF737373), height: 1.45),
+            ),
+            const SizedBox(height: 24),
+            OutlinedButton(
+              onPressed: _logout,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: kPrimary,
+                side: const BorderSide(color: kPrimary),
+              ),
+              child: const Text('Logout'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

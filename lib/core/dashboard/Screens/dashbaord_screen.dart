@@ -1638,13 +1638,14 @@ class DashboardScreen extends GetView<DashboardController> {
                 ),
                 const SizedBox(height: 4),
                 _SectionLabel('SUPPORT'),
-                _NavSection(
-                  title: 'Subscription',
-                  icon: Mdi.crown,
-                  items: const [
-                    ('Subscription Plans', Mdi.crown, 'subscription'),
-                  ],
-                ),
+                if (PermissionService.to.isAdmin)
+                  _NavSection(
+                    title: 'Subscription',
+                    icon: Mdi.crown,
+                    items: const [
+                      ('Subscription Plans', Mdi.crown, 'subscription'),
+                    ],
+                  ),
                 _NavSection(
                   title: 'Help & Support',
                   icon: Mdi.help_circle,
@@ -2007,55 +2008,57 @@ class _DrawerHeader extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.shield_outlined,
-                  size: 14,
-                  color: Colors.white60,
-                ),
-                const SizedBox(width: 6),
-                const Text(
-                  'Current plan',
-                  style: TextStyle(fontSize: 11, color: Colors.white60),
-                ),
-                const Spacer(),
-                Obx(
-                  () => Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: subscriptionController.hasActiveSubscription.value
-                          ? Colors.green.shade500
-                          : Colors.orange.shade500,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      subscriptionController.hasActiveSubscription.value
-                          ? 'Premium'
-                          : subscriptionController.isTrialActive.value
-                          ? 'Trial'
-                          : 'Free',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
+          if (PermissionService.to.isAdmin) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.shield_outlined,
+                    size: 14,
+                    color: Colors.white60,
+                  ),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'Current plan',
+                    style: TextStyle(fontSize: 11, color: Colors.white60),
+                  ),
+                  const Spacer(),
+                  Obx(
+                    () => Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: subscriptionController.hasActiveSubscription.value
+                            ? Colors.green.shade500
+                            : Colors.orange.shade500,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        subscriptionController.hasActiveSubscription.value
+                            ? 'Premium'
+                            : subscriptionController.isTrialActive.value
+                            ? 'Trial'
+                            : 'Free',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -2418,19 +2421,20 @@ class _DrawerFooter extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Obx(
-                        () => Text(
-                          subscriptionController.hasActiveSubscription.value
-                              ? 'Premium Account'
-                              : subscriptionController.isTrialActive.value
-                              ? 'Trial Account'
-                              : 'Free Account',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey.shade500,
+                      if (PermissionService.to.isAdmin)
+                        Obx(
+                          () => Text(
+                            subscriptionController.hasActiveSubscription.value
+                                ? 'Premium Account'
+                                : subscriptionController.isTrialActive.value
+                                ? 'Trial Account'
+                                : 'Free Account',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey.shade500,
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ),
