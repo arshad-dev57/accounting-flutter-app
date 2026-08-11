@@ -20,10 +20,12 @@ import 'package:BisonsTechs_app/core/changepassword/screen/change_password_scree
 import 'package:BisonsTechs_app/core/companyprofile/controller/profile_controller.dart';
 import 'package:BisonsTechs_app/core/companyprofile/screen/company_profile_screen.dart';
 import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
+import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:BisonsTechs_app/core/purchasedashboard/purchase_dashboard_screen.dart';
 import 'package:BisonsTechs_app/core/settings/screens/currency_screen.dart';
 import 'package:BisonsTechs_app/core/settings/screens/pdf_report_settings_screen.dart';
+import 'package:BisonsTechs_app/core/support/screens/support_tickets_screen.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -308,45 +310,145 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
       backgroundColor: kBg,
       appBar: _buildTopBar(isMobile),
       drawer: isMobile ? _buildDrawer() : null,
-      body: Stack(
+      body: Column(
         children: [
-          isMobile
-              ? _buildBanner(isMobile: true)
-              : Row(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: _buildSidebar(isTablet),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(
-                          top: 12,
-                          right: 12,
-                          bottom: 12,
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: _buildBanner(isMobile: false),
-                        ),
+          _buildSubscriptionStrip(),
+          Expanded(
+            child: Stack(
+              children: [
+                isMobile
+                    ? _buildBanner(isMobile: true)
+                    : Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: _buildSidebar(isTablet),
+                          ),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                top: 12,
+                                right: 12,
+                                bottom: 12,
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: _buildBanner(isMobile: false),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-          // Support Tickets Dropdown Overlay
-          Obx(() {
-            if (!_supportCtrl.showTicketsDropdown.value) {
-              return const SizedBox.shrink();
-            }
-            return Positioned(
-              top: 70,
-              right: isMobile ? 16 : 100,
-              child: _buildTicketsDropdown(),
-            );
-          }),
+                // Support Tickets Dropdown Overlay
+                Obx(() {
+                  if (!_supportCtrl.showTicketsDropdown.value) {
+                    return const SizedBox.shrink();
+                  }
+                  return Positioned(
+                    top: 70,
+                    right: isMobile ? 16 : 100,
+                    child: _buildTicketsDropdown(),
+                  );
+                }),
+              ],
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  Widget _buildSubscriptionStrip() {
+    final subCtrl = Get.find<SubscriptionController>();
+    return Obx(() {
+      final plan = subCtrl.subscriptionPlan.value;
+      final hasAccess = subCtrl.hasAccess;
+      final isTrial = plan == 'trial' && hasAccess;
+      final days = subCtrl.remainingDays;
+      final urgent = hasAccess && days > 0 && days <= 3;
+      final expired = !hasAccess;
+
+      String planName;
+      if (plan == 'trial') {
+        planName = 'Free Trial';
+      } else if (plan == 'monthly') {
+        planName = 'Monthly Plan';
+      } else if (plan == 'yearly') {
+        planName = 'Yearly Plan';
+      } else {
+        planName = 'No active plan';
+      }
+
+      String detail;
+      if (expired) {
+        detail = 'Expired — renew to keep using the ERP';
+      } else if (isTrial) {
+        detail = days == 1 ? '1 day remaining' : '$days days remaining';
+      } else {
+        detail = days == 1 ? '1 day remaining' : '$days days remaining';
+      }
+
+      final color = (urgent || expired) ? kDanger : kPrimary;
+
+      return Material(
+        color: color.withValues(alpha: 0.07),
+        child: InkWell(
+          onTap: () => Get.to(() => const SelectPlanScreen()),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: color.withValues(alpha: 0.15)),
+              ),
+            ),
+            child: Row(
+              children: [
+                Iconify(Mdi.crown, size: 15, color: color),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: planName,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: color,
+                          ),
+                        ),
+                        TextSpan(
+                          text: '  ·  $detail',
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w500,
+                            color: color.withValues(alpha: 0.9),
+                          ),
+                        ),
+                      ],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Text(
+                  expired ? 'RENEW' : 'MANAGE',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.6,
+                    color: color,
+                  ),
+                ),
+                const SizedBox(width: 2),
+                Icon(Icons.arrow_forward, size: 12, color: color),
+              ],
+            ),
+          ),
+        ),
+      );
+    });
   }
 
   // ─── Top Bar ──────────────────────────────────────────────────────────
@@ -474,7 +576,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                   icon: Icons.headset_mic_outlined,
                   label: 'Support Ticket',
                   color: Colors.black87,
-                  onTap: _toggleSupportDropdown,
+                  onTap: () => Get.to(() => const SupportTicketsScreen()),
                 ),
                 const SizedBox(width: 8),
                 Container(

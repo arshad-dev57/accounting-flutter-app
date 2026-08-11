@@ -108,6 +108,16 @@ class SalesController extends GetxController {
           data['topCustomers'] = [];
         }
 
+        if (!data.containsKey('pos')) {
+          data['pos'] = {
+            'count': 0,
+            'revenue': 0,
+            'todayCount': 0,
+            'todayRevenue': 0,
+            'trend': [],
+          };
+        }
+
         // Provide default revenue breakdown if not present
         if (!data.containsKey('revenueBreakdown')) {
           data['revenueBreakdown'] = _getDefaultRevenueBreakdown();

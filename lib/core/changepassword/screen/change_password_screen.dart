@@ -221,6 +221,17 @@ class ChangePasswordScreen extends StatelessWidget {
   Widget _buildWebHeader() {
     return Column(
       children: [
+        Image.asset(
+          'assets/logo.png',
+          height: 72,
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) => const Icon(
+            Icons.account_balance_rounded,
+            size: 56,
+            color: kPrimary,
+          ),
+        ),
+        const SizedBox(height: 24),
         Text(
           'Change Password',
           style: const TextStyle(
@@ -289,17 +300,23 @@ class ChangePasswordScreen extends StatelessWidget {
       child: Column(
         children: [
           Container(
+            width: ResponsiveUtils.isTablet(context) ? 88 : 72,
+            height: ResponsiveUtils.isTablet(context) ? 88 : 72,
             padding: EdgeInsets.all(
-              ResponsiveUtils.isTablet(context) ? 20 : 16,
+              ResponsiveUtils.isTablet(context) ? 14 : 12,
             ),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+            decoration: const BoxDecoration(
+              color: Colors.white,
               shape: BoxShape.circle,
             ),
-            child: Iconify(
-              Mdi.lock_reset,
-              color: Colors.white,
-              size: ResponsiveUtils.isTablet(context) ? 48 : 40,
+            child: Image.asset(
+              'assets/logo.png',
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => Icon(
+                Icons.account_balance_rounded,
+                color: kPrimary,
+                size: ResponsiveUtils.isTablet(context) ? 40 : 32,
+              ),
             ),
           ),
           SizedBox(height: ResponsiveUtils.isTablet(context) ? 20 : 16),

@@ -11,6 +11,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -291,10 +292,32 @@ class ProductsController extends GetxController {
   }
 
   // ─── CRUD ─────────────────────────────────────────────────────
-  Future<bool> createProduct(Map<String, dynamic> data) async {
+  Future<bool> createProduct(
+    Map<String, dynamic> data, {
+    List<String>? imagePaths,
+    List<String>? existingImages,
+  }) async {
     try {
       isSubmitting.value = true;
-      final response = await _api.post('/api/warehouse/products', body: data);
+      final fields = <String, String>{};
+      data.forEach((key, value) {
+        if (value == null) return;
+        fields[key] = value is bool || value is num ? value.toString() : value.toString();
+      });
+      fields['existingImages'] = jsonEncode(existingImages ?? <String>[]);
+
+      final multiFilePaths = <String, List<String>>{};
+      if (imagePaths != null && imagePaths.isNotEmpty) {
+        multiFilePaths['images'] = imagePaths;
+      }
+
+      // Always multipart so Cloudinary image flow matches web/register
+      final response = await _api.postMultipart(
+        '/api/warehouse/products',
+        fields: fields,
+        multiFilePaths: multiFilePaths.isEmpty ? null : multiFilePaths,
+      );
+
       if (response.success && response.data['success'] == true) {
         refreshAll();
         return true;
@@ -308,13 +331,32 @@ class ProductsController extends GetxController {
     }
   }
 
-  Future<bool> updateProduct(String id, Map<String, dynamic> data) async {
+  Future<bool> updateProduct(
+    String id,
+    Map<String, dynamic> data, {
+    List<String>? imagePaths,
+    List<String>? existingImages,
+  }) async {
     try {
       isSubmitting.value = true;
-      final response = await _api.put(
+      final fields = <String, String>{};
+      data.forEach((key, value) {
+        if (value == null) return;
+        fields[key] = value is bool || value is num ? value.toString() : value.toString();
+      });
+      fields['existingImages'] = jsonEncode(existingImages ?? <String>[]);
+
+      final multiFilePaths = <String, List<String>>{};
+      if (imagePaths != null && imagePaths.isNotEmpty) {
+        multiFilePaths['images'] = imagePaths;
+      }
+
+      final response = await _api.putMultipart(
         '/api/warehouse/products/$id',
-        body: data,
+        fields: fields,
+        multiFilePaths: multiFilePaths.isEmpty ? null : multiFilePaths,
       );
+
       if (response.success && response.data['success'] == true) {
         refreshAll();
         return true;
