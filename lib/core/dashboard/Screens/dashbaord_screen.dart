@@ -66,7 +66,6 @@ const _kOrangeBg = Color(0xFFFFF8E7);
 const _kRed = Color(0xFFEF4444);
 const _kRedBg = Color(0xFFFEF2F2);
 const _kPurple = Color(0xFF7C3AED);
-const _kPurpleBg = Color(0xFFF5F0FF);
 
 const _kHeroBg = Color(0xFFE6EEF5);
 const _kHeroBgEnd = Color(0xFFD6E4F0);
