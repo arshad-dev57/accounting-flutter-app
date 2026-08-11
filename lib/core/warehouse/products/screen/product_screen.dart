@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/category/category_screen.dart';
 import 'package:BisonsTechs_app/core/warehouse/products/controller/product_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/products/screen/product_qr_scan_screen.dart';
@@ -13,6 +14,7 @@ import 'package:currency_picker/currency_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:barcode/barcode.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -423,6 +425,42 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   // ─── Product Details Bottom Sheet ─────────────────────────
+  List<String> _productImages(Map<String, dynamic> product) {
+    final imgs = product['images'];
+    if (imgs is List && imgs.isNotEmpty) {
+      return imgs.map((e) => e.toString()).where((e) => e.isNotEmpty).toList();
+    }
+    final main = product['mainImage']?.toString();
+    if (main != null && main.isNotEmpty) return [main];
+    return [];
+  }
+
+  String? _productMainImage(Map<String, dynamic> product) {
+    final images = _productImages(product);
+    return images.isEmpty ? null : images.first;
+  }
+
+  Widget _productAvatar(Map<String, dynamic> product, {double size = 48, Color? fallbackColor}) {
+    final url = _productMainImage(product);
+    final color = fallbackColor ?? kPrimary;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(size > 50 ? 14 : 12),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: url == null
+          ? Icon(Icons.inventory_2, color: color, size: size * 0.5)
+          : Image.network(
+              url,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Icon(Icons.inventory_2, color: color, size: size * 0.5),
+            ),
+    );
+  }
+
   void _showProductDetails(
     BuildContext context,
     Map<String, dynamic> product,
@@ -465,19 +503,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     children: [
                       Row(
                         children: [
-                          Container(
-                            width: 52,
-                            height: 52,
-                            decoration: BoxDecoration(
-                              color: kPrimary.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: Icon(
-                              Icons.inventory_2,
-                              color: kPrimary,
-                              size: 26,
-                            ),
-                          ),
+                          _productAvatar(product, size: 52),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -528,6 +554,35 @@ class _ProductsScreenState extends State<ProductsScreen> {
                           ),
                         ],
                       ),
+                      if (_productImages(product).isNotEmpty) ...[
+                        const SizedBox(height: 14),
+                        SizedBox(
+                          height: 88,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _productImages(product).length,
+                            separatorBuilder: (_, __) => const SizedBox(width: 8),
+                            itemBuilder: (_, i) {
+                              final url = _productImages(product)[i];
+                              return ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(
+                                  url,
+                                  width: 88,
+                                  height: 88,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Container(
+                                    width: 88,
+                                    height: 88,
+                                    color: Colors.grey.shade200,
+                                    child: const Icon(Icons.broken_image),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 16),
                       Row(
                         children: [
@@ -865,6 +920,7 @@ class _AddProductPageState extends State<_AddProductPage> {
   String? _selectedDimensionUnit;
   String? _selectedSize;
   String? _selectedShippingClass;
+  // These are FORM-LOCAL — changes here never write to CurrencyController or SharedPreferences
   String _currency = 'PKR';
   String _currencyName = 'Pakistani Rupee';
   String _currencySymbol = 'Rs';
@@ -894,6 +950,10 @@ class _AddProductPageState extends State<_AddProductPage> {
   String? _generatedBarcodeData;
   String? _selectedBarcodeFormat = 'Code-128';
 
+  // ── Media / Cloudinary images ──
+  final List<String> _existingImages = [];
+  final List<String> _newImagePaths = [];
+
   @override
   void initState() {
     super.initState();
@@ -918,6 +978,14 @@ class _AddProductPageState extends State<_AddProductPage> {
       if (value == null) return '';
       if (value is List) return value.join(', ');
       return value.toString();
+    }
+
+    // Load existing Cloudinary images when editing
+    final imgs = p?['images'];
+    if (imgs is List) {
+      _existingImages.addAll(imgs.map((e) => e.toString()).where((e) => e.isNotEmpty));
+    } else if (p?['mainImage'] != null && p!['mainImage'].toString().isNotEmpty) {
+      _existingImages.add(p['mainImage'].toString());
     }
 
     _nameCtrl = TextEditingController(text: safeToString(p?['name']));
@@ -1035,11 +1103,18 @@ class _AddProductPageState extends State<_AddProductPage> {
     _warrantyUnit = p?['warrantyUnit'] ?? 'Months';
     _countryOfOrigin = p?['countryOfOriginName'] ?? 'Pakistan';
     _countryFlagEmoji = p?['countryOfOriginFlag']?.toString() ?? '🇵🇰';
-    _currency = p?['currencyCode'] ?? 'PKR';
+    // For editing: use the product's saved currency.
+    // For creating: read the app's current global currency as default (read-only — never writes back).
+    final globalCurrency = Get.find<CurrencyController>();
+    _currency = p?['currencyCode'] ?? globalCurrency.currencyCode.value;
     _applyCurrencyFromCode(_currency);
+    // Override symbol/name from the product record if present (takes priority over CurrencyService lookup)
     if (p?['currencySymbol'] != null &&
         p!['currencySymbol'].toString().isNotEmpty) {
       _currencySymbol = p['currencySymbol'].toString();
+    } else if (p == null) {
+      // New product: also pull symbol from global currency for correct display
+      _currencySymbol = globalCurrency.currencySymbol.value;
     }
     if (p?['currencyName'] != null && p!['currencyName'].toString().isNotEmpty) {
       _currencyName = p['currencyName'].toString();
@@ -1450,6 +1525,8 @@ class _AddProductPageState extends State<_AddProductPage> {
             ),
           ),
           onSelect: (Currency currency) {
+            // FORM-LOCAL only — intentionally NOT calling CurrencyController.setCurrency()
+            // so the app's global currency setting is never affected by product form selections.
             setState(() {
               _currency = currency.code;
               _currencyName = currency.name;
@@ -1530,6 +1607,7 @@ class _AddProductPageState extends State<_AddProductPage> {
           searchBarAutofocus: true,
           listType: ListType.list,
           onSelect: (Country selected) {
+            // FORM-LOCAL only — currency auto-filled from country, but never persisted globally.
             setState(() {
               _countryOfOrigin = selected.name;
               _countryFlagEmoji = selected.flagEmoji;
@@ -2961,45 +3039,228 @@ class _AddProductPageState extends State<_AddProductPage> {
     ],
   );
 
-  Widget _tab7Media() => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      _sectionHeader('Media', Icons.image_outlined),
-      _mediaPlaceholder(
-        Icons.image_outlined,
-        'Product Images',
-        'Image upload available in web version',
-      ),
-      const SizedBox(height: 12),
-      _mediaPlaceholder(
-        Icons.picture_as_pdf_outlined,
-        'Specification Sheet (PDF)',
-        'PDF upload available in web version',
-      ),
-    ],
-  );
+  Widget _tab7Media() {
+    final total = _existingImages.length + _newImagePaths.length;
+    final remaining = 5 - total;
 
-  Widget _mediaPlaceholder(IconData icon, String title, String sub) =>
-      Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: kCardBg,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.withOpacity(0.3)),
-        ),
-        child: Column(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionHeader('Media', Icons.image_outlined),
+        Row(
           children: [
-            Icon(icon, size: 32, color: kSubText.withOpacity(0.5)),
-            const SizedBox(height: 8),
-            Text(title, style: TextStyle(fontSize: 13, color: kSubText)),
-            const SizedBox(height: 4),
             Text(
-              sub,
-              style: TextStyle(fontSize: 11, color: kSubText.withOpacity(0.6)),
+              'Product Images',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kSubText),
+            ),
+            const Spacer(),
+            Text(
+              '$total / 5',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kSubText),
             ),
           ],
         ),
-      );
+        const SizedBox(height: 4),
+        Text(
+          'Select multiple images. First image is main. You can add more in batches.',
+          style: TextStyle(fontSize: 11, color: kSubText.withOpacity(0.7)),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            ..._existingImages.asMap().entries.map((e) {
+              final isMain = e.key == 0 && _newImagePaths.isEmpty;
+              return _imageThumb(
+                child: Image.network(
+                  e.value,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
+                ),
+                isMain: isMain,
+                onRemove: () => setState(() => _existingImages.remove(e.value)),
+              );
+            }),
+            ..._newImagePaths.asMap().entries.map((e) {
+              final isMain = _existingImages.isEmpty && e.key == 0;
+              return _imageThumb(
+                child: Image.file(File(e.value), fit: BoxFit.cover),
+                isMain: isMain,
+                onRemove: () => setState(() => _newImagePaths.remove(e.value)),
+              );
+            }),
+            if (remaining > 0)
+              InkWell(
+                onTap: _showImageSourceSheet,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  width: 96,
+                  height: 96,
+                  decoration: BoxDecoration(
+                    color: kCardBg,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.grey.withOpacity(0.4),
+                      style: BorderStyle.solid,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.add_photo_alternate_outlined, color: kSubText.withOpacity(0.75), size: 26),
+                      const SizedBox(height: 4),
+                      Text('Add images', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: kSubText)),
+                      Text('$remaining left', style: TextStyle(fontSize: 9, color: kSubText.withOpacity(0.7))),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+        if (remaining > 0) ...[
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _pickProductImages,
+              icon: const Icon(Icons.photo_library_outlined, size: 18),
+              label: const Text('Choose multiple images'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: kPrimary,
+                side: BorderSide(color: kPrimary.withOpacity(0.5)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _imageThumb({
+    required Widget child,
+    required VoidCallback onRemove,
+    bool isMain = false,
+  }) {
+    return Stack(
+      children: [
+        Container(
+          width: 96,
+          height: 96,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isMain ? kPrimary.withOpacity(0.55) : Colors.grey.withOpacity(0.3),
+              width: isMain ? 2 : 1,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: child,
+        ),
+        if (isMain)
+          Positioned(
+            left: 4,
+            bottom: 4,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: kPrimary,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Text(
+                'Main',
+                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.white),
+              ),
+            ),
+          ),
+        Positioned(
+          top: 4,
+          right: 4,
+          child: InkWell(
+            onTap: onRemove,
+            child: Container(
+              padding: const EdgeInsets.all(3),
+              decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+              child: const Icon(Icons.close, size: 12, color: Colors.white),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showImageSourceSheet() async {
+    final remaining = 5 - (_existingImages.length + _newImagePaths.length);
+    if (remaining <= 0) return;
+
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('Choose multiple from gallery'),
+                subtitle: Text('Up to $remaining more'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickProductImages();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: const Text('Take photo'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickFromCamera();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickProductImages() async {
+    final picker = ImagePicker();
+    final remaining = 5 - (_existingImages.length + _newImagePaths.length);
+    if (remaining <= 0) return;
+    final files = await picker.pickMultiImage(imageQuality: 85);
+    if (files.isEmpty) return;
+    setState(() {
+      _newImagePaths.addAll(files.take(remaining).map((f) => f.path));
+    });
+  }
+
+  Future<void> _pickFromCamera() async {
+    final remaining = 5 - (_existingImages.length + _newImagePaths.length);
+    if (remaining <= 0) return;
+    final picker = ImagePicker();
+    final file = await picker.pickImage(source: ImageSource.camera, imageQuality: 85);
+    if (file == null) return;
+    setState(() {
+      _newImagePaths.add(file.path);
+    });
+  }
 
   Widget _tab8Custom() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -3114,9 +3375,15 @@ class _AddProductPageState extends State<_AddProductPage> {
       success = await _c.updateProduct(
         widget.editingProduct!['_id'] ?? widget.editingProduct!['id'] ?? '',
         payload,
+        imagePaths: _newImagePaths,
+        existingImages: _existingImages,
       );
     } else {
-      success = await _c.createProduct(payload);
+      success = await _c.createProduct(
+        payload,
+        imagePaths: _newImagePaths,
+        existingImages: _existingImages,
+      );
     }
 
     if (!mounted) return;
@@ -3522,19 +3789,7 @@ class _MobileProductsListState extends State<_MobileProductsList> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: stockColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.inventory_2_rounded,
-                          color: stockColor,
-                          size: 22,
-                        ),
-                      ),
+                      _ProductThumb(product: product, stockColor: stockColor),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -3680,5 +3935,44 @@ class _MobileProductsListState extends State<_MobileProductsList> {
       );
     }
     return const SizedBox.shrink();
+  }
+}
+
+class _ProductThumb extends StatelessWidget {
+  final Map<String, dynamic> product;
+  final Color stockColor;
+  const _ProductThumb({required this.product, required this.stockColor});
+
+  String? get _url {
+    final main = product['mainImage']?.toString();
+    if (main != null && main.isNotEmpty) return main;
+    final imgs = product['images'];
+    if (imgs is List && imgs.isNotEmpty) {
+      final first = imgs.first?.toString() ?? '';
+      if (first.isNotEmpty) return first;
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final url = _url;
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: stockColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: url == null
+          ? Icon(Icons.inventory_2_rounded, color: stockColor, size: 22)
+          : Image.network(
+              url,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) =>
+                  Icon(Icons.inventory_2_rounded, color: stockColor, size: 22),
+            ),
+    );
   }
 }

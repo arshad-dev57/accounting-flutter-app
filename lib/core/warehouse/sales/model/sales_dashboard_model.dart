@@ -1,5 +1,6 @@
 class SalesDashboardModel {
   final SalesOrdersSummary orders;
+  final SalesPosSummary pos;
   final SalesInvoicesSummary invoices;
   final Map<String, dynamic> returns;
   final Map<String, dynamic> refunds;
@@ -12,6 +13,7 @@ class SalesDashboardModel {
 
   SalesDashboardModel({
     required this.orders,
+    required this.pos,
     required this.invoices,
     this.returns = const {},
     this.refunds = const {},
@@ -26,6 +28,7 @@ class SalesDashboardModel {
   factory SalesDashboardModel.fromJson(Map<String, dynamic> json) {
     return SalesDashboardModel(
       orders: SalesOrdersSummary.fromJson(Map<String, dynamic>.from(json['orders'] ?? {})),
+      pos: SalesPosSummary.fromJson(Map<String, dynamic>.from(json['pos'] ?? {})),
       invoices: SalesInvoicesSummary.fromJson(Map<String, dynamic>.from(json['invoices'] ?? {})),
       returns: Map<String, dynamic>.from(json['returns'] ?? {}),
       refunds: Map<String, dynamic>.from(json['refunds'] ?? {}),
@@ -113,6 +116,47 @@ class SalesOrdersSummary {
   }
 }
 
+class SalesPosSummary {
+  final int count;
+  final double revenue;
+  final double discountTotal;
+  final double taxTotal;
+  final double paidAmount;
+  final int todayCount;
+  final double todayRevenue;
+  final List<SalesTrendPoint> trend;
+  final String revenueGrowth;
+
+  SalesPosSummary({
+    this.count = 0,
+    this.revenue = 0,
+    this.discountTotal = 0,
+    this.taxTotal = 0,
+    this.paidAmount = 0,
+    this.todayCount = 0,
+    this.todayRevenue = 0,
+    this.trend = const [],
+    this.revenueGrowth = '+0%',
+  });
+
+  factory SalesPosSummary.fromJson(Map<String, dynamic> json) {
+    return SalesPosSummary(
+      count: (json['count'] as num?)?.toInt() ?? 0,
+      revenue: SalesOrdersSummary._toDouble(json['revenue']),
+      discountTotal: SalesOrdersSummary._toDouble(json['discountTotal']),
+      taxTotal: SalesOrdersSummary._toDouble(json['taxTotal']),
+      paidAmount: SalesOrdersSummary._toDouble(json['paidAmount']),
+      todayCount: (json['todayCount'] as num?)?.toInt() ?? 0,
+      todayRevenue: SalesOrdersSummary._toDouble(json['todayRevenue']),
+      trend: (json['trend'] as List?)
+              ?.map((e) => SalesTrendPoint.fromJson(Map<String, dynamic>.from(e)))
+              .toList() ??
+          [],
+      revenueGrowth: json['revenueGrowth']?.toString() ?? '+0%',
+    );
+  }
+}
+
 class OrderStatusBreakdown {
   final String status;
   final int count;
@@ -186,13 +230,15 @@ class SalesTrendPoint {
   });
 
   factory SalesTrendPoint.fromJson(Map<String, dynamic> json) {
+    final revenue = SalesOrdersSummary._toDouble(json['revenue']);
+    final orderRevenue = SalesOrdersSummary._toDouble(json['orderRevenue']);
     return SalesTrendPoint(
       date: json['date']?.toString() ?? '',
-      revenue: SalesOrdersSummary._toDouble(json['revenue']),
+      revenue: revenue,
       collected: SalesOrdersSummary._toDouble(json['collected']),
-      orderRevenue: SalesOrdersSummary._toDouble(json['orderRevenue']),
-      count: (json['count'] as num?)?.toInt() ?? 0,
-      orders: (json['orders'] as num?)?.toInt() ?? 0,
+      orderRevenue: orderRevenue > 0 ? orderRevenue : revenue,
+      count: (json['count'] as num?)?.toInt() ?? (json['sales'] as num?)?.toInt() ?? 0,
+      orders: (json['orders'] as num?)?.toInt() ?? (json['sales'] as num?)?.toInt() ?? 0,
     );
   }
 }
@@ -300,10 +346,12 @@ class TopSellingProduct {
 
   factory TopSellingProduct.fromJson(Map<String, dynamic> json) {
     return TopSellingProduct(
-      id: json['id']?.toString() ?? '',
-      name: json['name']?.toString() ?? '',
+      id: json['id']?.toString() ?? json['productId']?.toString() ?? '',
+      name: json['name']?.toString() ?? json['productName']?.toString() ?? '',
       sku: json['sku']?.toString() ?? '',
-      quantitySold: (json['quantitySold'] as num?)?.toInt() ?? 0,
+      quantitySold: (json['quantitySold'] as num?)?.toInt() ??
+          (json['quantity'] as num?)?.toInt() ??
+          0,
       revenue: SalesOrdersSummary._toDouble(json['revenue']),
       discountAmount: SalesOrdersSummary._toDouble(json['discountAmount']),
     );

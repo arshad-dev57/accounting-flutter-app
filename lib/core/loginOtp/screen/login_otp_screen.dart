@@ -285,28 +285,20 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Top bar — mobile only, same as login ──────
-        if (!isWeb)
-          Row(
-            children: [
-              const Expanded(
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.only(right: 48.0),
-                    child: Text(
-                      'Verify OTP',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+        // App logo
+        Center(
+          child: Image.asset(
+            'assets/logo.png',
+            height: isTablet || isWeb ? 72 : 64,
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => Icon(
+              Icons.account_balance_rounded,
+              size: isTablet || isWeb ? 56 : 48,
+              color: kPrimary,
+            ),
           ),
-        if (!isWeb) const SizedBox(height: 32),
+        ),
+        SizedBox(height: isWeb ? 28 : 24),
 
         // ── Heading — same font/style as login "Welcome back" ──
         Text(
@@ -402,6 +394,48 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
           );
         }),
 
+        const SizedBox(height: 16),
+
+        // ── OTP expiry countdown timer ────────────────
+        Obx(() {
+          final expired = controller.expirySeconds.value == 0;
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: expired
+                  ? kDanger.withOpacity(0.08)
+                  : Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: expired
+                    ? kDanger.withOpacity(0.3)
+                    : Colors.grey.shade300,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  expired ? Icons.timer_off_outlined : Icons.timer_outlined,
+                  size: 16,
+                  color: expired ? kDanger : Colors.grey.shade600,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  expired
+                      ? 'Code expired — request a new one'
+                      : 'Code expires in ${controller.expiryTimerText}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: expired ? kDanger : Colors.grey.shade700,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+
         const SizedBox(height: 24),
 
         // ── Verify button — same pill style as login "Log in" button ──
@@ -461,33 +495,52 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
 
         const SizedBox(height: 24),
 
-        // ── Resend code button — same outlined style as social buttons ──
-        SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: OutlinedButton(
-            onPressed: () {
-              // TODO: resend OTP logic
-            },
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: Colors.grey.shade400, width: 1),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(28),
+        // ── Resend code button ────────────────────────
+        Obx(() {
+          final canResend = controller.canResend;
+          final isResending = controller.isResending.value;
+          return SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: OutlinedButton(
+              onPressed: canResend ? controller.resendOtp : null,
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(
+                  color: canResend
+                      ? Colors.grey.shade400
+                      : Colors.grey.shade300,
+                  width: 1,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                elevation: 0,
+                backgroundColor: Colors.transparent,
+                padding: EdgeInsets.zero,
+                disabledForegroundColor: Colors.grey.shade400,
               ),
-              elevation: 0,
-              backgroundColor: Colors.transparent,
-              padding: EdgeInsets.zero,
+              child: isResending
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.grey.shade500,
+                      ),
+                    )
+                  : Text(
+                      controller.resendButtonText,
+                      style: TextStyle(
+                        color: canResend
+                            ? Colors.black
+                            : Colors.grey.shade500,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
             ),
-            child: const Text(
-              'Resend Code',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ),
+          );
+        }),
 
         const SizedBox(height: 32),
 

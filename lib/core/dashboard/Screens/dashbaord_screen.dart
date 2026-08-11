@@ -80,50 +80,67 @@ class DashboardScreen extends GetView<DashboardController> {
 
   @override
   Widget build(BuildContext context) {
-    Get.put(DashboardController());
+    // Controller is provided by route Bindings — do not Get.put() here.
     final isMobile = ResponsiveUtils.isMobile(context);
     final isTablet = MediaQuery.of(context).size.width >= 600;
 
     return Scaffold(
       backgroundColor: _kPageBg,
       appBar: _buildAppBar(isMobile),
-      body: Obx(() {
-        if (controller.isLoading.value && controller.chartData.isEmpty) {
-          return _buildShimmer();
-        }
-        return RefreshIndicator(
-          color: kPrimary,
-          backgroundColor: _kCardBg,
-          onRefresh: () async {
-            await Get.find<SubscriptionController>().checkSubscriptionStatus();
-            controller.loadDashboardData();
-          },
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeroCard(),
-                const SizedBox(height: 14),
-                _buildPeriodChips(),
-                const SizedBox(height: 16),
-                _buildKpiGrid(isTablet),
-                const SizedBox(height: 16),
-                _buildFinancialOverview(),
-                const SizedBox(height: 16),
-                _buildRevenueTrendCard(),
-                const SizedBox(height: 16),
-                _buildExpenseCategoriesCard(),
-                const SizedBox(height: 16),
-
-                _buildRecentTransactions(),
-              ],
-            ),
-          ),
-        );
-      }),
       drawer: _buildDrawer(context),
+      body: Stack(
+        children: [
+          Obx(() {
+            if (controller.isLoading.value && !controller.hasLoadedOnce.value) {
+              return _buildShimmer();
+            }
+            return RefreshIndicator(
+              color: kPrimary,
+              backgroundColor: _kCardBg,
+              onRefresh: () async {
+                await controller.loadDashboardData();
+              },
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeroCard(),
+                    const SizedBox(height: 14),
+                    _buildPeriodChips(),
+                    const SizedBox(height: 16),
+                    _buildKpiGrid(isTablet),
+                    const SizedBox(height: 16),
+                    _buildFinancialOverview(),
+                    const SizedBox(height: 16),
+                    _buildRevenueTrendCard(),
+                    const SizedBox(height: 16),
+                    _buildExpenseCategoriesCard(),
+                    const SizedBox(height: 16),
+                    _buildRecentTransactions(),
+                  ],
+                ),
+              ),
+            );
+          }),
+          Obx(() {
+            if (!controller.isRefreshing.value) {
+              return const SizedBox.shrink();
+            }
+            return const Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: LinearProgressIndicator(
+                minHeight: 2,
+                color: kPrimary,
+                backgroundColor: Color(0xFFE6EEF5),
+              ),
+            );
+          }),
+        ],
+      ),
     );
   }
 
@@ -168,6 +185,10 @@ class DashboardScreen extends GetView<DashboardController> {
                           ? Image.network(
                               logo,
                               fit: BoxFit.cover,
+                              width: 30,
+                              height: 30,
+                              cacheWidth: 60,
+                              cacheHeight: 60,
                               errorBuilder: (context, error, stackTrace) {
                                 return Container(
                                   width: 30,
@@ -187,6 +208,10 @@ class DashboardScreen extends GetView<DashboardController> {
                           : Image.file(
                               File(logo),
                               fit: BoxFit.cover,
+                              width: 30,
+                              height: 30,
+                              cacheWidth: 60,
+                              cacheHeight: 60,
                               errorBuilder: (context, error, stackTrace) {
                                 return Container(
                                   width: 30,
@@ -337,7 +362,6 @@ class DashboardScreen extends GetView<DashboardController> {
           borderRadius: BorderRadius.circular(17),
           child: Stack(
             children: [
-              // Full-bleed background — behind padding, covers entire card
               if (hasLogo)
                 Positioned.fill(
                   child: IgnorePointer(
@@ -700,17 +724,28 @@ class DashboardScreen extends GetView<DashboardController> {
         ),
       ];
 
-      return GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: kpis.length,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: isTablet ? 4 : 2,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: isTablet ? 1.2 : 1.55,
-        ),
-        itemBuilder: (_, i) => _KpiCard(item: kpis[i]),
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final crossCount = isTablet ? 4 : 2;
+          final spacing = 10.0;
+          final itemWidth =
+              (constraints.maxWidth - spacing * (crossCount - 1)) / crossCount;
+          return Wrap(
+            spacing: spacing,
+            runSpacing: spacing,
+            children: kpis
+                .map(
+                  (item) => SizedBox(
+                    width: itemWidth,
+                    child: AspectRatio(
+                      aspectRatio: isTablet ? 1.2 : 1.55,
+                      child: _KpiCard(item: item),
+                    ),
+                  ),
+                )
+                .toList(),
+          );
+        },
       );
     });
   }
@@ -944,7 +979,8 @@ class DashboardScreen extends GetView<DashboardController> {
         ),
         child: SizedBox(
           height: 190,
-          child: LineChart(
+          child: RepaintBoundary(
+            child: LineChart(
             LineChartData(
               gridData: FlGridData(
                 show: true,
@@ -1005,6 +1041,7 @@ class DashboardScreen extends GetView<DashboardController> {
                 _buildTrendLine(expenseData, _kRed),
               ],
             ),
+          ),
           ),
         ),
       );
@@ -1090,7 +1127,8 @@ class DashboardScreen extends GetView<DashboardController> {
                   children: [
                     Expanded(
                       flex: 4,
-                      child: PieChart(
+                      child: RepaintBoundary(
+                        child: PieChart(
                         PieChartData(
                           sectionsSpace: 2,
                           centerSpaceRadius: 38,
@@ -1116,6 +1154,7 @@ class DashboardScreen extends GetView<DashboardController> {
                             );
                           }).toList(),
                         ),
+                      ),
                       ),
                     ),
                     Expanded(
@@ -1559,12 +1598,14 @@ class DashboardScreen extends GetView<DashboardController> {
                   icon: Mdi.chart_line,
                   module: 'accounting',
                   permissions: const [
+                    'journal-entries',
                     'profit-loss',
                     'balance-sheet',
                     'cash-flow',
                     'aged-receivables',
                   ],
                   items: const [
+                    ('Accounting Reports', Mdi.file_chart, 'accounting_reports'),
                     ('Profit & Loss', Mdi.chart_line, 'profit_loss'),
                     (
                       'Balance Sheet',
@@ -1904,6 +1945,10 @@ class _DrawerHeader extends StatelessWidget {
                               ? Image.network(
                                   logo,
                                   fit: BoxFit.cover,
+                                  width: 40,
+                                  height: 40,
+                                  cacheWidth: 80,
+                                  cacheHeight: 80,
                                   errorBuilder: (context, error, stackTrace) {
                                     return const Icon(
                                       Icons.account_balance_rounded,
@@ -1915,6 +1960,10 @@ class _DrawerHeader extends StatelessWidget {
                               : Image.file(
                                   File(logo),
                                   fit: BoxFit.cover,
+                                  width: 40,
+                                  height: 40,
+                                  cacheWidth: 80,
+                                  cacheHeight: 80,
                                   errorBuilder: (context, error, stackTrace) {
                                     return const Icon(
                                       Icons.account_balance_rounded,
@@ -2058,10 +2107,18 @@ class _NavSection extends StatefulWidget {
 class _NavSectionState extends State<_NavSection> {
   bool _expanded = false;
   final PermissionService _permissionService = PermissionService.to;
+  late final List<(String, String, String)> _filteredItems;
 
-  List<(String, String, String)> get _filteredItems {
-    if (widget.module == null || widget.permissions == null)
+  @override
+  void initState() {
+    super.initState();
+    _filteredItems = _computeFilteredItems();
+  }
+
+  List<(String, String, String)> _computeFilteredItems() {
+    if (widget.module == null || widget.permissions == null) {
       return widget.items;
+    }
     if (_permissionService.isAdmin) return widget.items;
 
     final filtered = <(String, String, String)>[];
@@ -2078,8 +2135,7 @@ class _NavSectionState extends State<_NavSection> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredItems = _filteredItems;
-    if (filteredItems.isEmpty) return const SizedBox.shrink();
+    if (_filteredItems.isEmpty) return const SizedBox.shrink();
 
     return Column(
       children: [
@@ -2116,13 +2172,9 @@ class _NavSectionState extends State<_NavSection> {
             ),
           ),
         ),
-        AnimatedCrossFade(
-          duration: const Duration(milliseconds: 200),
-          crossFadeState: _expanded
-              ? CrossFadeState.showFirst
-              : CrossFadeState.showSecond,
-          firstChild: Column(
-            children: filteredItems
+        if (_expanded)
+          Column(
+            children: _filteredItems
                 .map(
                   (item) => _NavItem(
                     label: item.$1,
@@ -2132,8 +2184,6 @@ class _NavSectionState extends State<_NavSection> {
                 )
                 .toList(),
           ),
-          secondChild: const SizedBox.shrink(),
-        ),
       ],
     );
   }
@@ -2262,6 +2312,9 @@ class _NavItem extends StatelessWidget {
           break;
         case 'capital_equity':
           Get.to(() => const CapitalEquityScreen());
+          break;
+        case 'accounting_reports':
+          Get.toNamed('/accounting/reports');
           break;
         case 'profit_loss':
           Get.to(() => const ProfitLossStatementScreen());

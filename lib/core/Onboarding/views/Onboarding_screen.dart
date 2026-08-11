@@ -20,27 +20,23 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
 
-  // Slides with network images (Unsplash - finance/professional)
   final List<Map<String, String>> _slides = [
     {
-      'image':
-          'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800&q=80',
+      'image': 'assets/onboarding1.jpg',
       'tag': 'PRODUCTIVITY',
       'title': 'Boost your\nbusiness growth',
       'subtitle':
           'Reconcile transactions in seconds and get back to what matters most.',
     },
     {
-      'image':
-          'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80',
+      'image': 'assets/onboarding2.jpg',
       'tag': 'ANALYTICS',
       'title': 'Track every\npenny, effortlessly',
       'subtitle':
           'All your accounts, expenses and income — beautifully unified.',
     },
     {
-      'image':
-          'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80',
+      'image': 'assets/onboarding3.jpg',
       'tag': 'INSIGHTS',
       'title': 'Smart insights,\nbetter decisions',
       'subtitle':
@@ -106,13 +102,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               },
               itemCount: _slides.length,
               itemBuilder: (context, index) {
-                return Image.network(
+                return Image.asset(
                   _slides[index]['image']!,
                   fit: BoxFit.cover,
-                  loadingBuilder: (context, child, progress) {
-                    if (progress == null) return child;
-                    return Container(color: _primary);
-                  },
+                  width: size.width,
+                  height: size.height,
                   errorBuilder: (_, __, ___) =>
                       Container(color: _primary),
                 );
@@ -144,33 +138,27 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Logo / Brand
-                  Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
+                  // Logo (top left)
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Image.asset(
+                        'assets/logo.png',
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => const Icon(
                           Icons.bolt_rounded,
                           color: _primary,
                           size: 22,
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      const Text(
-                        'BisonsTechs',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
 
                   const SizedBox(height: 24),

@@ -248,30 +248,20 @@ class _LoginScreenState extends State<LoginScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Top Bar: Back arrow and Title
-        if (!isWeb)
-          Row(
-            children: [
-              const Expanded(
-                child: Center(
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      right: 48.0,
-                    ), // Balance the back button
-                    child: Text(
-                      'Log in',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+        // App logo
+        Center(
+          child: Image.asset(
+            'assets/logo.png',
+            height: isTablet || isWeb ? 72 : 64,
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => Icon(
+              Icons.account_balance_rounded,
+              size: isTablet || isWeb ? 56 : 48,
+              color: kPrimary,
+            ),
           ),
-        if (!isWeb) const SizedBox(height: 32),
+        ),
+        SizedBox(height: isWeb ? 28 : 24),
 
         Text(
           'Welcome back! Log in to your\nBisonsTechs account',
@@ -398,38 +388,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
         const SizedBox(height: 32),
 
-        Row(
-          children: [
-            Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                'or',
-                style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-              ),
-            ),
-            Expanded(child: Divider(color: Colors.grey.shade300, thickness: 1)),
-          ],
-        ),
-
-        const SizedBox(height: 24),
-
-        // Social Buttons
-        _buildSocialButton(
-          icon: Icons.apple,
-          text: 'Continue with Apple',
-          onPressed: () {},
-        ),
-        const SizedBox(height: 12),
-        _buildSocialButton(
-          icon: Icons.g_mobiledata,
-          text: 'Continue with Google',
-          iconColor: Colors.red,
-          iconSize: 32,
-          onPressed: () {},
-        ),
-        const SizedBox(height: 32),
-
         // Sign Up
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -547,56 +505,6 @@ class _LoginScreenState extends State<LoginScreen> {
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 18,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSocialButton({
-    required IconData icon,
-    required String text,
-    Color? iconColor,
-    double iconSize = 24,
-    required VoidCallback onPressed,
-  }) {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          side: BorderSide(color: Colors.grey.shade400, width: 1),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
-          ),
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          padding: EdgeInsets.zero,
-        ),
-        child: Stack(
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 20.0),
-                child: Icon(
-                  icon,
-                  color: iconColor ?? Colors.black,
-                  size: iconSize,
-                ),
-              ),
-            ),
-            Center(
-              child: Text(
-                text,
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );

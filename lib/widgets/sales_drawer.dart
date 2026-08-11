@@ -7,9 +7,10 @@ import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/About/about_app_screen.dart';
 import 'package:BisonsTechs_app/core/About/privacypolicy_screen.dart';
 import 'package:BisonsTechs_app/core/About/termsofservice_screen.dart';
-import 'package:BisonsTechs_app/core/Contact/Screens/Contact_Screen.dart';
 import 'package:BisonsTechs_app/core/Feedback/feedback_screen.dart';
 import 'package:BisonsTechs_app/core/ReportIsuue/Report_issue_screen.dart';
+import 'package:BisonsTechs_app/core/contactsupport/contact_support_screen.dart';
+import 'package:BisonsTechs_app/core/support/screens/support_tickets_screen.dart';
 import 'package:BisonsTechs_app/core/UserGuide/screen/user_guide_screen.dart';
 import 'package:BisonsTechs_app/core/changepassword/screen/change_password_screen.dart';
 import 'package:BisonsTechs_app/core/companyprofile/screen/company_profile_screen.dart';
@@ -97,6 +98,7 @@ class SalesDrawer extends StatelessWidget {
                     'deliveries',
                     'invoices',
                     'sales-payments',
+                    'orders',
                   ],
                   items: const [
                     (
@@ -118,6 +120,7 @@ class SalesDrawer extends StatelessWidget {
                     ('Deliveries', Mdi.truck_delivery, '/sales/delivery'),
                     ('Invoices', Mdi.receipt, '/sales-invoices'),
                     ('Sales Payments', Mdi.arrow_left_right, '/sales-payments'),
+                    ('Sales Reports', Mdi.file_chart, '/sales/reports'),
                   ],
                 ),
                 _NavSection(
@@ -169,6 +172,7 @@ class SalesDrawer extends StatelessWidget {
                   items: const [
                     ('User Guide', Mdi.book_information_variant, '__userguide'),
                     ('Contact Support', Mdi.headset, '__contact'),
+                    ('Support Tickets', Mdi.ticket_outline, '__supporttickets'),
                     ('Report an Issue', Mdi.bug_outline, '__reportissue'),
                   ],
                 ),
@@ -551,6 +555,9 @@ class _NavSection extends StatelessWidget {
       case '/sales/credits':
         Get.toNamed('/sales/credits');
         break;
+      case '/sales/reports':
+        Get.toNamed('/sales/reports');
+        break;
       case '__currency':
         Get.to(() => const CurrencyScreen());
         break;
@@ -567,7 +574,10 @@ class _NavSection extends StatelessWidget {
         Get.to(() => const UserGuideScreen());
         break;
       case '__contact':
-        Get.to(() => const ContactScreen());
+        Get.to(() => const ContactSupportScreen());
+        break;
+      case '__supporttickets':
+        Get.to(() => const SupportTicketsScreen());
         break;
       case '__reportissue':
         Get.to(() => const ReportIssueScreen());

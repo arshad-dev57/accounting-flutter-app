@@ -122,7 +122,11 @@ class DashboardController extends GetxController {
   var selectedTimePeriod = 'Today'.obs;
   final Rx<DateTime?> customStartDate = Rx<DateTime?>(null);
   final Rx<DateTime?> customEndDate = Rx<DateTime?>(null);
-  bool _subscriptionWatchStarted = false;
+  /// Soft refresh flag — does not tear down the whole body like [isLoading].
+  var isRefreshing = false.obs;
+  /// Flips once after first successful (or failed) load so body Obx stops
+  /// rebuilding the entire scroll tree on every chartData update.
+  var hasLoadedOnce = false.obs;
 
   static const timePeriodLabels = [
     'Today',
@@ -140,7 +144,29 @@ class DashboardController extends GetxController {
     loadUserData();
     loadBusinessLogo();
     loadDashboardData();
-    ensureSubscriptionWatch();
+    // One-shot access check only — SubscriptionController already polls globally.
+    _checkSubscriptionOnce();
+  }
+
+  @override
+  void onClose() {
+    super.onClose();
+  }
+
+  Future<void> _checkSubscriptionOnce() async {
+    try {
+      if (!Get.isRegistered<SubscriptionController>()) return;
+      final sub = Get.find<SubscriptionController>();
+      // Prefer cached state; only hit network if we have no plan yet.
+      if (sub.subscriptionPlan.value.isEmpty ||
+          sub.subscriptionPlan.value == 'none') {
+        await sub.checkSubscriptionStatus();
+      }
+      if (!sub.hasActiveSubscription.value &&
+          sub.subscriptionStatus.value == 'expired') {
+        _showExpiredDialog(sub);
+      }
+    } catch (_) {}
   }
 
   Future<void> loadUserData() async {
@@ -177,30 +203,7 @@ class DashboardController extends GetxController {
           }
         }
       }
-    } catch (e) {
-      print('❌ [DashboardController] Error loading business logo: $e');
-    }
-  }
-
-  void ensureSubscriptionWatch() {
-    if (_subscriptionWatchStarted) return;
-    _subscriptionWatchStarted = true;
-    Future.delayed(const Duration(seconds: 2), _subscriptionCheckLoop);
-  }
-
-  Future<void> _subscriptionCheckLoop() async {
-    if (isClosed) return;
-    try {
-      if (!Get.isRegistered<SubscriptionController>()) return;
-      final sub = Get.find<SubscriptionController>();
-      await sub.checkSubscriptionStatus();
-      if (!sub.hasActiveSubscription.value &&
-          sub.subscriptionStatus.value == 'expired') {
-        _showExpiredDialog(sub);
-      }
     } catch (_) {}
-    if (isClosed) return;
-    Future.delayed(const Duration(minutes: 5), _subscriptionCheckLoop);
   }
 
   void _showExpiredDialog(SubscriptionController sub) {
@@ -235,8 +238,14 @@ class DashboardController extends GetxController {
     DateTime? customStart,
     DateTime? customEnd,
   }) async {
+    final hasExistingData = chartData.isNotEmpty || totalRevenue.value > 0;
     try {
-      isLoading.value = true;
+      // Soft refresh keeps existing UI mounted (avoids full-tree rebuild).
+      if (hasExistingData) {
+        isRefreshing.value = true;
+      } else {
+        isLoading.value = true;
+      }
       hasError.value = false;
 
       if (timePeriod != null && timePeriod.isNotEmpty) {
@@ -258,6 +267,8 @@ class DashboardController extends GetxController {
       _showError(errorMessage.value);
     } finally {
       isLoading.value = false;
+      isRefreshing.value = false;
+      hasLoadedOnce.value = true;
     }
   }
 
@@ -359,8 +370,7 @@ class DashboardController extends GetxController {
     }
 
     print(
-      '🔵 [Dashboard] overview period=${selectedTimePeriod.value} '
-      'params=$params',
+      '🔵 [Dashboard] overview period=${selectedTimePeriod.value}',
     );
 
     final response = await _api.get(

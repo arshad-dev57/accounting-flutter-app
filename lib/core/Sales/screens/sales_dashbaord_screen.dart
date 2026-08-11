@@ -590,6 +590,15 @@ class SalesDashboardScreen extends GetView<SalesController> {
 
       final kpis = [
         _KpiItem(
+          label: 'POS Revenue',
+          value: fmt(data?.pos.revenue ?? 0),
+          icon: Icons.point_of_sale_outlined,
+          iconBg: _kOrangeBg,
+          iconColor: _kOrange,
+          trend: '${data?.pos.todayCount ?? 0} today',
+          trendUp: true,
+        ),
+        _KpiItem(
           label: 'Order Revenue',
           value: fmt(data?.orders.revenue ?? 0),
           icon: Icons.shopping_cart_outlined,
@@ -615,15 +624,6 @@ class SalesDashboardScreen extends GetView<SalesController> {
           iconColor: _kTeal,
           trend: data?.invoices.paidAmountGrowth ?? '0%',
           trendUp: (data?.invoices.paidAmountGrowth ?? '').startsWith('+'),
-        ),
-        _KpiItem(
-          label: 'Outstanding',
-          value: fmt(data?.invoices.outstanding ?? 0),
-          icon: Icons.pending_actions_outlined,
-          iconBg: _kOrangeBg,
-          iconColor: _kOrange,
-          trend: (data?.invoices.outstanding ?? 0) > 0 ? 'Pending' : 'Clear',
-          trendUp: (data?.invoices.outstanding ?? 0) <= 0,
         ),
       ];
 
@@ -740,24 +740,34 @@ class SalesDashboardScreen extends GetView<SalesController> {
       final fmt = Get.find<CurrencyController>().formatAmount;
 
       final revenue = data?.orders.revenue ?? 0.0;
+      final posRevenue = data?.pos.revenue ?? 0.0;
       final invoiceTotal = data?.invoices.grandTotal ?? 0.0;
       final collected = data?.invoices.paidAmount ?? 0.0;
       final outstanding = data?.invoices.outstanding ?? 0.0;
       final credits = data?.creditAmount ?? 0.0;
-      final todayRev = data?.orders.todayRevenue ?? 0.0;
-      final totalOrders = (data?.orders.todayCount ?? 0).toDouble();
+      final todayPos = data?.pos.todayRevenue ?? 0.0;
+      final posCount = (data?.pos.count ?? 0).toDouble();
 
       final maxVal = [
+        posRevenue,
         revenue,
         invoiceTotal,
         collected,
         outstanding,
         credits,
-        todayRev,
-        totalOrders,
+        todayPos,
+        posCount,
       ].fold<double>(0, (a, b) => b > a ? b : a);
 
       final bars = [
+        _BarItem(
+          'POS Revenue',
+          fmt(posRevenue),
+          posRevenue,
+          _kOrange,
+          _kOrangeBg,
+          '${data?.pos.count ?? 0} completed POS sales',
+        ),
         _BarItem(
           'Order Revenue',
           fmt(revenue),
@@ -799,20 +809,20 @@ class SalesDashboardScreen extends GetView<SalesController> {
           'Credit notes issued (AR / GL)',
         ),
         _BarItem(
-          'Today Revenue',
-          fmt(todayRev),
-          todayRev,
+          'POS Today',
+          fmt(todayPos),
+          todayPos,
           _kTeal,
           _kTealBg,
-          'Revenue earned today',
+          '${data?.pos.todayCount ?? 0} sales today',
         ),
         _BarItem(
-          'Today Orders',
-          '$totalOrders',
-          totalOrders,
+          'POS Sales',
+          '${data?.pos.count ?? 0}',
+          posCount,
           _kRed,
           _kRedBg,
-          'Orders placed today',
+          'POS transactions in period',
         ),
       ];
 
@@ -915,14 +925,17 @@ class SalesDashboardScreen extends GetView<SalesController> {
       final data = controller.dashboard.value;
       final invoiceTrend = data?.invoices.trend ?? [];
       final orderTrend = data?.orders.trend ?? [];
+      final posTrend = data?.pos.trend ?? [];
 
       final allDates = <String>{};
       for (final p in invoiceTrend) allDates.add(p.date);
       for (final p in orderTrend) allDates.add(p.date);
+      for (final p in posTrend) allDates.add(p.date);
       final sorted = allDates.toList()..sort();
 
       final invoiceSpots = <FlSpot>[];
       final orderSpots = <FlSpot>[];
+      final posSpots = <FlSpot>[];
       for (var i = 0; i < sorted.length; i++) {
         final d = sorted[i];
         final inv = invoiceTrend.firstWhere(
@@ -933,13 +946,19 @@ class SalesDashboardScreen extends GetView<SalesController> {
           (p) => p.date == d,
           orElse: () => SalesTrendPoint(date: d),
         );
+        final pos = posTrend.firstWhere(
+          (p) => p.date == d,
+          orElse: () => SalesTrendPoint(date: d),
+        );
         invoiceSpots.add(FlSpot(i.toDouble(), inv.revenue));
         orderSpots.add(FlSpot(i.toDouble(), ord.orderRevenue));
+        posSpots.add(FlSpot(i.toDouble(), pos.revenue));
       }
 
       final maxY = [
         ...invoiceSpots.map((s) => s.y),
         ...orderSpots.map((s) => s.y),
+        ...posSpots.map((s) => s.y),
       ].fold<double>(0, (a, b) => b > a ? b : a);
 
       // Fallback empty data
@@ -947,6 +966,7 @@ class SalesDashboardScreen extends GetView<SalesController> {
         for (var i = 0; i < 7; i++) {
           invoiceSpots.add(FlSpot(i.toDouble(), 0));
           orderSpots.add(FlSpot(i.toDouble(), 0));
+          posSpots.add(FlSpot(i.toDouble(), 0));
           sorted.add('--');
         }
       }
@@ -955,6 +975,8 @@ class SalesDashboardScreen extends GetView<SalesController> {
         title: 'Revenue trend',
         trailing: Row(
           children: [
+            _legendDot(_kOrange, 'POS'),
+            const SizedBox(width: 12),
             _legendDot(_kTeal, 'Invoices'),
             const SizedBox(width: 12),
             _legendDot(kPrimary, 'Orders'),
@@ -1023,6 +1045,7 @@ class SalesDashboardScreen extends GetView<SalesController> {
               minY: 0,
               maxY: maxY > 0 ? maxY * 1.2 : 100,
               lineBarsData: [
+                _buildLine(posSpots, _kOrange),
                 _buildLine(invoiceSpots, _kTeal),
                 _buildLine(orderSpots, kPrimary),
               ],
@@ -1685,21 +1708,19 @@ class SalesDashboardScreen extends GetView<SalesController> {
         () => Get.toNamed('/sales-invoices'),
       ),
       _QuickAction(
+        'Reports',
+        Icons.assessment_outlined,
+        _kPurple,
+        _kPurpleBg,
+        () => Get.toNamed('/sales/reports'),
+      ),
+      _QuickAction(
         'Customers',
         Icons.people_outline_rounded,
         _kOrange,
         _kOrangeBg,
         () => Get.toNamed('/sales/warehouse-customers'),
       ),
-      if (PermissionService.to.isAdmin ||
-          PermissionService.to.hasSubPageAccess('sales', 'credits'))
-        _QuickAction(
-          'Credits',
-          Icons.note_alt_outlined,
-          _kPurple,
-          _kPurpleBg,
-          () => Get.toNamed('/sales/credits'),
-        ),
     ];
 
     return _SectionCard(

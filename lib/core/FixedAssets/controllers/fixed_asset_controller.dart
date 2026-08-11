@@ -24,6 +24,7 @@ class FixedAssetController extends GetxController {
   var allAssets = <FixedAsset>[].obs;
   var assets = <FixedAsset>[].obs;
   var vendors = <Map<String, dynamic>>[].obs;
+  var bankAccounts = <Map<String, dynamic>>[].obs;
 
   var isLoading = true.obs;
   var isLoadingMore = false.obs;
@@ -63,6 +64,7 @@ class FixedAssetController extends GetxController {
     searchController.addListener(_onSearchChanged);
     loadFixedAssets(resetPage: true);
     loadVendors();
+    loadBankAccounts();
     loadSummary();
   }
 
@@ -210,6 +212,25 @@ class FixedAssetController extends GetxController {
     }
   }
 
+  Future<void> loadBankAccounts() async {
+    try {
+      final response = await _apiClient.get('/api/bank-accounts');
+      if (response.success && response.statusCode == 200) {
+        final responseData = response.data;
+        final list = responseData['data'] ?? responseData;
+        if (list is List) {
+          bankAccounts.value = list
+              .whereType<Map>()
+              .map((e) => Map<String, dynamic>.from(e))
+              .where((a) => (a['status'] ?? 'Active') == 'Active')
+              .toList();
+        }
+      }
+    } catch (e) {
+      print('Error loading bank accounts: $e');
+    }
+  }
+
   // ─── LOAD SUMMARY ──────────────────────────────────────────────
   Future<void> loadSummary() async {
     try {
@@ -271,10 +292,27 @@ class FixedAssetController extends GetxController {
     String? supplierId,
     DateTime? warrantyExpiry,
     String? notes,
+    String acquisitionType = 'purchase',
+    String paymentMethod = 'Cash',
+    String? bankAccountId,
+    double openingAccumulatedDepreciation = 0,
   }) async {
     try {
       isProcessing.value = true;
       assetSaved.value = false; // reset
+
+      if (acquisitionType == 'purchase' &&
+          paymentMethod == 'Bank' &&
+          (bankAccountId == null || bankAccountId.isEmpty)) {
+        _showError('Please select a bank account');
+        return;
+      }
+      if (acquisitionType == 'purchase' &&
+          paymentMethod == 'Credit' &&
+          (supplierId == null || supplierId.isEmpty || supplierId == 'null')) {
+        _showError('Supplier is required for credit purchases');
+        return;
+      }
 
       final Map<String, dynamic> assetData = {
         'name': name,
@@ -285,10 +323,21 @@ class FixedAssetController extends GetxController {
         'salvageValue': salvageValue,
         'location': location,
         'notes': notes ?? '',
+        'acquisitionType': acquisitionType,
+        'paymentMethod':
+            acquisitionType == 'opening_balance' ? 'Opening Balance' : paymentMethod,
+        'openingAccumulatedDepreciation':
+            acquisitionType == 'opening_balance' ? openingAccumulatedDepreciation : 0,
       };
 
       if (supplierId != null && supplierId.isNotEmpty && supplierId != 'null') {
         assetData['supplierId'] = supplierId;
+      }
+
+      if (paymentMethod == 'Bank' &&
+          bankAccountId != null &&
+          bankAccountId.isNotEmpty) {
+        assetData['bankAccountId'] = bankAccountId;
       }
 
       if (warrantyExpiry != null) {
@@ -1627,6 +1676,10 @@ class FixedAssetController extends GetxController {
     String? selectedSupplierId;
     DateTime? warrantyExpiry;
     String notes = '';
+    String acquisitionType = 'purchase'; // purchase | opening_balance
+    String paymentMethod = 'Cash'; // Cash | Bank | Credit
+    String? selectedBankAccountId;
+    double openingAccumulatedDepreciation = 0;
 
     assetSaved.value = false; // reset before opening
 
@@ -1731,8 +1784,71 @@ class FixedAssetController extends GetxController {
                               onChanged: (v) => setState(() => category = v!),
                             ),
                             const SizedBox(height: 16),
+                            _buildDropdownField(
+                              label: 'Acquisition Type *',
+                              value: acquisitionType == 'opening_balance'
+                                  ? 'Opening Balance / Existing'
+                                  : 'New Purchase',
+                              items: const [
+                                'New Purchase',
+                                'Opening Balance / Existing',
+                              ],
+                              onChanged: (v) {
+                                setState(() {
+                                  acquisitionType =
+                                      v == 'Opening Balance / Existing'
+                                          ? 'opening_balance'
+                                          : 'purchase';
+                                  if (acquisitionType == 'opening_balance') {
+                                    paymentMethod = 'Cash';
+                                    selectedBankAccountId = null;
+                                  }
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            if (acquisitionType == 'purchase') ...[
+                              _buildDropdownField(
+                                label: 'Payment Method *',
+                                value: paymentMethod,
+                                items: const ['Cash', 'Bank', 'Credit'],
+                                onChanged: (v) {
+                                  setState(() {
+                                    paymentMethod = v!;
+                                    if (paymentMethod != 'Bank') {
+                                      selectedBankAccountId = null;
+                                    }
+                                  });
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              if (paymentMethod == 'Bank') ...[
+                                _buildBankAccountDropdownField(
+                                  selectedBankAccountId,
+                                  (v) => setState(
+                                    () => selectedBankAccountId = v,
+                                  ),
+                                  bankAccounts.toList(),
+                                ),
+                                const SizedBox(height: 16),
+                              ],
+                            ],
+                            if (acquisitionType == 'opening_balance') ...[
+                              _buildTextField(
+                                label: 'Opening Accumulated Depreciation',
+                                hint: '0.00',
+                                prefixText: CurrencyUtils.prefix,
+                                onChanged: (v) =>
+                                    openingAccumulatedDepreciation =
+                                        double.tryParse(v) ?? 0,
+                                keyboardType: TextInputType.number,
+                              ),
+                              const SizedBox(height: 16),
+                            ],
                             _buildDatePickerField(
-                              'Purchase Date *',
+                              acquisitionType == 'opening_balance'
+                                  ? 'Acquisition Date *'
+                                  : 'Purchase Date *',
                               purchaseDate,
                               (d) => setState(() => purchaseDate = d),
                               context,
@@ -1779,6 +1895,17 @@ class FixedAssetController extends GetxController {
                               (v) => setState(() => selectedSupplierId = v),
                               vendors.toList(),
                             ),
+                            if (paymentMethod == 'Credit')
+                              Padding(
+                                padding: const EdgeInsets.only(top: 6),
+                                child: Text(
+                                  'Supplier is required for credit purchases',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.orange.shade800,
+                                  ),
+                                ),
+                              ),
                             const SizedBox(height: 16),
                             _buildDatePickerField(
                               'Warranty Expiry',
@@ -1848,6 +1975,11 @@ class FixedAssetController extends GetxController {
                                         supplierId: selectedSupplierId,
                                         warrantyExpiry: warrantyExpiry,
                                         notes: notes,
+                                        acquisitionType: acquisitionType,
+                                        paymentMethod: paymentMethod,
+                                        bankAccountId: selectedBankAccountId,
+                                        openingAccumulatedDepreciation:
+                                            openingAccumulatedDepreciation,
                                       );
                                     }
                                   },
@@ -2875,6 +3007,55 @@ class FixedAssetController extends GetxController {
             .toList(),
       ],
       onChanged: (v) => onChanged(v),
+    );
+  }
+
+  Widget _buildBankAccountDropdownField(
+    String? selectedId,
+    void Function(String?) onChanged,
+    List<Map<String, dynamic>> accounts,
+  ) {
+    final items = accounts
+        .map(
+          (a) => DropdownMenuItem<String>(
+            value: (a['id'] ?? a['_id']).toString(),
+            child: Text(
+              '${a['accountName'] ?? a['name'] ?? 'Account'}'
+              '${a['bankName'] != null ? ' • ${a['bankName']}' : ''}',
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        )
+        .toList();
+
+    final validIds = items.map((e) => e.value).whereType<String>().toSet();
+    final value =
+        selectedId != null && validIds.contains(selectedId) ? selectedId : null;
+
+    return DropdownButtonFormField<String>(
+      value: value,
+      decoration: InputDecoration(
+        labelText: 'Bank Account *',
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+        isDense: true,
+        labelStyle: TextStyle(fontSize: 12, color: kSubText),
+      ),
+      style: const TextStyle(fontSize: 13, color: Colors.black),
+      items: items.isEmpty
+          ? const [
+              DropdownMenuItem(
+                value: null,
+                child: Text('No bank accounts found'),
+              ),
+            ]
+          : items,
+      onChanged: onChanged,
+      validator: (v) =>
+          (v == null || v.isEmpty) ? 'Bank account is required' : null,
     );
   }
 

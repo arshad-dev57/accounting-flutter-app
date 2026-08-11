@@ -6,8 +6,12 @@ import 'package:BisonsTechs_app/core/Onboarding/views/Onboarding_screen.dart';
 import 'package:BisonsTechs_app/core/Register/Views/register_screen.dart';
 import 'package:BisonsTechs_app/core/Sales/screens/sales_credits_screen.dart';
 import 'package:BisonsTechs_app/core/Sales/screens/sales_dashbaord_screen.dart';
+import 'package:BisonsTechs_app/core/Sales/screens/sales_report_screen.dart';
+import 'package:BisonsTechs_app/core/accountingReports/accounting_report_screen.dart';
+import 'package:BisonsTechs_app/core/purchasedashboard/purchase_report_screen.dart';
 import 'package:BisonsTechs_app/core/Splash/screen/splash_screen.dart';
 import 'package:BisonsTechs_app/core/dashboard/Screens/dashbaord_screen.dart';
+import 'package:BisonsTechs_app/core/dashboard/controllers/dashboard_controller.dart';
 import 'package:BisonsTechs_app/core/dashboardSelection/screen/dashboard_selection.dart';
 import 'package:BisonsTechs_app/core/goodsRecieving/goods_receiving_controller.dart';
 import 'package:BisonsTechs_app/core/goodsRecieving/goods_receiving_screen.dart';
@@ -115,7 +119,7 @@ class MyApp extends StatelessWidget {
           initialRoute: '/',
           getPages: [
             // ========== AUTH ROUTES ==========
-            GetPage(name: '/', page: () => SplashScreen()),
+            GetPage(name: '/', page: () => OnboardingScreen()),
             GetPage(name: '/login', page: () => const LoginScreen()),
             GetPage(name: '/register', page: () => RegistrationScreen()),
             GetPage(name: '/onboarding', page: () => const OnboardingScreen()),
@@ -128,6 +132,9 @@ class MyApp extends StatelessWidget {
             GetPage(
               name: '/accounting/dashboard',
               page: () => const DashboardScreen(),
+              binding: BindingsBuilder(() {
+                Get.lazyPut(() => DashboardController(), fenix: true);
+              }),
             ),
             GetPage(
               name: '/sales-invoices',
@@ -307,6 +314,18 @@ class MyApp extends StatelessWidget {
             GetPage(
               name: '/sales/credits',
               page: () => const SalesCreditsScreen(),
+            ),
+            GetPage(
+              name: '/sales/reports',
+              page: () => const SalesReportScreen(),
+            ),
+            GetPage(
+              name: '/purchase/reports',
+              page: () => const PurchaseReportScreen(),
+            ),
+            GetPage(
+              name: '/accounting/reports',
+              page: () => const AccountingReportScreen(),
             ),
             // ========== USER MANAGEMENT ROUTES ==========
             GetPage(name: '/admin/users', page: () => const UserListScreen()),

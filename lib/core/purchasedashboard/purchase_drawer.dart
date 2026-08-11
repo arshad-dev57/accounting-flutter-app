@@ -7,9 +7,10 @@ import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/About/about_app_screen.dart';
 import 'package:BisonsTechs_app/core/About/privacypolicy_screen.dart';
 import 'package:BisonsTechs_app/core/About/termsofservice_screen.dart';
-import 'package:BisonsTechs_app/core/Contact/Screens/Contact_Screen.dart';
 import 'package:BisonsTechs_app/core/Feedback/feedback_screen.dart';
 import 'package:BisonsTechs_app/core/ReportIsuue/Report_issue_screen.dart';
+import 'package:BisonsTechs_app/core/contactsupport/contact_support_screen.dart';
+import 'package:BisonsTechs_app/core/support/screens/support_tickets_screen.dart';
 import 'package:BisonsTechs_app/core/UserGuide/screen/user_guide_screen.dart';
 import 'package:BisonsTechs_app/core/changepassword/screen/change_password_screen.dart';
 import 'package:BisonsTechs_app/core/companyprofile/screen/company_profile_screen.dart';
@@ -47,6 +48,7 @@ class PurchaseDrawer extends StatelessWidget {
                   module: 'purchase',
                   permissions: const [
                     'dashboard',
+                    'dashboard',
                     'purchase-orders',
                     'suppliers',
                     'goods-receiving',
@@ -59,6 +61,11 @@ class PurchaseDrawer extends StatelessWidget {
                       'Purchase Dashboard',
                       Mdi.view_dashboard,
                       '/warehouse/purchase',
+                    ),
+                    (
+                      'Purchase Reports',
+                      Mdi.file_chart,
+                      '/purchase/reports',
                     ),
                     ('Purchase Orders', Mdi.receipt_text, '/purchase-order'),
                     ('Suppliers', Mdi.account_tie, '/warehouse/suppliers'),
@@ -113,6 +120,7 @@ class PurchaseDrawer extends StatelessWidget {
                   items: const [
                     ('User Guide', Mdi.book_information_variant, '__userguide'),
                     ('Contact Support', Mdi.headset, '__contact'),
+                    ('Support Tickets', Mdi.ticket_outline, '__supporttickets'),
                     ('Report an Issue', Mdi.bug_outline, '__reportissue'),
                   ],
                 ),
@@ -765,7 +773,10 @@ class _NavSectionState extends State<_NavSection> {
         Get.to(() => const UserGuideScreen());
         break;
       case '__contact':
-        Get.to(() => const ContactScreen());
+        Get.to(() => const ContactSupportScreen());
+        break;
+      case '__supporttickets':
+        Get.to(() => const SupportTicketsScreen());
         break;
       case '__reportissue':
         Get.to(() => const ReportIssueScreen());

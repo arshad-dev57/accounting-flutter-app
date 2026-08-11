@@ -1,5 +1,6 @@
 // lib/core/loginOtp/controller/login_otp_controller.dart
 
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
@@ -26,14 +27,73 @@ class LoginOtpController extends GetxController {
   final FocusNode pinFocusNode = FocusNode();
 
   var isLoading = false.obs;
+  var isResending = false.obs;
   var otpError = ''.obs;
+
+  // OTP expiry countdown (5 minutes = 300 seconds)
+  var expirySeconds = 300.obs;
+  // Resend cooldown (60 seconds after each send)
+  var resendCooldown = 0.obs;
+
+  Timer? _expiryTimer;
+  Timer? _resendTimer;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _startExpiryTimer();
+    _startResendCooldown();
+  }
 
   @override
   void onClose() {
+    _expiryTimer?.cancel();
+    _resendTimer?.cancel();
     pinController.dispose();
     pinFocusNode.dispose();
     super.onClose();
   }
+
+  void _startExpiryTimer() {
+    expirySeconds.value = 300;
+    _expiryTimer?.cancel();
+    _expiryTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (expirySeconds.value > 0) {
+        expirySeconds.value--;
+      } else {
+        timer.cancel();
+        otpError.value = 'OTP expired. Please request a new code.';
+      }
+    });
+  }
+
+  void _startResendCooldown() {
+    resendCooldown.value = 60;
+    _resendTimer?.cancel();
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (resendCooldown.value > 0) {
+        resendCooldown.value--;
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  String get expiryTimerText {
+    final m = expirySeconds.value ~/ 60;
+    final s = expirySeconds.value % 60;
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  }
+
+  String get resendButtonText {
+    if (resendCooldown.value > 0) {
+      final s = resendCooldown.value;
+      return 'Resend in 00:${s.toString().padLeft(2, '0')}';
+    }
+    return 'Resend Code';
+  }
+
+  bool get canResend => resendCooldown.value == 0 && !isResending.value;
 
   void clearPin() {
     pinController.clear();
@@ -139,14 +199,52 @@ class LoginOtpController extends GetxController {
           Get.offAll(() => const SelectPlanScreen());
         }
       } else {
-        otpError.value = data['message'] ?? 'Invalid OTP. Please try again.';
+        final msg = data['message'] ?? 'Invalid OTP. Please try again.';
+        otpError.value = msg;
+        AppSnackbar.error(kDanger, 'Invalid Code', msg);
         clearPin();
       }
     } catch (e) {
       print('OTP verification error: $e');
-      otpError.value = 'Something went wrong. Please try again.';
+      const msg = 'Something went wrong. Please try again.';
+      otpError.value = msg;
+      AppSnackbar.error(kDanger, 'Error', msg);
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> resendOtp() async {
+    if (!canResend) return;
+
+    isResending.value = true;
+    otpError.value = '';
+
+    try {
+      final response = await _api.post(
+        '/api/users/resend-login-otp',
+        body: {'email': email},
+        requiresAuth: false,
+      );
+
+      if (response.success) {
+        AppSnackbar.success(
+          kSuccess,
+          'Code Sent',
+          'A new OTP has been sent to $email',
+        );
+        clearPin();
+        _startExpiryTimer();
+        _startResendCooldown();
+      } else {
+        final msg =
+            response.data?['message'] ?? 'Failed to resend. Please try again.';
+        AppSnackbar.error(kDanger, 'Error', msg);
+      }
+    } catch (e) {
+      AppSnackbar.error(kDanger, 'Error', 'Failed to resend. Please try again.');
+    } finally {
+      isResending.value = false;
     }
   }
 
@@ -155,8 +253,8 @@ class LoginOtpController extends GetxController {
       final prefs = await SharedPreferences.getInstance();
 
       // ✅ Safe token saving with null check
-      final token = data['token']?.toString()?.trim() ?? '';
-      final refreshToken = data['refreshToken']?.toString()?.trim() ?? '';
+      final token = data['token']?.toString().trim() ?? '';
+      final refreshToken = data['refreshToken']?.toString().trim() ?? '';
 
       if (token.isNotEmpty && refreshToken.isNotEmpty) {
         await _api.setBothTokens(token, refreshToken);

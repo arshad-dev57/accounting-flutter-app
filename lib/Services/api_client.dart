@@ -468,6 +468,7 @@ class ApiClient extends GetxService {
     String endpoint, {
     required Map<String, String> fields,
     Map<String, String>? filePaths, // key: fieldName, value: filePath
+    Map<String, List<String>>? multiFilePaths, // multiple files same field (e.g. images)
     bool requiresAuth = true,
   }) async {
     return _executeMultipartRequest(
@@ -475,6 +476,7 @@ class ApiClient extends GetxService {
       endpoint,
       fields,
       filePaths,
+      multiFilePaths,
       requiresAuth,
     );
   }
@@ -484,6 +486,7 @@ class ApiClient extends GetxService {
     String endpoint, {
     required Map<String, String> fields,
     Map<String, String>? filePaths, // key: fieldName, value: filePath
+    Map<String, List<String>>? multiFilePaths,
     bool requiresAuth = true,
   }) async {
     return _executeMultipartRequest(
@@ -491,6 +494,7 @@ class ApiClient extends GetxService {
       endpoint,
       fields,
       filePaths,
+      multiFilePaths,
       requiresAuth,
     );
   }
@@ -500,6 +504,7 @@ class ApiClient extends GetxService {
     String endpoint,
     Map<String, String> fields,
     Map<String, String>? filePaths,
+    Map<String, List<String>>? multiFilePaths,
     bool requiresAuth,
   ) async {
     try {
@@ -518,13 +523,26 @@ class ApiClient extends GetxService {
         request.fields[key] = value;
       });
 
-      // Add files
+      // Add single files
       if (filePaths != null) {
         for (var entry in filePaths.entries) {
           if (entry.value.isNotEmpty) {
             request.files.add(
               await http.MultipartFile.fromPath(entry.key, entry.value),
             );
+          }
+        }
+      }
+
+      // Add multi files (same field name, e.g. images[])
+      if (multiFilePaths != null) {
+        for (var entry in multiFilePaths.entries) {
+          for (final path in entry.value) {
+            if (path.isNotEmpty) {
+              request.files.add(
+                await http.MultipartFile.fromPath(entry.key, path),
+              );
+            }
           }
         }
       }

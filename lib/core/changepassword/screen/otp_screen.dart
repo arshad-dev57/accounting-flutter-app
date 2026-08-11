@@ -302,6 +302,17 @@ class _OtpScreenState extends State<OtpScreen> {
   Widget _buildWebHeader(String title, String subtitle) {
     return Column(
       children: [
+        Image.asset(
+          'assets/logo.png',
+          height: 72,
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) => const Icon(
+            Icons.account_balance_rounded,
+            size: 56,
+            color: kPrimary,
+          ),
+        ),
+        const SizedBox(height: 24),
         Text(
           title,
           style: const TextStyle(
@@ -353,7 +364,6 @@ class _OtpScreenState extends State<OtpScreen> {
       children: [
         _buildMobileHeader(
           'Reset Password',
-          Mdi.lock_reset,
           'Enter your email address and we\'ll send you an OTP to reset your password',
           context,
         ),
@@ -373,7 +383,6 @@ class _OtpScreenState extends State<OtpScreen> {
       children: [
         _buildMobileHeader(
           'Verify OTP',
-          Mdi.shield_key,
           'Please enter the 6-digit OTP sent to ${controller.email.value}',
           context,
         ),
@@ -392,7 +401,6 @@ class _OtpScreenState extends State<OtpScreen> {
   // ═══════════════════════════════════════════════════════════════════
   Widget _buildMobileHeader(
     String title,
-    String icon,
     String subtitle,
     BuildContext context,
   ) {
@@ -418,12 +426,22 @@ class _OtpScreenState extends State<OtpScreen> {
       child: Column(
         children: [
           Container(
-            padding: EdgeInsets.all(isTablet ? 20 : 16),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+            width: isTablet ? 88 : 72,
+            height: isTablet ? 88 : 72,
+            padding: EdgeInsets.all(isTablet ? 14 : 12),
+            decoration: const BoxDecoration(
+              color: Colors.white,
               shape: BoxShape.circle,
             ),
-            child: Iconify(icon, color: Colors.white, size: isTablet ? 48 : 40),
+            child: Image.asset(
+              'assets/logo.png',
+              fit: BoxFit.contain,
+              errorBuilder: (_, __, ___) => Icon(
+                Icons.account_balance_rounded,
+                color: kPrimary,
+                size: isTablet ? 40 : 32,
+              ),
+            ),
           ),
           SizedBox(height: isTablet ? 20 : 16),
           Text(
