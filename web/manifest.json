@@ -1,11 +1,11 @@
 {
-    "name": "BisonsTechs_app",
-    "short_name": "BisonsTechs_app",
+    "name": "BisonsTechs",
+    "short_name": "BisonsTechs",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
+    "background_color": "#ffffff",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "BisonsTechs Accounting",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

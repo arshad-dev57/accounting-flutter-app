@@ -111,7 +111,7 @@ class MyApp extends StatelessWidget {
       builder: (context, orientation, deviceType) {
         return GetMaterialApp(
           debugShowCheckedModeBanner: false,
-          title: 'BisonsTechs App',
+          title: 'BisonsTechs',
           theme: _buildLightTheme(),
           darkTheme: _buildDarkTheme(),
           themeMode: Get.find<ThemeController>().isDarkMode.value
