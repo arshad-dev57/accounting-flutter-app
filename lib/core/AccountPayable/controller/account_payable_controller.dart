@@ -3,6 +3,7 @@ import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:universal_html/html.dart' as html;
@@ -68,16 +69,23 @@ class AccountsPayableController extends GetxController {
     return CurrencyUtils.format(amount);
   }
 
+  Worker? _fyWorker;
+
   @override
   void onInit() {
     super.onInit();
     searchController.addListener(_onSearchChanged);
-    fetchAllData();
     fetchBankAccounts();
+    Future(() async {
+      await waitForFiscalYearReady();
+      fetchAllData();
+    });
+    _fyWorker = listenFiscalYearChanges(fetchAllData);
   }
 
   @override
   void onClose() {
+    _fyWorker?.dispose();
     searchController.removeListener(_onSearchChanged);
     searchController.dispose();
     scrollController.dispose();

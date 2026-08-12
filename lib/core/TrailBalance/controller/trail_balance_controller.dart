@@ -5,6 +5,7 @@ import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -70,9 +71,7 @@ class TrialBalanceController extends GetxController {
       await _fiscalYearController.fetchFiscalYears();
     }
 
-    _fiscalYearWorker = ever(_fiscalYearController.selectedFiscalYear, (_) {
-      fetchTrialBalance();
-    });
+    _fiscalYearWorker = listenFiscalYearChanges(fetchTrialBalance);
 
     await fetchTrialBalance();
   }

@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:flutter/material.dart';
@@ -119,7 +121,7 @@ class DashboardController extends GetxController {
 
   final ApiClient _api = Get.find<ApiClient>();
 
-  var selectedTimePeriod = 'Today'.obs;
+  var selectedTimePeriod = 'This Year'.obs;
   final Rx<DateTime?> customStartDate = Rx<DateTime?>(null);
   final Rx<DateTime?> customEndDate = Rx<DateTime?>(null);
   /// Soft refresh flag — does not tear down the whole body like [isLoading].
@@ -138,18 +140,25 @@ class DashboardController extends GetxController {
     'Custom',
   ];
 
+  Worker? _fyWorker;
+
   @override
   void onInit() {
     super.onInit();
     loadUserData();
     loadBusinessLogo();
-    loadDashboardData();
+    Future(() async {
+      await waitForFiscalYearReady();
+      loadDashboardData();
+    });
+    _fyWorker = listenFiscalYearChanges(loadDashboardData);
     // One-shot access check only — SubscriptionController already polls globally.
     _checkSubscriptionOnce();
   }
 
   @override
   void onClose() {
+    _fyWorker?.dispose();
     super.onClose();
   }
 
@@ -369,8 +378,16 @@ class DashboardController extends GetxController {
       params['endDate'] = dateRange['endDate'] ?? '';
     }
 
+    if (Get.isRegistered<FiscalYearController>()) {
+      final fyId =
+          Get.find<FiscalYearController>().selectedFiscalYearId;
+      if (fyId != null && fyId.isNotEmpty) {
+        params['fiscalYearId'] = fyId;
+      }
+    }
+
     print(
-      '🔵 [Dashboard] overview period=${selectedTimePeriod.value}',
+      '🔵 [Dashboard] overview period=${selectedTimePeriod.value} fy=${params['fiscalYearId']}',
     );
 
     final response = await _api.get(

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/widgets/fiscal_year_select.dart';
 import 'package:BisonsTechs_app/core/Notifications/screens/notification_screen.dart';
 import 'package:BisonsTechs_app/core/purchasedashboard/purchase_controller.dart';
 import 'package:BisonsTechs_app/core/purchasedashboard/purchase_dashboard_model.dart';
@@ -198,6 +199,7 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
         );
       }),
       actions: [
+        const FiscalYearSelect(compact: true, showManageLink: true),
         IconButton(
           icon: const Icon(
             Icons.notifications_none_rounded,

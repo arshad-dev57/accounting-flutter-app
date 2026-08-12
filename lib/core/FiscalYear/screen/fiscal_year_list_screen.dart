@@ -4,6 +4,7 @@ import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/models/fiscal_year_model.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_dates.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -15,8 +16,31 @@ class FiscalYearListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(FiscalYearController());
-    return _buildMobileLayout(context, controller);
+    final controller = Get.isRegistered<FiscalYearController>()
+        ? Get.find<FiscalYearController>()
+        : Get.put(FiscalYearController(), permanent: true);
+    return _FiscalYearListBody(controller: controller);
+  }
+}
+
+class _FiscalYearListBody extends StatefulWidget {
+  final FiscalYearController controller;
+  const _FiscalYearListBody({required this.controller});
+
+  @override
+  State<_FiscalYearListBody> createState() => _FiscalYearListBodyState();
+}
+
+class _FiscalYearListBodyState extends State<_FiscalYearListBody> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.fetchFiscalYears();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildMobileLayout(context, widget.controller);
   }
 
   Widget _buildMobileLayout(
@@ -213,8 +237,8 @@ class FiscalYearListScreen extends StatelessWidget {
                 children: [
                   if (!isSelected)
                     TextButton.icon(
-                      onPressed: () {
-                        controller.selectFiscalYear(fiscalYear);
+                      onPressed: () async {
+                        await controller.selectFiscalYear(fiscalYear);
                         AppSnackbar.success(
                           kSuccess,
                           'Selected',
@@ -222,7 +246,7 @@ class FiscalYearListScreen extends StatelessWidget {
                         );
                       },
                       icon: const Icon(Icons.check, size: 16),
-                      label: const Text('Select'),
+                      label: const Text('Use'),
                       style: TextButton.styleFrom(foregroundColor: kPrimary),
                     ),
                   if (fiscalYear.isOpen)
@@ -275,119 +299,8 @@ class FiscalYearListScreen extends StatelessWidget {
     FiscalYearController controller,
     BuildContext context,
   ) {
-    final nameController = TextEditingController();
-    final startDateController = TextEditingController();
-    final endDateController = TextEditingController();
-    DateTime? startDate;
-    DateTime? endDate;
-
     Get.dialog(
-      AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Create Fiscal Year'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Fiscal Year Name',
-                  hintText: 'e.g., FY 2024-2025',
-                  prefixIcon: Icon(Icons.label),
-                ),
-              ),
-              SizedBox(height: 2.h),
-              TextField(
-                controller: startDateController,
-                readOnly: true,
-                decoration: InputDecoration(
-                  labelText: 'Start Date',
-                  hintText: 'Select start date',
-                  prefixIcon: const Icon(Icons.calendar_today),
-                  suffixIcon: const Icon(Icons.arrow_drop_down),
-                ),
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime(2030),
-                  );
-                  if (picked != null) {
-                    startDate = picked;
-                    startDateController.text = DateFormat(
-                      'dd MMM yyyy',
-                    ).format(picked);
-                  }
-                },
-              ),
-              SizedBox(height: 2.h),
-              TextField(
-                controller: endDateController,
-                readOnly: true,
-                decoration: InputDecoration(
-                  labelText: 'End Date',
-                  hintText: 'Select end date',
-                  prefixIcon: const Icon(Icons.calendar_today),
-                  suffixIcon: const Icon(Icons.arrow_drop_down),
-                ),
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: startDate ?? DateTime.now(),
-                    firstDate: startDate ?? DateTime.now(),
-                    lastDate: DateTime(2030),
-                  );
-                  if (picked != null) {
-                    endDate = picked;
-                    endDateController.text = DateFormat(
-                      'dd MMM yyyy',
-                    ).format(picked);
-                  }
-                },
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              if (nameController.text.isEmpty ||
-                  startDate == null ||
-                  endDate == null) {
-                AppSnackbar.error(kDanger, 'Error', 'Please fill all fields');
-                return;
-              }
-
-              if (endDate!.isBefore(startDate!)) {
-                AppSnackbar.error(
-                  kDanger,
-                  'Error',
-                  'End date must be after start date',
-                );
-                return;
-              }
-
-              controller
-                  .createFiscalYear(
-                    name: nameController.text,
-                    startDate: startDate!,
-                    endDate: endDate!,
-                  )
-                  .then((success) {
-                    if (success) Get.back();
-                  });
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: kPrimary,
-              foregroundColor: Colors.black87,
-            ),
-            child: const Text('Create'),
-          ),
-        ],
-      ),
+      _CreateFiscalYearDialog(controller: controller),
     );
   }
 
@@ -586,6 +499,202 @@ class FiscalYearListScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _CreateFiscalYearDialog extends StatefulWidget {
+  final FiscalYearController controller;
+  const _CreateFiscalYearDialog({required this.controller});
+
+  @override
+  State<_CreateFiscalYearDialog> createState() =>
+      _CreateFiscalYearDialogState();
+}
+
+class _CreateFiscalYearDialogState extends State<_CreateFiscalYearDialog> {
+  late final TextEditingController nameController;
+  late final TextEditingController startDateController;
+  late final TextEditingController endDateController;
+  String periodKey = 'Calendar';
+  DateTime? startDate;
+  DateTime? endDate;
+  bool saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    nameController = TextEditingController();
+    startDateController = TextEditingController();
+    endDateController = TextEditingController();
+    _applySuggested('Calendar');
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    startDateController.dispose();
+    endDateController.dispose();
+    super.dispose();
+  }
+
+  void _applySuggested(String key) {
+    final suggested = widget.controller.suggestNextRange(key);
+    periodKey = key;
+    startDate = suggested.startDate;
+    endDate = suggested.endDate;
+    nameController.text = suggested.name;
+    startDateController.text =
+        DateFormat('dd MMM yyyy').format(suggested.startDate);
+    endDateController.text =
+        DateFormat('dd MMM yyyy').format(suggested.endDate);
+  }
+
+  Future<void> _pickStart() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: startDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2040),
+    );
+    if (picked != null) {
+      setState(() {
+        startDate = picked;
+        startDateController.text = DateFormat('dd MMM yyyy').format(picked);
+        periodKey = 'Custom';
+      });
+    }
+  }
+
+  Future<void> _pickEnd() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: endDate ?? startDate ?? DateTime.now(),
+      firstDate: startDate ?? DateTime(2000),
+      lastDate: DateTime(2040),
+    );
+    if (picked != null) {
+      setState(() {
+        endDate = picked;
+        endDateController.text = DateFormat('dd MMM yyyy').format(picked);
+        periodKey = 'Custom';
+      });
+    }
+  }
+
+  Future<void> _submit() async {
+    if (nameController.text.trim().isEmpty ||
+        startDate == null ||
+        endDate == null) {
+      AppSnackbar.error(kDanger, 'Error', 'Please fill all fields');
+      return;
+    }
+    if (!endDate!.isAfter(startDate!)) {
+      AppSnackbar.error(
+        kDanger,
+        'Error',
+        'Start date must be before end date',
+      );
+      return;
+    }
+
+    setState(() => saving = true);
+    final ok = await widget.controller.createFiscalYear(
+      name: nameController.text.trim(),
+      startDate: startDate!,
+      endDate: endDate!,
+      periodType: kFiscalPeriodPref[periodKey] ?? 'Custom',
+    );
+    if (mounted) setState(() => saving = false);
+    if (ok) Get.back();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: const Text('Create Fiscal Year'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Fiscal Year Name',
+                hintText: 'e.g., FY 2027',
+                prefixIcon: Icon(Icons.label),
+              ),
+            ),
+            SizedBox(height: 1.5.h),
+            DropdownButtonFormField<String>(
+              value: periodKey,
+              decoration: const InputDecoration(
+                labelText: 'Period type',
+                prefixIcon: Icon(Icons.date_range),
+              ),
+              items: const [
+                DropdownMenuItem(value: 'Calendar', child: Text('Calendar (Jan–Dec)')),
+                DropdownMenuItem(value: 'April', child: Text('April–March')),
+                DropdownMenuItem(value: 'July', child: Text('July–June')),
+                DropdownMenuItem(value: 'Custom', child: Text('Custom')),
+              ],
+              onChanged: (v) {
+                if (v == null) return;
+                setState(() {
+                  if (v == 'Custom') {
+                    periodKey = 'Custom';
+                  } else {
+                    _applySuggested(v);
+                  }
+                });
+              },
+            ),
+            SizedBox(height: 1.5.h),
+            TextField(
+              controller: startDateController,
+              readOnly: true,
+              decoration: const InputDecoration(
+                labelText: 'Start Date',
+                prefixIcon: Icon(Icons.calendar_today),
+                suffixIcon: Icon(Icons.arrow_drop_down),
+              ),
+              onTap: _pickStart,
+            ),
+            SizedBox(height: 1.5.h),
+            TextField(
+              controller: endDateController,
+              readOnly: true,
+              decoration: const InputDecoration(
+                labelText: 'End Date',
+                prefixIcon: Icon(Icons.calendar_today),
+                suffixIcon: Icon(Icons.arrow_drop_down),
+              ),
+              onTap: _pickEnd,
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: saving ? null : () => Get.back(),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: saving ? null : _submit,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: kPrimary,
+            foregroundColor: Colors.white,
+          ),
+          child: saving
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Create'),
+        ),
+      ],
     );
   }
 }

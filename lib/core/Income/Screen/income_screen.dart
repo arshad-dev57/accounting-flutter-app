@@ -2,6 +2,7 @@ import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/Income/controller/income_controller.dart';
+import 'package:BisonsTechs_app/core/tax/tax_rate_field.dart';
 import 'package:BisonsTechs_app/core/Income/models/income_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -1684,22 +1685,7 @@ class IncomeScreen extends StatelessWidget {
   }
 
   Widget _buildTaxField(double taxRate, void Function(double) onChanged) {
-    return TextFormField(
-      initialValue: '0',
-      decoration: InputDecoration(
-        labelText: 'Tax Rate (%)',
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 10,
-        ),
-        isDense: true,
-        labelStyle: TextStyle(fontSize: 11, color: kSubText),
-      ),
-      style: const TextStyle(fontSize: 13, color: Colors.black),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      onChanged: (v) => onChanged(double.tryParse(v) ?? 0),
-    );
+    return TaxRateField(value: taxRate, onRateChanged: onChanged);
   }
 
   Widget _buildAmountField(double amount, void Function(double) onChanged) {

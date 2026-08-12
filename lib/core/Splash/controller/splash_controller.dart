@@ -1,6 +1,7 @@
 // lib/core/Splash/controller/splash_controller.dart
 
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
 import 'package:BisonsTechs_app/core/Onboarding/views/Onboarding_screen.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,6 +19,12 @@ class SplashController extends GetxController {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('auth_token');
     bool? hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
+
+    if (token != null && token.isNotEmpty) {
+      if (Get.isRegistered<FiscalYearController>()) {
+        await Get.find<FiscalYearController>().fetchFiscalYears();
+      }
+    }
 
     if (kIsWeb) {
       // Web Flow

@@ -7,6 +7,7 @@ import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -21,7 +22,7 @@ import 'package:excel/excel.dart';
 class PLController extends GetxController {
   // Observable variables
   var isLoading = true.obs;
-  var selectedPeriod = 'This Month'.obs;
+  var selectedPeriod = 'This Year'.obs;
   var selectedDateRange = Rxn<DateTimeRange>();
 
   // Report Data
@@ -51,10 +52,22 @@ class PLController extends GetxController {
   final FiscalYearController _fiscalYearController =
       Get.find<FiscalYearController>();
 
+  Worker? _fyWorker;
+
   @override
   void onInit() {
     super.onInit();
-    loadReportData();
+    Future(() async {
+      await waitForFiscalYearReady();
+      loadReportData();
+    });
+    _fyWorker = listenFiscalYearChanges(loadReportData);
+  }
+
+  @override
+  void onClose() {
+    _fyWorker?.dispose();
+    super.onClose();
   }
 
   String _formatAmount(double amount) {

@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/category/category_screen.dart';
+import 'package:BisonsTechs_app/core/tax/tax_rate_field.dart';
 import 'package:BisonsTechs_app/core/warehouse/products/controller/product_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/products/screen/product_qr_scan_screen.dart';
 import 'package:BisonsTechs_app/core/warehouse/supplier/screen/supplier_screen.dart';
@@ -854,7 +855,6 @@ class _AddProductPageState extends State<_AddProductPage> {
   // ── Snapshot lists ──
   late List<Map<String, dynamic>> _productTypes;
   late List<Map<String, dynamic>> _stockUnits;
-  late List<Map<String, dynamic>> _taxTypes;
   late List<Map<String, dynamic>> _categories;
   late List<Map<String, dynamic>> _suppliers;
   late List<Map<String, dynamic>> _rackLocations;
@@ -960,7 +960,6 @@ class _AddProductPageState extends State<_AddProductPage> {
 
     _productTypes = List<Map<String, dynamic>>.from(_c.productTypes);
     _stockUnits = List<Map<String, dynamic>>.from(_c.stockUnits);
-    _taxTypes = List<Map<String, dynamic>>.from(_c.taxTypes);
     _categories = List<Map<String, dynamic>>.from(_c.categories);
     _suppliers = List<Map<String, dynamic>>.from(_c.suppliers);
     _rackLocations = List<Map<String, dynamic>>.from(_c.rackLocations);
@@ -1189,7 +1188,6 @@ class _AddProductPageState extends State<_AddProductPage> {
     setState(() {
       _productTypes = List<Map<String, dynamic>>.from(_c.productTypes);
       _stockUnits = List<Map<String, dynamic>>.from(_c.stockUnits);
-      _taxTypes = List<Map<String, dynamic>>.from(_c.taxTypes);
       _categories = List<Map<String, dynamic>>.from(_c.categories);
       _suppliers = List<Map<String, dynamic>>.from(_c.suppliers);
       _rackLocations = List<Map<String, dynamic>>.from(_c.rackLocations);
@@ -2402,23 +2400,15 @@ class _AddProductPageState extends State<_AddProductPage> {
         ),
         _sectionHeader('Tax', Icons.receipt_long_outlined),
         _field(
-          label: 'Tax Rate (%)',
-          child: TextFormField(
-            controller: _taxRateCtrl,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: _dec(hint: '0', suffix: '%'),
-            style: const TextStyle(fontSize: 13, color: Colors.black),
+          label: 'Tax class',
+          child: TaxRateField(
+            value: double.tryParse(_taxRateCtrl.text) ?? 0,
+            onRateChanged: (r) {
+              _taxRateCtrl.text = r.toString();
+              setState(() {});
+            },
+            onTypeChanged: (t) => setState(() => _selectedTaxType = t),
           ),
-        ),
-        _dropdownWithAdd<String>(
-          label: 'Tax Type',
-          hint: 'Select Tax Type',
-          value: _selectedTaxType,
-          items: _taxTypes,
-          labelKey: 'name',
-          valueKey: 'name',
-          onChanged: (v) => setState(() => _selectedTaxType = v),
-          settingsCategory: 'taxType',
         ),
         _sectionHeader('Stock Information', Icons.inventory_outlined),
         _dropdownWithAdd<String>(

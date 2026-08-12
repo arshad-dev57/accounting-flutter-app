@@ -4,6 +4,7 @@ import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/AccountPayable/controller/account_payable_controller.dart';
+import 'package:BisonsTechs_app/core/tax/tax_rate_field.dart';
 import 'package:BisonsTechs_app/core/Vendor&Supplier/screens/vendor_supplier_screen.dart';
 import 'package:BisonsTechs_app/core/warehouse/supplier/screen/supplier_screen.dart';
 import 'package:flutter/material.dart';
@@ -854,13 +855,9 @@ class AccountsPayableScreen extends StatelessWidget {
                             _buildItemsSection(items, setState),
                             const SizedBox(height: 16),
 
-                            _buildTextField(
-                              label: 'Tax Rate (%)',
-                              hint: '0',
-                              onChanged: (v) => setState(
-                                () => taxRate = double.tryParse(v) ?? 0,
-                              ),
-                              keyboardType: TextInputType.number,
+                            TaxRateField(
+                              value: taxRate,
+                              onRateChanged: (v) => setState(() => taxRate = v),
                             ),
                             const SizedBox(height: 16),
 

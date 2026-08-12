@@ -33,6 +33,9 @@ import 'package:BisonsTechs_app/core/chartofaccounts/screens/chart_of_account_sc
 import 'package:BisonsTechs_app/core/settings/screens/currency_screen.dart';
 import 'package:BisonsTechs_app/core/settings/screens/pdf_report_settings_screen.dart';
 import 'package:BisonsTechs_app/core/dashboard/controllers/dashboard_controller.dart';
+import 'package:BisonsTechs_app/core/tax/tax_screen.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/screen/fiscal_year_list_screen.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/widgets/fiscal_year_select.dart';
 import 'package:BisonsTechs_app/core/journalEntries/Screens/journal_entries_screen.dart';
 import 'package:BisonsTechs_app/core/loanBorrowing/screen/_loan_borrowing_screen.dart';
 import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
@@ -257,6 +260,7 @@ class DashboardScreen extends GetView<DashboardController> {
         );
       }),
       actions: [
+        const FiscalYearSelect(compact: true, showManageLink: true),
         IconButton(
           icon: const Icon(
             Icons.notifications_none_rounded,
@@ -1512,6 +1516,7 @@ class DashboardScreen extends GetView<DashboardController> {
                     'bank-accounts',
                     'income',
                     'expenses',
+                    'chart-of-accounts',
                   ],
                   items: const [
                     ('Chart of Accounts', Mdi.chart_tree, 'chart_of_accounts'),
@@ -1529,6 +1534,7 @@ class DashboardScreen extends GetView<DashboardController> {
                     ('Bank Accounts', Mdi.bank, 'bank_accounts'),
                     ('Income', Mdi.trending_up, 'income'),
                     ('Expense', Mdi.trending_down, 'expense'),
+                    ('Tax Compliance', Mdi.percent, 'tax_compliance'),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -1624,6 +1630,7 @@ class DashboardScreen extends GetView<DashboardController> {
                   module: 'accounting',
                   permissions: const ['currency'],
                   items: const [
+                    ('Fiscal Years', Mdi.calendar_range, 'fiscal_years'),
                     ('Currency', Mdi.currency_usd, 'currency'),
                     ('PDF Reports', Mdi.file_pdf_box, 'pdf_report'),
                   ],
@@ -2265,6 +2272,9 @@ class _NavItem extends StatelessWidget {
       }
     } else {
       switch (routeKey) {
+        case 'tax_compliance':
+          Get.to(() => const TaxComplianceScreen());
+          break;
         case 'chart_of_accounts':
           Get.to(() => const ChartOfAccountsScreen());
           break;
@@ -2336,6 +2346,9 @@ class _NavItem extends StatelessWidget {
           break;
         case 'currency':
           Get.to(() => const CurrencyScreen());
+          break;
+        case 'fiscal_years':
+          Get.to(() => const FiscalYearListScreen());
           break;
         case 'pdf_report':
           Get.to(() => const PdfReportSettingsScreen());

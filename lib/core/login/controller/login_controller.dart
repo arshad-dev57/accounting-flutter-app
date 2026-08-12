@@ -15,6 +15,7 @@ import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:BisonsTechs_app/core/settings/controller/pdf_report_settings_controller.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/Services/notification_Service.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -186,6 +187,9 @@ class LoginController extends GetxController {
         }
 
         if (subscriptionController.hasAccess) {
+          if (Get.isRegistered<FiscalYearController>()) {
+            await Get.find<FiscalYearController>().fetchFiscalYears();
+          }
           Get.offAllNamed('/dashboard');
         } else {
           Get.offAll(() => const SelectPlanScreen());

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/widgets/fiscal_year_select.dart';
 import 'package:BisonsTechs_app/core/Notifications/screens/notification_screen.dart';
 import 'package:BisonsTechs_app/core/warehouse/dashboard/warehouse_dashboard_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/widgets/drawer_widget.dart';
@@ -183,6 +184,7 @@ class WarehouseDashboard extends GetView<WarehouseDashboardController> {
         );
       }),
       actions: [
+        const FiscalYearSelect(compact: true, showManageLink: true),
         IconButton(
           icon: const Icon(
             Icons.notifications_none_rounded,

@@ -9,6 +9,7 @@ import 'package:universal_html/html.dart' as html;
 import 'package:get/get.dart';
 import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:intl/intl.dart';
@@ -69,17 +70,24 @@ class BillController extends GetxController {
     return CurrencyUtils.format(amount);
   }
 
+  Worker? _fyWorker;
+
   @override
   void onInit() {
     super.onInit();
     searchController.addListener(_onSearchChanged);
     fetchSuppliers();
     fetchBankAccounts();
-    fetchBills(resetPage: true);
+    Future(() async {
+      await waitForFiscalYearReady();
+      fetchBills(resetPage: true);
+    });
+    _fyWorker = listenFiscalYearChanges(() => fetchBills(resetPage: true));
   }
 
   @override
   void onClose() {
+    _fyWorker?.dispose();
     searchController.removeListener(_onSearchChanged);
     searchController.dispose();
     scrollController.dispose();
@@ -173,6 +181,7 @@ class BillController extends GetxController {
       if (endDate.value != null) {
         params['endDate'] = endDate.value!.toIso8601String();
       }
+      putFiscalYearId(params);
 
       final response = await _api.get(
         '/api/accounts-payable/bills',

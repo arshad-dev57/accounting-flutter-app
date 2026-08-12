@@ -70,6 +70,7 @@ import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/Services/notification_Service.dart';
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/tax/tax_screen.dart';
 
 class ThemeController extends GetxController {
   var isDarkMode = false.obs;
@@ -119,7 +120,7 @@ class MyApp extends StatelessWidget {
           initialRoute: '/',
           getPages: [
             // ========== AUTH ROUTES ==========
-            GetPage(name: '/', page: () => OnboardingScreen()),
+            GetPage(name: '/', page: () => SplashScreen()),
             GetPage(name: '/login', page: () => const LoginScreen()),
             GetPage(name: '/register', page: () => RegistrationScreen()),
             GetPage(name: '/onboarding', page: () => const OnboardingScreen()),
@@ -128,6 +129,10 @@ class MyApp extends StatelessWidget {
             GetPage(
               name: '/dashboard',
               page: () => const DashboardSelectionScreen(),
+            ),
+            GetPage(
+              name: '/tax',
+              page: () => const TaxComplianceScreen(),
             ),
             GetPage(
               name: '/accounting/dashboard',
@@ -222,7 +227,6 @@ class MyApp extends StatelessWidget {
               page: () => const PaymentCancelScreen(),
             ),
 
-            // ========== WAREHOUSE ROUTES ==========
             GetPage(
               name: '/warehouse/dashboard',
               page: () => WarehouseDashboard(),

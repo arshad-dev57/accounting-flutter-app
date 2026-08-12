@@ -5,6 +5,7 @@ import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/Expense/controller/expense_controller.dart';
+import 'package:BisonsTechs_app/core/tax/tax_rate_field.dart';
 import 'package:BisonsTechs_app/core/Expense/model/expense_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -1715,11 +1716,9 @@ class ExpenseScreen extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 8),
-                              _formField(
-                                'Tax Rate (%)',
-                                '0',
-                                (v) => taxRate = double.tryParse(v) ?? 0,
-                                keyboardType: TextInputType.number,
+                              TaxRateField(
+                                value: taxRate,
+                                onRateChanged: (v) => setState(() => taxRate = v),
                               ),
                             ] else
                               _formField(

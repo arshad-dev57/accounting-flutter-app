@@ -18,6 +18,7 @@ import 'package:BisonsTechs_app/core/companyprofile/screen/company_profile_scree
 import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:BisonsTechs_app/core/settings/screens/currency_screen.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/screen/fiscal_year_list_screen.dart';
 import 'package:BisonsTechs_app/core/settings/screens/pdf_report_settings_screen.dart';
 import 'package:BisonsTechs_app/core/warehouse/dashboard/warehouse_dashboard_controller.dart';
 import 'package:flutter/material.dart';
@@ -129,8 +130,10 @@ class WarehouseDrawer extends StatelessWidget {
                       icon: Mdi.cog,
                       currentRoute: currentRoute,
                       items: const [
+                        ('Fiscal Years', Mdi.calendar_range, '__fiscal_years'),
                         ('Currency', Mdi.currency_usd, '__currency'),
                         ('PDF Reports', Mdi.file_pdf_box, '__pdf_report'),
+                        ('Tax Compliance', Mdi.percent, '__tax'),
                       ],
                     ),
                     _NavSection(
@@ -807,6 +810,12 @@ class _NavSectionState extends State<_NavSection> {
       return;
     }
     switch (routeKey) {
+      case '__tax':
+        Get.toNamed('/tax');
+        break;
+      case '__fiscal_years':
+        Get.to(() => const FiscalYearListScreen());
+        break;
       case '__currency':
         Get.to(() => const CurrencyScreen());
         break;

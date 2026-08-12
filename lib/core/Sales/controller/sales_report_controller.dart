@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
@@ -128,7 +129,7 @@ class SalesReportController extends GetxController {
   final RxString error = ''.obs;
 
   final RxString channel = 'all'.obs;
-  final RxString period = 'month'.obs;
+  final RxString period = 'year'.obs;
   final RxString status = 'all'.obs;
   final RxString search = ''.obs;
   final Rxn<DateTime> startDate = Rxn<DateTime>();
@@ -166,14 +167,21 @@ class SalesReportController extends GetxController {
     ('Invoiced', 'Invoiced'),
   ];
 
+  Worker? _fyWorker;
+
   @override
   void onInit() {
     super.onInit();
-    loadReport();
+    Future(() async {
+      await waitForFiscalYearReady();
+      loadReport();
+    });
+    _fyWorker = listenFiscalYearChanges(loadReport);
   }
 
   @override
   void onClose() {
+    _fyWorker?.dispose();
     searchController.dispose();
     super.onClose();
   }
@@ -196,6 +204,7 @@ class SalesReportController extends GetxController {
         q['endDate'] = DateFormat('yyyy-MM-dd').format(endDate.value!);
       }
     }
+    putFiscalYearId(q);
     return q;
   }
 

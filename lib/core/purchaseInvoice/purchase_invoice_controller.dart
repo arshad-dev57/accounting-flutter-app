@@ -1,6 +1,7 @@
 // lib/core/warehouse/purchase_invoice/controller/purchase_invoice_controller.dart
 
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/core/purchaseInvoice/purchase_invoice_model.dart';
 import 'package:flutter/material.dart';
@@ -85,6 +86,8 @@ class PurchaseInvoiceController extends GetxController {
   final Rx<DateTime?> selectedInvoiceDate = Rx<DateTime?>(null);
   final Rx<DateTime?> selectedDueDate = Rx<DateTime?>(null);
 
+  Worker? _fyWorker;
+
   @override
   void onInit() {
     super.onInit();
@@ -97,11 +100,16 @@ class PurchaseInvoiceController extends GetxController {
     dueDateController.text = DateFormat(
       'dd MMM yyyy',
     ).format(selectedDueDate.value!);
-    fetchInvoices();
+    Future(() async {
+      await waitForFiscalYearReady();
+      fetchInvoices();
+    });
+    _fyWorker = listenFiscalYearChanges(() => fetchInvoices());
   }
 
   @override
   void onClose() {
+    _fyWorker?.dispose();
     print(
       '🟢 [PurchaseInvoiceController] onClose called - disposing controllers',
     );
@@ -182,6 +190,8 @@ class PurchaseInvoiceController extends GetxController {
         params['toDate'] = toDate.value!.toIso8601String().split('T').first;
         print('🔵 [PurchaseInvoiceController] To date: ${params['toDate']}');
       }
+      final fyId = currentFiscalYearId();
+      if (fyId != null) params['fiscalYearId'] = fyId;
 
       final query = params.entries
           .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')

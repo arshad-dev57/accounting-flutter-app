@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:BisonsTechs_app/core/warehouse/sales/model/sales_dashboard_model.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,9 +10,9 @@ class SalesController extends GetxController {
   final ApiClient _api = Get.find<ApiClient>();
 
   final RxBool isLoading = false.obs;
-  final RxString period = 'today'.obs;
-  final RxString selectedPeriod = 'today'.obs;
-  final RxString selectedTimePeriodLabel = 'Today'.obs;
+  final RxString period = 'year'.obs;
+  final RxString selectedPeriod = 'year'.obs;
+  final RxString selectedTimePeriodLabel = 'This Year'.obs;
   final RxString businessLogo = ''.obs;
   final Rx<SalesDashboardModel?> dashboard = Rx<SalesDashboardModel?>(null);
 
@@ -31,11 +32,23 @@ class SalesController extends GetxController {
     'This Year',
   ];
 
+  Worker? _fyWorker;
+
   @override
   void onInit() {
     super.onInit();
     loadBusinessLogo();
-    fetchDashboard();
+    Future(() async {
+      await waitForFiscalYearReady();
+      fetchDashboard();
+    });
+    _fyWorker = listenFiscalYearChanges(fetchDashboard);
+  }
+
+  @override
+  void onClose() {
+    _fyWorker?.dispose();
+    super.onClose();
   }
 
   Future<void> loadBusinessLogo() async {
@@ -74,6 +87,7 @@ class SalesController extends GetxController {
         queryParams['endDate'] = _formatDate(endDate.value!);
         queryParams['period'] = 'custom';
       }
+      putFiscalYearId(queryParams);
 
       final response = await _api.get(
         '/api/warehouse/sales/dashboard',

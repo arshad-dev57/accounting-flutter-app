@@ -13,6 +13,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
@@ -73,16 +74,26 @@ class IncomeController extends GetxController {
   // ✅ Scroll Controller for Lazy Loading
   final ScrollController scrollController = ScrollController();
 
+  Worker? _fyWorker;
+
   @override
   void onInit() {
     super.onInit();
     searchController.addListener(_onSearchChanged);
-    loadAllData();
-    loadSummary();
+    Future(() async {
+      await waitForFiscalYearReady();
+      loadAllData();
+      loadSummary();
+    });
+    _fyWorker = listenFiscalYearChanges(() {
+      loadAllData();
+      loadSummary();
+    });
   }
 
   @override
   void onClose() {
+    _fyWorker?.dispose();
     searchController.removeListener(_onSearchChanged);
     searchController.dispose();
     scrollController.dispose();
@@ -152,6 +163,7 @@ class IncomeController extends GetxController {
       if (searchQuery.value.isNotEmpty) {
         params['search'] = searchQuery.value;
       }
+      putFiscalYearId(params);
 
       final response = await _api.get(
         '/api/income/list',
@@ -318,6 +330,7 @@ class IncomeController extends GetxController {
         params['startDate'] = DateFormat('yyyy-MM-dd').format(startDate.value!);
         params['endDate'] = DateFormat('yyyy-MM-dd').format(endDate.value!);
       }
+      putFiscalYearId(params);
 
       final response = await _api.get(
         '/api/income/summary',

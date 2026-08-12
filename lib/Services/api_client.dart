@@ -3,6 +3,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:BisonsTechs_app/config/apiconfig.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_dates.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
@@ -85,6 +87,11 @@ class ApiClient extends GetxService {
     await prefs.remove('refresh_token');
     _cachedToken = null;
     _cachedRefreshToken = null;
+    try {
+      if (Get.isRegistered<FiscalYearController>()) {
+        await Get.find<FiscalYearController>().clearSession();
+      }
+    } catch (_) {}
   }
 
   Future<String?> getToken() async {
@@ -264,8 +271,26 @@ class ApiClient extends GetxService {
       final headers = await _getHeaders(requiresAuth);
       Uri uri = Uri.parse('$baseUrl$endpoint');
 
-      if (queryParameters != null && queryParameters.isNotEmpty) {
-        final stringParams = queryParameters.map(
+      // Keep any query already on the endpoint (e.g. /api/sales/invoices?page=1)
+      var params = <String, dynamic>{
+        ...uri.queryParameters,
+        if (queryParameters != null) ...queryParameters,
+      };
+
+      // Attach selected fiscal year on whitelisted GETs (mirrors Next.js interceptor)
+      if (method.toUpperCase() == 'GET' && shouldAttachFiscalYear(endpoint)) {
+        if (!params.containsKey('fiscalYearId') ||
+            params['fiscalYearId'] == null ||
+            params['fiscalYearId'].toString().isEmpty) {
+          final fyId = _resolveSelectedFiscalYearId();
+          if (fyId != null && fyId.isNotEmpty) {
+            params['fiscalYearId'] = fyId;
+          }
+        }
+      }
+
+      if (params.isNotEmpty) {
+        final stringParams = params.map(
           (key, value) => MapEntry(key, value.toString()),
         );
         uri = uri.replace(queryParameters: stringParams);
@@ -312,6 +337,15 @@ class ApiClient extends GetxService {
         success: false,
         message: e.toString(),
       );
+    }
+  }
+
+  String? _resolveSelectedFiscalYearId() {
+    try {
+      if (!Get.isRegistered<FiscalYearController>()) return null;
+      return Get.find<FiscalYearController>().selectedFiscalYearId;
+    } catch (_) {
+      return null;
     }
   }
 

@@ -26,6 +26,7 @@ import 'package:BisonsTechs_app/core/purchasedashboard/purchase_dashboard_screen
 import 'package:BisonsTechs_app/core/settings/screens/currency_screen.dart';
 import 'package:BisonsTechs_app/core/settings/screens/pdf_report_settings_screen.dart';
 import 'package:BisonsTechs_app/core/support/screens/support_tickets_screen.dart';
+import 'package:BisonsTechs_app/core/tax/tax_screen.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -1030,6 +1031,15 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
               showArrow: true,
               onTap: _navigateToAccounting,
             ),
+          _SidebarItemWidget(
+            icon: Icons.percent,
+            label: 'Tax Compliance',
+            index: 5,
+            selectedIndex: _selectedIndex,
+            collapsed: collapsed,
+            showArrow: true,
+            onTap: () => Get.to(() => const TaxComplianceScreen()),
+          ),
           const Spacer(),
           if (!collapsed)
             Padding(
@@ -1089,12 +1099,14 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                     'accounting',
                     'sales',
                     'purchases',
+                    'accounting',
                   ],
                   items: const [
                     ('Warehouse', Mdi.warehouse, '__warehouse'),
                     ('Accounting', Mdi.account_balance, '__accounting'),
                     ('Sales', Mdi.cart_outline, '__sales'),
                     ('Purchases', Mdi.cart_plus, '__purchase'),
+                    ('Tax Compliance', Mdi.percent, '__tax'),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -2418,6 +2430,9 @@ class _NavSectionState extends State<_NavSection> {
         break;
       case '__purchase':
         Get.to(() => const PurchaseDashboardScreen());
+        break;
+      case '__tax':
+        Get.to(() => const TaxComplianceScreen());
         break;
       case '__currency':
         Get.to(() => const CurrencyScreen());

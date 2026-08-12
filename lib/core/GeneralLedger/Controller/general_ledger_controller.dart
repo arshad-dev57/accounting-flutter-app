@@ -3,6 +3,8 @@
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -91,11 +93,26 @@ class GeneralLedgerController extends GetxController {
     return 0.0;
   }
 
+  Worker? _fyWorker;
+
   @override
   void onInit() {
     super.onInit();
-    fetchAccountSummaries();
-    fetchLedgerEntries();
+    Future(() async {
+      await waitForFiscalYearReady();
+      fetchAccountSummaries();
+      fetchLedgerEntries();
+    });
+    _fyWorker = listenFiscalYearChanges(() {
+      fetchAccountSummaries();
+      fetchLedgerEntries();
+    });
+  }
+
+  @override
+  void onClose() {
+    _fyWorker?.dispose();
+    super.onClose();
   }
 
   // Fetch account summaries for cards and dropdown
@@ -110,6 +127,7 @@ class GeneralLedgerController extends GetxController {
             .toIso8601String();
         queryParams['endDate'] = selectedDateRange.value!.end.toIso8601String();
       }
+      putFiscalYearId(queryParams);
 
       final response = await _api.get(
         '/api/general-ledger/accounts',
@@ -274,6 +292,7 @@ class GeneralLedgerController extends GetxController {
             .toIso8601String();
         queryParams['endDate'] = selectedDateRange.value!.end.toIso8601String();
       }
+      putFiscalYearId(queryParams);
 
       // Add sorting
       queryParams['sortBy'] = 'date';
