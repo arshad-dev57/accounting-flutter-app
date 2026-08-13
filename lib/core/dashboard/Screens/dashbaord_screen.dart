@@ -170,10 +170,10 @@ class DashboardScreen extends GetView<DashboardController> {
               ),
             )
           : null,
+      titleSpacing: isMobile ? 0 : NavigationToolbar.kMiddleSpacing,
       title: Obx(() {
         final logo = controller.businessLogo.value;
         return Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
             logo.isNotEmpty
                 ? Container(
@@ -247,20 +247,28 @@ class DashboardScreen extends GetView<DashboardController> {
                     ),
                   ),
             const SizedBox(width: 8),
-            const Text(
-              'BisonsTechs',
-              style: TextStyle(
-                color: _kTextPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.3,
+            Flexible(
+              child: Text(
+                isMobile ? 'Bisons' : 'BisonsTechs',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: _kTextPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.3,
+                ),
               ),
             ),
           ],
         );
       }),
       actions: [
-        const FiscalYearSelect(compact: true, showManageLink: true),
+        FiscalYearSelect(
+          compact: true,
+          // Manage FY from drawer on mobile — keeps AppBar from overflowing
+          showManageLink: !isMobile,
+        ),
         IconButton(
           icon: const Icon(
             Icons.notifications_none_rounded,
@@ -268,6 +276,9 @@ class DashboardScreen extends GetView<DashboardController> {
             size: 22,
           ),
           onPressed: () => Get.to(() => const NotificationScreen()),
+          visualDensity: VisualDensity.compact,
+          padding: const EdgeInsets.all(8),
+          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
         ),
         const SizedBox(width: 4),
       ],

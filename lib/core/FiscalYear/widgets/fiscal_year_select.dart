@@ -86,13 +86,21 @@ class FiscalYearSelect extends StatelessWidget {
                     else
                       const SizedBox(width: 16),
                     const SizedBox(width: 8),
-                    Text(y.isClosed ? '${y.name} · Closed' : y.name),
+                    Flexible(
+                      child: Text(
+                        y.isClosed ? '${y.name} · Closed' : y.name,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
               );
             }).toList(),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              padding: EdgeInsets.symmetric(
+                horizontal: compact ? 6 : 8,
+                vertical: compact ? 5 : 6,
+              ),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
@@ -101,41 +109,68 @@ class FiscalYearSelect extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.calendar_month_rounded, size: 16, color: kPrimary),
-                  const SizedBox(width: 6),
+                  Icon(
+                    Icons.calendar_month_rounded,
+                    size: compact ? 14 : 16,
+                    color: kPrimary,
+                  ),
+                  SizedBox(width: compact ? 4 : 6),
                   ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 110),
+                    constraints: BoxConstraints(maxWidth: compact ? 64 : 110),
                     child: Text(
                       current.name,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 13,
+                      style: TextStyle(
+                        fontSize: compact ? 12 : 13,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF1A1D2E),
+                        color: const Color(0xFF1A1D2E),
                       ),
                     ),
                   ),
-                  const Icon(Icons.expand_more, size: 18, color: Color(0xFF1A1D2E)),
-                  const SizedBox(width: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: isClosed
-                          ? Colors.grey.shade100
-                          : const Color(0xFFECFDF5),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      isClosed ? 'Closed' : 'Open',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
+                  Icon(
+                    Icons.expand_more,
+                    size: compact ? 16 : 18,
+                    color: const Color(0xFF1A1D2E),
+                  ),
+                  // Status pill only on non-compact headers (avoids AppBar overflow)
+                  if (!compact) ...[
+                    const SizedBox(width: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
                         color: isClosed
-                            ? Colors.grey.shade700
+                            ? Colors.grey.shade100
+                            : const Color(0xFFECFDF5),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        isClosed ? 'Closed' : 'Open',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: isClosed
+                              ? Colors.grey.shade700
+                              : const Color(0xFF047857),
+                        ),
+                      ),
+                    ),
+                  ] else ...[
+                    // Compact: tiny status dot instead of "Open"/"Closed" chip
+                    const SizedBox(width: 4),
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isClosed
+                            ? Colors.grey.shade500
                             : const Color(0xFF047857),
                       ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),

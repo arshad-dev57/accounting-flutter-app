@@ -56,7 +56,10 @@ class GeneralLedgerScreen extends StatelessWidget {
             Expanded(
               child: NotificationListener<ScrollNotification>(
                 onNotification: (scrollInfo) {
-                  if (!controller.isLoadingMore.value &&
+                  if (scrollInfo.metrics.maxScrollExtent <= 0) return false;
+                  if (controller.hasNextPage.value &&
+                      !controller.isLoadingMore.value &&
+                      !controller.isLoading.value &&
                       scrollInfo.metrics.pixels >=
                           scrollInfo.metrics.maxScrollExtent - 200) {
                     controller.loadMoreData();
@@ -296,13 +299,8 @@ class GeneralLedgerScreen extends StatelessWidget {
   ) {
     return Obx(() {
       final summary = controller.getCurrentSummary();
-      final entries = controller.filteredLedgerEntries;
       final isAllAccounts = controller.isAllAccountsSelected;
-
-      double closingBalance = 0.0;
-      if (!isAllAccounts && entries.isNotEmpty) {
-        closingBalance = entries.last.balance;
-      }
+      final closingBalance = controller.selectedAccountClosingBalance;
 
       final cards = <Widget>[
         _buildMobileKpiCard(
@@ -331,7 +329,7 @@ class GeneralLedgerScreen extends StatelessWidget {
           ),
         _buildMobileKpiCard(
           'Entries',
-          '${entries.length}',
+          '${summary['entryCount']}',
           kPrimary,
           Icons.receipt,
         ),
@@ -870,14 +868,8 @@ class GeneralLedgerScreen extends StatelessWidget {
   Widget _buildWebKpiStrip(GeneralLedgerController controller) {
     return Obx(() {
       final summary = controller.getCurrentSummary();
-      final entries = controller.filteredLedgerEntries;
       final isAllAccounts = controller.isAllAccountsSelected;
-
-      // For single account - get closing balance from entries
-      double closingBalance = 0.0;
-      if (!isAllAccounts && entries.isNotEmpty) {
-        closingBalance = entries.last.balance;
-      }
+      final closingBalance = controller.selectedAccountClosingBalance;
 
       return Container(
         color: kCardBg,
@@ -918,7 +910,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                     _buildWebKpiDivider(),
                     _buildWebKpiTile(
                       'Total Entries',
-                      '${entries.length}',
+                      '${summary['entryCount']}',
                       kPrimary,
                       Icons.receipt,
                     ),
@@ -963,7 +955,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                 Expanded(
                   child: _buildWebKpiTile(
                     'Total Entries',
-                    '${entries.length}',
+                    '${summary['entryCount']}',
                     kPrimary,
                     Icons.receipt,
                   ),
@@ -1381,14 +1373,39 @@ class GeneralLedgerScreen extends StatelessWidget {
           ),
           Container(height: 1, color: Colors.grey.withOpacity(0.15)),
           Expanded(
-            child: ListView.separated(
-              itemCount: entries.length,
-              separatorBuilder: (_, __) =>
-                  Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
-              itemBuilder: (context, index) {
-                final entry = entries[index];
-                return _buildWebTableRow(entry);
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (scrollInfo) {
+                if (scrollInfo.metrics.maxScrollExtent <= 0) return false;
+                if (controller.hasNextPage.value &&
+                    !controller.isLoadingMore.value &&
+                    !controller.isLoading.value &&
+                    scrollInfo.metrics.pixels >=
+                        scrollInfo.metrics.maxScrollExtent - 200) {
+                  controller.loadMoreData();
+                }
+                return false;
               },
+              child: ListView.separated(
+                itemCount: entries.length +
+                    (controller.isLoadingMore.value ? 1 : 0),
+                separatorBuilder: (_, __) =>
+                    Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
+                itemBuilder: (context, index) {
+                  if (index >= entries.length) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Center(
+                        child: LoadingAnimationWidget.discreteCircle(
+                          color: kPrimary,
+                          size: 28,
+                        ),
+                      ),
+                    );
+                  }
+                  final entry = entries[index];
+                  return _buildWebTableRow(entry);
+                },
+              ),
             ),
           ),
         ],
@@ -1583,7 +1600,9 @@ class GeneralLedgerScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Showing ${controller.ledgerEntries.length} of ${controller.totalItems.value} records',
+              controller.totalItems.value > 0
+                  ? 'Showing ${controller.ledgerEntries.length} of ${controller.totalItems.value} records'
+                  : 'Showing ${controller.ledgerEntries.length} records',
               style: TextStyle(fontSize: 13, color: kSubText),
             ),
             Row(
@@ -2060,7 +2079,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                     _pdfSummaryItem('Account', selectedAccount, accent),
                     _pdfSummaryItem(
                       'Total Entries',
-                      entries.length.toString(),
+                      '${summary['entryCount']}',
                       accent,
                     ),
                   ],

@@ -1,9 +1,10 @@
 // core/GeneralLedger/Controller/general_ledger_controller.dart
 
+import 'dart:async';
+
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
-import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -19,7 +20,6 @@ class GeneralLedgerController extends GetxController {
   var selectedDateRange = Rx<DateTimeRange?>(null);
   var searchQuery = ''.obs;
 
-  // Pagination variables
   var currentPage = 1.obs;
   var totalPages = 1.obs;
   var totalItems = 0.obs;
@@ -27,14 +27,11 @@ class GeneralLedgerController extends GetxController {
   var hasPrevPage = false.obs;
   var itemsPerPage = 20.obs;
 
-  // For dropdown accounts
   var accountsForDropdown = <Map<String, dynamic>>[].obs;
 
-  // Filter variables
   var showOnlyDebit = false.obs;
   var showOnlyCredit = false.obs;
 
-  // Summary totals from API
   var totalDebitSummary = 0.0.obs;
   var totalCreditSummary = 0.0.obs;
   var netDifferenceSummary = 0.0.obs;
@@ -42,22 +39,71 @@ class GeneralLedgerController extends GetxController {
   var trialBalanceStatus = ''.obs;
 
   final ApiClient _api = Get.find<ApiClient>();
+  Timer? _searchDebounce;
 
-  // Computed filtered entries
-  List<LedgerEntry> get filteredLedgerEntries {
-    List<LedgerEntry> filtered = ledgerEntries.toList();
+  List<LedgerEntry> get filteredLedgerEntries => ledgerEntries.toList();
 
-    if (showOnlyDebit.value) {
-      filtered = filtered.where((e) => e.debit > 0).toList();
-    } else if (showOnlyCredit.value) {
-      filtered = filtered.where((e) => e.credit > 0).toList();
-    }
+  bool get isAllAccountsSelected => selectedAccount.value == 'All Accounts';
 
-    return filtered;
+  double get selectedAccountClosingBalance {
+    if (isAllAccountsSelected) return 0;
+    final match = accountSummaries.where(
+      (a) => a.accountName == selectedAccount.value,
+    );
+    if (match.isEmpty) return 0;
+    return match.first.closingBalance;
+  }
+  Map<String, dynamic> _unwrapPayload(dynamic raw) {
+    if (raw is! Map) return <String, dynamic>{};
+    final map = Map<String, dynamic>.from(raw);
+    final inner = map['data'];
+    if (inner is Map) return Map<String, dynamic>.from(inner);
+    return map;
   }
 
-  // Check if All Accounts is selected
-  bool get isAllAccountsSelected => selectedAccount.value == 'All Accounts';
+  List<dynamic> _extractList(dynamic raw) {
+    if (raw is List) return raw;
+    if (raw is Map) {
+      final nested =
+          raw['data'] ?? raw['entries'] ?? raw['items'] ?? raw['accounts'] ?? raw['transactions'];
+      if (nested is List) return nested;
+    }
+    return const [];
+  }
+
+  void _applySummary(Map<String, dynamic>? summary) {
+    if (summary == null) return;
+    totalDebitSummary.value = _toDouble(summary['totalDebit']);
+    totalCreditSummary.value = _toDouble(summary['totalCredit']);
+    netDifferenceSummary.value = _toDouble(
+      summary['netDifference'] ?? summary['difference'] ?? 0,
+    );
+    isBalancedSummary.value = summary['isBalanced'] ?? true;
+    trialBalanceStatus.value =
+        summary['status']?.toString() ??
+        (isBalancedSummary.value ? '✅ Balanced' : '⚠️ Not Balanced');
+  }
+
+  void _applyPagination(Map<String, dynamic>? pagination, {int fallbackCount = 0}) {
+    if (pagination == null) {
+      // If API omitted pagination, assume single page of what we got
+      if (fallbackCount > 0 && totalItems.value == 0) {
+        totalItems.value = fallbackCount;
+        totalPages.value = 1;
+        hasNextPage.value = false;
+        hasPrevPage.value = false;
+      }
+      return;
+    }
+    totalPages.value = (pagination['pages'] as num?)?.toInt() ?? 1;
+    totalItems.value = (pagination['total'] as num?)?.toInt() ?? 0;
+    hasNextPage.value = pagination['hasNext'] == true;
+    hasPrevPage.value = pagination['hasPrev'] == true;
+    final pageFromApi = (pagination['page'] as num?)?.toInt();
+    if (pageFromApi != null && pageFromApi > 0) {
+      currentPage.value = pageFromApi;
+    }
+  }
 
   void toggleDebitFilter() {
     if (showOnlyDebit.value) {
@@ -111,6 +157,7 @@ class GeneralLedgerController extends GetxController {
 
   @override
   void onClose() {
+    _searchDebounce?.cancel();
     _fyWorker?.dispose();
     super.onClose();
   }
@@ -135,94 +182,29 @@ class GeneralLedgerController extends GetxController {
       );
 
       if (response.success) {
-        final data = response.data;
-        print('📊 API Response structure: ${data.runtimeType}');
-        print('📊 Full response keys: ${data.keys}');
-        print('📊 Data field: ${data['data']}');
-        print('📊 Data field type: ${data['data'].runtimeType}');
+        final outer = response.data;
+        final list = _extractList(
+          outer is Map ? (outer['data'] ?? outer) : outer,
+        );
 
-        // Handle data field - could be List or Map
-        final dataList = data['data'];
-        if (dataList is List) {
-          print('✅ Data is a List with ${dataList.length} items');
-          accountSummaries.value = dataList
-              .map((e) => AccountSummary.fromJson(e))
-              .toList();
+        accountSummaries.value =
+            list.map((e) => AccountSummary.fromJson(Map<String, dynamic>.from(e))).toList();
+        accountsForDropdown.value = list
+            .map(
+              (e) => {
+                'accountId': e['accountId'],
+                'accountName': e['accountName'],
+                'accountCode': e['accountCode'],
+              },
+            )
+            .toList();
 
-          accountsForDropdown.value = dataList
-              .map(
-                (e) => {
-                  'accountId': e['accountId'],
-                  'accountName': e['accountName'],
-                  'accountCode': e['accountCode'],
-                },
-              )
-              .toList();
-          print('✅ Parsed ${accountSummaries.length} account summaries');
-        } else if (dataList is Map) {
-          print('⚠️ Data is a Map, looking for nested list...');
-          // Handle nested structure: {count, data: [...], summary}
-          final nestedList = dataList['data'];
-          if (nestedList is List) {
-            print(
-              '✅ Found nested list in data.data with ${nestedList.length} items',
-            );
-            accountSummaries.value = nestedList
-                .map((e) => AccountSummary.fromJson(e))
-                .toList();
-            accountsForDropdown.value = nestedList
-                .map(
-                  (e) => {
-                    'accountId': e['accountId'],
-                    'accountName': e['accountName'],
-                    'accountCode': e['accountCode'],
-                  },
-                )
-                .toList();
-          } else {
-            // Try other common keys
-            final altList =
-                dataList['entries'] ??
-                dataList['items'] ??
-                dataList['accounts'];
-            if (altList is List) {
-              print('✅ Found nested list with ${altList.length} items');
-              accountSummaries.value = altList
-                  .map((e) => AccountSummary.fromJson(e))
-                  .toList();
-              accountsForDropdown.value = altList
-                  .map(
-                    (e) => {
-                      'accountId': e['accountId'],
-                      'accountName': e['accountName'],
-                      'accountCode': e['accountCode'],
-                    },
-                  )
-                  .toList();
-            } else {
-              print('❌ No nested list found in Map');
-              accountSummaries.value = [];
-              accountsForDropdown.value = [];
-            }
-          }
-        } else {
-          print(
-            '⚠️ API returned non-List data for accounts: ${dataList.runtimeType}',
-          );
-          accountSummaries.value = [];
-          accountsForDropdown.value = [];
-        }
-
-        // ─── Update summary totals from API ──────────────────────
-        if (data['summary'] != null) {
-          final summary = data['summary'];
-          totalDebitSummary.value = _toDouble(summary['totalDebit']);
-          totalCreditSummary.value = _toDouble(summary['totalCredit']);
-          netDifferenceSummary.value = _toDouble(summary['netDifference'] ?? 0);
-          isBalancedSummary.value = summary['isBalanced'] ?? true;
-          trialBalanceStatus.value =
-              summary['status'] ??
-              (isBalancedSummary.value ? '✅ Balanced' : '⚠️ Not Balanced');
+        final payload = _unwrapPayload(outer);
+        final summary = payload['summary'];
+        if (summary is Map) {
+          _applySummary(Map<String, dynamic>.from(summary));
+        } else if (outer is Map && outer['summary'] is Map) {
+          _applySummary(Map<String, dynamic>.from(outer['summary']));
         }
       } else {
         AppSnackbar.error(
@@ -242,23 +224,29 @@ class GeneralLedgerController extends GetxController {
     }
   }
 
-  // Fetch ledger entries with pagination
-  Future<void> fetchLedgerEntries({bool resetPage = true}) async {
+  Future<void> fetchLedgerEntries({
+    bool resetPage = true,
+    bool append = false,
+  }) async {
     try {
       if (resetPage) {
         currentPage.value = 1;
         isLoading(true);
-      } else {
+      } else if (append) {
         isLoadingMore(true);
+      } else {
+        isLoading(true);
       }
 
-      String endpoint;
-      Map<String, dynamic> queryParams = {};
+      const endpoint = '/api/general-ledger/all-entries';
+      final queryParams = <String, dynamic>{
+        'page': currentPage.value.toString(),
+        'limit': itemsPerPage.value.toString(),
+        'sortBy': 'date',
+        'sortOrder': 'desc',
+      };
 
-      // Build endpoint based on account selection
-      if (selectedAccount.value == 'All Accounts') {
-        endpoint = '/api/general-ledger/all-entries';
-      } else {
+      if (selectedAccount.value != 'All Accounts') {
         final selected = accountSummaries.firstWhere(
           (a) => a.accountName == selectedAccount.value,
           orElse: () => AccountSummary(
@@ -272,112 +260,60 @@ class GeneralLedgerController extends GetxController {
             closingBalance: 0,
           ),
         );
-
         if (selected.accountId.isEmpty) {
           isLoading(false);
           isLoadingMore(false);
           return;
         }
-
-        endpoint = '/api/general-ledger/entries/${selected.accountId}';
+        queryParams['accountId'] = selected.accountId;
       }
 
-      // Add pagination params
-      queryParams['page'] = currentPage.value.toString();
-      queryParams['limit'] = itemsPerPage.value.toString();
-
-      // Add date range filter
       if (selectedDateRange.value != null) {
-        queryParams['startDate'] = selectedDateRange.value!.start
-            .toIso8601String();
+        queryParams['startDate'] =
+            selectedDateRange.value!.start.toIso8601String();
         queryParams['endDate'] = selectedDateRange.value!.end.toIso8601String();
       }
       putFiscalYearId(queryParams);
 
-      // Add sorting
-      queryParams['sortBy'] = 'date';
-      queryParams['sortOrder'] = 'desc';
+      if (searchQuery.value.trim().isNotEmpty) {
+        queryParams['search'] = searchQuery.value.trim();
+      }
+      if (showOnlyDebit.value) queryParams['showDebitOnly'] = 'true';
+      if (showOnlyCredit.value) queryParams['showCreditOnly'] = 'true';
 
       final response = await _api.get(endpoint, queryParameters: queryParams);
 
       if (response.success) {
-        final data = response.data;
-        print('📊 Ledger API Response structure: ${data.runtimeType}');
-        print('📊 Full response keys: ${data.keys}');
-        print('📊 Data field: ${data['data']}');
-        print('📊 Data field type: ${data['data'].runtimeType}');
+        final outer = response.data;
+        final payload = _unwrapPayload(outer);
+        final list = _extractList(
+          payload.containsKey('data') || payload.containsKey('entries')
+              ? payload
+              : (outer is Map ? outer['data'] : outer),
+        );
 
-        // Handle data field - could be List or Map
-        final dataList = data['data'];
-        List<LedgerEntry> entries = [];
+        final entries = list
+            .map((e) => LedgerEntry.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
 
-        if (dataList is List) {
-          print('✅ Data is a List with ${dataList.length} items');
-          entries = dataList.map((e) => LedgerEntry.fromJson(e)).toList();
-          print('✅ Parsed ${entries.length} ledger entries');
-        } else if (dataList is Map) {
-          print('⚠️ Data is a Map, looking for nested list...');
-          // Handle nested structure: {count, data: [...], summary}
-          final nestedList = dataList['data'];
-          if (nestedList is List) {
-            print(
-              '✅ Found nested list in data.data with ${nestedList.length} items',
-            );
-            entries = nestedList.map((e) => LedgerEntry.fromJson(e)).toList();
-          } else {
-            // Try other common keys
-            final altList =
-                dataList['entries'] ??
-                dataList['items'] ??
-                dataList['transactions'];
-            if (altList is List) {
-              print('✅ Found nested list with ${altList.length} items');
-              entries = altList.map((e) => LedgerEntry.fromJson(e)).toList();
-            } else {
-              print('❌ No nested list found in Map');
-            }
-          }
-        } else {
-          print(
-            '⚠️ API returned non-List data for ledger entries: ${dataList.runtimeType}',
-          );
-          print('📋 Response data structure: $data');
+        final pagination = payload['pagination'];
+        _applyPagination(
+          pagination is Map ? Map<String, dynamic>.from(pagination) : null,
+          fallbackCount: entries.length,
+        );
+
+        // Prefer entries-response summary (full filtered set); keep prior if absent
+        final summary = payload['summary'];
+        if (summary is Map) {
+          _applySummary(Map<String, dynamic>.from(summary));
         }
 
-        // Update pagination info
-        if (data['pagination'] != null) {
-          totalPages.value = data['pagination']['pages'] ?? 1;
-          totalItems.value = data['pagination']['total'] ?? 0;
-          hasNextPage.value = data['pagination']['hasNext'] ?? false;
-          hasPrevPage.value = data['pagination']['hasPrev'] ?? false;
-        }
-
-        // Update summary from response
-        if (data['summary'] != null) {
-          final summary = data['summary'];
-          totalDebitSummary.value = _toDouble(summary['totalDebit'] ?? 0);
-          totalCreditSummary.value = _toDouble(summary['totalCredit'] ?? 0);
-          netDifferenceSummary.value = _toDouble(summary['netDifference'] ?? 0);
-          isBalancedSummary.value = summary['isBalanced'] ?? true;
-          trialBalanceStatus.value = isBalancedSummary.value
-              ? '✅ Balanced'
-              : '⚠️ Not Balanced';
-        }
-
-        if (resetPage) {
-          allLedgerEntries.value = entries;
-          if (searchQuery.value.isNotEmpty) {
-            searchEntries(searchQuery.value);
-          } else {
-            ledgerEntries.value = entries;
-          }
-        } else {
+        if (append) {
           allLedgerEntries.addAll(entries);
-          if (searchQuery.value.isNotEmpty) {
-            searchEntries(searchQuery.value);
-          } else {
-            ledgerEntries.addAll(entries);
-          }
+          ledgerEntries.addAll(entries);
+        } else {
+          allLedgerEntries.value = entries;
+          ledgerEntries.value = entries;
         }
       } else {
         AppSnackbar.error(
@@ -400,27 +336,24 @@ class GeneralLedgerController extends GetxController {
     }
   }
 
-  // Load next page for web pagination
   Future<void> loadNextPage() async {
     if (hasNextPage.value && !isLoadingMore.value && !isLoading.value) {
       currentPage.value++;
-      await fetchLedgerEntries(resetPage: false);
+      await fetchLedgerEntries(resetPage: false, append: false);
     }
   }
 
-  // Load previous page for web pagination
   Future<void> loadPreviousPage() async {
     if (hasPrevPage.value && !isLoadingMore.value && !isLoading.value) {
       currentPage.value--;
-      await fetchLedgerEntries(resetPage: false);
+      await fetchLedgerEntries(resetPage: false, append: false);
     }
   }
 
-  // Load more data for mobile lazy loading
   Future<void> loadMoreData() async {
     if (hasNextPage.value && !isLoadingMore.value && !isLoading.value) {
       currentPage.value++;
-      await fetchLedgerEntries(resetPage: false);
+      await fetchLedgerEntries(resetPage: false, append: true);
     }
   }
 
@@ -458,19 +391,10 @@ class GeneralLedgerController extends GetxController {
 
   void searchEntries(String query) {
     searchQuery.value = query;
-
-    if (query.isEmpty) {
-      ledgerEntries.value = allLedgerEntries.value;
-    } else {
-      final searchLower = query.toLowerCase();
-      final results = allLedgerEntries.where((entry) {
-        return entry.description.toLowerCase().contains(searchLower) ||
-            entry.reference.toLowerCase().contains(searchLower) ||
-            entry.accountName.toLowerCase().contains(searchLower) ||
-            entry.accountCode.toLowerCase().contains(searchLower);
-      }).toList();
-      ledgerEntries.value = results;
-    }
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 400), () {
+      fetchLedgerEntries(resetPage: true);
+    });
   }
 
   void _applyDateFilter(String filter) {
@@ -504,7 +428,6 @@ class GeneralLedgerController extends GetxController {
     }
   }
 
-  // Export functions
   void exportLedger() {
     AppSnackbar.success(
       kPrimary,
@@ -521,26 +444,19 @@ class GeneralLedgerController extends GetxController {
     );
   }
 
-  // ─── Get summary for current view ──────────────────────────────
+  // ─── Get summary for current view (API totals — matches Next.js) ───
   Map<String, dynamic> getCurrentSummary() {
-    final entries = filteredLedgerEntries;
-    final totalDebit = entries.fold(0.0, (sum, e) => sum + e.debit);
-    final totalCredit = entries.fold(0.0, (sum, e) => sum + e.credit);
-    final netDifference = totalDebit - totalCredit;
-    final isBalanced = netDifference.abs() < 0.01;
-
     return {
-      'totalDebit': totalDebit,
-      'totalCredit': totalCredit,
-      'netDifference': netDifference,
-      'isBalanced': isBalanced,
-      'entryCount': entries.length,
+      'totalDebit': totalDebitSummary.value,
+      'totalCredit': totalCreditSummary.value,
+      'netDifference': netDifferenceSummary.value,
+      'isBalanced': isBalancedSummary.value,
+      'entryCount': totalItems.value,
       'isAllAccounts': isAllAccountsSelected,
     };
   }
 }
 
-// ─── ACCOUNT SUMMARY MODEL ─────────────────────────────────────────
 class AccountSummary {
   final String accountId;
   final String accountCode;
@@ -579,7 +495,6 @@ class AccountSummary {
   }
 }
 
-// ─── LEDGER ENTRY MODEL ────────────────────────────────────────────
 class LedgerEntry {
   final String id;
   final DateTime date;
