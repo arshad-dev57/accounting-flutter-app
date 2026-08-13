@@ -35,7 +35,10 @@ class _FiscalYearListBodyState extends State<_FiscalYearListBody> {
   @override
   void initState() {
     super.initState();
-    widget.controller.fetchFiscalYears();
+    // Always refresh on open; shares in-flight request if splash/dashboard already loading.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.controller.ensureFiscalYearsLoaded(force: true);
+    });
   }
 
   @override
@@ -68,7 +71,9 @@ class _FiscalYearListBodyState extends State<_FiscalYearListBody> {
                 Icon(Icons.calendar_today_outlined, size: 80, color: kSubText),
                 SizedBox(height: 2.h),
                 Text(
-                  'No Fiscal Years Found',
+                  controller.error.value.isNotEmpty
+                      ? 'Could not load fiscal years'
+                      : 'No Fiscal Years Found',
                   style: TextStyle(
                     fontSize: 16.sp,
                     color: kSubText,
@@ -77,27 +82,42 @@ class _FiscalYearListBodyState extends State<_FiscalYearListBody> {
                 ),
                 SizedBox(height: 1.h),
                 Text(
-                  'Create your first fiscal year to get started',
+                  controller.error.value.isNotEmpty
+                      ? controller.error.value
+                      : 'Create your first fiscal year to get started',
+                  textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 12.sp, color: kSubText),
                 ),
                 SizedBox(height: 3.h),
-                ElevatedButton.icon(
-                  onPressed: () =>
-                      _showAddFiscalYearDialog(controller, context),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Create Fiscal Year'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kPrimary,
-                    foregroundColor: Colors.black87,
+                if (controller.error.value.isNotEmpty)
+                  ElevatedButton.icon(
+                    onPressed: () =>
+                        controller.ensureFiscalYearsLoaded(force: true),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kPrimary,
+                      foregroundColor: Colors.black87,
+                    ),
+                  )
+                else
+                  ElevatedButton.icon(
+                    onPressed: () =>
+                        _showAddFiscalYearDialog(controller, context),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Create Fiscal Year'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kPrimary,
+                      foregroundColor: Colors.black87,
+                    ),
                   ),
-                ),
               ],
             ),
           );
         }
 
         return RefreshIndicator(
-          onRefresh: () => controller.fetchFiscalYears(),
+          onRefresh: () => controller.ensureFiscalYearsLoaded(force: true),
           child: ListView.builder(
             padding: EdgeInsets.all(2.w),
             itemCount: controller.fiscalYears.length,
@@ -135,7 +155,7 @@ class _FiscalYearListBodyState extends State<_FiscalYearListBody> {
         IconButton(
           icon: const Icon(Icons.refresh_rounded, color: Colors.black87),
           onPressed: () {
-            controller.fetchFiscalYears();
+            controller.ensureFiscalYearsLoaded(force: true);
           },
         ),
       ],

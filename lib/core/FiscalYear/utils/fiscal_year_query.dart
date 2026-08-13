@@ -25,12 +25,21 @@ void putFiscalYearId(Map<String, dynamic> params) {
   if (id != null) params['fiscalYearId'] = id;
 }
 
-/// Wait until the FY list has finished loading (or [timeout]).
+/// Wait until FY is ready for API calls (loaded + selection when available).
 Future<void> waitForFiscalYearReady({
-  Duration timeout = const Duration(seconds: 6),
+  Duration timeout = const Duration(seconds: 10),
 }) async {
-  if (!Get.isRegistered<FiscalYearController>()) return;
-  final c = Get.find<FiscalYearController>();
+  final c = ensureFiscalYearController();
+  if (c == null) return;
+
+  await c.ensureFiscalYearsLoaded();
+
+  // First paint sometimes races auth/token — retry once if still empty.
+  if (c.fiscalYears.isEmpty &&
+      (c.selectedFiscalYearId == null || c.selectedFiscalYearId!.isEmpty)) {
+    await c.ensureFiscalYearsLoaded(force: true);
+  }
+
   final deadline = DateTime.now().add(timeout);
   while (c.isLoading.value && DateTime.now().isBefore(deadline)) {
     await Future.delayed(const Duration(milliseconds: 40));

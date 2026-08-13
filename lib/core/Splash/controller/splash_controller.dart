@@ -21,9 +21,11 @@ class SplashController extends GetxController {
     bool? hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
 
     if (token != null && token.isNotEmpty) {
-      if (Get.isRegistered<FiscalYearController>()) {
-        await Get.find<FiscalYearController>().fetchFiscalYears();
-      }
+      final fy = Get.isRegistered<FiscalYearController>()
+          ? Get.find<FiscalYearController>()
+          : Get.put(FiscalYearController(), permanent: true);
+      // Force so we always hydrate FY before dashboard (avoids empty first paint).
+      await fy.ensureFiscalYearsLoaded(force: true);
     }
 
     if (kIsWeb) {

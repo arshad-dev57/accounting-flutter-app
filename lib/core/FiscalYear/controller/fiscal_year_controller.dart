@@ -18,30 +18,99 @@ class FiscalYearController extends GetxController {
   var isLoading = true.obs;
   var selectedFiscalYear = Rx<FiscalYear?>(null);
   var error = ''.obs;
+  /// Restored from disk before the list API returns — so dashboards can still
+  /// attach fiscalYearId on first paint.
+  final RxnString storedSelectedId = RxnString();
 
   final ApiClient _api = Get.find<ApiClient>();
+  Future<void>? _fetchInFlight;
+  int _fetchGeneration = 0;
+  bool _hasAttemptedFetch = false;
 
   @override
   void onInit() {
     super.onInit();
-    fetchFiscalYears();
+    // Hydrate selection + load only once a token exists (avoids empty 401 race).
+    Future(() async {
+      await _hydrateStoredSelection();
+      await ensureFiscalYearsLoaded();
+    });
   }
 
-  Future<void> fetchFiscalYears() async {
+  Future<void> _hydrateStoredSelection() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final storedId = prefs.getString(kSelectedFiscalYearStorageKey);
+      if (storedId != null && storedId.isNotEmpty) {
+        storedSelectedId.value = storedId;
+      }
+    } catch (_) {}
+  }
+
+  /// Load fiscal years when authenticated. Safe to call many times — shares
+  /// one in-flight request and skips if already loaded (unless [force]).
+  Future<void> ensureFiscalYearsLoaded({bool force = false}) async {
+    final token = await _api.getToken();
+    if (token == null || token.isEmpty) {
+      isLoading(false);
+      return;
+    }
+    if (!force &&
+        fiscalYears.isNotEmpty &&
+        (selectedFiscalYear.value != null ||
+            (storedSelectedId.value != null &&
+                storedSelectedId.value!.isNotEmpty))) {
+      isLoading(false);
+      return;
+    }
+    await fetchFiscalYears(force: force);
+  }
+
+  Future<void> fetchFiscalYears({bool force = false}) async {
+    if (_fetchInFlight != null) {
+      await _fetchInFlight;
+      if (!force) return;
+    }
+    final future = _doFetchFiscalYears();
+    _fetchInFlight = future;
+    try {
+      await future;
+    } finally {
+      if (identical(_fetchInFlight, future)) {
+        _fetchInFlight = null;
+      }
+    }
+  }
+
+  Future<void> _doFetchFiscalYears() async {
+    final generation = ++_fetchGeneration;
     try {
       isLoading(true);
       error.value = '';
+      _hasAttemptedFetch = true;
+
+      final token = await _api.getToken();
+      if (token == null || token.isEmpty) {
+        error.value = '';
+        return;
+      }
 
       final response = await _api.get('/api/fiscal-year');
+      if (generation != _fetchGeneration) return;
 
       if (response.success) {
         final data = response.data;
         final raw = data is Map ? (data['data'] ?? data) : data;
         final list = raw is List ? raw : <dynamic>[];
-        final years = list
-            .whereType<Map>()
-            .map((e) => FiscalYear.fromJson(Map<String, dynamic>.from(e)))
-            .toList();
+        final years = <FiscalYear>[];
+        for (final e in list) {
+          if (e is! Map) continue;
+          try {
+            years.add(FiscalYear.fromJson(Map<String, dynamic>.from(e)));
+          } catch (_) {
+            // Skip malformed rows instead of failing the whole load.
+          }
+        }
 
         years.sort((a, b) => b.startDate.compareTo(a.startDate));
         fiscalYears.value = years;
@@ -56,9 +125,13 @@ class FiscalYearController extends GetxController {
         }
       }
     } catch (e) {
-      error.value = 'Failed to load fiscal years: $e';
+      if (generation == _fetchGeneration) {
+        error.value = 'Failed to load fiscal years: $e';
+      }
     } finally {
-      isLoading(false);
+      if (generation == _fetchGeneration) {
+        isLoading(false);
+      }
     }
   }
 
@@ -70,7 +143,8 @@ class FiscalYearController extends GetxController {
     }
 
     final prefs = await SharedPreferences.getInstance();
-    final storedId = prefs.getString(kSelectedFiscalYearStorageKey);
+    final storedId = prefs.getString(kSelectedFiscalYearStorageKey) ??
+        storedSelectedId.value;
     FiscalYear? chosen;
 
     if (storedId != null && storedId.isNotEmpty) {
@@ -87,6 +161,8 @@ class FiscalYearController extends GetxController {
   }
 
   Future<void> _persistSelectedId(String? id) async {
+    storedSelectedId.value =
+        (id == null || id.isEmpty) ? null : id;
     final prefs = await SharedPreferences.getInstance();
     if (id == null || id.isEmpty) {
       await prefs.remove(kSelectedFiscalYearStorageKey);
@@ -303,13 +379,25 @@ class FiscalYearController extends GetxController {
     await _persistSelectedId(year?.id);
   }
 
-  String? get selectedFiscalYearId => selectedFiscalYear.value?.id;
+  String? get selectedFiscalYearId {
+    final live = selectedFiscalYear.value?.id;
+    if (live != null && live.isNotEmpty) return live;
+    final stored = storedSelectedId.value;
+    if (stored != null && stored.isNotEmpty) return stored;
+    return null;
+  }
+
+  bool get hasLoadedList => _hasAttemptedFetch && !isLoading.value;
 
   /// Clear in-memory + stored selection (call on logout).
   Future<void> clearSession() async {
+    _fetchGeneration++;
+    _fetchInFlight = null;
+    _hasAttemptedFetch = false;
     fiscalYears.clear();
     selectedFiscalYear.value = null;
     error.value = '';
+    isLoading(false);
     await _persistSelectedId(null);
   }
 
