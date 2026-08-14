@@ -4,6 +4,7 @@ import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/Invoice/controller/invoice_controller.dart';
+import 'package:BisonsTechs_app/core/tax/tax_rate_field.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -2340,9 +2341,6 @@ class InvoicesScreen extends StatelessWidget {
                             final priceCtrl = TextEditingController(
                               text: item['unitPrice'].toString(),
                             );
-                            final taxCtrl = TextEditingController(
-                              text: item['taxRate'].toString(),
-                            );
 
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 8),
@@ -2390,16 +2388,12 @@ class InvoicesScreen extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 6),
                                   SizedBox(
-                                    width: isWeb ? 60 : 50,
-                                    child: _dialogInput(
-                                      controller: taxCtrl,
-                                      hint: '0',
-                                      isWeb: isWeb,
-                                      keyboardType: TextInputType.number,
-                                      textAlign: TextAlign.right,
-                                      onChanged: (v) {
-                                        item['taxRate'] =
-                                            double.tryParse(v) ?? 0;
+                                    width: isWeb ? 140 : 120,
+                                    child: TaxRateField(
+                                      dense: true,
+                                      value: (item['taxRate'] as num?)?.toDouble() ?? 0,
+                                      onRateChanged: (v) {
+                                        item['taxRate'] = v;
                                         setState(() {});
                                       },
                                     ),

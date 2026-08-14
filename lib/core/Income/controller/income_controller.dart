@@ -13,6 +13,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
@@ -73,16 +74,26 @@ class IncomeController extends GetxController {
   // ✅ Scroll Controller for Lazy Loading
   final ScrollController scrollController = ScrollController();
 
+  Worker? _fyWorker;
+
   @override
   void onInit() {
     super.onInit();
     searchController.addListener(_onSearchChanged);
-    loadAllData();
-    loadSummary();
+    Future(() async {
+      await waitForFiscalYearReady();
+      loadAllData();
+      loadSummary();
+    });
+    _fyWorker = listenFiscalYearChanges(() {
+      loadAllData();
+      loadSummary();
+    });
   }
 
   @override
   void onClose() {
+    _fyWorker?.dispose();
     searchController.removeListener(_onSearchChanged);
     searchController.dispose();
     scrollController.dispose();
@@ -152,6 +163,7 @@ class IncomeController extends GetxController {
       if (searchQuery.value.isNotEmpty) {
         params['search'] = searchQuery.value;
       }
+      putFiscalYearId(params);
 
       final response = await _api.get(
         '/api/income/list',
@@ -318,6 +330,7 @@ class IncomeController extends GetxController {
         params['startDate'] = DateFormat('yyyy-MM-dd').format(startDate.value!);
         params['endDate'] = DateFormat('yyyy-MM-dd').format(endDate.value!);
       }
+      putFiscalYearId(params);
 
       final response = await _api.get(
         '/api/income/summary',
@@ -462,6 +475,108 @@ class IncomeController extends GetxController {
       if (Get.isDialogOpen ?? false) Get.back();
       print('❌ Error creating income: $e');
       _showError('Error creating income: $e');
+    } finally {
+      isSaving.value = false;
+    }
+  }
+
+  Future<void> updateIncome({
+    required String id,
+    required DateTime date,
+    required String incomeType,
+    required String? incomeAccountId,
+    required String? customerId,
+    required List<Map<String, dynamic>> items,
+    required double? amount,
+    required double taxRate,
+    required String description,
+    required String reference,
+    required String paymentMethod,
+    required String? bankAccountId,
+  }) async {
+    Get.dialog(
+      Center(
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: kSuccess,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Updating income...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kText,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+
+    try {
+      isSaving.value = true;
+      final Map<String, dynamic> incomeData = {
+        'date': DateFormat('yyyy-MM-dd').format(date),
+        'incomeType': incomeType,
+        'incomeAccountId': incomeAccountId,
+        'customerId': customerId,
+        'items': items,
+        'amount': amount ?? 0,
+        'taxRate': taxRate,
+        'description': description,
+        'reference': reference,
+        'paymentMethod': paymentMethod,
+      };
+
+      final bool hasValidBankAccount =
+          bankAccountId != null &&
+          bankAccountId.isNotEmpty &&
+          bankAccountId != 'null';
+
+      if (hasValidBankAccount) {
+        incomeData['bankAccountId'] = bankAccountId;
+      }
+
+      final response = await _api.put('/api/income/$id', body: incomeData);
+      Get.back();
+
+      if (response.success) {
+        final Map<String, dynamic> responseData = response.data;
+        if (responseData['success'] == true) {
+          AppSnackbar.success(
+            kSuccess,
+            'Success',
+            'Income updated across ledger and reports',
+          );
+          await refreshData();
+        } else {
+          _showError(responseData['message'] ?? 'Failed to update income');
+        }
+      } else {
+        _showError(response.message ?? 'Failed to update income');
+      }
+    } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
+      print('❌ Error updating income: $e');
+      _showError('Error updating income: $e');
     } finally {
       isSaving.value = false;
     }

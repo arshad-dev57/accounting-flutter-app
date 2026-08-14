@@ -33,6 +33,34 @@ import 'package:BisonsTechs_app/core/chartofaccounts/screens/chart_of_account_sc
 import 'package:BisonsTechs_app/core/settings/screens/currency_screen.dart';
 import 'package:BisonsTechs_app/core/settings/screens/pdf_report_settings_screen.dart';
 import 'package:BisonsTechs_app/core/dashboard/controllers/dashboard_controller.dart';
+import 'package:BisonsTechs_app/widgets/reload_when_visible.dart';
+import 'package:BisonsTechs_app/core/AccountPayable/controller/account_payable_controller.dart';
+import 'package:BisonsTechs_app/core/AccountRecievables/controllers/account_recievables_controller.dart';
+import 'package:BisonsTechs_app/core/BankAccounts/controllers/bankaccount_controller.dart';
+import 'package:BisonsTechs_app/core/Bills/controller/bills_controller.dart';
+import 'package:BisonsTechs_app/core/CapitalEquity/controller/equity_controller.dart';
+import 'package:BisonsTechs_app/core/CreditNote/controllers/creditnote_controller.dart';
+import 'package:BisonsTechs_app/core/Expense/controller/expense_controller.dart';
+import 'package:BisonsTechs_app/core/FixedAssets/controllers/fixed_asset_controller.dart';
+import 'package:BisonsTechs_app/core/GeneralLedger/Controller/general_ledger_controller.dart';
+import 'package:BisonsTechs_app/core/Income/controller/income_controller.dart';
+import 'package:BisonsTechs_app/core/PaymentMade/controller/paymentmade_controller.dart';
+import 'package:BisonsTechs_app/core/TrailBalance/controller/trail_balance_controller.dart';
+import 'package:BisonsTechs_app/core/accountingReports/accounting_report_controller.dart';
+import 'package:BisonsTechs_app/core/balancesheet/controller/balance_sheet_controller.dart';
+import 'package:BisonsTechs_app/core/cashflowstatement/controller/cashflow_controller.dart';
+import 'package:BisonsTechs_app/core/chartofaccounts/controller/chart_of_account_controller.dart';
+import 'package:BisonsTechs_app/core/journalEntries/Controllers/journal_entry_controller.dart';
+import 'package:BisonsTechs_app/core/loanBorrowing/controller/loan_controller.dart';
+import 'package:BisonsTechs_app/core/paymentRecieved/controller/payment_recieved_controller.dart';
+import 'package:BisonsTechs_app/core/profitlossStatement/controllers/profit_and_loss_controller.dart';
+import 'package:BisonsTechs_app/core/settings/controller/pdf_report_settings_controller.dart';
+import 'package:BisonsTechs_app/core/tax/tax_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/invoice/controller/warehouse_invoice_controller.dart';
+import 'package:BisonsTechs_app/core/warehousecustomer/warehouse_customer_controller.dart';
+import 'package:BisonsTechs_app/core/tax/tax_screen.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/screen/fiscal_year_list_screen.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/widgets/fiscal_year_select.dart';
 import 'package:BisonsTechs_app/core/journalEntries/Screens/journal_entries_screen.dart';
 import 'package:BisonsTechs_app/core/loanBorrowing/screen/_loan_borrowing_screen.dart';
 import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
@@ -75,12 +103,31 @@ const _kHeroIcon = Color(0xFFC5D8E8);
 const _kChipBg = Color(0xFFF0F2F8);
 const _kAppBarBg = Color(0xFFF7F9FC);
 
-class DashboardScreen extends GetView<DashboardController> {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen>
+    with RouteAware, ReloadWhenVisible {
+  @override
+  void reloadOnOpen() {
+    if (Get.isRegistered<DashboardController>()) {
+      Get.find<DashboardController>().loadDashboardData();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => const _AccountingDashboardView();
+}
+
+class _AccountingDashboardView extends GetView<DashboardController> {
+  const _AccountingDashboardView();
+
+  @override
   Widget build(BuildContext context) {
-    // Controller is provided by route Bindings — do not Get.put() here.
     final isMobile = ResponsiveUtils.isMobile(context);
     final isTablet = MediaQuery.of(context).size.width >= 600;
 
@@ -111,6 +158,8 @@ class DashboardScreen extends GetView<DashboardController> {
                     _buildPeriodChips(),
                     const SizedBox(height: 16),
                     _buildKpiGrid(isTablet),
+                    const SizedBox(height: 16),
+                    _buildCapitalCard(),
                     const SizedBox(height: 16),
                     _buildFinancialOverview(),
                     const SizedBox(height: 16),
@@ -167,10 +216,10 @@ class DashboardScreen extends GetView<DashboardController> {
               ),
             )
           : null,
+      titleSpacing: isMobile ? 0 : NavigationToolbar.kMiddleSpacing,
       title: Obx(() {
         final logo = controller.businessLogo.value;
         return Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
             logo.isNotEmpty
                 ? Container(
@@ -244,19 +293,28 @@ class DashboardScreen extends GetView<DashboardController> {
                     ),
                   ),
             const SizedBox(width: 8),
-            const Text(
-              'BisonsTechs',
-              style: TextStyle(
-                color: _kTextPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.3,
+            Flexible(
+              child: Text(
+                isMobile ? 'Bisons' : 'BisonsTechs',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: _kTextPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.3,
+                ),
               ),
             ),
           ],
         );
       }),
       actions: [
+        FiscalYearSelect(
+          compact: true,
+          // Manage FY from drawer on mobile — keeps AppBar from overflowing
+          showManageLink: !isMobile,
+        ),
         IconButton(
           icon: const Icon(
             Icons.notifications_none_rounded,
@@ -264,13 +322,15 @@ class DashboardScreen extends GetView<DashboardController> {
             size: 22,
           ),
           onPressed: () => Get.to(() => const NotificationScreen()),
+          visualDensity: VisualDensity.compact,
+          padding: const EdgeInsets.all(8),
+          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
         ),
         const SizedBox(width: 4),
       ],
     );
   }
 
-  // ─── Shimmer Loading ──────────────────────────────────────────────────────
   Widget _buildShimmer() {
     return Shimmer.fromColors(
       baseColor: const Color(0xFFEEEFF4),
@@ -712,6 +772,15 @@ class DashboardScreen extends GetView<DashboardController> {
           trendUp: controller.isCashPositive.value,
         ),
         _KpiItem(
+          label: 'Cash',
+          value: controller.totalCashBalanceFormatted.value,
+          icon: Icons.payments_outlined,
+          iconBg: _kGreenBg,
+          iconColor: _kGreen,
+          trend: 'Cash in Hand',
+          trendUp: controller.totalCashBalance.value >= 0,
+        ),
+        _KpiItem(
           label: 'Receivables',
           value: controller.outstandingFormatted.value,
           icon: Icons.hourglass_empty_rounded,
@@ -750,6 +819,287 @@ class DashboardScreen extends GetView<DashboardController> {
     });
   }
 
+  Widget _buildCapitalCard() {
+    return Obx(() {
+      final up = controller.isCapitalIncrease.value;
+      final rows = controller.capitalChart;
+      final labels = <String>[];
+      final openingSpots = <FlSpot>[];
+      final capitalSpots = <FlSpot>[];
+      if (rows.isEmpty) {
+        labels.addAll(['Start', 'Now']);
+        openingSpots.addAll([
+          FlSpot(0, controller.openingCapital.value),
+          FlSpot(1, controller.openingCapital.value),
+        ]);
+        capitalSpots.addAll([
+          FlSpot(0, controller.openingCapital.value),
+          FlSpot(
+            1,
+            controller.openingCapital.value + controller.periodEarnings.value,
+          ),
+        ]);
+      } else {
+        for (var i = 0; i < rows.length; i++) {
+          final row = rows[i];
+          final month = row['month']?.toString() ?? row['label']?.toString() ?? '';
+          if (month.contains(' ') && !RegExp(r'\d{4}').hasMatch(month)) {
+            labels.add(month);
+          } else if (month.length > 3) {
+            labels.add(month.substring(0, 3));
+          } else {
+            labels.add(month);
+          }
+          openingSpots.add(FlSpot(i.toDouble(), _asChartDouble(row['opening'])));
+          capitalSpots.add(FlSpot(i.toDouble(), _asChartDouble(row['capital'])));
+        }
+      }
+
+      final ys = [
+        ...openingSpots.map((s) => s.y),
+        ...capitalSpots.map((s) => s.y),
+      ];
+      final rawMin = ys.fold<double>(0, (a, b) => b < a ? b : a);
+      final rawMax = ys.fold<double>(0, (a, b) => b > a ? b : a);
+      final minY = rawMin >= 0 ? 0.0 : rawMin * 1.2;
+      final span = (rawMax - minY).abs();
+      final maxY = span < 1 ? (rawMax.abs() < 1 ? 1.0 : rawMax * 1.2) : rawMax * 1.12;
+
+      return _SectionCard(
+        title: 'Capital & earnings',
+        trailing: Text(
+          controller.periodLabel,
+          style: const TextStyle(fontSize: 11, color: _kTextSub),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _capitalStat(
+                    'Your capital',
+                    controller.openingCapitalFormatted.value,
+                    kPrimary,
+                    _kPrimaryBg,
+                    Icons.account_balance_wallet_outlined,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _capitalStat(
+                    up ? 'Earned this period' : 'Decreased this period',
+                    controller.periodEarningsFormatted.value,
+                    up ? _kGreen : _kRed,
+                    up ? _kGreenBg : _kRedBg,
+                    up
+                        ? Icons.trending_up_rounded
+                        : Icons.trending_down_rounded,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _capitalStat(
+                    'Equity now',
+                    controller.currentEquityFormatted.value,
+                    _kPurple,
+                    _kPurpleBg,
+                    Icons.pie_chart_outline_rounded,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              up
+                  ? 'This period earned ${controller.periodEarningsFormatted.value} on your capital.'
+                  : 'This period reduced capital by ${CurrencyUtils.format(controller.periodEarnings.value.abs())}.',
+              style: TextStyle(
+                fontSize: 11,
+                color: up ? _kGreen : _kRed,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                _legendDot(kPrimary, 'Your capital'),
+                const SizedBox(width: 12),
+                _legendDot(_kPurple, 'Equity now'),
+              ],
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 180,
+              child: RepaintBoundary(
+                child: LineChart(
+                  LineChartData(
+                    minY: minY,
+                    maxY: maxY <= minY ? minY + 1 : maxY,
+                    gridData: FlGridData(
+                      show: true,
+                      drawVerticalLine: false,
+                      getDrawingHorizontalLine: (_) =>
+                          const FlLine(color: _kCardBorder, strokeWidth: 1),
+                    ),
+                    titlesData: FlTitlesData(
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 40,
+                          getTitlesWidget: (v, _) {
+                            final lbl = v >= 1000
+                                ? '${(v / 1000).toStringAsFixed(0)}k'
+                                : v.toInt().toString();
+                            return Text(
+                              lbl,
+                              style: const TextStyle(
+                                fontSize: 9,
+                                color: _kTextSub,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 22,
+                          interval: labels.length > 6
+                              ? (labels.length / 4).ceilToDouble()
+                              : 1,
+                          getTitlesWidget: (v, _) {
+                            final i = v.toInt();
+                            if (i < 0 || i >= labels.length) {
+                              return const SizedBox();
+                            }
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                labels[i],
+                                style: const TextStyle(
+                                  fontSize: 9,
+                                  color: _kTextSub,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      rightTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                      topTitles: const AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                    ),
+                    borderData: FlBorderData(show: false),
+                    lineTouchData: LineTouchData(
+                      touchTooltipData: LineTouchTooltipData(
+                        getTooltipItems: (spots) => spots
+                            .map(
+                              (s) => LineTooltipItem(
+                                CurrencyUtils.format(s.y),
+                                const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    ),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: openingSpots,
+                        isCurved: false,
+                        color: kPrimary,
+                        barWidth: 2,
+                        dashArray: const [6, 4],
+                        dotData: const FlDotData(show: false),
+                      ),
+                      LineChartBarData(
+                        spots: capitalSpots,
+                        isCurved: true,
+                        color: _kPurple,
+                        barWidth: 2.5,
+                        dotData: FlDotData(
+                          show: capitalSpots.length <= 8,
+                          getDotPainter: (spot, percent, bar, index) =>
+                              FlDotCirclePainter(
+                            radius: 3,
+                            color: _kPurple,
+                            strokeWidth: 0,
+                          ),
+                        ),
+                        belowBarData: BarAreaData(
+                          show: true,
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              _kPurple.withOpacity(0.16),
+                              _kPurple.withOpacity(0.0),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _capitalStat(
+    String label,
+    String value,
+    Color color,
+    Color bg,
+    IconData icon,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ─── Financial Overview (bar-based) ──────────────────────────────────────
   Widget _buildFinancialOverview() {
     return Obx(() {
@@ -759,6 +1109,7 @@ class DashboardScreen extends GetView<DashboardController> {
         controller.totalPurchases.value,
         controller.totalExpenses.value,
         controller.totalBankBalance.value,
+        controller.totalCashBalance.value,
         controller.outstanding.value,
         controller.payables.value,
         controller.netProfit.value.abs(),
@@ -806,6 +1157,14 @@ class DashboardScreen extends GetView<DashboardController> {
           kPrimary,
           _kPrimaryBg,
           'Bank Accounts',
+        ),
+        _BarItem(
+          'Cash',
+          controller.totalCashBalanceFormatted.value,
+          controller.totalCashBalance.value,
+          _kGreen,
+          _kGreenBg,
+          'Cash in Hand (Chart of Accounts)',
         ),
         _BarItem(
           'Receivables',
@@ -1512,6 +1871,7 @@ class DashboardScreen extends GetView<DashboardController> {
                     'bank-accounts',
                     'income',
                     'expenses',
+                    'chart-of-accounts',
                   ],
                   items: const [
                     ('Chart of Accounts', Mdi.chart_tree, 'chart_of_accounts'),
@@ -1529,6 +1889,7 @@ class DashboardScreen extends GetView<DashboardController> {
                     ('Bank Accounts', Mdi.bank, 'bank_accounts'),
                     ('Income', Mdi.trending_up, 'income'),
                     ('Expense', Mdi.trending_down, 'expense'),
+                    ('Tax Compliance', Mdi.percent, 'tax_compliance'),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -1541,11 +1902,11 @@ class DashboardScreen extends GetView<DashboardController> {
                     'accounts-receivable',
                     'accounts-payable',
                     'customers',
-                    'bills',
-                    'payments-received',
-                    'payments-made',
-                    'credit-notes',
-                    'warehouse-invoices',
+                    // 'bills',
+                    // 'payments-received',
+                    // 'payments-made',
+                    // 'credit-notes',
+                    // 'warehouse-invoices',
                   ],
                   items: const [
                     (
@@ -1555,19 +1916,19 @@ class DashboardScreen extends GetView<DashboardController> {
                     ),
                     ('Accounts Payable', Mdi.cash_minus, 'accounts_payable'),
                     ('Customers', Mdi.account_group, 'customers'),
-                    ('Bills', Mdi.file_document_outline, 'bills'),
-                    (
-                      'Payments Received',
-                      Mdi.credit_card_outline,
-                      'payments_received',
-                    ),
-                    ('Payments Made', Mdi.cash_check, 'payments_made'),
-                    ('Credit Notes', Mdi.file_undo_outline, 'credit_notes'),
-                    (
-                      'Warehouse Invoices',
-                      Mdi.receipt_text_outline,
-                      'warehouse_invoices',
-                    ),
+                    // ('Bills', Mdi.file_document_outline, 'bills'),
+                    // (
+                    //   'Payments Received',
+                    //   Mdi.credit_card_outline,
+                    //   'payments_received',
+                    // ),
+                    // ('Payments Made', Mdi.cash_check, 'payments_made'),
+                    // ('Credit Notes', Mdi.file_undo_outline, 'credit_notes'),
+                    // (
+                    //   'Warehouse Invoices',
+                    //   Mdi.receipt_text_outline,
+                    //   'warehouse_invoices',
+                    // ),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -1624,6 +1985,7 @@ class DashboardScreen extends GetView<DashboardController> {
                   module: 'accounting',
                   permissions: const ['currency'],
                   items: const [
+                    ('Fiscal Years', Mdi.calendar_range, 'fiscal_years'),
                     ('Currency', Mdi.currency_usd, 'currency'),
                     ('PDF Reports', Mdi.file_pdf_box, 'pdf_report'),
                   ],
@@ -1638,13 +2000,14 @@ class DashboardScreen extends GetView<DashboardController> {
                 ),
                 const SizedBox(height: 4),
                 _SectionLabel('SUPPORT'),
-                _NavSection(
-                  title: 'Subscription',
-                  icon: Mdi.crown,
-                  items: const [
-                    ('Subscription Plans', Mdi.crown, 'subscription'),
-                  ],
-                ),
+                if (PermissionService.to.isAdmin)
+                  _NavSection(
+                    title: 'Subscription',
+                    icon: Mdi.crown,
+                    items: const [
+                      ('Subscription Plans', Mdi.crown, 'subscription'),
+                    ],
+                  ),
                 _NavSection(
                   title: 'Help & Support',
                   icon: Mdi.help_circle,
@@ -2007,55 +2370,57 @@ class _DrawerHeader extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.shield_outlined,
-                  size: 14,
-                  color: Colors.white60,
-                ),
-                const SizedBox(width: 6),
-                const Text(
-                  'Current plan',
-                  style: TextStyle(fontSize: 11, color: Colors.white60),
-                ),
-                const Spacer(),
-                Obx(
-                  () => Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: subscriptionController.hasActiveSubscription.value
-                          ? Colors.green.shade500
-                          : Colors.orange.shade500,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      subscriptionController.hasActiveSubscription.value
-                          ? 'Premium'
-                          : subscriptionController.isTrialActive.value
-                          ? 'Trial'
-                          : 'Free',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
+          if (PermissionService.to.isAdmin) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.shield_outlined,
+                    size: 14,
+                    color: Colors.white60,
+                  ),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'Current plan',
+                    style: TextStyle(fontSize: 11, color: Colors.white60),
+                  ),
+                  const Spacer(),
+                  Obx(
+                    () => Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: subscriptionController.hasActiveSubscription.value
+                            ? Colors.green.shade500
+                            : Colors.orange.shade500,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        subscriptionController.hasActiveSubscription.value
+                            ? 'Premium'
+                            : subscriptionController.isTrialActive.value
+                            ? 'Trial'
+                            : 'Free',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -2262,80 +2627,98 @@ class _NavItem extends StatelessWidget {
       }
     } else {
       switch (routeKey) {
+        case 'tax_compliance':
+          if (Get.isRegistered<TaxController>()) {
+            Get.find<TaxController>().loadAll();
+          }
+          Get.to(() => const TaxComplianceScreen());
+          break;
         case 'chart_of_accounts':
-          Get.to(() => const ChartOfAccountsScreen());
+          openFresh<ChartOfAccountController>(const ChartOfAccountsScreen());
           break;
         case 'journal_entries':
-          Get.to(() => const JournalEntriesScreen());
+          openFresh<JournalEntryController>(const JournalEntriesScreen());
           break;
         case 'general_ledger':
-          Get.to(() => const GeneralLedgerScreen());
+          openFresh<GeneralLedgerController>(const GeneralLedgerScreen());
           break;
         case 'trial_balance':
-          Get.to(() => const TrialBalanceScreen());
+          openFresh<TrialBalanceController>(const TrialBalanceScreen());
           break;
         case 'bank_accounts':
-          Get.to(() => const BankAccountsScreen());
+          openFresh<BankAccountController>(const BankAccountsScreen());
           break;
         case 'income':
-          Get.to(() => const IncomeScreen());
+          openFresh<IncomeController>(const IncomeScreen());
           break;
         case 'expense':
-          Get.to(() => const ExpenseScreen());
+          openFresh<ExpenseController>(const ExpenseScreen());
           break;
         case 'accounts_receivable':
-          Get.to(() => const AccountsReceivableScreen());
+          openFresh<AccountsReceivableController>(
+            const AccountsReceivableScreen(),
+          );
           break;
         case 'accounts_payable':
-          Get.to(() => const AccountsPayableScreen());
+          openFresh<AccountsPayableController>(const AccountsPayableScreen());
           break;
         case 'customers':
-          Get.to(() => const WarehouseCustomerScreen());
+          openFresh<WarehouseCustomerController>(
+            const WarehouseCustomerScreen(),
+          );
           break;
         case 'bills':
-          Get.to(() => const BillsScreen());
+          openFresh<BillController>(const BillsScreen());
           break;
         case 'payments_received':
-          Get.to(() => const PaymentsReceivedScreen());
+          openFresh<PaymentReceivedController>(const PaymentsReceivedScreen());
           break;
         case 'payments_made':
-          Get.to(() => const PaymentsMadeScreen());
+          openFresh<PaymentMadeController>(const PaymentsMadeScreen());
           break;
         case 'credit_notes':
-          Get.to(() => const CreditNotesScreen());
+          openFresh<CreditNoteController>(const CreditNotesScreen());
           break;
         case 'fixed_assets':
-          Get.to(() => const FixedAssetsScreen());
+          openFresh<FixedAssetController>(const FixedAssetsScreen());
           break;
         case 'loans':
-          Get.to(() => const LoansBorrowingsScreen());
+          openFresh<LoanController>(const LoansBorrowingsScreen());
           break;
         case 'capital_equity':
-          Get.to(() => const CapitalEquityScreen());
+          openFresh<EquityController>(const CapitalEquityScreen());
           break;
         case 'accounting_reports':
+          if (Get.isRegistered<AccountingReportController>()) {
+            Get.delete<AccountingReportController>(force: true);
+          }
           Get.toNamed('/accounting/reports');
           break;
         case 'profit_loss':
-          Get.to(() => const ProfitLossStatementScreen());
+          openFresh<PLController>(const ProfitLossStatementScreen());
           break;
         case 'balance_sheet':
-          Get.to(() => const BalanceSheetScreen());
+          openFresh<BalanceSheetController>(const BalanceSheetScreen());
           break;
         case 'cash_flow':
-          Get.to(() => const CashFlowStatementScreen());
+          openFresh<CashFlowController>(const CashFlowStatementScreen());
           break;
         case 'aged_receivables':
           Get.to(() => const AgedReceivablesScreen());
           break;
         case 'warehouse_invoices':
-          Get.to(() => const WarehouseInvoiceScreen());
+          openFresh<WarehouseInvoiceController>(const WarehouseInvoiceScreen());
           break;
         case 'currency':
           Get.to(() => const CurrencyScreen());
           break;
+        case 'fiscal_years':
+          Get.to(() => const FiscalYearListScreen());
+          break;
         case 'pdf_report':
-          Get.to(() => const PdfReportSettingsScreen());
+          openFresh<PdfReportSettingsController>(
+            const PdfReportSettingsScreen(),
+          );
           break;
         case 'subscription':
           Get.to(() => const SelectPlanScreen());
@@ -2418,19 +2801,20 @@ class _DrawerFooter extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Obx(
-                        () => Text(
-                          subscriptionController.hasActiveSubscription.value
-                              ? 'Premium Account'
-                              : subscriptionController.isTrialActive.value
-                              ? 'Trial Account'
-                              : 'Free Account',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey.shade500,
+                      if (PermissionService.to.isAdmin)
+                        Obx(
+                          () => Text(
+                            subscriptionController.hasActiveSubscription.value
+                                ? 'Premium Account'
+                                : subscriptionController.isTrialActive.value
+                                ? 'Trial Account'
+                                : 'Free Account',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.grey.shade500,
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ),

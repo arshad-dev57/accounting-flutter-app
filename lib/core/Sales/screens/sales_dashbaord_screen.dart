@@ -4,7 +4,9 @@ import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/widgets/fiscal_year_select.dart';
 import 'package:BisonsTechs_app/core/Notifications/screens/notification_screen.dart';
+import 'package:BisonsTechs_app/widgets/reload_when_visible.dart';
 import 'package:BisonsTechs_app/core/warehouse/sales/controller/sales_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/sales/model/sales_dashboard_model.dart';
 import 'package:BisonsTechs_app/widgets/sales_drawer.dart';
@@ -41,8 +43,28 @@ const _kHeroBgEnd = Color(0xFFD6E4F0);
 const _kHeroBorder = Color(0xFFB8CFE0);
 const _kHeroIcon = Color(0xFFC5D8E8);
 
-class SalesDashboardScreen extends GetView<SalesController> {
+class SalesDashboardScreen extends StatefulWidget {
   const SalesDashboardScreen({super.key});
+
+  @override
+  State<SalesDashboardScreen> createState() => _SalesDashboardScreenState();
+}
+
+class _SalesDashboardScreenState extends State<SalesDashboardScreen>
+    with RouteAware, ReloadWhenVisible {
+  @override
+  void reloadOnOpen() {
+    if (Get.isRegistered<SalesController>()) {
+      Get.find<SalesController>().fetchDashboard();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => const _SalesDashboardView();
+}
+
+class _SalesDashboardView extends GetView<SalesController> {
+  const _SalesDashboardView();
 
   @override
   Widget build(BuildContext context) {
@@ -127,10 +149,10 @@ class SalesDashboardScreen extends GetView<SalesController> {
               ),
             )
           : null,
+      titleSpacing: isMobile ? 0 : NavigationToolbar.kMiddleSpacing,
       title: Obx(() {
         final logo = controller.businessLogo.value;
         return Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
             logo.isNotEmpty
                 ? Container(
@@ -196,19 +218,27 @@ class SalesDashboardScreen extends GetView<SalesController> {
                     ),
                   ),
             const SizedBox(width: 8),
-            const Text(
-              'Sales',
-              style: TextStyle(
-                color: _kTextPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.3,
+            const Flexible(
+              child: Text(
+                'Sales',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: _kTextPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.3,
+                ),
               ),
             ),
           ],
         );
       }),
       actions: [
+        FiscalYearSelect(
+          compact: true,
+          showManageLink: !isMobile,
+        ),
         IconButton(
           icon: const Icon(
             Icons.notifications_none_rounded,
@@ -216,6 +246,9 @@ class SalesDashboardScreen extends GetView<SalesController> {
             size: 22,
           ),
           onPressed: () => Get.to(() => const NotificationScreen()),
+          visualDensity: VisualDensity.compact,
+          padding: const EdgeInsets.all(8),
+          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
         ),
         const SizedBox(width: 4),
       ],

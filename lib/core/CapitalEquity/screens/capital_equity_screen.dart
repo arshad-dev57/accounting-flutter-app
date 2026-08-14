@@ -1,6 +1,7 @@
 // screens/capital_equity_screen.dart - COMPLETE PROFESSIONAL MOBILE DESIGN
 
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/widgets/expandable_stat_card.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/CapitalEquity/controller/equity_controller.dart';
@@ -271,43 +272,66 @@ class CapitalEquityScreen extends StatelessWidget {
   // ═══════════════════════════════════════════════════════════════
 
   Widget _buildSummaryCards(EquityController controller) {
-    return Obx(
-      () => Container(
+    return Obx(() {
+      final up = controller.isCapitalIncrease.value;
+      final earned = controller.periodEarnings.value;
+      final changeLabel = up ? 'Earned this period' : 'Decreased this period';
+      final changeColor = up ? kSuccess : kDanger;
+      return Container(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildProfessionalCard(
-              title: 'Total Equity',
-              amount: controller.formatAmount(controller.totalEquity.value),
-              color: kPrimary,
-              icon: Icons.account_balance_wallet,
-              bgColor: kPrimary.withOpacity(0.08),
-              borderColor: kPrimary.withOpacity(0.2),
+            Row(
+              children: [
+                _buildProfessionalCard(
+                  title: 'Your capital',
+                  amount: controller.formatAmount(controller.ownerCapital.value),
+                  color: kPrimary,
+                  icon: Icons.account_balance_wallet_outlined,
+                  bgColor: kPrimary.withOpacity(0.08),
+                  borderColor: kPrimary.withOpacity(0.2),
+                ),
+                const SizedBox(width: 8),
+                _buildProfessionalCard(
+                  title: changeLabel,
+                  amount: controller.formatAmount(earned),
+                  color: changeColor,
+                  icon: up
+                      ? Icons.trending_up_rounded
+                      : Icons.trending_down_rounded,
+                  bgColor: changeColor.withOpacity(0.08),
+                  borderColor: changeColor.withOpacity(0.2),
+                ),
+                const SizedBox(width: 8),
+                _buildProfessionalCard(
+                  title: 'Equity now',
+                  amount: controller.formatAmount(controller.equityNow.value),
+                  color: kPrimary,
+                  icon: Icons.pie_chart_outline_rounded,
+                  bgColor: kPrimary.withOpacity(0.08),
+                  borderColor: kPrimary.withOpacity(0.2),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            _buildProfessionalCard(
-              title: 'Capital',
-              amount: controller.formatAmount(controller.totalCapital.value),
-              color: kPrimary,
-              icon: Icons.account_balance,
-              bgColor: kPrimary.withOpacity(0.08),
-              borderColor: kPrimary.withOpacity(0.2),
-            ),
-            const SizedBox(width: 8),
-            _buildProfessionalCard(
-              title: 'Retained',
-              amount: controller.formatAmount(
-                controller.totalRetainedEarnings.value,
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                up
+                    ? 'Owner capital ${controller.formatAmount(controller.ownerCapital.value)} + ${controller.formatAmount(earned.abs())} this period = equity ${controller.formatAmount(controller.equityNow.value)}.'
+                    : 'Owner capital ${controller.formatAmount(controller.ownerCapital.value)} − ${controller.formatAmount(earned.abs())} this period = equity ${controller.formatAmount(controller.equityNow.value)}.',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: changeColor,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-              color: kSuccess,
-              icon: Icons.trending_up,
-              bgColor: kSuccess.withOpacity(0.08),
-              borderColor: kSuccess.withOpacity(0.2),
             ),
           ],
         ),
-      ),
-    );
+      );
+    });
   }
 
   Widget _buildProfessionalCard({
@@ -319,79 +343,16 @@ class CapitalEquityScreen extends StatelessWidget {
     required Color borderColor,
     bool isNumber = false,
   }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: kCardBg,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: borderColor, width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: bgColor,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(icon, size: 14, color: color),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: kSubText,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              amount,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: color,
-                letterSpacing: -0.5,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            Container(
-              height: 2,
-              width: 30,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [color, color.withOpacity(0.3)],
-                ),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return ExpandableStatCard(
+      title: title,
+      amount: amount,
+      color: color,
+      icon: icon,
+      bgColor: bgColor,
+      borderColor: borderColor,
     );
   }
+
 
   // ═══════════════════════════════════════════════════════════════
   // LIST VIEW WITH LAZY LOADING

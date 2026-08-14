@@ -3,6 +3,7 @@
 import 'dart:convert';
 
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:BisonsTechs_app/core/purchasedashboard/purchase_dashboard_model.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,8 +13,8 @@ class PurchaseController extends GetxController {
 
   // ─── STATE ────────────────────────────────────────────────────────────────
   final RxBool isLoading = false.obs;
-  final RxString period = 'today'.obs;
-  final RxString selectedTimePeriodLabel = 'Today'.obs;
+  final RxString period = 'year'.obs;
+  final RxString selectedTimePeriodLabel = 'This Year'.obs;
   final RxString businessLogo = ''.obs;
 
   final Rx<PurchaseDashboardModel?> dashboard = Rx<PurchaseDashboardModel?>(
@@ -46,11 +47,23 @@ class PurchaseController extends GetxController {
     'This Year',
   ];
 
+  Worker? _fyWorker;
+
   @override
   void onInit() {
     super.onInit();
     loadBusinessLogo();
-    fetchDashboard();
+    Future(() async {
+      await waitForFiscalYearReady();
+      fetchDashboard();
+    });
+    _fyWorker = listenFiscalYearChanges(fetchDashboard);
+  }
+
+  @override
+  void onClose() {
+    _fyWorker?.dispose();
+    super.onClose();
   }
 
   Future<void> loadBusinessLogo() async {
@@ -125,6 +138,8 @@ class PurchaseController extends GetxController {
         params['endDate'] = customEnd.value!.toIso8601String();
       }
     }
+    final fyId = currentFiscalYearId();
+    if (fyId != null) params['fiscalYearId'] = fyId;
     return params;
   }
 
@@ -266,6 +281,7 @@ class PurchaseController extends GetxController {
       final res = await _api.get(
         '/api/purchase/dashboard/activities',
         requiresAuth: true,
+        queryParameters: _periodParams,
       );
       if (res.success && res.data != null) {
         final data = Map<String, dynamic>.from(res.data['data'] ?? {});

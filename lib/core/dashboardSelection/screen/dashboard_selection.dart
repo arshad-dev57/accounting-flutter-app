@@ -26,6 +26,7 @@ import 'package:BisonsTechs_app/core/purchasedashboard/purchase_dashboard_screen
 import 'package:BisonsTechs_app/core/settings/screens/currency_screen.dart';
 import 'package:BisonsTechs_app/core/settings/screens/pdf_report_settings_screen.dart';
 import 'package:BisonsTechs_app/core/support/screens/support_tickets_screen.dart';
+import 'package:BisonsTechs_app/core/tax/tax_screen.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -286,7 +287,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
       'btnText': 'Open Warehouse',
       'imageUrl':
           'https://images.unsplash.com/photo-1553413077-190dd305871c?w=1200&q=80',
-      'accentColor': const Color(0xFF7C4DFF),
+      'accentColor': const Color(0xFF014582),
       'bgColor': const Color(0xFF1A1A2E),
     },
     {
@@ -312,7 +313,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
       drawer: isMobile ? _buildDrawer() : null,
       body: Column(
         children: [
-          _buildSubscriptionStrip(),
+          if (PermissionService.to.isAdmin) _buildSubscriptionStrip(),
           Expanded(
             child: Stack(
               children: [
@@ -1030,6 +1031,15 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
               showArrow: true,
               onTap: _navigateToAccounting,
             ),
+          _SidebarItemWidget(
+            icon: Icons.percent,
+            label: 'Tax Compliance',
+            index: 5,
+            selectedIndex: _selectedIndex,
+            collapsed: collapsed,
+            showArrow: true,
+            onTap: () => Get.to(() => const TaxComplianceScreen()),
+          ),
           const Spacer(),
           if (!collapsed)
             Padding(
@@ -1089,12 +1099,14 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                     'accounting',
                     'sales',
                     'purchases',
+                    'accounting',
                   ],
                   items: const [
                     ('Warehouse', Mdi.warehouse, '__warehouse'),
                     ('Accounting', Mdi.account_balance, '__accounting'),
                     ('Sales', Mdi.cart_outline, '__sales'),
                     ('Purchases', Mdi.cart_plus, '__purchase'),
+                    ('Tax Compliance', Mdi.percent, '__tax'),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -1144,14 +1156,15 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                   currentRoute: '',
                   items: const [('Feedback', Mdi.feedback, '__feedback')],
                 ),
-                _NavSection(
-                  title: 'Subscription',
-                  icon: Mdi.crown,
-                  currentRoute: '',
-                  items: const [
-                    ('Subscription Plans', Mdi.crown, '__subscription'),
-                  ],
-                ),
+                if (PermissionService.to.isAdmin)
+                  _NavSection(
+                    title: 'Subscription',
+                    icon: Mdi.crown,
+                    currentRoute: '',
+                    items: const [
+                      ('Subscription Plans', Mdi.crown, '__subscription'),
+                    ],
+                  ),
                 _NavSection(
                   title: 'About',
                   icon: Mdi.information,
@@ -2216,47 +2229,48 @@ class _DrawerHeaderState extends State<_DrawerHeader> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          // Plan badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Iconify(Mdi.shield_account, size: 14, color: Colors.white70),
-                const SizedBox(width: 6),
-                Text(
-                  'Current Plan',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.white.withOpacity(0.7),
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade600,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'Premium',
+          if (PermissionService.to.isAdmin) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Iconify(Mdi.shield_account, size: 14, color: Colors.white70),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Current Plan',
                     style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                      color: Colors.white.withOpacity(0.7),
                     ),
                   ),
-                ),
-              ],
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade600,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'Premium',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -2416,6 +2430,9 @@ class _NavSectionState extends State<_NavSection> {
         break;
       case '__purchase':
         Get.to(() => const PurchaseDashboardScreen());
+        break;
+      case '__tax':
+        Get.to(() => const TaxComplianceScreen());
         break;
       case '__currency':
         Get.to(() => const CurrencyScreen());
@@ -2697,7 +2714,9 @@ class _DrawerFooter extends StatelessWidget {
                       Obx(
                         () => Text(
                           profileCtrl.organizationName.value.isEmpty
-                              ? 'Premium Account'
+                              ? (PermissionService.to.isAdmin
+                                    ? 'Premium Account'
+                                    : 'Account')
                               : profileCtrl.organizationName.value,
                           style: TextStyle(
                             fontSize: 10,

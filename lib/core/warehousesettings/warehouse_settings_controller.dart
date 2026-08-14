@@ -116,12 +116,6 @@ const List<SettingCategory> productSettingCategories = [
     description: 'Manage stock units',
     iconName: 'box',
   ),
-  SettingCategory(
-    id: 'taxType',
-    label: 'Tax Types',
-    description: 'Manage tax types',
-    iconName: 'file_text',
-  ),
 ];
 
 const List<SettingCategory> orderSettingCategories = [

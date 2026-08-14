@@ -6,47 +6,168 @@ import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/models/fiscal_year_model.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/screen/fiscal_year_list_screen.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_dates.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+const String kSelectedFiscalYearStorageKey = 'selected_fiscal_year_id';
 
 class FiscalYearController extends GetxController {
   var fiscalYears = <FiscalYear>[].obs;
   var isLoading = true.obs;
   var selectedFiscalYear = Rx<FiscalYear?>(null);
+  var error = ''.obs;
+  /// Restored from disk before the list API returns — so dashboards can still
+  /// attach fiscalYearId on first paint.
+  final RxnString storedSelectedId = RxnString();
 
   final ApiClient _api = Get.find<ApiClient>();
+  Future<void>? _fetchInFlight;
+  int _fetchGeneration = 0;
+  bool _hasAttemptedFetch = false;
 
   @override
   void onInit() {
     super.onInit();
-    fetchFiscalYears();
+    // Hydrate selection + load only once a token exists (avoids empty 401 race).
+    Future(() async {
+      await _hydrateStoredSelection();
+      await ensureFiscalYearsLoaded();
+    });
   }
 
-  Future<void> fetchFiscalYears() async {
+  Future<void> _hydrateStoredSelection() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final storedId = prefs.getString(kSelectedFiscalYearStorageKey);
+      if (storedId != null && storedId.isNotEmpty) {
+        storedSelectedId.value = storedId;
+      }
+    } catch (_) {}
+  }
+
+  /// Load fiscal years when authenticated. Safe to call many times — shares
+  /// one in-flight request and skips if already loaded (unless [force]).
+  Future<void> ensureFiscalYearsLoaded({bool force = false}) async {
+    final token = await _api.getToken();
+    if (token == null || token.isEmpty) {
+      isLoading(false);
+      return;
+    }
+    if (!force &&
+        fiscalYears.isNotEmpty &&
+        (selectedFiscalYear.value != null ||
+            (storedSelectedId.value != null &&
+                storedSelectedId.value!.isNotEmpty))) {
+      isLoading(false);
+      return;
+    }
+    await fetchFiscalYears(force: force);
+  }
+
+  Future<void> fetchFiscalYears({bool force = false}) async {
+    if (_fetchInFlight != null) {
+      await _fetchInFlight;
+      if (!force) return;
+    }
+    final future = _doFetchFiscalYears();
+    _fetchInFlight = future;
+    try {
+      await future;
+    } finally {
+      if (identical(_fetchInFlight, future)) {
+        _fetchInFlight = null;
+      }
+    }
+  }
+
+  Future<void> _doFetchFiscalYears() async {
+    final generation = ++_fetchGeneration;
     try {
       isLoading(true);
+      error.value = '';
+      _hasAttemptedFetch = true;
+
+      final token = await _api.getToken();
+      if (token == null || token.isEmpty) {
+        error.value = '';
+        return;
+      }
 
       final response = await _api.get('/api/fiscal-year');
+      if (generation != _fetchGeneration) return;
 
       if (response.success) {
         final data = response.data;
-        final years = (data['data'] as List)
-            .map((e) => FiscalYear.fromJson(e))
-            .toList();
+        final raw = data is Map ? (data['data'] ?? data) : data;
+        final list = raw is List ? raw : <dynamic>[];
+        final years = <FiscalYear>[];
+        for (final e in list) {
+          if (e is! Map) continue;
+          try {
+            years.add(FiscalYear.fromJson(Map<String, dynamic>.from(e)));
+          } catch (_) {
+            // Skip malformed rows instead of failing the whole load.
+          }
+        }
 
+        years.sort((a, b) => b.startDate.compareTo(a.startDate));
         fiscalYears.value = years;
-        if (years.isNotEmpty && selectedFiscalYear.value == null) {
-          final openYear = years.firstWhere(
-            (y) => y.isOpen,
-            orElse: () => years.first,
-          );
-          selectedFiscalYear.value = openYear;
+        await _reconcileSelection(years);
+      } else {
+        error.value = response.message.isNotEmpty
+            ? response.message
+            : 'Failed to load fiscal years';
+        // Silent when logged out / no token — list loads after login
+        if (response.statusCode != 401 && response.statusCode != 403) {
+          AppSnackbar.error(kDanger, 'Error', error.value);
         }
       }
     } catch (e) {
-      AppSnackbar.error(kDanger, 'Error', 'Failed to load fiscal years: $e');
+      if (generation == _fetchGeneration) {
+        error.value = 'Failed to load fiscal years: $e';
+      }
     } finally {
-      isLoading(false);
+      if (generation == _fetchGeneration) {
+        isLoading(false);
+      }
+    }
+  }
+
+  Future<void> _reconcileSelection(List<FiscalYear> years) async {
+    if (years.isEmpty) {
+      selectedFiscalYear.value = null;
+      await _persistSelectedId(null);
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final storedId = prefs.getString(kSelectedFiscalYearStorageKey) ??
+        storedSelectedId.value;
+    FiscalYear? chosen;
+
+    if (storedId != null && storedId.isNotEmpty) {
+      chosen = years.firstWhereOrNull((y) => y.id == storedId);
+    }
+    chosen ??= years.firstWhereOrNull((y) => y.isOpen) ?? years.first;
+
+    if (selectedFiscalYear.value?.id == chosen.id) {
+      await _persistSelectedId(chosen.id);
+      return;
+    }
+    selectedFiscalYear.value = chosen;
+    await _persistSelectedId(chosen.id);
+  }
+
+  Future<void> _persistSelectedId(String? id) async {
+    storedSelectedId.value =
+        (id == null || id.isEmpty) ? null : id;
+    final prefs = await SharedPreferences.getInstance();
+    if (id == null || id.isEmpty) {
+      await prefs.remove(kSelectedFiscalYearStorageKey);
+    } else {
+      await prefs.setString(kSelectedFiscalYearStorageKey, id);
     }
   }
 
@@ -62,9 +183,9 @@ class FiscalYearController extends GetxController {
       final response = await _api.post(
         '/api/fiscal-year',
         body: {
-          'name': name,
-          'startDate': startDate.toIso8601String(),
-          'endDate': endDate.toIso8601String(),
+          'name': name.trim(),
+          'startDate': fiscalDateOnly(startDate),
+          'endDate': fiscalDateOnly(endDate),
           'periodType': periodType ?? 'Custom',
         },
       );
@@ -76,6 +197,17 @@ class FiscalYearController extends GetxController {
           'Fiscal year created successfully',
         );
         await fetchFiscalYears();
+
+        // Prefer selecting the newly created year
+        final created = response.data is Map
+            ? (response.data['data'] ?? response.data)
+            : null;
+        if (created is Map && created['id'] != null) {
+          final match = fiscalYears.firstWhereOrNull(
+            (y) => y.id == created['id'].toString(),
+          );
+          if (match != null) await selectFiscalYear(match);
+        }
         return true;
       } else {
         if (response.isFiscalYearError) {
@@ -84,7 +216,9 @@ class FiscalYearController extends GetxController {
           AppSnackbar.error(
             kDanger,
             'Error',
-            response.message ?? 'Failed to create fiscal year',
+            response.message.isNotEmpty
+                ? response.message
+                : 'Failed to create fiscal year',
           );
         }
         return false;
@@ -111,8 +245,8 @@ class FiscalYearController extends GetxController {
         '/api/fiscal-year/$id',
         body: {
           if (name != null) 'name': name,
-          if (startDate != null) 'startDate': startDate.toIso8601String(),
-          if (endDate != null) 'endDate': endDate.toIso8601String(),
+          if (startDate != null) 'startDate': fiscalDateOnly(startDate),
+          if (endDate != null) 'endDate': fiscalDateOnly(endDate),
           if (periodType != null) 'periodType': periodType,
         },
       );
@@ -129,7 +263,9 @@ class FiscalYearController extends GetxController {
         AppSnackbar.error(
           kDanger,
           'Error',
-          response.message ?? 'Failed to update fiscal year',
+          response.message.isNotEmpty
+              ? response.message
+              : 'Failed to update fiscal year',
         );
         return false;
       }
@@ -159,7 +295,9 @@ class FiscalYearController extends GetxController {
         AppSnackbar.error(
           kDanger,
           'Error',
-          response.message ?? 'Failed to close fiscal year',
+          response.message.isNotEmpty
+              ? response.message
+              : 'Failed to close fiscal year',
         );
         return false;
       }
@@ -189,7 +327,9 @@ class FiscalYearController extends GetxController {
         AppSnackbar.error(
           kDanger,
           'Error',
-          response.message ?? 'Failed to reopen fiscal year',
+          response.message.isNotEmpty
+              ? response.message
+              : 'Failed to reopen fiscal year',
         );
         return false;
       }
@@ -219,7 +359,9 @@ class FiscalYearController extends GetxController {
         AppSnackbar.error(
           kDanger,
           'Error',
-          response.message ?? 'Failed to delete fiscal year',
+          response.message.isNotEmpty
+              ? response.message
+              : 'Failed to delete fiscal year',
         );
         return false;
       }
@@ -231,54 +373,75 @@ class FiscalYearController extends GetxController {
     }
   }
 
-  void selectFiscalYear(FiscalYear? year) {
+  Future<void> selectFiscalYear(FiscalYear? year) async {
+    if (selectedFiscalYear.value?.id == year?.id) return;
     selectedFiscalYear.value = year;
+    await _persistSelectedId(year?.id);
   }
 
   String? get selectedFiscalYearId {
-    return selectedFiscalYear.value?.id;
+    final live = selectedFiscalYear.value?.id;
+    if (live != null && live.isNotEmpty) return live;
+    final stored = storedSelectedId.value;
+    if (stored != null && stored.isNotEmpty) return stored;
+    return null;
   }
 
-  // Get formatted date range for display
+  bool get hasLoadedList => _hasAttemptedFetch && !isLoading.value;
+
+  /// Clear in-memory + stored selection (call on logout).
+  Future<void> clearSession() async {
+    _fetchGeneration++;
+    _fetchInFlight = null;
+    _hasAttemptedFetch = false;
+    fiscalYears.clear();
+    selectedFiscalYear.value = null;
+    error.value = '';
+    isLoading(false);
+    await _persistSelectedId(null);
+  }
+
+  FiscalYearDateRange suggestNextRange(String periodKey) {
+    return suggestNextFiscalRange(
+      periodKey: periodKey,
+      existingEndDates: fiscalYears.map((y) => y.endDate).toList(),
+    );
+  }
+
   String getFormattedDateRange(FiscalYear year) {
     final formatter = DateFormat('dd MMM yyyy');
     return '${formatter.format(year.startDate)} - ${formatter.format(year.endDate)}';
   }
 
-  // Check if a date falls within the selected fiscal year
   bool isDateInSelectedFiscalYear(DateTime date) {
     if (selectedFiscalYear.value == null) return true;
     final year = selectedFiscalYear.value!;
-    return date.isAfter(year.startDate.subtract(const Duration(days: 1))) &&
-        date.isBefore(year.endDate.add(const Duration(days: 1)));
+    return !date.isBefore(DateTime(
+          year.startDate.year,
+          year.startDate.month,
+          year.startDate.day,
+        )) &&
+        !date.isAfter(DateTime(
+          year.endDate.year,
+          year.endDate.month,
+          year.endDate.day,
+          23,
+          59,
+          59,
+        ));
   }
 
-  // Get current fiscal year based on today's date
   FiscalYear? getCurrentFiscalYear() {
+    if (fiscalYears.isEmpty) return null;
     final today = DateTime.now();
-    return fiscalYears.firstWhere(
-      (y) =>
-          today.isAfter(y.startDate.subtract(const Duration(days: 1))) &&
-          today.isBefore(y.endDate.add(const Duration(days: 1))),
-      orElse: () => fiscalYears.firstWhere(
-        (y) => y.isOpen,
-        orElse: () => fiscalYears.isNotEmpty
-            ? fiscalYears.first
-            : FiscalYear(
-                id: '',
-                userId: '',
-                name: 'No Fiscal Year',
-                startDate: DateTime.now(),
-                endDate: DateTime.now(),
-                status: 'Open',
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
-              ),
-      ),
-    );
+    return fiscalYears.firstWhereOrNull(
+          (y) =>
+              !today.isBefore(y.startDate) && !today.isAfter(y.endDate),
+        ) ??
+        fiscalYears.firstWhereOrNull((y) => y.isOpen) ??
+        fiscalYears.first;
   }
 
-  // Show fiscal year error dialog
   void _showFiscalYearErrorDialog(String message) {
     Get.dialog(
       AlertDialog(

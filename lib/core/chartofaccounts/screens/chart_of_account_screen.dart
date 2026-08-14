@@ -2,6 +2,7 @@ import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/chartofaccounts/controller/chart_of_account_controller.dart';
+import 'package:BisonsTechs_app/core/tax/tax_rate_field.dart';
 import 'package:BisonsTechs_app/core/journalEntries/Screens/journal_entries_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -24,6 +25,9 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
     controller = Get.isRegistered<ChartOfAccountController>()
         ? Get.find<ChartOfAccountController>()
         : Get.put(ChartOfAccountController());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) controller.fetchAccounts(resetPage: true);
+    });
   }
 
   @override
@@ -1189,24 +1193,10 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                               enabled: !isSaving,
                             ),
                             const SizedBox(height: 16),
-                            _proDropdownField<String>(
-                              label: 'Tax Code',
+                            TaxCodeField(
                               value: taxCode,
-                              items: const [
-                                'N/A',
-                                'GST-13%',
-                                'GST-5%',
-                                'WHT-10%',
-                              ],
-                              onChanged: isSaving
-                                  ? null
-                                  : (v) => setState(() => taxCode = v!),
-                              displayLabels: const [
-                                'N/A - No Tax',
-                                'GST 13% (Standard)',
-                                'GST 5% (Reduced)',
-                                'WHT 10%',
-                              ],
+                              enabled: !isSaving,
+                              onChanged: (v) => setState(() => taxCode = v),
                             ),
                             const SizedBox(height: 16),
                             _proFormField(
@@ -1582,24 +1572,10 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                               enabled: !isSaving,
                             ),
                             const SizedBox(height: 16),
-                            _proDropdownField<String>(
-                              label: 'Tax Code',
+                            TaxCodeField(
                               value: taxCode,
-                              items: const [
-                                'N/A',
-                                'GST-13%',
-                                'GST-5%',
-                                'WHT-10%',
-                              ],
-                              onChanged: isSaving
-                                  ? null
-                                  : (v) => setState(() => taxCode = v!),
-                              displayLabels: const [
-                                'N/A - No Tax',
-                                'GST 13% (Standard)',
-                                'GST 5% (Reduced)',
-                                'WHT 10%',
-                              ],
+                              enabled: !isSaving,
+                              onChanged: (v) => setState(() => taxCode = v),
                             ),
                             const SizedBox(height: 16),
                             _proFormField(

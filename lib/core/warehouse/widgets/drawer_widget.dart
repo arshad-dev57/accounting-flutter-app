@@ -18,6 +18,7 @@ import 'package:BisonsTechs_app/core/companyprofile/screen/company_profile_scree
 import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:BisonsTechs_app/core/settings/screens/currency_screen.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/screen/fiscal_year_list_screen.dart';
 import 'package:BisonsTechs_app/core/settings/screens/pdf_report_settings_screen.dart';
 import 'package:BisonsTechs_app/core/warehouse/dashboard/warehouse_dashboard_controller.dart';
 import 'package:flutter/material.dart';
@@ -129,8 +130,10 @@ class WarehouseDrawer extends StatelessWidget {
                       icon: Mdi.cog,
                       currentRoute: currentRoute,
                       items: const [
+                        ('Fiscal Years', Mdi.calendar_range, '__fiscal_years'),
                         ('Currency', Mdi.currency_usd, '__currency'),
                         ('PDF Reports', Mdi.file_pdf_box, '__pdf_report'),
+                        ('Tax Compliance', Mdi.percent, '__tax'),
                       ],
                     ),
                     _NavSection(
@@ -165,14 +168,15 @@ class WarehouseDrawer extends StatelessWidget {
                       currentRoute: currentRoute,
                       items: const [('Feedback', Mdi.feedback, '__feedback')],
                     ),
-                    _NavSection(
-                      title: 'Subscription',
-                      icon: Mdi.crown,
-                      currentRoute: currentRoute,
-                      items: const [
-                        ('Subscription Plans', Mdi.crown, '__subscription'),
-                      ],
-                    ),
+                    if (PermissionService.to.isAdmin)
+                      _NavSection(
+                        title: 'Subscription',
+                        icon: Mdi.crown,
+                        currentRoute: currentRoute,
+                        items: const [
+                          ('Subscription Plans', Mdi.crown, '__subscription'),
+                        ],
+                      ),
                     _NavSection(
                       title: 'About',
                       icon: Mdi.information,
@@ -356,51 +360,52 @@ class _WarehouseDrawerHeaderState extends State<_WarehouseDrawerHeader> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          // Plan badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Iconify(
-                  Mdi.shield_account,
-                  size: 14,
-                  color: Colors.white.withOpacity(0.7),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'Current Plan',
-                  style: TextStyle(
-                    fontSize: 11,
+          if (PermissionService.to.isAdmin) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Iconify(
+                    Mdi.shield_account,
+                    size: 14,
                     color: Colors.white.withOpacity(0.7),
                   ),
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade600,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'Premium',
+                  const SizedBox(width: 6),
+                  Text(
+                    'Current Plan',
                     style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                      color: Colors.white.withOpacity(0.7),
                     ),
                   ),
-                ),
-              ],
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade600,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'Premium',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -465,13 +470,14 @@ class _WarehouseDrawerFooter extends StatelessWidget {
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
-                      Text(
-                        'Premium Account',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey.shade500,
+                      if (PermissionService.to.isAdmin)
+                        Text(
+                          'Premium Account',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey.shade500,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -804,6 +810,12 @@ class _NavSectionState extends State<_NavSection> {
       return;
     }
     switch (routeKey) {
+      case '__tax':
+        Get.toNamed('/tax');
+        break;
+      case '__fiscal_years':
+        Get.to(() => const FiscalYearListScreen());
+        break;
       case '__currency':
         Get.to(() => const CurrencyScreen());
         break;

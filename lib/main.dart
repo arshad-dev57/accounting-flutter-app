@@ -1,6 +1,7 @@
 // lib/main.dart - COMPLETE FIXED
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/widgets/reload_when_visible.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/core/Onboarding/views/Onboarding_screen.dart';
 import 'package:BisonsTechs_app/core/Register/Views/register_screen.dart';
@@ -70,6 +71,7 @@ import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/Services/notification_Service.dart';
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/tax/tax_screen.dart';
 
 class ThemeController extends GetxController {
   var isDarkMode = false.obs;
@@ -110,7 +112,8 @@ class MyApp extends StatelessWidget {
       builder: (context, orientation, deviceType) {
         return GetMaterialApp(
           debugShowCheckedModeBanner: false,
-          title: 'BisonsTechs App',
+          title: 'BisonsTechs',
+          navigatorObservers: [appRouteObserver],
           theme: _buildLightTheme(),
           darkTheme: _buildDarkTheme(),
           themeMode: Get.find<ThemeController>().isDarkMode.value
@@ -119,7 +122,7 @@ class MyApp extends StatelessWidget {
           initialRoute: '/',
           getPages: [
             // ========== AUTH ROUTES ==========
-            GetPage(name: '/', page: () => OnboardingScreen()),
+            GetPage(name: '/', page: () => SplashScreen()),
             GetPage(name: '/login', page: () => const LoginScreen()),
             GetPage(name: '/register', page: () => RegistrationScreen()),
             GetPage(name: '/onboarding', page: () => const OnboardingScreen()),
@@ -128,6 +131,10 @@ class MyApp extends StatelessWidget {
             GetPage(
               name: '/dashboard',
               page: () => const DashboardSelectionScreen(),
+            ),
+            GetPage(
+              name: '/tax',
+              page: () => const TaxComplianceScreen(),
             ),
             GetPage(
               name: '/accounting/dashboard',
@@ -222,7 +229,6 @@ class MyApp extends StatelessWidget {
               page: () => const PaymentCancelScreen(),
             ),
 
-            // ========== WAREHOUSE ROUTES ==========
             GetPage(
               name: '/warehouse/dashboard',
               page: () => WarehouseDashboard(),
@@ -363,7 +369,7 @@ class MyApp extends StatelessWidget {
         primary: const Color(0xFF1AB4F5),
         brightness: Brightness.light,
       ),
-      scaffoldBackgroundColor: kBg,
+      scaffoldBackgroundColor: kBgLight,
       appBarTheme: const AppBarTheme(
         elevation: 0,
         centerTitle: false,

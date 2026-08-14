@@ -97,7 +97,9 @@ class AuthController extends GetxController {
     super.onInit();
     _initControllers();
     _setupListeners();
-    _fiscalYearController = Get.put(FiscalYearController());
+    _fiscalYearController = Get.isRegistered<FiscalYearController>()
+        ? Get.find<FiscalYearController>()
+        : Get.put(FiscalYearController(), permanent: true);
     checkLoginStatus();
   }
 
@@ -196,16 +198,25 @@ class AuthController extends GetxController {
     return {'startDate': startDate, 'endDate': endDate};
   }
 
-  // Create initial fiscal year after registration
+  // Create initial fiscal year after registration only if backend did not
   Future<void> _createInitialFiscalYear() async {
     if (selectedFiscalYear.value.isEmpty) return;
 
     try {
+      await _fiscalYearController.fetchFiscalYears();
+      if (_fiscalYearController.fiscalYears.isNotEmpty) {
+        print('✅ Fiscal year already created during registration');
+        return;
+      }
+
       final dates = _calculateFiscalYearDates(selectedFiscalYear.value);
-      final currentYear = DateTime.now().year;
+      final startYear = dates['startDate']!.year;
+      final endYear = dates['endDate']!.year;
+      final name =
+          startYear == endYear ? 'FY $startYear' : 'FY $startYear-$endYear';
 
       final success = await _fiscalYearController.createFiscalYear(
-        name: 'FY $currentYear',
+        name: name,
         startDate: dates['startDate']!,
         endDate: dates['endDate']!,
         periodType: selectedFiscalYear.value,
@@ -355,6 +366,14 @@ class AuthController extends GetxController {
         };
 
         // ─── API REQUEST ──────────────────────────────────────────
+        final dates = _calculateFiscalYearDates(selectedFiscalYear.value);
+        final currentYear = DateTime.now().year;
+        final startYear = dates['startDate']!.year;
+        final endYear = dates['endDate']!.year;
+        final fyName = startYear == endYear
+            ? 'FY $startYear'
+            : 'FY $startYear-$endYear';
+
         final Map<String, String> fields = {
           'firstName': firstNameController.text.trim(),
           'lastName': lastNameController.text.trim(),
@@ -365,6 +384,10 @@ class AuthController extends GetxController {
           'address': addressController.text.trim(),
           'organizationName': organizationNameController.text.trim(),
           'fiscalYear': selectedFiscalYear.value,
+          'fiscalYearStartDate': dates['startDate']!.toIso8601String(),
+          'fiscalYearEndDate': dates['endDate']!.toIso8601String(),
+          'fiscalYearName':
+              selectedFiscalYear.value.isNotEmpty ? fyName : 'FY $currentYear',
           'taxRegistrationNumber': taxRegistrationController.text.trim(),
           'industry': industryController.text.trim(),
           'businessType': selectedBusinessType.value,

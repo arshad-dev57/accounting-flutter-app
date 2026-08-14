@@ -1,7 +1,9 @@
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/widgets/expandable_stat_card.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/Income/controller/income_controller.dart';
+import 'package:BisonsTechs_app/core/tax/tax_rate_field.dart';
 import 'package:BisonsTechs_app/core/Income/models/income_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -290,78 +292,16 @@ class IncomeScreen extends StatelessWidget {
     required Color borderColor,
     bool isNumber = false,
   }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: kCardBg,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: borderColor, width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: bgColor,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Icon(icon, size: 12, color: color),
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 9,
-                      color: kSubText,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              amount,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: color,
-                letterSpacing: -0.5,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 3),
-            Container(
-              height: 2,
-              width: 25,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [color, color.withOpacity(0.3)],
-                ),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return ExpandableStatCard(
+      title: title,
+      amount: amount,
+      color: color,
+      icon: icon,
+      bgColor: bgColor,
+      borderColor: borderColor,
     );
   }
+
 
   // ═══════════════════════════════════════════════════════════════
   // LIST VIEW WITH LAZY LOADING
@@ -671,6 +611,36 @@ class IncomeScreen extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (income.status != 'Cancelled') ...[
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => _showAddIncomeDialog(
+                            controller,
+                            context,
+                            income: income,
+                          ),
+                          icon: Icon(Icons.edit, size: 14, color: kPrimary),
+                          label: Text(
+                            'Edit',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: kText,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(
+                              color: Colors.grey.withOpacity(0.3),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                     if (income.status == 'Draft') ...[
                       const SizedBox(width: 10),
                       Expanded(
@@ -714,21 +684,41 @@ class IncomeScreen extends StatelessWidget {
   // ADD INCOME DIALOG - PROFESSIONAL DESIGN
   // ═══════════════════════════════════════════════════════════════
 
-  void _showAddIncomeDialog(IncomeController controller, BuildContext ctx) {
+  void _showAddIncomeDialog(
+    IncomeController controller,
+    BuildContext ctx, {
+    Income? income,
+  }) {
     final formKey = GlobalKey<FormState>();
-    DateTime selectedDate = DateTime.now();
-    String incomeType = 'Sales';
-    String? selectedIncomeAccountId;
-    String? selectedCustomerId;
-    double simpleAmount = 0;
-    List<Map<String, dynamic>> items = [
-      {'description': '', 'quantity': 1, 'unitPrice': 0.0},
-    ];
-    double taxRate = 0;
-    String description = '';
-    String reference = '';
-    String paymentMethod = 'Cash';
-    String? selectedBankAccountId;
+    final isEditing = income != null;
+    DateTime selectedDate = income?.date ?? DateTime.now();
+    String incomeType = income?.incomeType ?? 'Sales';
+    if (!controller.incomeTypes.skip(1).contains(incomeType)) {
+      incomeType = 'Other Income';
+    }
+    String? selectedIncomeAccountId = income?.incomeAccountId;
+    String? selectedCustomerId = income?.customerId;
+    double simpleAmount = income == null
+        ? 0
+        : (income.items.isNotEmpty ? 0 : income.totalAmount);
+    List<Map<String, dynamic>> items = income != null && income.items.isNotEmpty
+        ? income.items
+              .map(
+                (i) => {
+                  'description': i.description,
+                  'quantity': i.quantity,
+                  'unitPrice': i.unitPrice,
+                },
+              )
+              .toList()
+        : [
+            {'description': '', 'quantity': 1, 'unitPrice': 0.0},
+          ];
+    double taxRate = income?.taxRate ?? 0;
+    String description = income?.description ?? '';
+    String reference = income?.reference ?? '';
+    String paymentMethod = income?.paymentMethod ?? 'Cash';
+    String? selectedBankAccountId = income?.bankAccountId;
 
     bool requiresItems() => incomeType == 'Sales' || incomeType == 'Services';
 
@@ -804,7 +794,7 @@ class IncomeScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Add Income',
+                                isEditing ? 'Edit Income' : 'Add Income',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w800,
@@ -813,7 +803,9 @@ class IncomeScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Create a new income entry',
+                                isEditing
+                                    ? 'Update ${income.incomeNumber} — ledger will follow'
+                                    : 'Create a new income entry',
                                 style: TextStyle(fontSize: 12, color: kSubText),
                               ),
                             ],
@@ -851,7 +843,13 @@ class IncomeScreen extends StatelessWidget {
                             _buildDropdownField(
                               label: 'Income Type',
                               value: incomeType,
-                              items: controller.incomeTypes.skip(1).toList(),
+                              items: [
+                                ...controller.incomeTypes.skip(1),
+                                if (!controller.incomeTypes
+                                    .skip(1)
+                                    .contains(incomeType))
+                                  incomeType,
+                              ],
                               onChanged: (v) => setState(() => incomeType = v!),
                             ),
                             const SizedBox(height: 16),
@@ -1091,22 +1089,42 @@ class IncomeScreen extends StatelessWidget {
                                           : selectedBankAccountId;
 
                                       Navigator.pop(context);
-                                      await controller.createIncome(
-                                        date: selectedDate,
-                                        incomeType: incomeType,
-                                        incomeAccountId:
-                                            selectedIncomeAccountId,
-                                        customerId: selectedCustomerId,
-                                        items: requiresItems() ? items : [],
-                                        amount: requiresItems()
-                                            ? null
-                                            : simpleAmount,
-                                        taxRate: requiresItems() ? taxRate : 0,
-                                        description: description,
-                                        reference: reference,
-                                        paymentMethod: paymentMethod,
-                                        bankAccountId: finalBankAccountId,
-                                      );
+                                      if (isEditing) {
+                                        await controller.updateIncome(
+                                          id: income.id,
+                                          date: selectedDate,
+                                          incomeType: incomeType,
+                                          incomeAccountId:
+                                              selectedIncomeAccountId,
+                                          customerId: selectedCustomerId,
+                                          items: requiresItems() ? items : [],
+                                          amount: requiresItems()
+                                              ? null
+                                              : simpleAmount,
+                                          taxRate: requiresItems() ? taxRate : 0,
+                                          description: description,
+                                          reference: reference,
+                                          paymentMethod: paymentMethod,
+                                          bankAccountId: finalBankAccountId,
+                                        );
+                                      } else {
+                                        await controller.createIncome(
+                                          date: selectedDate,
+                                          incomeType: incomeType,
+                                          incomeAccountId:
+                                              selectedIncomeAccountId,
+                                          customerId: selectedCustomerId,
+                                          items: requiresItems() ? items : [],
+                                          amount: requiresItems()
+                                              ? null
+                                              : simpleAmount,
+                                          taxRate: requiresItems() ? taxRate : 0,
+                                          description: description,
+                                          reference: reference,
+                                          paymentMethod: paymentMethod,
+                                          bankAccountId: finalBankAccountId,
+                                        );
+                                      }
                                     },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: kPrimary,
@@ -1130,8 +1148,8 @@ class IncomeScreen extends StatelessWidget {
                                             ),
                                       ),
                                     )
-                                  : const Text(
-                                      'Save Income',
+                                  : Text(
+                                      isEditing ? 'Update Income' : 'Save Income',
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
@@ -1392,6 +1410,44 @@ class IncomeScreen extends StatelessWidget {
                       // Footer Buttons
                       Row(
                         children: [
+                          if (income.status != 'Cancelled') ...[
+                            Expanded(
+                              child: SizedBox(
+                                height: 46,
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                    _showAddIncomeDialog(
+                                      controller,
+                                      context,
+                                      income: income,
+                                    );
+                                  },
+                                  icon: const Icon(
+                                    Icons.edit,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                                  label: const Text(
+                                    'Edit',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: kPrimary,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                          ],
                           if (income.status == 'Draft') ...[
                             Expanded(
                               child: SizedBox(
@@ -1684,26 +1740,12 @@ class IncomeScreen extends StatelessWidget {
   }
 
   Widget _buildTaxField(double taxRate, void Function(double) onChanged) {
-    return TextFormField(
-      initialValue: '0',
-      decoration: InputDecoration(
-        labelText: 'Tax Rate (%)',
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 10,
-        ),
-        isDense: true,
-        labelStyle: TextStyle(fontSize: 11, color: kSubText),
-      ),
-      style: const TextStyle(fontSize: 13, color: Colors.black),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      onChanged: (v) => onChanged(double.tryParse(v) ?? 0),
-    );
+    return TaxRateField(value: taxRate, onRateChanged: onChanged);
   }
 
   Widget _buildAmountField(double amount, void Function(double) onChanged) {
     return TextFormField(
+      initialValue: amount > 0 ? amount.toString() : '',
       decoration: InputDecoration(
         labelText: 'Amount *',
         prefixText: CurrencyUtils.prefix,
@@ -1725,6 +1767,7 @@ class IncomeScreen extends StatelessWidget {
 
   Widget _buildDescriptionField(String value, void Function(String) onChanged) {
     return TextFormField(
+      initialValue: value,
       decoration: InputDecoration(
         labelText: 'Description',
         hintText: 'Enter description',
@@ -1744,6 +1787,7 @@ class IncomeScreen extends StatelessWidget {
 
   Widget _buildReferenceField(String value, void Function(String) onChanged) {
     return TextFormField(
+      initialValue: value,
       decoration: InputDecoration(
         labelText: 'Reference #',
         hintText: 'e.g., INV-001',
@@ -1778,9 +1822,19 @@ class IncomeScreen extends StatelessWidget {
         labelStyle: TextStyle(fontSize: 11, color: kSubText),
       ),
       style: TextStyle(fontSize: 13, color: kText),
-      items: const ['Cash', 'Bank Transfer', 'Cheque', 'Credit Card']
-          .map((method) => DropdownMenuItem(value: method, child: Text(method)))
-          .toList(),
+      items: [
+        'Cash',
+        'Bank Transfer',
+        'Cheque',
+        'Credit Card',
+        if (![
+          'Cash',
+          'Bank Transfer',
+          'Cheque',
+          'Credit Card',
+        ].contains(value))
+          value,
+      ].map((method) => DropdownMenuItem(value: method, child: Text(method))).toList(),
       onChanged: onChanged,
     );
   }

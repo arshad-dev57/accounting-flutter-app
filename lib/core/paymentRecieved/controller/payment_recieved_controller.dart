@@ -3,6 +3,7 @@
 
 import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
@@ -73,17 +74,28 @@ class PaymentReceivedController extends GetxController {
   }
 
   @override
+  Worker? _fyWorker;
+
+  @override
   void onInit() {
     super.onInit();
     searchController.addListener(_onSearchChanged);
     fetchCustomers();
     fetchBankAccounts();
-    fetchPayments(resetPage: true);
-    fetchSummary();
+    Future(() async {
+      await waitForFiscalYearReady();
+      fetchPayments(resetPage: true);
+      fetchSummary();
+    });
+    _fyWorker = listenFiscalYearChanges(() {
+      fetchPayments(resetPage: true);
+      fetchSummary();
+    });
   }
 
   @override
   void onClose() {
+    _fyWorker?.dispose();
     searchController.removeListener(_onSearchChanged);
     searchController.dispose();
     scrollController.dispose();

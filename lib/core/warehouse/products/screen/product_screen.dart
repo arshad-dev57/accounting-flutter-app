@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/category/category_screen.dart';
+import 'package:BisonsTechs_app/core/tax/tax_rate_field.dart';
 import 'package:BisonsTechs_app/core/warehouse/products/controller/product_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/products/screen/product_qr_scan_screen.dart';
 import 'package:BisonsTechs_app/core/warehouse/supplier/screen/supplier_screen.dart';
@@ -854,7 +855,6 @@ class _AddProductPageState extends State<_AddProductPage> {
   // ── Snapshot lists ──
   late List<Map<String, dynamic>> _productTypes;
   late List<Map<String, dynamic>> _stockUnits;
-  late List<Map<String, dynamic>> _taxTypes;
   late List<Map<String, dynamic>> _categories;
   late List<Map<String, dynamic>> _suppliers;
   late List<Map<String, dynamic>> _rackLocations;
@@ -960,7 +960,6 @@ class _AddProductPageState extends State<_AddProductPage> {
 
     _productTypes = List<Map<String, dynamic>>.from(_c.productTypes);
     _stockUnits = List<Map<String, dynamic>>.from(_c.stockUnits);
-    _taxTypes = List<Map<String, dynamic>>.from(_c.taxTypes);
     _categories = List<Map<String, dynamic>>.from(_c.categories);
     _suppliers = List<Map<String, dynamic>>.from(_c.suppliers);
     _rackLocations = List<Map<String, dynamic>>.from(_c.rackLocations);
@@ -1189,7 +1188,6 @@ class _AddProductPageState extends State<_AddProductPage> {
     setState(() {
       _productTypes = List<Map<String, dynamic>>.from(_c.productTypes);
       _stockUnits = List<Map<String, dynamic>>.from(_c.stockUnits);
-      _taxTypes = List<Map<String, dynamic>>.from(_c.taxTypes);
       _categories = List<Map<String, dynamic>>.from(_c.categories);
       _suppliers = List<Map<String, dynamic>>.from(_c.suppliers);
       _rackLocations = List<Map<String, dynamic>>.from(_c.rackLocations);
@@ -1975,59 +1973,42 @@ class _AddProductPageState extends State<_AddProductPage> {
   }
 
   String _generateNumericBarcode(String sku, int requiredLength) {
-    // Extract numbers from SKU or generate hash-based number
+    final dataLength = requiredLength - 1;
     final numbers = sku.replaceAll(RegExp(r'[^0-9]'), '');
 
     String baseNumber;
-
-    if (numbers.length >= requiredLength - 1) {
-      // Use first (requiredLength - 1) digits (last digit is checksum)
-      baseNumber = numbers.substring(0, requiredLength - 1);
-    } else if (numbers.isNotEmpty) {
-      // Pad with zeros
-      final padding = '0' * ((requiredLength - 1) - numbers.length);
-      baseNumber = numbers + padding;
+    if (numbers.isNotEmpty) {
+      baseNumber = numbers;
     } else {
-      // Generate from SKU hash
-      final hash = sku.hashCode.abs();
-      final hashString = hash.toString();
-      final padding = '0' * ((requiredLength - 1) - hashString.length);
-      baseNumber = hashString + padding;
+      baseNumber = sku.hashCode.abs().toString();
     }
 
-    // Calculate and append checksum
-    final checksum = _calculateChecksum(baseNumber, requiredLength);
-    return baseNumber + checksum;
+    if (baseNumber.length >= dataLength) {
+      baseNumber = baseNumber.substring(0, dataLength);
+    } else {
+      baseNumber = baseNumber.padRight(dataLength, '0');
+    }
+
+    return baseNumber + _eanChecksum(baseNumber);
   }
 
-  String _calculateChecksum(String data, int totalLength) {
+  /// GS1 checksum: from the right, odd positions (1-based) weight 3.
+  String _eanChecksum(String data) {
     int sum = 0;
-
-    if (totalLength == 13 || totalLength == 8) {
-      // EAN checksum calculation
-      for (int i = 0; i < data.length; i++) {
-        final digit = int.parse(data[i]);
-        // Odd positions (1, 3, 5...) are multiplied by 1
-        // Even positions (2, 4, 6...) are multiplied by 3
-        final weight = (i % 2 == 0) ? 1 : 3;
-        sum += digit * weight;
-      }
-      final checksum = (10 - (sum % 10)) % 10;
-      return checksum.toString();
-    } else if (totalLength == 12) {
-      // UPC-A checksum calculation
-      for (int i = 0; i < data.length; i++) {
-        final digit = int.parse(data[i]);
-        // Odd positions (1, 3, 5...) are multiplied by 3
-        // Even positions (2, 4, 6...) are multiplied by 1
-        final weight = (i % 2 == 0) ? 3 : 1;
-        sum += digit * weight;
-      }
-      final checksum = (10 - (sum % 10)) % 10;
-      return checksum.toString();
+    for (int i = 0; i < data.length; i++) {
+      final digit = int.parse(data[data.length - 1 - i]);
+      sum += digit * (i % 2 == 0 ? 3 : 1);
     }
+    return ((10 - (sum % 10)) % 10).toString();
+  }
 
-    return '0';
+  String _withValidChecksum(String value, int totalLength) {
+    final digits = value.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.length < totalLength - 1) {
+      return _generateNumericBarcode(value, totalLength);
+    }
+    final data = digits.substring(0, totalLength - 1);
+    return data + _eanChecksum(data);
   }
 
   bool _validateBarcodeData(String data, String format) {
@@ -2049,33 +2030,50 @@ class _AddProductPageState extends State<_AddProductPage> {
   }
 
   Widget _buildBarcodeWidget() {
-    Barcode barcode;
-    switch (_selectedBarcodeFormat) {
-      case 'EAN-13':
-        barcode = Barcode.ean13();
-        break;
-      case 'EAN-8':
-        barcode = Barcode.ean8();
-        break;
-      case 'UPC-A':
-        barcode = Barcode.upcA();
-        break;
-      case 'Code-39':
-        barcode = Barcode.code39();
-        break;
-      case 'Code-128':
-      default:
-        barcode = Barcode.code128();
-        break;
-    }
+    final data = _generatedBarcodeData ?? '';
+    if (data.isEmpty) return const SizedBox.shrink();
 
-    final svgString = barcode.toSvg(
-      _generatedBarcodeData!,
+    return SvgPicture.string(
+      _barcodeSvg(data, _selectedBarcodeFormat),
       width: 200,
       height: 80,
     );
+  }
 
-    return SvgPicture.string(svgString, width: 200, height: 80);
+  String _barcodeSvg(String data, String? format) {
+    try {
+      late Barcode barcode;
+      var payload = data;
+      switch (format) {
+        case 'EAN-13':
+          barcode = Barcode.ean13();
+          payload = _withValidChecksum(data, 13);
+          break;
+        case 'EAN-8':
+          barcode = Barcode.ean8();
+          payload = _withValidChecksum(data, 8);
+          break;
+        case 'UPC-A':
+          barcode = Barcode.upcA();
+          payload = _withValidChecksum(data, 12);
+          break;
+        case 'Code-39':
+          barcode = Barcode.code39();
+          payload = data.toUpperCase().replaceAll(
+            RegExp(r'[^A-Z0-9\-\.\ \$\/\+\%]'),
+            '',
+          );
+          if (payload.isEmpty) payload = '0';
+          break;
+        case 'Code-128':
+        default:
+          barcode = Barcode.code128();
+          break;
+      }
+      return barcode.toSvg(payload, width: 200, height: 80);
+    } catch (_) {
+      return Barcode.code128().toSvg(data, width: 200, height: 80);
+    }
   }
 
   Widget _datePicker({
@@ -2402,23 +2400,15 @@ class _AddProductPageState extends State<_AddProductPage> {
         ),
         _sectionHeader('Tax', Icons.receipt_long_outlined),
         _field(
-          label: 'Tax Rate (%)',
-          child: TextFormField(
-            controller: _taxRateCtrl,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: _dec(hint: '0', suffix: '%'),
-            style: const TextStyle(fontSize: 13, color: Colors.black),
+          label: 'Tax class',
+          child: TaxRateField(
+            value: double.tryParse(_taxRateCtrl.text) ?? 0,
+            onRateChanged: (r) {
+              _taxRateCtrl.text = r.toString();
+              setState(() {});
+            },
+            onTypeChanged: (t) => setState(() => _selectedTaxType = t),
           ),
-        ),
-        _dropdownWithAdd<String>(
-          label: 'Tax Type',
-          hint: 'Select Tax Type',
-          value: _selectedTaxType,
-          items: _taxTypes,
-          labelKey: 'name',
-          valueKey: 'name',
-          onChanged: (v) => setState(() => _selectedTaxType = v),
-          settingsCategory: 'taxType',
         ),
         _sectionHeader('Stock Information', Icons.inventory_outlined),
         _dropdownWithAdd<String>(

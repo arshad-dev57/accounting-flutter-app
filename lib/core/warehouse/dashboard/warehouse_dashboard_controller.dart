@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -36,8 +37,8 @@ class WarehouseDashboardController extends GetxController {
   final RxInt totalOrders = 0.obs;
 
   // Period Filter — today | week | month | year | custom
-  final RxString selectedPeriod = 'today'.obs;
-  final RxString selectedPeriodLabel = 'Today'.obs;
+  final RxString selectedPeriod = 'year'.obs;
+  final RxString selectedPeriodLabel = 'This Year'.obs;
   final Rx<DateTime?> customStartDate = Rx<DateTime?>(null);
   final Rx<DateTime?> customEndDate = Rx<DateTime?>(null);
 
@@ -107,14 +108,26 @@ class WarehouseDashboardController extends GetxController {
       'route': '/warehouse/reports',
     },
   ];
+  Worker? _fyWorker;
+
   @override
   void onInit() {
     super.onInit();
     loadBusinessLogo();
-    loadDashboardData();
+    Future(() async {
+      await waitForFiscalYearReady();
+      loadDashboardData();
+    });
+    _fyWorker = listenFiscalYearChanges(loadDashboardData);
     ever(currentRoute, (route) {
       _updateSelectedIndex(route);
     });
+  }
+
+  @override
+  void onClose() {
+    _fyWorker?.dispose();
+    super.onClose();
   }
 
   Future<void> loadBusinessLogo() async {
@@ -197,6 +210,7 @@ class WarehouseDashboardController extends GetxController {
       if (customEndDate.value != null)
         params['endDate'] = customEndDate.value!.toIso8601String();
     }
+    putFiscalYearId(params);
     return params;
   }
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/tax/tax_rate_field.dart';
 import 'package:BisonsTechs_app/core/warehouse/invoice/controller/warehouse_invoice_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/products/screen/product_screen.dart';
 import 'package:flutter/material.dart';
@@ -2352,20 +2353,10 @@ class _CreateWarehouseInvoiceFormState
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: TextFormField(
-                    initialValue: line.taxRate.toStringAsFixed(1),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: 'Tax %',
-                      isDense: true,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    onChanged: (v) =>
-                        setState(() => line.taxRate = double.tryParse(v) ?? 0),
+                  child: TaxRateField(
+                    dense: true,
+                    value: line.taxRate,
+                    onRateChanged: (v) => setState(() => line.taxRate = v),
                   ),
                 ),
               ],

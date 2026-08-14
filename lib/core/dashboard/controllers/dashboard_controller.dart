@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:flutter/material.dart';
@@ -99,6 +101,17 @@ class DashboardController extends GetxController {
   var profitChange = 0.0.obs;
   var isProfitPositive = true.obs;
 
+  var openingCapital = 0.0.obs;
+  var openingCapitalFormatted = ''.obs;
+  var currentEquity = 0.0.obs;
+  var currentEquityFormatted = ''.obs;
+  var periodEarnings = 0.0.obs;
+  var periodEarningsFormatted = ''.obs;
+  var capitalChange = 0.0.obs;
+  var capitalChangeFormatted = ''.obs;
+  var isCapitalIncrease = true.obs;
+  var capitalChart = <Map<String, dynamic>>[].obs;
+
   var salesOrdersCount = 0.obs;
   var purchaseOrdersCount = 0.obs;
 
@@ -119,7 +132,7 @@ class DashboardController extends GetxController {
 
   final ApiClient _api = Get.find<ApiClient>();
 
-  var selectedTimePeriod = 'Today'.obs;
+  var selectedTimePeriod = 'This Year'.obs;
   final Rx<DateTime?> customStartDate = Rx<DateTime?>(null);
   final Rx<DateTime?> customEndDate = Rx<DateTime?>(null);
   /// Soft refresh flag — does not tear down the whole body like [isLoading].
@@ -138,18 +151,25 @@ class DashboardController extends GetxController {
     'Custom',
   ];
 
+  Worker? _fyWorker;
+
   @override
   void onInit() {
     super.onInit();
     loadUserData();
     loadBusinessLogo();
-    loadDashboardData();
+    Future(() async {
+      await waitForFiscalYearReady();
+      loadDashboardData();
+    });
+    _fyWorker = listenFiscalYearChanges(loadDashboardData);
     // One-shot access check only — SubscriptionController already polls globally.
     _checkSubscriptionOnce();
   }
 
   @override
   void onClose() {
+    _fyWorker?.dispose();
     super.onClose();
   }
 
@@ -369,8 +389,16 @@ class DashboardController extends GetxController {
       params['endDate'] = dateRange['endDate'] ?? '';
     }
 
+    if (Get.isRegistered<FiscalYearController>()) {
+      final fyId =
+          Get.find<FiscalYearController>().selectedFiscalYearId;
+      if (fyId != null && fyId.isNotEmpty) {
+        params['fiscalYearId'] = fyId;
+      }
+    }
+
     print(
-      '🔵 [Dashboard] overview period=${selectedTimePeriod.value}',
+      '🔵 [Dashboard] overview period=${selectedTimePeriod.value} fy=${params['fiscalYearId']}',
     );
 
     final response = await _api.get(
@@ -505,7 +533,9 @@ class DashboardController extends GetxController {
     isCashPositive.value = bankData['isPositive'] ?? true;
 
     final cashOnly = _asDouble(
-      (kpi['cashBalance'] is Map) ? (kpi['cashBalance']['cashOnly']) : null,
+      (kpi['cashInHand'] is Map)
+          ? kpi['cashInHand']['amount']
+          : ((kpi['cashBalance'] is Map) ? kpi['cashBalance']['cashOnly'] : null),
     );
     totalCashBalance.value = cashOnly;
     totalCashBalanceFormatted.value = formatAmount(totalCashBalance.value);
@@ -519,6 +549,27 @@ class DashboardController extends GetxController {
     dailyRevenue.value = _asDouble(dailyData['revenue']);
     dailyExpenses.value = _asDouble(dailyData['expenses']);
     dailyProfit.value = _asDouble(dailyData['profit']);
+
+    final capital = dataObj['capital'] is Map
+        ? dataObj['capital']
+        : (kpi['capital'] is Map ? kpi['capital'] : {});
+    openingCapital.value = _asDouble(capital['openingCapital']);
+    openingCapitalFormatted.value = formatAmount(openingCapital.value);
+    currentEquity.value = _asDouble(capital['currentEquity']);
+    currentEquityFormatted.value = formatAmount(currentEquity.value);
+    periodEarnings.value = _asDouble(capital['periodEarnings']);
+    periodEarningsFormatted.value = formatAmount(periodEarnings.value);
+    capitalChange.value = _asDouble(capital['changeOnCapital']);
+    capitalChangeFormatted.value = formatAmount(capitalChange.value);
+    isCapitalIncrease.value = capital['isIncrease'] ?? (periodEarnings.value >= 0);
+    final capitalSeries = capital['chart'];
+    if (capitalSeries is List) {
+      capitalChart.value = List<Map<String, dynamic>>.from(
+        capitalSeries.map((e) => Map<String, dynamic>.from(e as Map)),
+      );
+    } else {
+      capitalChart.clear();
+    }
   }
 
   void _applyCharts(Map dataObj) {

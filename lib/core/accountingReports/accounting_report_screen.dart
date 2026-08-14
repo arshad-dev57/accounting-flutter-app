@@ -1,4 +1,5 @@
 import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/widgets/expandable_stat_card.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/core/accountingReports/accounting_report_controller.dart';
 import 'package:flutter/material.dart';
@@ -309,34 +310,40 @@ class _SummaryCards extends StatelessWidget {
         mainAxisSpacing: 10,
         childAspectRatio: isMobile ? 1.6 : 2.2,
         children: cards.map((c) {
-          return Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(c.$3, size: 18, color: kPrimary),
-                const SizedBox(height: 6),
-                Text(
-                  c.$1,
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  c.$2,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
+          return ExpandableStatWrap(
+            title: c.$1,
+            value: c.$2,
+            color: kPrimary,
+            icon: c.$3,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(12, 12, 22, 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(c.$3, size: 18, color: kPrimary),
+                  const SizedBox(height: 6),
+                  Text(
+                    c.$1,
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 2),
+                  Text(
+                    c.$2,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         }).toList(),

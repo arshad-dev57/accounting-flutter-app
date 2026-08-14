@@ -1,4 +1,5 @@
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/core/Sales/model/sales_credit_model.dart';
 import 'package:flutter/material.dart';
@@ -60,15 +61,25 @@ class SalesCreditController extends GetxController {
   final Rx<SalesCreditInvoice?> applyInvoice = Rx<SalesCreditInvoice?>(null);
   final RxBool isLoadingApplyInvoices = false.obs;
 
+  Worker? _fyWorker;
+
   @override
   void onInit() {
     super.onInit();
-    fetchCredits();
-    fetchSummary();
+    Future(() async {
+      await waitForFiscalYearReady();
+      fetchCredits();
+      fetchSummary();
+    });
+    _fyWorker = listenFiscalYearChanges(() {
+      fetchCredits();
+      fetchSummary();
+    });
   }
 
   @override
   void onClose() {
+    _fyWorker?.dispose();
     try {
       customerSearchController.dispose();
       amountController.dispose();

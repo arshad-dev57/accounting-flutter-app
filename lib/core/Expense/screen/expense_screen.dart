@@ -1,10 +1,12 @@
 // core/Expense/views/expense_screen.dart - COMPLETE WITH LOADING
 
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/widgets/expandable_stat_card.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/Expense/controller/expense_controller.dart';
+import 'package:BisonsTechs_app/core/tax/tax_rate_field.dart';
 import 'package:BisonsTechs_app/core/Expense/model/expense_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -310,57 +312,14 @@ class ExpenseScreen extends StatelessWidget {
     required IconData icon,
     required Color accentColor,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: kCardBg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: accentColor.withOpacity(0.18), width: 1.2),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 18, color: accentColor),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 9,
-                    color: kSubText,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: accentColor,
-                    letterSpacing: -0.4,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return ExpandableStatTile(
+      label: label,
+      value: value,
+      icon: icon,
+      accentColor: accentColor,
     );
   }
+
 
   Widget _buildMobileExpenseList(
     ExpenseController controller,
@@ -1419,24 +1378,99 @@ class ExpenseScreen extends StatelessWidget {
   // ─────────────────────────────────────────
   // ADD EXPENSE DIALOG WITH LOADING
   // ─────────────────────────────────────────
-  void _showAddExpenseDialog(ExpenseController controller, BuildContext ctx) {
+  void _showAddExpenseDialog(
+    ExpenseController controller,
+    BuildContext ctx, {
+    Expense? expense,
+  }) {
     final isWeb = ResponsiveUtils.isWeb(ctx);
+    final isEditing = expense != null;
     final formKey = GlobalKey<FormState>();
-    DateTime selectedDate = DateTime.now();
+    DateTime selectedDate = expense?.date ?? DateTime.now();
     String expenseType = 'Rent';
-    String? selectedExpenseAccountId;
-    String? selectedVendorId;
-    List<Map<String, dynamic>> items = [
-      {'description': '', 'quantity': 1, 'unitPrice': 0.0},
-    ];
-    double simpleAmount = 0;
-    double taxRate = 0;
-    String description = '';
-    String reference = '';
-    String paymentMethod = 'Cash';
-    String? selectedBankAccountId;
+    if (expense != null) {
+      final existingType = expense.expenseType;
+      if (controller.formExpenseTypes.contains(existingType)) {
+        expenseType = existingType;
+      } else {
+        controller.rememberCustomExpenseType(existingType);
+        expenseType = controller.formExpenseTypes.contains(existingType)
+            ? existingType
+            : 'Other';
+      }
+    }
+    String? selectedExpenseAccountId = expense?.expenseAccountId;
+    String? selectedVendorId = expense?.vendorId;
+    List<Map<String, dynamic>> items = expense != null && expense.items.isNotEmpty
+        ? expense.items
+              .map(
+                (i) => {
+                  'description': i['description'] ?? '',
+                  'quantity': i['quantity'] ?? 1,
+                  'unitPrice': (i['unitPrice'] ?? 0).toDouble(),
+                },
+              )
+              .toList()
+        : [
+            {'description': '', 'quantity': 1, 'unitPrice': 0.0},
+          ];
+    double simpleAmount = expense == null
+        ? 0
+        : (expense.hasItems ? 0 : (expense.amount > 0 ? expense.amount : expense.totalAmount));
+    double taxRate = expense?.taxRate ?? 0;
+    String description = expense?.description ?? '';
+    String reference = expense?.reference ?? '';
+    String paymentMethod = expense?.paymentMethod ?? 'Cash';
+    String? selectedBankAccountId = expense?.bankAccountId;
+    final customTypeController = TextEditingController(
+      text: expense != null && expenseType == 'Other' ? expense.expenseType : '',
+    );
 
     bool requiresItems() => controller.requiresItems(expenseType);
+
+    Widget expenseTypeField(void Function(void Function()) setState) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _dropdownField(
+            label: 'Expense Type',
+            value: expenseType,
+            items: [
+              ...controller.formExpenseTypes,
+              if (!controller.formExpenseTypes.contains(expenseType))
+                expenseType,
+            ],
+            onChanged: (v) => setState(() => expenseType = v!),
+          ),
+          if (expenseType == 'Other') ...[
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: customTypeController,
+              decoration: InputDecoration(
+                labelText: 'Custom expense type *',
+                hintText: 'e.g. Printing, Courier, Donation',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                isDense: true,
+              ),
+              style: const TextStyle(fontSize: 13, color: Colors.black87),
+              validator: (v) {
+                if (expenseType != 'Other') return null;
+                if (v == null || v.trim().length < 2) {
+                  return 'Enter a custom type';
+                }
+                return null;
+              },
+            ),
+          ],
+        ],
+      );
+    }
 
     showDialog(
       context: ctx,
@@ -1513,7 +1547,7 @@ class ExpenseScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Add Expense',
+                                isEditing ? 'Edit Expense' : 'Add Expense',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w800,
@@ -1522,7 +1556,9 @@ class ExpenseScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Create a new expense entry',
+                                isEditing
+                                    ? 'Update ${expense.expenseNumber} — ledger will follow'
+                                    : 'Create a new expense entry',
                                 style: TextStyle(fontSize: 12, color: kSubText),
                               ),
                             ],
@@ -1563,15 +1599,7 @@ class ExpenseScreen extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
-                                    child: _dropdownField(
-                                      label: 'Expense Type',
-                                      value: expenseType,
-                                      items: controller.expenseTypes
-                                          .skip(1)
-                                          .toList(),
-                                      onChanged: (v) =>
-                                          setState(() => expenseType = v!),
-                                    ),
+                                    child: expenseTypeField(setState),
                                   ),
                                 ],
                               )
@@ -1584,13 +1612,7 @@ class ExpenseScreen extends StatelessWidget {
                                 context,
                               ),
                               const SizedBox(height: 12),
-                              _dropdownField(
-                                label: 'Expense Type',
-                                value: expenseType,
-                                items: controller.expenseTypes.skip(1).toList(),
-                                onChanged: (v) =>
-                                    setState(() => expenseType = v!),
-                              ),
+                              expenseTypeField(setState),
                             ],
 
                             const SizedBox(height: 12),
@@ -1715,17 +1737,18 @@ class ExpenseScreen extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 8),
-                              _formField(
-                                'Tax Rate (%)',
-                                '0',
-                                (v) => taxRate = double.tryParse(v) ?? 0,
-                                keyboardType: TextInputType.number,
+                              TaxRateField(
+                                value: taxRate,
+                                onRateChanged: (v) => setState(() => taxRate = v),
                               ),
                             ] else
                               _formField(
                                 'Amount *',
                                 '0.00',
                                 (v) => simpleAmount = double.tryParse(v) ?? 0,
+                                initialValue: simpleAmount > 0
+                                    ? simpleAmount.toString()
+                                    : '',
                                 keyboardType: TextInputType.number,
                                 prefixText: CurrencyUtils.prefix,
                               ),
@@ -1739,6 +1762,7 @@ class ExpenseScreen extends StatelessWidget {
                                       'Description',
                                       '',
                                       (v) => description = v,
+                                      initialValue: description,
                                     ),
                                   ),
                                   const SizedBox(width: 12),
@@ -1747,6 +1771,7 @@ class ExpenseScreen extends StatelessWidget {
                                       'Reference #',
                                       '',
                                       (v) => reference = v,
+                                      initialValue: reference,
                                     ),
                                   ),
                                 ],
@@ -1756,12 +1781,14 @@ class ExpenseScreen extends StatelessWidget {
                                 'Description',
                                 '',
                                 (v) => description = v,
+                                initialValue: description,
                               ),
                               const SizedBox(height: 12),
                               _formField(
                                 'Reference #',
                                 '',
                                 (v) => reference = v,
+                                initialValue: reference,
                               ),
                             ],
                             const SizedBox(height: 12),
@@ -1873,6 +1900,15 @@ class ExpenseScreen extends StatelessWidget {
                                       if (!formKey.currentState!.validate())
                                         return;
 
+                                      var typeToSave = expenseType;
+                                      if (expenseType == 'Other') {
+                                        typeToSave =
+                                            customTypeController.text.trim();
+                                        controller.rememberCustomExpenseType(
+                                          typeToSave,
+                                        );
+                                      }
+
                                       if (selectedExpenseAccountId == null ||
                                           selectedExpenseAccountId!.isEmpty) {
                                         AppSnackbar.error(
@@ -1941,22 +1977,42 @@ class ExpenseScreen extends StatelessWidget {
                                       );
 
                                       Navigator.pop(context);
-                                      await controller.createExpense(
-                                        date: selectedDate,
-                                        expenseType: expenseType,
-                                        expenseAccountId:
-                                            selectedExpenseAccountId,
-                                        vendorId: selectedVendorId,
-                                        items: requiresItems() ? items : [],
-                                        amount: requiresItems()
-                                            ? null
-                                            : simpleAmount,
-                                        taxRate: requiresItems() ? taxRate : 0,
-                                        description: description,
-                                        reference: reference,
-                                        paymentMethod: paymentMethod,
-                                        bankAccountId: finalBankAccountId,
-                                      );
+                                      if (isEditing) {
+                                        await controller.updateExpense(
+                                          id: expense.id,
+                                          date: selectedDate,
+                                          expenseType: typeToSave,
+                                          expenseAccountId:
+                                              selectedExpenseAccountId,
+                                          vendorId: selectedVendorId,
+                                          items: requiresItems() ? items : [],
+                                          amount: requiresItems()
+                                              ? null
+                                              : simpleAmount,
+                                          taxRate: requiresItems() ? taxRate : 0,
+                                          description: description,
+                                          reference: reference,
+                                          paymentMethod: paymentMethod,
+                                          bankAccountId: finalBankAccountId,
+                                        );
+                                      } else {
+                                        await controller.createExpense(
+                                          date: selectedDate,
+                                          expenseType: typeToSave,
+                                          expenseAccountId:
+                                              selectedExpenseAccountId,
+                                          vendorId: selectedVendorId,
+                                          items: requiresItems() ? items : [],
+                                          amount: requiresItems()
+                                              ? null
+                                              : simpleAmount,
+                                          taxRate: requiresItems() ? taxRate : 0,
+                                          description: description,
+                                          reference: reference,
+                                          paymentMethod: paymentMethod,
+                                          bankAccountId: finalBankAccountId,
+                                        );
+                                      }
                                     },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: kPrimary,
@@ -1980,8 +2036,8 @@ class ExpenseScreen extends StatelessWidget {
                                             ),
                                       ),
                                     )
-                                  : const Text(
-                                      'Save Expense',
+                                  : Text(
+                                      isEditing ? 'Update Expense' : 'Save Expense',
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
@@ -2000,7 +2056,7 @@ class ExpenseScreen extends StatelessWidget {
           );
         },
       ),
-    );
+    ).whenComplete(customTypeController.dispose);
   }
 
   // ─── FORM HELPERS ──────────────────────────────────────────────
@@ -2437,6 +2493,40 @@ class ExpenseScreen extends StatelessWidget {
               const SizedBox(height: 16),
               Row(
                 children: [
+                  if (expense.status != 'Cancelled') ...[
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          _showAddExpenseDialog(
+                            controller,
+                            context,
+                            expense: expense,
+                          );
+                        },
+                        icon: const Icon(
+                          Icons.edit,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                        label: const Text(
+                          'Edit',
+                          style: TextStyle(fontSize: 12, color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kPrimary,
+                          padding: EdgeInsets.symmetric(
+                            vertical: isWeb ? 10 : 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          elevation: 0,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                  ],
                   if (expense.status == 'Draft') ...[
                     Expanded(
                       child: ElevatedButton.icon(
@@ -2509,10 +2599,19 @@ class ExpenseScreen extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       items: [
         PopupMenuItem(
-          onTap: () => AppSnackbar.info(
-            'Info',
-            'Edit expense #${expense.expenseNumber}',
-          ),
+          onTap: () {
+            Future.microtask(() {
+              if (expense.status == 'Cancelled') {
+                AppSnackbar.error(
+                  kWarning,
+                  'Error',
+                  'Cancelled expenses cannot be edited',
+                );
+                return;
+              }
+              _showAddExpenseDialog(controller, context, expense: expense);
+            });
+          },
           child: const ListTile(
             leading: Icon(Icons.edit, size: 18),
             title: Text('Edit', style: TextStyle(fontSize: 13)),
