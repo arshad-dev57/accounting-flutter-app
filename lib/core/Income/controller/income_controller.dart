@@ -480,6 +480,108 @@ class IncomeController extends GetxController {
     }
   }
 
+  Future<void> updateIncome({
+    required String id,
+    required DateTime date,
+    required String incomeType,
+    required String? incomeAccountId,
+    required String? customerId,
+    required List<Map<String, dynamic>> items,
+    required double? amount,
+    required double taxRate,
+    required String description,
+    required String reference,
+    required String paymentMethod,
+    required String? bankAccountId,
+  }) async {
+    Get.dialog(
+      Center(
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: kSuccess,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Updating income...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kText,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+
+    try {
+      isSaving.value = true;
+      final Map<String, dynamic> incomeData = {
+        'date': DateFormat('yyyy-MM-dd').format(date),
+        'incomeType': incomeType,
+        'incomeAccountId': incomeAccountId,
+        'customerId': customerId,
+        'items': items,
+        'amount': amount ?? 0,
+        'taxRate': taxRate,
+        'description': description,
+        'reference': reference,
+        'paymentMethod': paymentMethod,
+      };
+
+      final bool hasValidBankAccount =
+          bankAccountId != null &&
+          bankAccountId.isNotEmpty &&
+          bankAccountId != 'null';
+
+      if (hasValidBankAccount) {
+        incomeData['bankAccountId'] = bankAccountId;
+      }
+
+      final response = await _api.put('/api/income/$id', body: incomeData);
+      Get.back();
+
+      if (response.success) {
+        final Map<String, dynamic> responseData = response.data;
+        if (responseData['success'] == true) {
+          AppSnackbar.success(
+            kSuccess,
+            'Success',
+            'Income updated across ledger and reports',
+          );
+          await refreshData();
+        } else {
+          _showError(responseData['message'] ?? 'Failed to update income');
+        }
+      } else {
+        _showError(response.message ?? 'Failed to update income');
+      }
+    } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
+      print('❌ Error updating income: $e');
+      _showError('Error updating income: $e');
+    } finally {
+      isSaving.value = false;
+    }
+  }
+
   // ─── DELETE INCOME ──────────────────────────────────────────
   Future<void> deleteIncome(String id, String incomeNumber) async {
     // Show loading dialog

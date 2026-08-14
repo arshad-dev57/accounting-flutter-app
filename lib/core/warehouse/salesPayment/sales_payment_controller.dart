@@ -611,15 +611,11 @@ class SalesPaymentController extends GetxController {
       return false;
     }
 
-    if (paymentMethod.value == 'Bank Transfer' &&
-        selectedBankAccount.value == null) {
-      print(
-        '❌ [SalesPaymentController] No bank account selected for bank transfer',
-      );
-      Get.snackbar(
-        'Validation',
-        'Please select a bank account for bank transfer',
-      );
+    final method = paymentMethod.value;
+    final needsBank =
+        method == 'Bank Transfer' || method == 'Cheque';
+    if (needsBank && selectedBankAccount.value == null) {
+      Get.snackbar('Validation', 'Please select a bank account');
       return false;
     }
 
@@ -648,12 +644,17 @@ class SalesPaymentController extends GetxController {
         'customerName': customer['name'],
         'amount': amount,
         'paymentMethod': paymentMethod.value,
-        'bankAccountId': selectedBankAccount.value?['id'],
-        'bankAccountName': selectedBankAccount.value?['accountName'] ?? '',
         'reference': referenceController.text.trim(),
         'notes': notesController.text.trim(),
         'invoicePayments': invoicePayments,
       };
+
+      // Bank GL only when the user actually picked a bank (never for Cash)
+      final bank = selectedBankAccount.value;
+      if (method != 'Cash' && bank != null && bank['id'] != null) {
+        payload['bankAccountId'] = bank['id'];
+        payload['bankAccountName'] = bank['accountName'] ?? '';
+      }
 
       print('🔵 [SalesPaymentController] Submitting payment payload');
       print(

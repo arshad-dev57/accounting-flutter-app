@@ -75,6 +75,8 @@ class PurchasePaymentController extends GetxController {
   final RxList<PurchaseInvoiceForPayment> selectedInvoices =
       <PurchaseInvoiceForPayment>[].obs;
   final RxBool isLoadingInvoices = false.obs;
+  final RxBool lockSupplier = false.obs;
+  final RxnString lockedInvoiceId = RxnString();
 
   // ─── CONTROLLERS ─────────────────────────────────────────────
   final supplierSearchController = TextEditingController();
@@ -421,6 +423,25 @@ class PurchasePaymentController extends GetxController {
     );
   }
 
+  /// Prefill the purchase-payment form for one Purchase Invoice (AP Pay).
+  Future<void> prepareForInvoicePayment({
+    required String supplierId,
+    required String supplierName,
+    required String invoiceId,
+  }) async {
+    _resetCreateForm();
+    lockSupplier.value = true;
+    lockedInvoiceId.value = invoiceId;
+    selectedSupplier.value = {'id': supplierId, 'name': supplierName};
+    supplierSearchController.text = supplierName;
+    showCreateForm.value = true;
+    await fetchBankAccounts();
+    await fetchSupplierInvoices(
+      supplierId,
+      selectOnlyInvoiceId: invoiceId,
+    );
+  }
+
   void _resetCreateForm() {
     print('🟢 [PurchasePaymentController] _resetCreateForm called');
     selectedSupplier.value = null;
@@ -433,6 +454,8 @@ class PurchasePaymentController extends GetxController {
     selectedBankAccount.value = null;
     availableInvoices.clear();
     selectedInvoices.clear();
+    lockSupplier.value = false;
+    lockedInvoiceId.value = null;
     selectedPaymentDate.value = DateTime.now();
     paymentDateController.text = DateFormat(
       'dd MMM yyyy',
@@ -503,7 +526,10 @@ class PurchasePaymentController extends GetxController {
 
   // ─── SUPPLIER INVOICES ──────────────────────────────────────
 
-  Future<void> fetchSupplierInvoices(String supplierId) async {
+  Future<void> fetchSupplierInvoices(
+    String supplierId, {
+    String? selectOnlyInvoiceId,
+  }) async {
     print(
       '🔵 [PurchasePaymentController] fetchSupplierInvoices called for supplier: $supplierId',
     );
@@ -521,7 +547,7 @@ class PurchasePaymentController extends GetxController {
 
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
-        availableInvoices.value = list
+        var invoices = list
             .map(
               (e) => PurchaseInvoiceForPayment.fromJson(
                 Map<String, dynamic>.from(e),
@@ -530,7 +556,14 @@ class PurchasePaymentController extends GetxController {
             .where((invoice) => invoice.outstanding > 0)
             .toList();
 
-        // Auto-select only payable (Posted / Partially Paid) invoices
+        if (selectOnlyInvoiceId != null) {
+          invoices = invoices
+              .where((invoice) => invoice.id == selectOnlyInvoiceId)
+              .toList();
+        }
+
+        availableInvoices.value = invoices;
+
         selectedInvoices.clear();
         for (var invoice in availableInvoices) {
           if (!invoice.payable) continue;
@@ -539,7 +572,6 @@ class PurchasePaymentController extends GetxController {
           selectedInvoices.add(invoice);
         }
 
-        // Update amount
         amountController.text = selectedTotalAmount.toStringAsFixed(2);
 
         final draftCount =
@@ -548,7 +580,14 @@ class PurchasePaymentController extends GetxController {
           '🔵 [PurchasePaymentController] Found ${availableInvoices.length} invoices (${selectedInvoices.length} payable, $draftCount draft)',
         );
 
-        if (availableInvoices.isNotEmpty && selectedInvoices.isEmpty) {
+        if (selectOnlyInvoiceId != null && selectedInvoices.isEmpty) {
+          Get.snackbar(
+            'Not Payable',
+            'This purchase invoice is not posted or has no outstanding amount.',
+            snackPosition: SnackPosition.BOTTOM,
+            duration: const Duration(seconds: 3),
+          );
+        } else if (availableInvoices.isNotEmpty && selectedInvoices.isEmpty) {
           Get.snackbar(
             'No Payable Invoices',
             'No unpaid posted invoices found for this supplier.',

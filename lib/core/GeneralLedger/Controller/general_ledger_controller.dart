@@ -162,7 +162,6 @@ class GeneralLedgerController extends GetxController {
     super.onClose();
   }
 
-  // Fetch account summaries for cards and dropdown
   Future<void> fetchAccountSummaries() async {
     try {
       isLoading(true);
@@ -302,7 +301,6 @@ class GeneralLedgerController extends GetxController {
           fallbackCount: entries.length,
         );
 
-        // Prefer entries-response summary (full filtered set); keep prior if absent
         final summary = payload['summary'];
         if (summary is Map) {
           _applySummary(Map<String, dynamic>.from(summary));
@@ -444,7 +442,6 @@ class GeneralLedgerController extends GetxController {
     );
   }
 
-  // ─── Get summary for current view (API totals — matches Next.js) ───
   Map<String, dynamic> getCurrentSummary() {
     return {
       'totalDebit': totalDebitSummary.value,

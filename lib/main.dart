@@ -1,6 +1,7 @@
 // lib/main.dart - COMPLETE FIXED
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/widgets/reload_when_visible.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/core/Onboarding/views/Onboarding_screen.dart';
 import 'package:BisonsTechs_app/core/Register/Views/register_screen.dart';
@@ -112,6 +113,7 @@ class MyApp extends StatelessWidget {
         return GetMaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'BisonsTechs',
+          navigatorObservers: [appRouteObserver],
           theme: _buildLightTheme(),
           darkTheme: _buildDarkTheme(),
           themeMode: Get.find<ThemeController>().isDarkMode.value
@@ -367,7 +369,7 @@ class MyApp extends StatelessWidget {
         primary: const Color(0xFF1AB4F5),
         brightness: Brightness.light,
       ),
-      scaffoldBackgroundColor: kBg,
+      scaffoldBackgroundColor: kBgLight,
       appBarTheme: const AppBarTheme(
         elevation: 0,
         centerTitle: false,

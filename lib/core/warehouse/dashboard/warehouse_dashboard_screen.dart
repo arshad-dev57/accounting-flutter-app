@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/widgets/fiscal_year_select.dart';
 import 'package:BisonsTechs_app/core/Notifications/screens/notification_screen.dart';
+import 'package:BisonsTechs_app/widgets/reload_when_visible.dart';
 import 'package:BisonsTechs_app/core/warehouse/dashboard/warehouse_dashboard_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/widgets/drawer_widget.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -36,8 +37,28 @@ const _kHeroBorder = Color(0xFFB8CFE0);
 const _kHeroIcon = Color(0xFFC5D8E8);
 const _kPrimaryBg = Color(0xFFE6EEF5);
 
-class WarehouseDashboard extends GetView<WarehouseDashboardController> {
+class WarehouseDashboard extends StatefulWidget {
   const WarehouseDashboard({super.key});
+
+  @override
+  State<WarehouseDashboard> createState() => _WarehouseDashboardState();
+}
+
+class _WarehouseDashboardState extends State<WarehouseDashboard>
+    with RouteAware, ReloadWhenVisible {
+  @override
+  void reloadOnOpen() {
+    if (Get.isRegistered<WarehouseDashboardController>()) {
+      Get.find<WarehouseDashboardController>().loadDashboardData();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => const _WarehouseDashboardView();
+}
+
+class _WarehouseDashboardView extends GetView<WarehouseDashboardController> {
+  const _WarehouseDashboardView();
 
   @override
   Widget build(BuildContext context) {

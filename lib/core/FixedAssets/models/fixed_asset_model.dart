@@ -45,7 +45,7 @@ class FixedAsset {
 
   factory FixedAsset.fromJson(Map<String, dynamic> json) {
     return FixedAsset(
-      id: json['_id'] ?? '',
+      id: (json['id'] ?? json['_id'])?.toString() ?? '',
       name: json['name'] ?? '',
       assetCode: json['assetCode'] ?? '',
       category: json['category'] ?? '',

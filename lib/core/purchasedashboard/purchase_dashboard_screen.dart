@@ -4,6 +4,7 @@ import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/widgets/fiscal_year_select.dart';
 import 'package:BisonsTechs_app/core/Notifications/screens/notification_screen.dart';
+import 'package:BisonsTechs_app/widgets/reload_when_visible.dart';
 import 'package:BisonsTechs_app/core/purchasedashboard/purchase_controller.dart';
 import 'package:BisonsTechs_app/core/purchasedashboard/purchase_dashboard_model.dart';
 import 'package:BisonsTechs_app/core/purchasedashboard/purchase_drawer.dart';
@@ -42,8 +43,29 @@ const _kHeroBgEnd = Color(0xFFD6E4F0);
 const _kHeroBorder = Color(0xFFB8CFE0);
 const _kHeroIcon = Color(0xFFC5D8E8);
 
-class PurchaseDashboardScreen extends GetView<PurchaseController> {
+class PurchaseDashboardScreen extends StatefulWidget {
   const PurchaseDashboardScreen({super.key});
+
+  @override
+  State<PurchaseDashboardScreen> createState() =>
+      _PurchaseDashboardScreenState();
+}
+
+class _PurchaseDashboardScreenState extends State<PurchaseDashboardScreen>
+    with RouteAware, ReloadWhenVisible {
+  @override
+  void reloadOnOpen() {
+    if (Get.isRegistered<PurchaseController>()) {
+      Get.find<PurchaseController>().fetchDashboard();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => const _PurchaseDashboardView();
+}
+
+class _PurchaseDashboardView extends GetView<PurchaseController> {
+  const _PurchaseDashboardView();
 
   @override
   Widget build(BuildContext context) {

@@ -25,6 +25,9 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
     controller = Get.isRegistered<ChartOfAccountController>()
         ? Get.find<ChartOfAccountController>()
         : Get.put(ChartOfAccountController());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) controller.fetchAccounts(resetPage: true);
+    });
   }
 
   @override

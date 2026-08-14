@@ -6,6 +6,7 @@ import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/widgets/fiscal_year_select.dart';
 import 'package:BisonsTechs_app/core/Notifications/screens/notification_screen.dart';
+import 'package:BisonsTechs_app/widgets/reload_when_visible.dart';
 import 'package:BisonsTechs_app/core/warehouse/sales/controller/sales_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/sales/model/sales_dashboard_model.dart';
 import 'package:BisonsTechs_app/widgets/sales_drawer.dart';
@@ -42,8 +43,28 @@ const _kHeroBgEnd = Color(0xFFD6E4F0);
 const _kHeroBorder = Color(0xFFB8CFE0);
 const _kHeroIcon = Color(0xFFC5D8E8);
 
-class SalesDashboardScreen extends GetView<SalesController> {
+class SalesDashboardScreen extends StatefulWidget {
   const SalesDashboardScreen({super.key});
+
+  @override
+  State<SalesDashboardScreen> createState() => _SalesDashboardScreenState();
+}
+
+class _SalesDashboardScreenState extends State<SalesDashboardScreen>
+    with RouteAware, ReloadWhenVisible {
+  @override
+  void reloadOnOpen() {
+    if (Get.isRegistered<SalesController>()) {
+      Get.find<SalesController>().fetchDashboard();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => const _SalesDashboardView();
+}
+
+class _SalesDashboardView extends GetView<SalesController> {
+  const _SalesDashboardView();
 
   @override
   Widget build(BuildContext context) {

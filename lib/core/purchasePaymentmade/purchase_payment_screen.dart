@@ -61,7 +61,7 @@ class PurchasePaymentScreen extends StatelessWidget {
       ),
       body: Obx(() {
         if (controller.showCreateForm.value) {
-          return _CreatePaymentForm(
+          return PurchasePaymentCreateForm(
             controller: controller,
             onCancel: controller.closeCreateForm,
           );
@@ -411,11 +411,17 @@ class _SearchFieldState extends State<_SearchField> {
 // CREATE PAYMENT FORM
 // ═══════════════════════════════════════════════════════════════
 
-class _CreatePaymentForm extends StatelessWidget {
+class PurchasePaymentCreateForm extends StatelessWidget {
   final PurchasePaymentController controller;
   final VoidCallback onCancel;
+  final VoidCallback? onSuccess;
 
-  const _CreatePaymentForm({required this.controller, required this.onCancel});
+  const PurchasePaymentCreateForm({
+    super.key,
+    required this.controller,
+    required this.onCancel,
+    this.onSuccess,
+  });
 
   String _format(double v) {
     final currency = Get.find<CurrencyController>();
@@ -483,28 +489,30 @@ class _CreatePaymentForm extends StatelessWidget {
       children: [
         // ─── Supplier Section ─────────────────────────────────
         _section('Supplier', [
-          TextField(
-            controller: controller.supplierSearchController,
-            decoration: const InputDecoration(
-              hintText: 'Search supplier by name, email, phone...',
-              prefixIcon: Icon(Icons.search, size: 18),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
+          if (!controller.lockSupplier.value) ...[
+            TextField(
+              controller: controller.supplierSearchController,
+              decoration: const InputDecoration(
+                hintText: 'Search supplier by name, email, phone...',
+                prefixIcon: Icon(Icons.search, size: 18),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                isDense: true,
               ),
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 10,
+              onChanged: controller.searchSuppliers,
+            ),
+            if (controller.isSearchingSuppliers.value)
+              const Padding(
+                padding: EdgeInsets.all(8),
+                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
               ),
-              isDense: true,
-            ),
-            onChanged: controller.searchSuppliers,
-          ),
-          if (controller.isSearchingSuppliers.value)
-            const Padding(
-              padding: EdgeInsets.all(8),
-              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-            ),
-          ...controller.supplierSearchResults.map(_supplierTile),
+            ...controller.supplierSearchResults.map(_supplierTile),
+          ],
           if (controller.selectedSupplier.value != null)
             _selectedSupplierCard(controller.selectedSupplier.value!),
         ]),
@@ -1049,7 +1057,10 @@ class _CreatePaymentForm extends StatelessWidget {
                 onPressed:
                     controller.isSubmitting.value || !controller.canMakePayment
                     ? null
-                    : controller.makePayment,
+                    : () async {
+                        final ok = await controller.makePayment();
+                        if (ok) onSuccess?.call();
+                      },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kSuccess,
                   padding: const EdgeInsets.symmetric(

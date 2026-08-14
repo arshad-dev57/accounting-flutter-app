@@ -1,9 +1,12 @@
 // screens/accounts_payable_screen.dart - COMPLETE FIXED VERSION
 
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/widgets/expandable_stat_card.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/AccountPayable/controller/account_payable_controller.dart';
+import 'package:BisonsTechs_app/core/purchasePaymentmade/purchase_payment_controller.dart';
+import 'package:BisonsTechs_app/core/purchasePaymentmade/purchase_payment_screen.dart';
 import 'package:BisonsTechs_app/core/tax/tax_rate_field.dart';
 import 'package:BisonsTechs_app/core/Vendor&Supplier/screens/vendor_supplier_screen.dart';
 import 'package:BisonsTechs_app/core/warehouse/supplier/screen/supplier_screen.dart';
@@ -297,79 +300,18 @@ class AccountsPayableScreen extends StatelessWidget {
     required IconData icon,
     required Color bgColor,
     required Color borderColor,
+    bool isNumber = false,
   }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: kCardBg,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: borderColor, width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: bgColor,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(icon, size: 14, color: color),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: kSubText,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              amount,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: color,
-                letterSpacing: -0.5,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            Container(
-              height: 2,
-              width: 30,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [color, color.withOpacity(0.3)],
-                ),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return ExpandableStatCard(
+      title: title,
+      amount: amount,
+      color: color,
+      icon: icon,
+      bgColor: bgColor,
+      borderColor: borderColor,
     );
   }
+
 
   // ═══════════════════════════════════════════════════════════════
   // LIST VIEW WITH LAZY LOADING
@@ -1369,11 +1311,61 @@ class AccountsPayableScreen extends StatelessWidget {
   // RECORD PAYMENT DIALOG
   // ═══════════════════════════════════════════════════════════════
 
+  void _openPurchaseInvoicePayment(
+    Bill bill,
+    AccountsPayableController apController,
+    BuildContext ctx,
+  ) {
+    const tag = 'apPurchasePay';
+    final payCtrl = Get.isRegistered<PurchasePaymentController>(tag: tag)
+        ? Get.find<PurchasePaymentController>(tag: tag)
+        : Get.put(PurchasePaymentController(), tag: tag);
+
+    payCtrl.prepareForInvoicePayment(
+      supplierId: bill.supplierId,
+      supplierName: bill.supplierName,
+      invoiceId: bill.id,
+    );
+
+    void cleanup() {
+      payCtrl.closeCreateForm();
+      if (Get.isRegistered<PurchasePaymentController>(tag: tag)) {
+        Get.delete<PurchasePaymentController>(tag: tag);
+      }
+    }
+
+    showDialog(
+      context: ctx,
+      barrierDismissible: false,
+      builder: (dialogCtx) {
+        return Dialog.fullscreen(
+          child: PurchasePaymentCreateForm(
+            controller: payCtrl,
+            onCancel: () {
+              cleanup();
+              Navigator.of(dialogCtx).pop();
+            },
+            onSuccess: () {
+              cleanup();
+              Navigator.of(dialogCtx).pop();
+              apController.fetchAllData();
+            },
+          ),
+        );
+      },
+    );
+  }
+
   void _recordBillPayment(
     Bill bill,
     AccountsPayableController controller,
     BuildContext ctx,
   ) {
+    if (bill.isPurchaseInvoice) {
+      _openPurchaseInvoicePayment(bill, controller, ctx);
+      return;
+    }
+
     final formKey = GlobalKey<FormState>();
     double amount = bill.outstanding;
     DateTime paymentDate = DateTime.now();

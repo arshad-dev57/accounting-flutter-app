@@ -101,6 +101,17 @@ class DashboardController extends GetxController {
   var profitChange = 0.0.obs;
   var isProfitPositive = true.obs;
 
+  var openingCapital = 0.0.obs;
+  var openingCapitalFormatted = ''.obs;
+  var currentEquity = 0.0.obs;
+  var currentEquityFormatted = ''.obs;
+  var periodEarnings = 0.0.obs;
+  var periodEarningsFormatted = ''.obs;
+  var capitalChange = 0.0.obs;
+  var capitalChangeFormatted = ''.obs;
+  var isCapitalIncrease = true.obs;
+  var capitalChart = <Map<String, dynamic>>[].obs;
+
   var salesOrdersCount = 0.obs;
   var purchaseOrdersCount = 0.obs;
 
@@ -522,7 +533,9 @@ class DashboardController extends GetxController {
     isCashPositive.value = bankData['isPositive'] ?? true;
 
     final cashOnly = _asDouble(
-      (kpi['cashBalance'] is Map) ? (kpi['cashBalance']['cashOnly']) : null,
+      (kpi['cashInHand'] is Map)
+          ? kpi['cashInHand']['amount']
+          : ((kpi['cashBalance'] is Map) ? kpi['cashBalance']['cashOnly'] : null),
     );
     totalCashBalance.value = cashOnly;
     totalCashBalanceFormatted.value = formatAmount(totalCashBalance.value);
@@ -536,6 +549,27 @@ class DashboardController extends GetxController {
     dailyRevenue.value = _asDouble(dailyData['revenue']);
     dailyExpenses.value = _asDouble(dailyData['expenses']);
     dailyProfit.value = _asDouble(dailyData['profit']);
+
+    final capital = dataObj['capital'] is Map
+        ? dataObj['capital']
+        : (kpi['capital'] is Map ? kpi['capital'] : {});
+    openingCapital.value = _asDouble(capital['openingCapital']);
+    openingCapitalFormatted.value = formatAmount(openingCapital.value);
+    currentEquity.value = _asDouble(capital['currentEquity']);
+    currentEquityFormatted.value = formatAmount(currentEquity.value);
+    periodEarnings.value = _asDouble(capital['periodEarnings']);
+    periodEarningsFormatted.value = formatAmount(periodEarnings.value);
+    capitalChange.value = _asDouble(capital['changeOnCapital']);
+    capitalChangeFormatted.value = formatAmount(capitalChange.value);
+    isCapitalIncrease.value = capital['isIncrease'] ?? (periodEarnings.value >= 0);
+    final capitalSeries = capital['chart'];
+    if (capitalSeries is List) {
+      capitalChart.value = List<Map<String, dynamic>>.from(
+        capitalSeries.map((e) => Map<String, dynamic>.from(e as Map)),
+      );
+    } else {
+      capitalChart.clear();
+    }
   }
 
   void _applyCharts(Map dataObj) {
