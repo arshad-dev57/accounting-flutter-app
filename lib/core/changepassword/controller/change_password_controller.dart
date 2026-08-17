@@ -1,6 +1,5 @@
 // lib/core/changepassword/controller/change_password_controller.dart
 
-import 'dart:convert';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +8,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
 
 class ChangePasswordController extends GetxController {
+  ChangePasswordController({this.isForgotFlow = false});
+
+  /// Forgot-password (email + OTP) must not ask for the current password.
+  final bool isForgotFlow;
+
   // Observable variables
   var isLoading = false.obs;
   var isOldPasswordVisible = false.obs;
@@ -75,13 +79,16 @@ class ChangePasswordController extends GetxController {
   bool _validateForm() {
     bool isValid = true;
 
-    // Old password validation
-    if (oldPasswordController.text.isEmpty) {
-      oldPasswordError.value = 'Please enter current password';
-      isValid = false;
-    } else if (oldPasswordController.text.length < 6) {
-      oldPasswordError.value = 'Password must be at least 6 characters';
-      isValid = false;
+    if (!isForgotFlow) {
+      if (oldPasswordController.text.isEmpty) {
+        oldPasswordError.value = 'Please enter current password';
+        isValid = false;
+      } else if (oldPasswordController.text.length < 6) {
+        oldPasswordError.value = 'Password must be at least 6 characters';
+        isValid = false;
+      } else {
+        oldPasswordError.value = '';
+      }
     } else {
       oldPasswordError.value = '';
     }
@@ -93,7 +100,8 @@ class ChangePasswordController extends GetxController {
     } else if (newPasswordController.text.length < 6) {
       newPasswordError.value = 'Password must be at least 6 characters';
       isValid = false;
-    } else if (newPasswordController.text == oldPasswordController.text) {
+    } else if (!isForgotFlow &&
+        newPasswordController.text == oldPasswordController.text) {
       newPasswordError.value = 'New password cannot be same as old password';
       isValid = false;
     } else {
@@ -114,40 +122,50 @@ class ChangePasswordController extends GetxController {
     return isValid;
   }
 
-  // Change password API call
   Future<void> changePassword() async {
     if (!_validateForm()) return;
 
     try {
       isLoading.value = true;
 
-      final response = await _api.post(
-        '/api/users/change-password',
-        body: {
-          'currentPassword': oldPasswordController.text,
-          'newPassword': newPasswordController.text,
-        },
-      );
+      final response = isForgotFlow
+          ? await _resetPassword()
+          : await _api.post(
+              '/api/users/change-password',
+              body: {
+                'currentPassword': oldPasswordController.text,
+                'newPassword': newPasswordController.text,
+              },
+            );
 
       if (response.success) {
         final data = response.data;
-        _showSuccess(data['message'] ?? 'Password changed successfully!');
+        _showSuccess(
+          (data is Map ? data['message'] : null) ??
+              (isForgotFlow
+                  ? 'Password reset successfully!'
+                  : 'Password changed successfully!'),
+        );
         _clearForm();
+        await _clearResetToken();
         await _api.clearToken();
 
-        // ✅ Dispose controllers before navigating
-        _disposeControllers();
-
-        // ✅ Remove controller from memory
-        Get.delete<ChangePasswordController>(force: true);
-
-        // ✅ Navigate to login
         Get.offAll(() => const LoginScreen());
-      } else if (response.statusCode == 400) {
+      } else if (response.statusCode == 400 || response.statusCode == 401) {
         final data = response.data;
-        _showError(data['message'] ?? 'Invalid current password');
+        _showError(
+          (data is Map ? data['message'] : null) ??
+              response.message ??
+              (isForgotFlow
+                  ? 'Unable to reset password'
+                  : 'Invalid current password'),
+        );
       } else {
-        _showError('Failed to change password. Please try again.');
+        _showError(
+          isForgotFlow
+              ? 'Failed to reset password. Please try again.'
+              : 'Failed to change password. Please try again.',
+        );
       }
     } catch (e) {
       print('Error changing password: $e');
@@ -157,6 +175,35 @@ class ChangePasswordController extends GetxController {
     }
   }
 
+  Future<ApiResponse> _resetPassword() async {
+    final prefs = await SharedPreferences.getInstance();
+    final resetToken =
+        prefs.getString('reset_token') ?? prefs.getString('auth_token') ?? '';
+
+    if (resetToken.isEmpty) {
+      return ApiResponse(
+        statusCode: 401,
+        data: null,
+        success: false,
+        message: 'Reset session expired. Please request a new OTP.',
+      );
+    }
+
+    await _api.setToken(resetToken);
+    return _api.post(
+      '/api/users/reset-password',
+      body: {
+        'newPassword': newPasswordController.text,
+        'confirmPassword': confirmPasswordController.text,
+      },
+    );
+  }
+
+  Future<void> _clearResetToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('reset_token');
+  }
+
   void _clearForm() {
     oldPasswordController.clear();
     newPasswordController.clear();
@@ -164,13 +211,6 @@ class ChangePasswordController extends GetxController {
     oldPasswordError.value = '';
     newPasswordError.value = '';
     confirmPasswordError.value = '';
-  }
-
-  // ✅ New method to dispose controllers properly
-  void _disposeControllers() {
-    oldPasswordController.dispose();
-    newPasswordController.dispose();
-    confirmPasswordController.dispose();
   }
 
   void _showError(String message) {
@@ -193,14 +233,15 @@ class ChangePasswordController extends GetxController {
 
   @override
   void onClose() {
-    // ✅ Already disposed in _disposeControllers, but safe to call again
     try {
       oldPasswordController.dispose();
+    } catch (_) {}
+    try {
       newPasswordController.dispose();
+    } catch (_) {}
+    try {
       confirmPasswordController.dispose();
-    } catch (e) {
-      // Ignore if already disposed
-    }
+    } catch (_) {}
     super.onClose();
   }
 }

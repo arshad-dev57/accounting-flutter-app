@@ -22,7 +22,12 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    controller = Get.put(LoginController());
+    if (Get.isRegistered<LoginController>()) {
+      controller = Get.find<LoginController>();
+      controller.ensureFreshControllers();
+    } else {
+      controller = Get.put(LoginController(), permanent: true);
+    }
     _keyboardFocusNode = FocusNode();
   }
 

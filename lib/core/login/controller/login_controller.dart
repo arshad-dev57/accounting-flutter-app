@@ -33,14 +33,22 @@ class LoginController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    ensureFreshControllers();
+  }
+
+  /// Get.offAll can dispose the previous Login route while this controller
+  /// is still reused. Always bind a live pair of text controllers.
+  void ensureFreshControllers() {
     emailController = TextEditingController();
     passwordController = TextEditingController();
+    emailError.value = '';
+    passwordError.value = '';
   }
 
   @override
   void onClose() {
-    emailController.dispose();
-    passwordController.dispose();
+    // Text controllers are owned for the life of the login UI. Get.offAll can
+    // close this controller while a new LoginScreen still holds the instance.
     super.onClose();
   }
 
@@ -295,11 +303,13 @@ class LoginController extends GetxController {
             [];
 
         final userDataForPermissions = UserData(
-          id: userData['_id']?.toString() ?? '',
+          id: userData['_id']?.toString() ?? userData['id']?.toString() ?? '',
           firstName: userData['firstName']?.toString() ?? '',
           lastName: userData['lastName']?.toString() ?? '',
           email: userData['email']?.toString() ?? '',
-          role: userData['role']?.toString() ?? 'user',
+          role: (userData['role']?.toString().trim().isNotEmpty ?? false)
+              ? userData['role'].toString()
+              : 'user',
           permissions: userPermissions,
         );
 

@@ -2164,10 +2164,17 @@ class FixedAssetController extends GetxController {
                               hint: '0.00',
                               prefixText: CurrencyUtils.prefix,
                               initialValue: purchaseCost.toString(),
-                              onChanged: (v) =>
-                                  purchaseCost = double.tryParse(v) ?? 0,
-                              validator: (v) =>
-                                  v?.isEmpty == true ? 'Required' : null,
+                              onChanged: (v) => setState(
+                                () => purchaseCost = double.tryParse(v) ?? 0,
+                              ),
+                              validator: (v) {
+                                if (v == null || v.isEmpty) return 'Required';
+                                final cost = double.tryParse(v) ?? 0;
+                                if (cost < asset.accumulatedDepreciation) {
+                                  return 'Cannot be below accumulated depreciation';
+                                }
+                                return null;
+                              },
                               keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 16),
@@ -2175,8 +2182,9 @@ class FixedAssetController extends GetxController {
                               label: 'Useful Life (years) *',
                               hint: '5',
                               initialValue: usefulLife.toString(),
-                              onChanged: (v) =>
-                                  usefulLife = int.tryParse(v) ?? 5,
+                              onChanged: (v) => setState(
+                                () => usefulLife = int.tryParse(v) ?? 5,
+                              ),
                               validator: (v) =>
                                   v?.isEmpty == true ? 'Required' : null,
                               keyboardType: TextInputType.number,
@@ -2187,9 +2195,19 @@ class FixedAssetController extends GetxController {
                               hint: '0.00',
                               prefixText: CurrencyUtils.prefix,
                               initialValue: salvageValue.toString(),
-                              onChanged: (v) =>
-                                  salvageValue = double.tryParse(v) ?? 0,
+                              onChanged: (v) => setState(
+                                () => salvageValue = double.tryParse(v) ?? 0,
+                              ),
                               keyboardType: TextInputType.number,
+                            ),
+                            const SizedBox(height: 12),
+                            _depreciationPreviewCard(
+                              cost: purchaseCost,
+                              salvage: salvageValue,
+                              usefulLifeYears: usefulLife,
+                              accumulated: asset.accumulatedDepreciation,
+                              purchaseDate: purchaseDate,
+                              lastDepreciationDate: asset.lastDepreciationDate,
                             ),
                             const SizedBox(height: 16),
                             _buildTextField(
@@ -2839,6 +2857,58 @@ class FixedAssetController extends GetxController {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _depreciationPreviewCard({
+    required double cost,
+    required double salvage,
+    required int usefulLifeYears,
+    required double accumulated,
+    required DateTime purchaseDate,
+    DateTime? lastDepreciationDate,
+  }) {
+    final nbv = (cost - accumulated).clamp(0.0, double.infinity);
+    final remaining = (cost - salvage - accumulated).clamp(0.0, double.infinity);
+    final totalMonths = (usefulLifeYears <= 0 ? 1 : usefulLifeYears) * 12;
+    var usedMonths = 0;
+    if (lastDepreciationDate != null) {
+      usedMonths = (lastDepreciationDate.year - purchaseDate.year) * 12 +
+              (lastDepreciationDate.month - purchaseDate.month) +
+              1;
+      if (usedMonths < 0) usedMonths = 0;
+    }
+    final remainingMonths = (totalMonths - usedMonths).clamp(1, totalMonths);
+    final monthly = remaining <= 0 ? 0.0 : remaining / remainingMonths;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F6FA),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Depreciation after this update',
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+          ),
+          const SizedBox(height: 8),
+          _detailRow('Accumulated (kept)', formatAmount(accumulated)),
+          _detailRow('Net book value', formatAmount(nbv)),
+          _detailRow('Next monthly charge', formatAmount(monthly)),
+          if (accumulated > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                'Posted depreciation stays. Future months use remaining value ÷ remaining life.',
+                style: TextStyle(fontSize: 11, color: kSubText, height: 1.3),
+              ),
+            ),
+        ],
       ),
     );
   }

@@ -1461,13 +1461,31 @@ class BankAccountsScreen extends StatelessWidget {
     String accountType = 'Current';
     String currency = '\$';
     double openingBalance = 0;
+    String offsetType = 'source_account';
+    String? sourceAccountId;
     bool isSaving = false;
+    var loadingSources = true;
+    var sourceLoadStarted = false;
+    var sourceAccounts = <Map<String, dynamic>>[];
 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
+          if (!sourceLoadStarted) {
+            sourceLoadStarted = true;
+            controller.fetchDepositSourceAccounts().then((list) {
+              if (!context.mounted) return;
+              setState(() {
+                sourceAccounts = list.where((a) {
+                  final type = (a['type'] ?? '').toString();
+                  return type == 'Asset';
+                }).toList();
+                loadingSources = false;
+              });
+            });
+          }
           return Dialog(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
@@ -1477,8 +1495,8 @@ class BankAccountsScreen extends StatelessWidget {
               width: isWeb ? 480 : double.infinity,
               constraints: BoxConstraints(
                 maxHeight: isWeb
-                    ? 650
-                    : MediaQuery.of(context).size.height * 0.88,
+                    ? 780
+                    : MediaQuery.of(context).size.height * 0.9,
                 maxWidth: 500,
               ),
               decoration: BoxDecoration(
@@ -1676,12 +1694,106 @@ class BankAccountsScreen extends StatelessWidget {
                             _formField(
                               'Opening Balance',
                               '0.00',
-                              (v) => openingBalance = double.tryParse(v) ?? 0,
+                              (v) => setState(
+                                () => openingBalance = double.tryParse(v) ?? 0,
+                              ),
                               keyboardType: TextInputType.number,
                               prefixText: CurrencyUtils.prefix,
                               isWeb: isWeb,
                               enabled: !isSaving,
                             ),
+                            if (openingBalance > 0) ...[
+                              const SizedBox(height: 16),
+                              Text(
+                                'Where is this opening balance from?',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: kText,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              RadioListTile<String>(
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                value: 'source_account',
+                                groupValue: offsetType,
+                                activeColor: kPrimary,
+                                title: const Text(
+                                  'Existing cash / another account',
+                                  style: TextStyle(fontSize: 13),
+                                ),
+                                subtitle: const Text(
+                                  'Dr Bank / Cr source account — does not increase equity',
+                                  style: TextStyle(fontSize: 11),
+                                ),
+                                onChanged: (v) =>
+                                    setState(() => offsetType = v!),
+                              ),
+                              RadioListTile<String>(
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                value: 'owner_capital',
+                                groupValue: offsetType,
+                                activeColor: kPrimary,
+                                title: const Text(
+                                  'Owner capital / new investment',
+                                  style: TextStyle(fontSize: 13),
+                                ),
+                                subtitle: const Text(
+                                  'Dr Bank / Cr Capital — only when it is new owner money',
+                                  style: TextStyle(fontSize: 11),
+                                ),
+                                onChanged: (v) =>
+                                    setState(() => offsetType = v!),
+                              ),
+                              if (offsetType == 'source_account') ...[
+                                const SizedBox(height: 8),
+                                if (loadingSources)
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 12),
+                                    child: Center(
+                                      child: SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                else
+                                  DropdownButtonFormField<String>(
+                                    value: sourceAccounts.any(
+                                          (a) =>
+                                              a['id']?.toString() ==
+                                              sourceAccountId,
+                                        )
+                                        ? sourceAccountId
+                                        : null,
+                                    isExpanded: true,
+                                    decoration: InputDecoration(
+                                      labelText: 'Source account (Cash, etc.)',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    items: sourceAccounts
+                                        .map(
+                                          (a) => DropdownMenuItem<String>(
+                                            value: a['id']?.toString(),
+                                            child: Text(
+                                              '${a['code'] ?? ''} ${a['name'] ?? ''}',
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: (v) =>
+                                        setState(() => sourceAccountId = v),
+                                  ),
+                              ],
+                            ],
                           ],
                         ),
                       ),
@@ -1733,16 +1845,35 @@ class BankAccountsScreen extends StatelessWidget {
                                 ? null
                                 : () async {
                                     if (formKey.currentState!.validate()) {
+                                      if (openingBalance > 0 &&
+                                          offsetType == 'source_account' &&
+                                          (sourceAccountId == null ||
+                                              sourceAccountId!.isEmpty)) {
+                                        AppSnackbar.error(
+                                          kDanger,
+                                          'Required',
+                                          'Select the cash/source account for this opening balance',
+                                        );
+                                        return;
+                                      }
                                       setState(() => isSaving = true);
+                                      final payload = <String, dynamic>{
+                                        'accountName': accountName,
+                                        'accountNumber': accountNumber,
+                                        'bankName': bankName,
+                                        'branchCode': branchCode,
+                                        'accountType': accountType,
+                                        'openingBalance': openingBalance,
+                                      };
+                                      if (openingBalance > 0) {
+                                        payload['offsetType'] = offsetType;
+                                        if (offsetType == 'source_account') {
+                                          payload['sourceAccountId'] =
+                                              sourceAccountId;
+                                        }
+                                      }
                                       final success = await controller
-                                          .createBankAccount({
-                                            'accountName': accountName,
-                                            'accountNumber': accountNumber,
-                                            'bankName': bankName,
-                                            'branchCode': branchCode,
-                                            'accountType': accountType,
-                                            'openingBalance': openingBalance,
-                                          });
+                                          .createBankAccount(payload);
                                       if (success) {
                                         Navigator.pop(context);
                                       } else {

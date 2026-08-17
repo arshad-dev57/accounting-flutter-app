@@ -60,12 +60,13 @@ class UserData {
   });
 
   factory UserData.fromJson(Map<String, dynamic> json) {
+    final role = (json['role'] ?? '').toString().trim();
     return UserData(
-      id: json['id'] ?? '',
+      id: (json['id'] ?? json['_id'] ?? '').toString(),
       firstName: json['firstName'] ?? '',
       lastName: json['lastName'] ?? '',
       email: json['email'] ?? '',
-      role: json['role'] ?? 'user',
+      role: role.isNotEmpty ? role : 'user',
       permissions: (json['permissions'] as List?)
               ?.map((p) => UserPermission.fromJson(p))
               .toList() ??
@@ -103,8 +104,9 @@ class PermissionService extends GetxController {
     try {
       loading.value = true;
       final prefs = await SharedPreferences.getInstance();
-      final userDataString = prefs.getString('user');
-      
+      final userDataString =
+          prefs.getString('user') ?? prefs.getString('user_data');
+
       if (userDataString != null) {
         final userData = UserData.fromJson(
           json.decode(userDataString) as Map<String, dynamic>,
@@ -147,14 +149,21 @@ class PermissionService extends GetxController {
 
   bool get isAdmin {
     final role = user.value?.role.toLowerCase().trim() ?? '';
-    return role == 'admin' || role == 'owner' || role == 'superadmin';
+    return role == 'admin' ||
+        role == 'owner' ||
+        role == 'superadmin' ||
+        role == 'company_admin';
+  }
+
+  /// Admin / owner always sees every module. Staff still needs page permissions.
+  bool canAccessModule(String module) {
+    if (isAdmin) return true;
+    return hasModuleAccess(module);
   }
 
   bool hasPermission(String page) {
-    if (user.value == null) return false;
-    
-    // Admin has all permissions
     if (isAdmin) return true;
+    if (user.value == null) return false;
     
     // Check specific permission
     final permission = user.value!.permissions.firstWhereOrNull(
@@ -165,10 +174,8 @@ class PermissionService extends GetxController {
   }
 
   bool hasModuleAccess(String module) {
-    if (user.value == null) return false;
-    
-    // Admin has all module access
     if (isAdmin) return true;
+    if (user.value == null) return false;
     
     print('🔍 [hasModuleAccess] Checking module access for: $module');
     print('🔍 [hasModuleAccess] User role: ${user.value!.role}');
@@ -188,10 +195,8 @@ class PermissionService extends GetxController {
   }
 
   bool hasSubPageAccess(String module, String subPage) {
-    if (user.value == null) return false;
-    
-    // Admin has all sub-page access
     if (isAdmin) return true;
+    if (user.value == null) return false;
     
     final moduleLower = module.toLowerCase();
     final sub = subPage.toLowerCase().replaceAll(' ', '-');
@@ -212,10 +217,8 @@ class PermissionService extends GetxController {
   }
 
   bool hasAnyModuleAccess() {
-    if (user.value == null) return false;
-    
-    // Admin has all module access
     if (isAdmin) return true;
+    if (user.value == null) return false;
     
     // Check if user has any permissions at all
     return user.value!.permissions.isNotEmpty;
