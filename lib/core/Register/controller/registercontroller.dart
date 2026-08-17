@@ -6,11 +6,13 @@ import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/settings/controller/pdf_report_settings_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:BisonsTechs_app/Utils/signature_dialog.dart';
 
@@ -415,34 +417,20 @@ class AuthController extends GetxController {
         if (response.success) {
           print("✅ Registration successful");
 
-          await _saveAuthData(data['token'], data['user']);
+          await _saveAuthData(
+            data['token']?.toString() ?? '',
+            Map<String, dynamic>.from(data['user'] as Map),
+            refreshToken: data['refreshToken']?.toString(),
+            companyOwner: true,
+            pdfReportSettings: data['pdfReportSettings'],
+          );
 
-          // Save selected currency
           await Get.find<CurrencyController>().setCurrency(
             selectedCurrencyCode.value,
           );
-
-          // Save company details
-          final prefs = await SharedPreferences.getInstance();
-          if (data['user']['organizationName'] != null &&
-              data['user']['organizationName'].isNotEmpty) {
-            await prefs.setString(
-              'company_name',
-              data['user']['organizationName'],
-            );
-          }
-          if (data['user']['address'] != null &&
-              data['user']['address'].isNotEmpty) {
-            await prefs.setString('company_address', data['user']['address']);
-          }
-
-          // Save business details
-          if (data['user']['businessDetails'] != null) {
-            await prefs.setString(
-              'business_details',
-              json.encode(data['user']['businessDetails']),
-            );
-          }
+          await Get.find<CurrencyController>().updateFromUserData(
+            Map<String, dynamic>.from(data['user'] as Map),
+          );
 
           final subscriptionController = Get.find<SubscriptionController>();
           subscriptionController.updateFromUserData(data['user']);
@@ -505,7 +493,12 @@ class AuthController extends GetxController {
       final data = response.data;
 
       if (response.success) {
-        await _saveAuthData(data['token'], data['user']);
+        await _saveAuthData(
+          data['token']?.toString() ?? '',
+          Map<String, dynamic>.from(data['user'] as Map),
+          refreshToken: data['refreshToken']?.toString(),
+          companyOwner: true,
+        );
 
         final subscriptionController = Get.find<SubscriptionController>();
         subscriptionController.updateFromUserData(data['user']);
@@ -545,21 +538,104 @@ class AuthController extends GetxController {
 
   Future<void> _saveAuthData(
     String token,
-    Map<String, dynamic> userData,
-  ) async {
+    Map<String, dynamic> userData, {
+    String? refreshToken,
+    bool companyOwner = false,
+    dynamic pdfReportSettings,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
-    await _api.setToken(token);
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      await _api.setBothTokens(token, refreshToken);
+    } else if (token.isNotEmpty) {
+      await _api.setToken(token);
+    }
+
+    // Company owner (self-register) always has full admin access.
+    final roleRaw = userData['role']?.toString().trim() ?? '';
+    final role = roleRaw.isNotEmpty
+        ? roleRaw
+        : (companyOwner ? 'admin' : 'user');
+    userData['role'] = role;
+
     await prefs.setString('user_data', json.encode(userData));
     user.value = userData;
     isLoggedIn.value = true;
+
+    final permissionService = Get.isRegistered<PermissionService>()
+        ? Get.find<PermissionService>()
+        : Get.put(PermissionService(), permanent: true);
+
+    final permissionsList = userData['permissions'] as List<dynamic>?;
+    final userPermissions = permissionsList
+            ?.map((p) {
+              if (p is Map<String, dynamic>) {
+                return UserPermission(
+                  id: p['id']?.toString() ?? '',
+                  page: p['page']?.toString() ?? '',
+                  canView: p['canView'] ?? true,
+                  canCreate: p['canCreate'] ?? false,
+                  canEdit: p['canEdit'] ?? false,
+                  canDelete: p['canDelete'] ?? false,
+                );
+              }
+              return UserPermission(id: '', page: p.toString(), canView: true);
+            })
+            .toList() ??
+        [];
+
+    await permissionService.saveUserData(
+      UserData(
+        id: userData['_id']?.toString() ?? userData['id']?.toString() ?? '',
+        firstName: userData['firstName']?.toString() ?? '',
+        lastName: userData['lastName']?.toString() ?? '',
+        email: userData['email']?.toString() ?? '',
+        role: role,
+        permissions: userPermissions,
+      ),
+    );
+
+    final orgName = userData['organizationName']?.toString() ?? '';
+    await prefs.setString('company_name', orgName);
+
+    final address = userData['address']?.toString() ?? '';
+    if (address.isNotEmpty) {
+      await prefs.setString('company_address', address);
+    }
+
+    final firstName = userData['firstName']?.toString() ?? '';
+    final lastName = userData['lastName']?.toString() ?? '';
+    final fullName = '$firstName $lastName'.trim();
+    if (fullName.isNotEmpty) {
+      await prefs.setString('user_name', fullName);
+    }
+
+    final userEmail = userData['email']?.toString() ?? '';
+    if (userEmail.isNotEmpty) {
+      await prefs.setString('user_email', userEmail);
+    }
+
+    if (userData['businessDetails'] != null) {
+      await prefs.setString(
+        'business_details',
+        json.encode(userData['businessDetails']),
+      );
+    }
+
+    await PdfReportSettingsController.persistFromLogin(
+      pdfReportSettings ?? userData['pdfReportSettings'],
+    );
   }
 
   Future<void> _clearAuthData() async {
     final prefs = await SharedPreferences.getInstance();
     await _api.clearToken();
     await prefs.remove('user_data');
+    await prefs.remove('user');
     user.value = null;
     isLoggedIn.value = false;
+    if (Get.isRegistered<PermissionService>()) {
+      await PermissionService.to.clearUserData();
+    }
   }
 
   Future<void> getCurrentUser() async {

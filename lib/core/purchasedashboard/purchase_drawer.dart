@@ -50,6 +50,7 @@ class PurchaseDrawer extends StatelessWidget {
                   permissions: const [
                     'dashboard',
                     'dashboard',
+                    'dashboard',
                     'purchase-orders',
                     'suppliers',
                     'goods-receiving',
@@ -67,6 +68,11 @@ class PurchaseDrawer extends StatelessWidget {
                       'Purchase Reports',
                       Mdi.file_chart,
                       '/purchase/reports',
+                    ),
+                    (
+                      'Products',
+                      Mdi.package_variant_closed,
+                      '/warehouse/products',
                     ),
                     ('Purchase Orders', Mdi.receipt_text, '/purchase-order'),
                     ('Suppliers', Mdi.account_tie, '/warehouse/suppliers'),

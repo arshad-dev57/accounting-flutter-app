@@ -209,7 +209,9 @@ class _OtpScreenState extends State<OtpScreen> {
                   child: Obx(() {
                     if (controller.isOtpVerified.value) {
                       WidgetsBinding.instance.addPostFrameCallback((_) {
-                        Get.off(() => const ChangePasswordScreen());
+                        Get.off(
+                          () => const ChangePasswordScreen(isForgotFlow: true),
+                        );
                       });
                       return const SizedBox.shrink();
                     }
@@ -240,7 +242,9 @@ class _OtpScreenState extends State<OtpScreen> {
       body: Obx(() {
         if (controller.isOtpVerified.value) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            Get.off(() => const ChangePasswordScreen());
+            Get.off(
+              () => const ChangePasswordScreen(isForgotFlow: true),
+            );
           });
           return const SizedBox.shrink();
         }

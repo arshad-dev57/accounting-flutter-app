@@ -242,6 +242,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
         ? Get.find<SupportController>()
         : Get.put(SupportController());
     _loadBusinessLogo();
+    PermissionService.to.loadUserData();
   }
   
   Future<void> _loadBusinessLogo() async {
@@ -1008,56 +1009,65 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                 ),
               ),
             ),
-          if (PermissionService.to.hasModuleAccess('accounting'))
-            _SidebarItemWidget(
-              icon: Icons.account_balance_outlined,
-              label: 'Accounting',
-              index: 2,
-              selectedIndex: _selectedIndex,
-              collapsed: collapsed,
-              showArrow: true,
-              onTap: _navigateToAccounting,
-            ),
-          if (PermissionService.to.hasModuleAccess('warehouse'))
-            _SidebarItemWidget(
-              icon: Icons.warehouse_outlined,
-              label: 'Warehouse',
-              index: 1,
-              selectedIndex: _selectedIndex,
-              collapsed: collapsed,
-              showArrow: true,
-              onTap: _navigateToWarehouse,
-            ),
-          if (PermissionService.to.hasModuleAccess('sales'))
-            _SidebarItemWidget(
-              icon: Icons.point_of_sale_outlined,
-              label: 'Sales',
-              index: 3,
-              selectedIndex: _selectedIndex,
-              collapsed: collapsed,
-              showArrow: true,
-              onTap: _navigateToSales,
-            ),
-          if (PermissionService.to.hasModuleAccess('purchases'))
-            _SidebarItemWidget(
-              icon: Icons.shopping_cart_outlined,
-              label: 'Purchase',
-              index: 4,
-              selectedIndex: _selectedIndex,
-              collapsed: collapsed,
-              showArrow: true,
-              onTap: _navigateToPurchase,
-            ),
-          if (PermissionService.to.hasModuleAccess('users'))
-            _SidebarItemWidget(
-              icon: Icons.people_outline,
-              label: 'Users',
-              index: 6,
-              selectedIndex: _selectedIndex,
-              collapsed: collapsed,
-              showArrow: true,
-              onTap: _navigateToUsers,
-            ),
+          Obx(() {
+            final perms = PermissionService.to;
+            perms.user.value;
+            perms.loading.value;
+            return Column(
+              children: [
+                if (perms.canAccessModule('accounting'))
+                  _SidebarItemWidget(
+                    icon: Icons.account_balance_outlined,
+                    label: 'Accounting',
+                    index: 2,
+                    selectedIndex: _selectedIndex,
+                    collapsed: collapsed,
+                    showArrow: true,
+                    onTap: _navigateToAccounting,
+                  ),
+                if (perms.canAccessModule('warehouse'))
+                  _SidebarItemWidget(
+                    icon: Icons.warehouse_outlined,
+                    label: 'Warehouse',
+                    index: 1,
+                    selectedIndex: _selectedIndex,
+                    collapsed: collapsed,
+                    showArrow: true,
+                    onTap: _navigateToWarehouse,
+                  ),
+                if (perms.canAccessModule('sales'))
+                  _SidebarItemWidget(
+                    icon: Icons.point_of_sale_outlined,
+                    label: 'Sales',
+                    index: 3,
+                    selectedIndex: _selectedIndex,
+                    collapsed: collapsed,
+                    showArrow: true,
+                    onTap: _navigateToSales,
+                  ),
+                if (perms.canAccessModule('purchases'))
+                  _SidebarItemWidget(
+                    icon: Icons.shopping_cart_outlined,
+                    label: 'Purchase',
+                    index: 4,
+                    selectedIndex: _selectedIndex,
+                    collapsed: collapsed,
+                    showArrow: true,
+                    onTap: _navigateToPurchase,
+                  ),
+                if (perms.canAccessModule('users'))
+                  _SidebarItemWidget(
+                    icon: Icons.people_outline,
+                    label: 'Users',
+                    index: 6,
+                    selectedIndex: _selectedIndex,
+                    collapsed: collapsed,
+                    showArrow: true,
+                    onTap: _navigateToUsers,
+                  ),
+              ],
+            );
+          }),
           _SidebarItemWidget(
             icon: Icons.percent,
             label: 'Tax Compliance',
@@ -1235,50 +1245,55 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
   }
 
   Widget _buildProductGrid({required bool isMobile}) {
-    final products = <_HomeProduct>[
-      if (PermissionService.to.hasModuleAccess('accounting'))
-        _HomeProduct(
-          title: 'Accounting',
-          subtitle: 'Books, invoices, reports & ledgers',
-          icon: Icons.account_balance_outlined,
-          color: kPrimary,
-          onTap: _navigateToAccounting,
-        ),
-      if (PermissionService.to.hasModuleAccess('warehouse'))
-        _HomeProduct(
-          title: 'Warehouse',
-          subtitle: 'Stock, products & inventory',
-          icon: Icons.warehouse_outlined,
-          color: const Color(0xFF0891B2),
-          onTap: _navigateToWarehouse,
-        ),
-      if (PermissionService.to.hasModuleAccess('sales'))
-        _HomeProduct(
-          title: 'Sales',
-          subtitle: 'Orders, invoices & collections',
-          icon: Icons.point_of_sale_outlined,
-          color: const Color(0xFF22A869),
-          onTap: _navigateToSales,
-        ),
-      if (PermissionService.to.hasModuleAccess('purchases'))
-        _HomeProduct(
-          title: 'Purchase',
-          subtitle: 'Bills, vendors & payments',
-          icon: Icons.shopping_cart_outlined,
-          color: const Color(0xFFF59E0B),
-          onTap: _navigateToPurchase,
-        ),
-      if (PermissionService.to.hasModuleAccess('users'))
-        _HomeProduct(
-          title: 'Users',
-          subtitle: 'Team access & permissions',
-          icon: Icons.people_outline,
-          color: const Color(0xFF7C3AED),
-          onTap: _navigateToUsers,
-        ),
-    ];
+    return Obx(() {
+      final perms = PermissionService.to;
+      perms.user.value;
+      perms.loading.value;
 
-    return Column(
+      final products = <_HomeProduct>[
+        if (perms.canAccessModule('accounting'))
+          _HomeProduct(
+            title: 'Accounting',
+            subtitle: 'Books, invoices, reports & ledgers',
+            icon: Icons.account_balance_outlined,
+            color: kPrimary,
+            onTap: _navigateToAccounting,
+          ),
+        if (perms.canAccessModule('warehouse'))
+          _HomeProduct(
+            title: 'Warehouse',
+            subtitle: 'Stock, products & inventory',
+            icon: Icons.warehouse_outlined,
+            color: const Color(0xFF0891B2),
+            onTap: _navigateToWarehouse,
+          ),
+        if (perms.canAccessModule('sales'))
+          _HomeProduct(
+            title: 'Sales',
+            subtitle: 'Orders, invoices & collections',
+            icon: Icons.point_of_sale_outlined,
+            color: const Color(0xFF22A869),
+            onTap: _navigateToSales,
+          ),
+        if (perms.canAccessModule('purchases'))
+          _HomeProduct(
+            title: 'Purchase',
+            subtitle: 'Bills, vendors & payments',
+            icon: Icons.shopping_cart_outlined,
+            color: const Color(0xFFF59E0B),
+            onTap: _navigateToPurchase,
+          ),
+        if (perms.canAccessModule('users'))
+          _HomeProduct(
+            title: 'Users',
+            subtitle: 'Team access & permissions',
+            icon: Icons.people_outline,
+            color: const Color(0xFF7C3AED),
+            onTap: _navigateToUsers,
+          ),
+      ];
+
+      return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
@@ -1313,6 +1328,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
         ),
       ],
     );
+    });
   }
 
   // ─── Banner ───────────────────────────────────────────────────────────
@@ -2526,7 +2542,7 @@ class _NavSectionState extends State<_NavSection> {
       final item = widget.items[i];
       final module = widget.modules![i];
 
-      if (_permissionService.hasModuleAccess(module)) {
+      if (_permissionService.canAccessModule(module)) {
         filtered.add(item);
       }
     }

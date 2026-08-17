@@ -103,15 +103,13 @@ class OTPController extends GetxController {
       final data = response.data;
 
       if (response.success) {
-        // ✅ Get resetToken from response
         String token = data['resetToken'] ?? '';
         resetToken.value = token;
 
-        // ✅ Store resetToken in SharedPreferences
         if (token.isNotEmpty) {
           final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('auth_token', token);
-          print('Auth token stored in SharedPreferences: $token');
+          await prefs.setString('reset_token', token);
+          await _api.setToken(token);
         }
 
         isOtpVerified.value = true;
