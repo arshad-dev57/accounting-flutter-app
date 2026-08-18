@@ -93,6 +93,12 @@ class RegistrationScreen extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Image.asset(
+            'assets/logo.png',
+            height: 72,
+            fit: BoxFit.contain,
+          ),
+          const SizedBox(height: 20),
           Text(
             titles[step],
             style: const TextStyle(

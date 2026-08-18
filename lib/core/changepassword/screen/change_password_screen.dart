@@ -113,32 +113,20 @@ class ChangePasswordScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1AB4F5),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.account_balance,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Text(
-                            'BisonsTechs',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1.8,
-                            ),
-                          ),
-                        ],
+                      Container(
+                        height: 96,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Image.asset(
+                          'assets/logo.png',
+                          fit: BoxFit.contain,
+                        ),
                       ),
                       const SizedBox(height: 20),
                       Text(
@@ -246,7 +234,7 @@ class ChangePasswordScreen extends StatelessWidget {
       children: [
         Image.asset(
           'assets/logo.png',
-          height: 72,
+          height: 110,
           fit: BoxFit.contain,
           errorBuilder: (_, __, ___) => const Icon(
             Icons.account_balance_rounded,
@@ -323,23 +311,18 @@ class ChangePasswordScreen extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            width: ResponsiveUtils.isTablet(context) ? 88 : 72,
-            height: ResponsiveUtils.isTablet(context) ? 88 : 72,
-            padding: EdgeInsets.all(
-              ResponsiveUtils.isTablet(context) ? 14 : 12,
+            height: ResponsiveUtils.isTablet(context) ? 72 : 56,
+            padding: EdgeInsets.symmetric(
+              horizontal: ResponsiveUtils.isTablet(context) ? 16 : 12,
+              vertical: ResponsiveUtils.isTablet(context) ? 10 : 8,
             ),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Colors.white,
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Image.asset(
               'assets/logo.png',
               fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => Icon(
-                Icons.account_balance_rounded,
-                color: kPrimary,
-                size: ResponsiveUtils.isTablet(context) ? 40 : 32,
-              ),
             ),
           ),
           SizedBox(height: ResponsiveUtils.isTablet(context) ? 20 : 16),

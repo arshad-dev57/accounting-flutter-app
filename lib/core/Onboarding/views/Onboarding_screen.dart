@@ -141,22 +141,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   // Logo (top left)
                   Align(
                     alignment: Alignment.topLeft,
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Image.asset(
-                        'assets/logo.png',
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const Icon(
-                          Icons.bolt_rounded,
-                          color: _primary,
-                          size: 22,
-                        ),
+                    child: Image.asset(
+                      'assets/logo.png',
+                      height: 56,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => const Icon(
+                        Icons.bolt_rounded,
+                        color: _primary,
+                        size: 22,
                       ),
                     ),
                   ),

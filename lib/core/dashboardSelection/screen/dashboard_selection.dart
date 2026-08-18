@@ -10,7 +10,7 @@ import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/About/about_app_screen.dart';
 import 'package:BisonsTechs_app/core/About/privacypolicy_screen.dart';
 import 'package:BisonsTechs_app/core/About/termsofservice_screen.dart';
-import 'package:BisonsTechs_app/core/Contact/Screens/Contact_Screen.dart';
+import 'package:BisonsTechs_app/core/contactsupport/contact_support_screen.dart';
 import 'package:BisonsTechs_app/core/Feedback/feedback_screen.dart';
 import 'package:BisonsTechs_app/core/ReportIsuue/Report_issue_screen.dart';
 import 'package:BisonsTechs_app/core/Sales/screens/sales_dashbaord_screen.dart';
@@ -27,6 +27,7 @@ import 'package:BisonsTechs_app/core/settings/screens/currency_screen.dart';
 import 'package:BisonsTechs_app/core/settings/screens/pdf_report_settings_screen.dart';
 import 'package:BisonsTechs_app/core/support/screens/support_tickets_screen.dart';
 import 'package:BisonsTechs_app/core/tax/tax_screen.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -243,6 +244,8 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
         : Get.put(SupportController());
     _loadBusinessLogo();
     PermissionService.to.loadUserData();
+    // Load FY here so Accounting dashboard does not wait on first open.
+    ensureFiscalYearController()?.ensureFiscalYearsLoaded();
   }
   
   Future<void> _loadBusinessLogo() async {
@@ -483,19 +486,31 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                                     _businessLogo,
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) {
-                                      return Icon(Icons.account_balance, color: kPrimary, size: 20);
+                                      return Image.asset(
+                                        'assets/logo.png',
+                                        height: 20,
+                                        fit: BoxFit.contain,
+                                      );
                                     },
                                   )
                                 : Image.file(
                                     File(_businessLogo),
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) {
-                                      return Icon(Icons.account_balance, color: kPrimary, size: 20);
+                                      return Image.asset(
+                                        'assets/logo.png',
+                                        height: 20,
+                                        fit: BoxFit.contain,
+                                      );
                                     },
                                   ),
                           ),
                         )
-                      : Icon(Icons.account_balance, color: kPrimary, size: 20),
+                      : Image.asset(
+                          'assets/logo.png',
+                          height: 22,
+                          fit: BoxFit.contain,
+                        ),
                   const SizedBox(width: 6),
                   Obx(
                     () => Text(
@@ -531,19 +546,31 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                                   _businessLogo,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
-                                    return Icon(Icons.account_balance, color: kPrimary, size: 18);
+                                    return Image.asset(
+                                      'assets/logo.png',
+                                      height: 18,
+                                      fit: BoxFit.contain,
+                                    );
                                   },
                                 )
                               : Image.file(
                                   File(_businessLogo),
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
-                                    return Icon(Icons.account_balance, color: kPrimary, size: 18);
+                                    return Image.asset(
+                                      'assets/logo.png',
+                                      height: 18,
+                                      fit: BoxFit.contain,
+                                    );
                                   },
                                 ),
                         ),
                       )
-                    : Icon(Icons.account_balance, color: kPrimary, size: 18),
+                    : Image.asset(
+                        'assets/logo.png',
+                        height: 20,
+                        fit: BoxFit.contain,
+                      ),
                 const SizedBox(width: 6),
                 Obx(
                   () => Text(
@@ -2372,11 +2399,11 @@ class _DrawerHeaderState extends State<_DrawerHeader> {
                                 _businessLogo,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
-                                  return const Center(
-                                    child: Icon(
-                                      Icons.account_balance_rounded,
-                                      color: Colors.white,
-                                      size: 22,
+                                  return Padding(
+                                    padding: const EdgeInsets.all(4),
+                                    child: Image.asset(
+                                      'assets/logo.png',
+                                      fit: BoxFit.contain,
                                     ),
                                   );
                                 },
@@ -2385,21 +2412,21 @@ class _DrawerHeaderState extends State<_DrawerHeader> {
                                 File(_businessLogo),
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
-                                  return const Center(
-                                    child: Icon(
-                                      Icons.account_balance_rounded,
-                                      color: Colors.white,
-                                      size: 22,
+                                  return Padding(
+                                    padding: const EdgeInsets.all(4),
+                                    child: Image.asset(
+                                      'assets/logo.png',
+                                      fit: BoxFit.contain,
                                     ),
                                   );
                                 },
                               ),
                       )
-                    : const Center(
-                        child: Icon(
-                          Icons.account_balance_rounded,
-                          color: Colors.white,
-                          size: 22,
+                    : Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Image.asset(
+                          'assets/logo.png',
+                          fit: BoxFit.contain,
                         ),
                       ),
               ),
@@ -2656,7 +2683,7 @@ class _NavSectionState extends State<_NavSection> {
         Get.to(() => const UserGuideScreen());
         break;
       case '__contact':
-        Get.to(() => const ContactScreen());
+        Get.to(() => const ContactSupportScreen());
         break;
       case '__reportissue':
         Get.to(() => const ReportIssueScreen());

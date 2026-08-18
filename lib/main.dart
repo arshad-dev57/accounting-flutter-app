@@ -1,5 +1,6 @@
 // lib/main.dart - COMPLETE FIXED
 
+import 'package:BisonsTechs_app/Utils/app_fonts.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/widgets/reload_when_visible.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
@@ -119,6 +120,12 @@ class MyApp extends StatelessWidget {
           themeMode: Get.find<ThemeController>().isDarkMode.value
               ? ThemeMode.dark
               : ThemeMode.light,
+          builder: (context, child) {
+            return DefaultTextStyle.merge(
+              style: AppFonts.style,
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
           initialRoute: '/',
           getPages: [
             // ========== AUTH ROUTES ==========
@@ -330,6 +337,13 @@ class MyApp extends StatelessWidget {
               page: () => const PurchaseReportScreen(),
             ),
             GetPage(
+              name: '/purchase/products',
+              page: () => const ProductsScreen(),
+              binding: BindingsBuilder(() {
+                Get.lazyPut(() => ProductsController());
+              }),
+            ),
+            GetPage(
               name: '/accounting/reports',
               page: () => const AccountingReportScreen(),
             ),
@@ -363,18 +377,24 @@ class MyApp extends StatelessWidget {
     return ThemeData(
       brightness: Brightness.light,
       primarySwatch: Colors.blue,
-      fontFamily: 'Poppins',
+      fontFamily: AppFonts.family,
       colorScheme: ColorScheme.fromSeed(
         seedColor: const Color(0xFF1AB4F5),
         primary: const Color(0xFF1AB4F5),
         brightness: Brightness.light,
       ),
       scaffoldBackgroundColor: kBgLight,
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         elevation: 0,
         centerTitle: false,
-        backgroundColor: Color(0xFF1AB4F5),
+        backgroundColor: const Color(0xFF1AB4F5),
         foregroundColor: Colors.white,
+        titleTextStyle: AppFonts.style.copyWith(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+        toolbarTextStyle: AppFonts.style,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -434,18 +454,24 @@ class MyApp extends StatelessWidget {
     return ThemeData(
       brightness: Brightness.dark,
       primarySwatch: Colors.blue,
-      fontFamily: 'Poppins',
+      fontFamily: AppFonts.family,
       colorScheme: ColorScheme.fromSeed(
         seedColor: const Color(0xFF1AB4F5),
         primary: const Color(0xFF1AB4F5),
         brightness: Brightness.dark,
       ),
       scaffoldBackgroundColor: const Color(0xFF121212),
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         elevation: 0,
         centerTitle: false,
-        backgroundColor: Color(0xFF1AB4F5),
+        backgroundColor: const Color(0xFF1AB4F5),
         foregroundColor: Colors.white,
+        titleTextStyle: AppFonts.style.copyWith(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+        toolbarTextStyle: AppFonts.style,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(

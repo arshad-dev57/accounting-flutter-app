@@ -211,6 +211,7 @@ class UserManagementController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxBool hasError = false.obs;
   final RxString errorMessage = ''.obs;
+  final RxBool lastInviteEmailSent = false.obs;
 
   final RxList<User> users = <User>[].obs;
   final RxList<Role> roles = <Role>[].obs;
@@ -478,6 +479,11 @@ class UserManagementController extends GetxController {
           icon: Icons.dashboard,
         ),
         SubPagePermission(
+          page: 'products',
+          displayName: 'Products',
+          icon: Icons.inventory_2,
+        ),
+        SubPagePermission(
           page: 'purchase-orders',
           displayName: 'Purchase Orders',
           icon: Icons.receipt,
@@ -614,12 +620,21 @@ class UserManagementController extends GetxController {
       );
 
       if (response.success) {
+        lastInviteEmailSent.value = response.data is Map &&
+            response.data['emailSent'] == true;
+        errorMessage.value = '';
         await loadUsers();
         return true;
       }
+      lastInviteEmailSent.value = false;
+      errorMessage.value = (response.message).trim().isNotEmpty
+          ? response.message.trim()
+          : 'Failed to create user';
       return false;
     } catch (e) {
       print('Error creating user: $e');
+      lastInviteEmailSent.value = false;
+      errorMessage.value = 'Failed to create user';
       return false;
     } finally {
       isLoading.value = false;
@@ -661,12 +676,17 @@ class UserManagementController extends GetxController {
       );
 
       if (response.success) {
+        errorMessage.value = '';
         await loadUsers();
         return true;
       }
+      errorMessage.value = (response.message).trim().isNotEmpty
+          ? response.message.trim()
+          : 'Failed to update user';
       return false;
     } catch (e) {
       print('Error updating user: $e');
+      errorMessage.value = 'Failed to update user';
       return false;
     } finally {
       isLoading.value = false;

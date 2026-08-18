@@ -13,7 +13,8 @@ import 'package:BisonsTechs_app/core/AgedRecievables/screens/aged_recievables_sc
 import 'package:BisonsTechs_app/core/BankAccounts/screens/bank_acccounts_screen.dart';
 import 'package:BisonsTechs_app/core/Bills/Screen/bill_Screen.dart';
 import 'package:BisonsTechs_app/core/CapitalEquity/screens/capital_equity_screen.dart';
-import 'package:BisonsTechs_app/core/Contact/Screens/Contact_Screen.dart';
+import 'package:BisonsTechs_app/core/companyprofile/screen/company_profile_screen.dart';
+import 'package:BisonsTechs_app/core/contactsupport/contact_support_screen.dart';
 import 'package:BisonsTechs_app/core/CreditNote/screens/credit_notes_screen.dart';
 import 'package:BisonsTechs_app/core/Customers/Screens/customers_screen.dart';
 import 'package:BisonsTechs_app/core/Expense/screen/expense_screen.dart';
@@ -116,6 +117,13 @@ class _AppBarLogo extends StatelessWidget {
     // Sirf logo value observe karo — baaki sab constant hai
     return Obx(() {
       final logo = controller.businessLogo.value;
+      if (logo.isEmpty) {
+        return Image.asset(
+          'assets/logo.png',
+          height: isMobile ? 32 : 36,
+          fit: BoxFit.contain,
+        );
+      }
       return Row(
         children: [
           _LogoAvatar(logo: logo, size: 30),
@@ -148,18 +156,11 @@ class _LogoAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (logo.isEmpty) {
-      return Container(
-        width: size,
+      return Image.asset(
+        'assets/logo.png',
+        width: size * 2.8,
         height: size,
-        decoration: BoxDecoration(
-          color: kPrimary,
-          borderRadius: BorderRadius.circular(size * 0.27),
-        ),
-        child: Icon(
-          Icons.account_balance_rounded,
-          size: size * 0.53,
-          color: Colors.white,
-        ),
+        fit: BoxFit.contain,
       );
     }
     return Container(
@@ -178,18 +179,11 @@ class _LogoAvatar extends StatelessWidget {
                 height: size,
                 cacheWidth: (size * 2).toInt(),
                 cacheHeight: (size * 2).toInt(),
-                errorBuilder: (_, __, ___) => Container(
+                errorBuilder: (_, __, ___) => Image.asset(
+                  'assets/logo.png',
                   width: size,
                   height: size,
-                  decoration: BoxDecoration(
-                    color: kPrimary,
-                    borderRadius: BorderRadius.circular(size * 0.27),
-                  ),
-                  child: Icon(
-                    Icons.account_balance_rounded,
-                    size: size * 0.53,
-                    color: Colors.white,
-                  ),
+                  fit: BoxFit.contain,
                 ),
               )
             : Image.file(
@@ -199,18 +193,11 @@ class _LogoAvatar extends StatelessWidget {
                 height: size,
                 cacheWidth: (size * 2).toInt(),
                 cacheHeight: (size * 2).toInt(),
-                errorBuilder: (_, __, ___) => Container(
+                errorBuilder: (_, __, ___) => Image.asset(
+                  'assets/logo.png',
                   width: size,
                   height: size,
-                  decoration: BoxDecoration(
-                    color: kPrimary,
-                    borderRadius: BorderRadius.circular(size * 0.27),
-                  ),
-                  child: Icon(
-                    Icons.account_balance_rounded,
-                    size: size * 0.53,
-                    color: Colors.white,
-                  ),
+                  fit: BoxFit.contain,
                 ),
               ),
       ),
@@ -246,7 +233,7 @@ class _AppDrawer extends StatelessWidget {
               children: const [
                 _SectionLabel('CORE'),
                 _NavSection(
-                  title: 'BisonsTechs Core',
+                  title: 'Accounting Core',
                   icon: Mdi.account_circle,
                   module: 'accounting',
                   permissions: [
@@ -382,7 +369,6 @@ class _AppDrawer extends StatelessWidget {
   }
 }
 
-// Subscription section — isAdmin check ke liye alag widget
 class _SubscriptionNavSection extends StatelessWidget {
   const _SubscriptionNavSection();
 
@@ -399,7 +385,6 @@ class _SubscriptionNavSection extends StatelessWidget {
   }
 }
 
-// ─── MAIN SCREEN ──────────────────────────────────────────────────────────────
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -412,9 +397,12 @@ class _DashboardScreenState extends State<DashboardScreen>
     with RouteAware, ReloadWhenVisible {
   @override
   void reloadOnOpen() {
-    if (Get.isRegistered<DashboardController>()) {
-      Get.find<DashboardController>().loadDashboardData();
-    }
+    if (!Get.isRegistered<DashboardController>()) return;
+    final c = Get.find<DashboardController>();
+    if (c.isLoading.value || c.isRefreshing.value) return;
+    // First load is onInit — do not fire a second overview call on open.
+    if (!c.hasLoadedOnce.value) return;
+    c.loadDashboardData();
   }
 
   @override
@@ -2015,7 +2003,7 @@ class _NavItem extends StatelessWidget {
           Get.to(() => const UserGuideScreen());
           break;
         case '__contact':
-          Get.to(() => const ContactScreen());
+          Get.to(() => const ContactSupportScreen());
           break;
         case '__reportissue':
           Get.to(() => const ReportIssueScreen());
@@ -2225,19 +2213,6 @@ class _DrawerFooter extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-// ─── PROFILE SCREEN ───────────────────────────────────────────────────────────
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Profile'), backgroundColor: kPrimary),
-      body: const Center(child: Text('Profile Screen')),
     );
   }
 }
