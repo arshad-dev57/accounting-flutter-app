@@ -73,6 +73,8 @@ import 'package:BisonsTechs_app/Services/notification_Service.dart';
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/locations/controller/location_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_reload_binder.dart';
+import 'package:BisonsTechs_app/core/warehouse/widgets/location_scope_bar.dart';
 import 'package:BisonsTechs_app/core/warehouse/locations/screen/locations_screen.dart';
 import 'package:BisonsTechs_app/core/tax/tax_screen.dart';
 
@@ -90,6 +92,8 @@ void main() {
   Get.put(CurrencyController(), permanent: true);
   Get.put(FiscalYearController(), permanent: true);
   Get.put(LocationController(), permanent: true);
+  Get.put(LocationScopeController(), permanent: true);
+  Get.put(LocationReloadBinder(), permanent: true);
   Get.put(PermissionService(), permanent: true);
 
   runApp(const MyApp());
@@ -123,10 +127,19 @@ class MyApp extends StatelessWidget {
           themeMode: Get.find<ThemeController>().isDarkMode.value
               ? ThemeMode.dark
               : ThemeMode.light,
+          routingCallback: (routing) {
+            if (Get.isRegistered<LocationScopeController>()) {
+              Get.find<LocationScopeController>().setRoute(
+                routing?.current ?? '',
+              );
+            }
+          },
           builder: (context, child) {
             return DefaultTextStyle.merge(
               style: AppFonts.style,
-              child: child ?? const SizedBox.shrink(),
+              child: LocationScopeHost(
+                child: child ?? const SizedBox.shrink(),
+              ),
             );
           },
           initialRoute: '/',
