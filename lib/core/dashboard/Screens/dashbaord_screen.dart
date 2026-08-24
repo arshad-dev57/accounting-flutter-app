@@ -62,6 +62,7 @@ import 'package:BisonsTechs_app/core/warehousecustomer/warehouse_customer_contro
 import 'package:BisonsTechs_app/core/tax/tax_screen.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/screen/fiscal_year_list_screen.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/widgets/fiscal_year_select.dart';
+import 'package:BisonsTechs_app/core/warehouse/widgets/location_switcher.dart';
 import 'package:BisonsTechs_app/core/journalEntries/Screens/journal_entries_screen.dart';
 import 'package:BisonsTechs_app/core/loanBorrowing/screen/_loan_borrowing_screen.dart';
 import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
@@ -504,6 +505,7 @@ class _AccountingDashboardView extends GetView<DashboardController> {
       // AppBar title: Obx sirf logo observe karta hai — text constant hai
       title: _AppBarLogo(controller: controller, isMobile: isMobile),
       actions: [
+        LocationSwitcher(compact: true, showManageLink: !isMobile),
         FiscalYearSelect(compact: true, showManageLink: !isMobile),
         IconButton(
           icon: const Icon(Icons.notifications_none_rounded, color: _kTextSub, size: 22),

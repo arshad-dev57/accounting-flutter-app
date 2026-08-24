@@ -1,5 +1,6 @@
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/core/warehouse/Stock_in/model/stock_movement_model.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/controller/location_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -188,10 +189,49 @@ class StockController extends GetxController {
     return [];
   }
 
+  Future<Map<String, dynamic>> fetchStockReasons() async {
+    try {
+      final response = await _api.get(
+        '/api/warehouse/stock/reasons',
+        requiresAuth: true,
+      );
+      if (response.success && response.data != null) {
+        final raw = response.data['data'] ?? response.data;
+        return Map<String, dynamic>.from(raw as Map);
+      }
+    } catch (_) {}
+    return {'stockIn': [], 'stockOut': []};
+  }
+
+  Future<List<Map<String, dynamic>>> fetchBankAccounts() async {
+    try {
+      final response = await _api.get(
+        '/api/bank-accounts',
+        queryParameters: {'limit': '100'},
+        requiresAuth: true,
+      );
+      if (response.success && response.data != null) {
+        final list = response.data['data'] as List? ?? [];
+        return list.map((item) {
+          final map = Map<String, dynamic>.from(item as Map);
+          return {
+            'id': (map['id'] ?? map['_id'])?.toString() ?? '',
+            'accountName': map['accountName']?.toString() ?? '',
+            'bankName': map['bankName']?.toString() ?? '',
+          };
+        }).toList();
+      }
+    } catch (_) {}
+    return [];
+  }
+
   Future<bool> addStock({
     required String productId,
     required String stockType,
     required int quantity,
+    required String stockSourceReason,
+    double? unitCost,
+    String? bankAccountId,
     int? boxCount,
     int? piecesPerBox,
     String? supplierId,
@@ -205,12 +245,24 @@ class StockController extends GetxController {
         'productId': productId,
         'stockType': stockType,
         'quantity': quantity,
+        'stockSourceReason': stockSourceReason,
         'supplierName': supplierName ?? 'Walk-in',
         'reference': reference ?? '',
         'notes': notes ?? '',
       };
-      if (supplierId != null && supplierId.isNotEmpty)
+      if (Get.isRegistered<LocationController>()) {
+        final locationId = Get.find<LocationController>().selectedLocationId;
+        if (locationId != null && locationId.isNotEmpty) {
+          body['locationId'] = locationId;
+        }
+      }
+      if (unitCost != null) body['unitCost'] = unitCost;
+      if (bankAccountId != null && bankAccountId.isNotEmpty) {
+        body['bankAccountId'] = bankAccountId;
+      }
+      if (supplierId != null && supplierId.isNotEmpty) {
         body['supplierId'] = supplierId;
+      }
       if (stockType == 'box') {
         body['boxCount'] = boxCount;
         body['piecesPerBox'] = piecesPerBox;
@@ -222,7 +274,13 @@ class StockController extends GetxController {
         requiresAuth: true,
       );
       if (response.success) {
-        Get.snackbar('Success', 'Stock added successfully');
+        final je = response.data?['journalEntry'];
+        Get.snackbar(
+          'Success',
+          je != null
+              ? 'Stock added & posted (JE ${je['entryNumber'] ?? ''})'
+              : 'Stock added successfully',
+        );
         await refreshMovements();
         return true;
       }
@@ -242,27 +300,34 @@ class StockController extends GetxController {
   Future<bool> removeStock({
     required String productId,
     required int quantity,
-    required String reason,
+    required String stockOutReason,
     String? customerName,
     String? reference,
     String? notes,
   }) async {
     try {
       isSubmitting.value = true;
+      final body = <String, dynamic>{
+        'productId': productId,
+        'quantity': quantity,
+        'stockOutReason': stockOutReason,
+        'customerName': customerName ?? 'Walk-in Customer',
+        'reference': reference ?? '',
+        'notes': notes ?? '',
+      };
+      if (Get.isRegistered<LocationController>()) {
+        final locationId = Get.find<LocationController>().selectedLocationId;
+        if (locationId != null && locationId.isNotEmpty) {
+          body['locationId'] = locationId;
+        }
+      }
       final response = await _api.post(
         '/api/warehouse/stock/out',
-        body: {
-          'productId': productId,
-          'quantity': quantity,
-          'reason': reason,
-          'customerName': customerName ?? 'Walk-in Customer',
-          'reference': reference ?? '',
-          'notes': notes ?? '',
-        },
+        body: body,
         requiresAuth: true,
       );
       if (response.success) {
-        Get.snackbar('Success', 'Stock out confirmed');
+        Get.snackbar('Success', 'Stock out confirmed & posted to accounting');
         await refreshMovements();
         return true;
       }

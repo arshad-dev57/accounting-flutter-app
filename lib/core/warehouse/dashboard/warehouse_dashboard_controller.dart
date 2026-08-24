@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -98,6 +99,11 @@ class WarehouseDashboardController extends GetxController {
       'route': '/warehouse/stock',
     },
     {
+      'icon': Icons.place_rounded,
+      'title': 'Locations',
+      'route': '/warehouse/locations',
+    },
+    {
       'icon': Icons.assessment_rounded,
       'title': 'Inventory Valuation',
       'route': '/warehouse/inventory',
@@ -109,6 +115,7 @@ class WarehouseDashboardController extends GetxController {
     },
   ];
   Worker? _fyWorker;
+  Worker? _locWorker;
 
   @override
   void onInit() {
@@ -119,6 +126,7 @@ class WarehouseDashboardController extends GetxController {
       loadDashboardData();
     });
     _fyWorker = listenFiscalYearChanges(loadDashboardData);
+    _locWorker = listenLocationChanges(loadDashboardData);
     ever(currentRoute, (route) {
       _updateSelectedIndex(route);
     });
@@ -127,6 +135,7 @@ class WarehouseDashboardController extends GetxController {
   @override
   void onClose() {
     _fyWorker?.dispose();
+    _locWorker?.dispose();
     super.onClose();
   }
 

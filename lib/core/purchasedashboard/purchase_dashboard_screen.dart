@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/widgets/fiscal_year_select.dart';
+import 'package:BisonsTechs_app/core/warehouse/widgets/location_switcher.dart';
 import 'package:BisonsTechs_app/core/Notifications/screens/notification_screen.dart';
 import 'package:BisonsTechs_app/widgets/reload_when_visible.dart';
 import 'package:BisonsTechs_app/core/purchasedashboard/purchase_controller.dart';
@@ -37,6 +38,7 @@ const _kHeroBg = Color(0xFFE6EEF5);
 const _kHeroBgEnd = Color(0xFFD6E4F0);
 const _kHeroBorder = Color(0xFFB8CFE0);
 const _kHeroIcon = Color(0xFFC5D8E8);
+
 
 class PurchaseDashboardScreen extends StatefulWidget {
   const PurchaseDashboardScreen({super.key});
@@ -211,6 +213,7 @@ class _PurchaseDashboardView extends GetView<PurchaseController> {
         );
       }),
       actions: [
+        LocationSwitcher(compact: true, showManageLink: !isMobile),
         FiscalYearSelect(
           compact: true,
           showManageLink: !isMobile,
@@ -231,7 +234,6 @@ class _PurchaseDashboardView extends GetView<PurchaseController> {
     );
   }
 
-  // ─── Shimmer (identical pattern to DashboardScreen) ──────────────────────
   Widget _buildShimmer() {
     return Shimmer.fromColors(
       baseColor: const Color(0xFFEEEFF4),
@@ -546,7 +548,6 @@ class _PurchaseDashboardView extends GetView<PurchaseController> {
   Widget _heroDivider() =>
       Container(width: 0.5, height: 44, color: _kCardBorder);
 
-  // ─── Period Chips (identical to DashboardScreen) ──────────────────────────
   Widget _buildPeriodChips() {
     return Obx(() {
       final selected = controller.selectedTimePeriodLabel.value;
@@ -644,7 +645,6 @@ class _PurchaseDashboardView extends GetView<PurchaseController> {
     });
   }
 
-  // ─── Financial Overview bars (same as DashboardScreen _buildFinancialOverview)
   Widget _buildFinancialOverview() {
     return Obx(() {
       final data = controller.dashboard.value;
@@ -1380,8 +1380,6 @@ class _PurchaseDashboardView extends GetView<PurchaseController> {
       );
     });
   }
-
-  // ─── Quick Actions (same 4-icon row as DashboardScreen) ──────────────────
   Widget _buildQuickActions() {
     final actions = [
       _QuickAction(

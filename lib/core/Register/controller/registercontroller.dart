@@ -6,6 +6,7 @@ import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'package:BisonsTechs_app/core/settings/controller/pdf_report_settings_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -624,6 +625,8 @@ class AuthController extends GetxController {
     await PdfReportSettingsController.persistFromLogin(
       pdfReportSettings ?? userData['pdfReportSettings'],
     );
+
+    await hydrateLocationsAfterAuth(userData);
   }
 
   Future<void> _clearAuthData() async {

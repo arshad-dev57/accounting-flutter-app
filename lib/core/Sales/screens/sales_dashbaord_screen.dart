@@ -5,6 +5,7 @@ import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/widgets/fiscal_year_select.dart';
+import 'package:BisonsTechs_app/core/warehouse/widgets/location_switcher.dart';
 import 'package:BisonsTechs_app/core/Notifications/screens/notification_screen.dart';
 import 'package:BisonsTechs_app/widgets/reload_when_visible.dart';
 import 'package:BisonsTechs_app/core/warehouse/sales/controller/sales_controller.dart';
@@ -227,6 +228,7 @@ class _SalesDashboardView extends GetView<SalesController> {
         );
       }),
       actions: [
+        LocationSwitcher(compact: true, showManageLink: !isMobile),
         FiscalYearSelect(
           compact: true,
           showManageLink: !isMobile,

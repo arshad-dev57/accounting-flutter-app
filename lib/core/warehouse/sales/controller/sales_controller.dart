@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'package:BisonsTechs_app/core/warehouse/sales/model/sales_dashboard_model.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,6 +34,7 @@ class SalesController extends GetxController {
   ];
 
   Worker? _fyWorker;
+  Worker? _locWorker;
 
   @override
   void onInit() {
@@ -43,11 +45,13 @@ class SalesController extends GetxController {
       fetchDashboard();
     });
     _fyWorker = listenFiscalYearChanges(fetchDashboard);
+    _locWorker = listenLocationChanges(fetchDashboard);
   }
 
   @override
   void onClose() {
     _fyWorker?.dispose();
+    _locWorker?.dispose();
     super.onClose();
   }
 

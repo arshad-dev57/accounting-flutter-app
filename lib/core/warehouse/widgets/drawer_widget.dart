@@ -21,6 +21,7 @@ import 'package:BisonsTechs_app/core/settings/screens/currency_screen.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/screen/fiscal_year_list_screen.dart';
 import 'package:BisonsTechs_app/core/settings/screens/pdf_report_settings_screen.dart';
 import 'package:BisonsTechs_app/core/warehouse/dashboard/warehouse_dashboard_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/widgets/location_switcher.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -60,6 +61,7 @@ class WarehouseDrawer extends StatelessWidget {
                         'customers',
                         'invoices',
                         'stock-movement',
+                        'locations',
                         'inventory-valuation',
                       ],
                       items: const [
@@ -85,6 +87,11 @@ class WarehouseDrawer extends StatelessWidget {
                           'Stock Movement',
                           Mdi.arrow_left_right,
                           '/warehouse/stock',
+                        ),
+                        (
+                          'Locations',
+                          Mdi.map_marker,
+                          '/warehouse/locations',
                         ),
                         (
                           'Inventory Valuation',
@@ -360,6 +367,8 @@ class _WarehouseDrawerHeaderState extends State<_WarehouseDrawerHeader> {
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          const LocationSwitcher(compact: true, showManageLink: true),
           if (PermissionService.to.isAdmin) ...[
             const SizedBox(height: 12),
             Container(
@@ -721,6 +730,7 @@ class _NavSectionState extends State<_NavSection> {
     final filtered = <(String, String, String)>[];
     for (int i = 0; i < widget.items.length; i++) {
       final item = widget.items[i];
+      if (item.$3 == '/warehouse/locations') continue;
       final permission = widget.permissions![i];
 
       if (_permissionService.hasSubPageAccess(widget.module!, permission)) {

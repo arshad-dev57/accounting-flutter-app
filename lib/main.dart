@@ -72,6 +72,8 @@ import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/Services/notification_Service.dart';
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/controller/location_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/screen/locations_screen.dart';
 import 'package:BisonsTechs_app/core/tax/tax_screen.dart';
 
 class ThemeController extends GetxController {
@@ -87,6 +89,7 @@ void main() {
   Get.put(ThemeController(), permanent: true);
   Get.put(CurrencyController(), permanent: true);
   Get.put(FiscalYearController(), permanent: true);
+  Get.put(LocationController(), permanent: true);
   Get.put(PermissionService(), permanent: true);
 
   runApp(const MyApp());
@@ -286,6 +289,10 @@ class MyApp extends StatelessWidget {
               page: () => SalesReturnScreen(),
             ),
             GetPage(name: '/warehouse/stock', page: () => const StockScreen()),
+            GetPage(
+              name: '/warehouse/locations',
+              page: () => const LocationsScreen(),
+            ),
             GetPage(
               name: '/warehouse/reports',
               page: () => const ReportsScreen(),

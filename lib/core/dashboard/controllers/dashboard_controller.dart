@@ -5,6 +5,7 @@ import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:flutter/material.dart';
@@ -139,6 +140,7 @@ class DashboardController extends GetxController {
   ];
 
   Worker? _fyWorker;
+  Worker? _locWorker;
 
   @override
   void onInit() {
@@ -158,6 +160,11 @@ class DashboardController extends GetxController {
       if (isLoading.value || isRefreshing.value) return;
       loadDashboardData();
     });
+    _locWorker = listenLocationChanges(() {
+      if (!hasLoadedOnce.value) return;
+      if (isLoading.value || isRefreshing.value) return;
+      loadDashboardData();
+    });
     // One-shot access check only — SubscriptionController already polls globally.
     _checkSubscriptionOnce();
   }
@@ -165,6 +172,7 @@ class DashboardController extends GetxController {
   @override
   void onClose() {
     _fyWorker?.dispose();
+    _locWorker?.dispose();
     super.onClose();
   }
 

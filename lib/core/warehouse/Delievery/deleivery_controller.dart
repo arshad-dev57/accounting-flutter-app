@@ -3,6 +3,7 @@
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/Delievery/deleivery_model.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/controller/location_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -571,6 +572,10 @@ class DeliveryController extends GetxController {
         'notes': notesController.text.trim().isEmpty
             ? null
             : notesController.text.trim(),
+        if (Get.isRegistered<LocationController>() &&
+            (Get.find<LocationController>().selectedLocationId?.isNotEmpty ??
+                false))
+          'locationId': Get.find<LocationController>().selectedLocationId,
       };
 
       print('🔵 [DeliveryController] Submitting delivery payload:');

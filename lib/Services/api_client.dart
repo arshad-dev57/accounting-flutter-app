@@ -5,6 +5,8 @@ import 'dart:convert';
 import 'package:BisonsTechs_app/config/apiconfig.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_dates.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/controller/location_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
@@ -90,6 +92,11 @@ class ApiClient extends GetxService {
     try {
       if (Get.isRegistered<FiscalYearController>()) {
         await Get.find<FiscalYearController>().clearSession();
+      }
+    } catch (_) {}
+    try {
+      if (Get.isRegistered<LocationController>()) {
+        await Get.find<LocationController>().clearSession();
       }
     } catch (_) {}
   }
@@ -285,6 +292,17 @@ class ApiClient extends GetxService {
           final fyId = _resolveSelectedFiscalYearId();
           if (fyId != null && fyId.isNotEmpty) {
             params['fiscalYearId'] = fyId;
+          }
+        }
+      }
+
+      if (method.toUpperCase() == 'GET' && shouldAttachLocationId(endpoint)) {
+        if (!params.containsKey('locationId') ||
+            params['locationId'] == null ||
+            params['locationId'].toString().isEmpty) {
+          final locId = currentLocationId();
+          if (locId != null && locId.isNotEmpty) {
+            params['locationId'] = locId;
           }
         }
       }

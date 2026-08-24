@@ -16,6 +16,7 @@ import 'package:BisonsTechs_app/core/settings/controller/pdf_report_settings_con
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/Services/notification_Service.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -345,6 +346,8 @@ class LoginController extends GetxController {
         await PdfReportSettingsController.persistFromLogin(
           data['pdfReportSettings'] ?? userData['pdfReportSettings'],
         );
+
+        await hydrateLocationsAfterAuth(userData);
       }
     } catch (e) {
       print('Error saving user data: $e');
