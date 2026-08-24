@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/widgets/fiscal_year_select.dart';
+import 'package:BisonsTechs_app/core/warehouse/widgets/location_switcher.dart';
 import 'package:BisonsTechs_app/core/Notifications/screens/notification_screen.dart';
 import 'package:BisonsTechs_app/widgets/reload_when_visible.dart';
 import 'package:BisonsTechs_app/core/warehouse/dashboard/warehouse_dashboard_controller.dart';
@@ -209,6 +210,7 @@ class _WarehouseDashboardView extends GetView<WarehouseDashboardController> {
         );
       }),
       actions: [
+        LocationSwitcher(compact: true, showManageLink: !isMobile),
         FiscalYearSelect(
           compact: true,
           showManageLink: !isMobile,

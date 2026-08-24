@@ -1,7 +1,10 @@
 // lib/core/Splash/controller/splash_controller.dart
 
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:convert';
+
 import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'package:BisonsTechs_app/core/Onboarding/views/Onboarding_screen.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,6 +29,20 @@ class SplashController extends GetxController {
           : Get.put(FiscalYearController(), permanent: true);
       // Force so we always hydrate FY before dashboard (avoids empty first paint).
       await fy.ensureFiscalYearsLoaded(force: true);
+
+      final rawUser = prefs.getString('user_data');
+      if (rawUser != null && rawUser.isNotEmpty) {
+        try {
+          final user = jsonDecode(rawUser);
+          await hydrateLocationsAfterAuth(user);
+        } catch (_) {
+          final loc = ensureLocationController();
+          await loc?.ensureLocationsLoaded(force: true);
+        }
+      } else {
+        final loc = ensureLocationController();
+        await loc?.ensureLocationsLoaded(force: true);
+      }
     }
 
     if (kIsWeb) {

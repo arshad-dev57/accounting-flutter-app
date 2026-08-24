@@ -1,5 +1,6 @@
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/Users/controller/user_management_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/controller/location_controller.dart';
 import 'package:country_picker_pro/country_picker_pro.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -35,6 +36,12 @@ class _UserFormScreenState extends State<UserFormScreen> {
   String? _selectedRoleId;
   bool _isActive = true;
   String _countryName = 'Pakistan';
+  final Set<String> _selectedLocationIds = {};
+
+  bool get _roleIsAdmin {
+    final r = _selectedRole.toLowerCase();
+    return r == 'admin' || r == 'owner' || r == 'superadmin';
+  }
 
   bool get isEditMode => widget.userId != null;
 
@@ -47,6 +54,9 @@ class _UserFormScreenState extends State<UserFormScreen> {
 
     if (isEditMode) {
       _loadUserData();
+    }
+    if (Get.isRegistered<LocationController>()) {
+      Get.find<LocationController>().ensureLocationsLoaded();
     }
   }
 
@@ -63,6 +73,9 @@ class _UserFormScreenState extends State<UserFormScreen> {
       _selectedRole = user.role;
       _selectedRoleId = user.roleId;
       _isActive = user.isActive;
+      _selectedLocationIds
+        ..clear()
+        ..addAll(user.locationIds);
     });
 
     final phone = (user.phone ?? '').trim();
@@ -118,6 +131,17 @@ class _UserFormScreenState extends State<UserFormScreen> {
       return;
     }
 
+    if (!_roleIsAdmin && _selectedLocationIds.isEmpty) {
+      Get.snackbar(
+        'Locations required',
+        'Assign at least one store / location to this user',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: kDanger,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
     _isSaving.value = true;
     bool success;
     try {
@@ -132,6 +156,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
           role: _selectedRole,
           roleId: _selectedRoleId,
           isActive: _isActive,
+          locationIds: _selectedLocationIds.toList(),
         );
       } else {
         success = await _controller.createUser(
@@ -143,6 +168,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
           country: _countryName.trim(),
           role: _selectedRole,
           roleId: _selectedRoleId,
+          locationIds: _selectedLocationIds.toList(),
         );
       }
     } finally {
@@ -355,6 +381,8 @@ class _UserFormScreenState extends State<UserFormScreen> {
               _buildCard(
                 children: [
                   _buildRoleDropdown(),
+                  const SizedBox(height: 16),
+                  _buildLocationPicker(),
                   const SizedBox(height: 16),
                   _buildSwitchTile(
                     title: 'Active Status',
@@ -712,6 +740,65 @@ class _UserFormScreenState extends State<UserFormScreen> {
         ),
       ],
     );
+  }
+
+  Widget _buildLocationPicker() {
+    if (!Get.isRegistered<LocationController>()) {
+      Get.put(LocationController(), permanent: true);
+    }
+    final locController = Get.find<LocationController>();
+    locController.ensureLocationsLoaded();
+
+    return Obx(() {
+      final locs = locController.locations;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _fieldLabel('Store / location access'),
+          const SizedBox(height: 6),
+          Text(
+            _roleIsAdmin
+                ? 'Admin can see every location. Optional pins below are stored if you later change the role.'
+                : 'Select the shops this user can work in.',
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600, height: 1.3),
+          ),
+          const SizedBox(height: 8),
+          if (locs.isEmpty)
+            Text(
+              'No locations yet. Create them in Warehouse → Locations first.',
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+            )
+          else
+            ...locs.map((loc) {
+              final checked = _selectedLocationIds.contains(loc.id);
+              return CheckboxListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                value: checked,
+                onChanged: (v) {
+                  setState(() {
+                    if (v == true) {
+                      _selectedLocationIds.add(loc.id);
+                    } else {
+                      _selectedLocationIds.remove(loc.id);
+                    }
+                  });
+                },
+                title: Text(
+                  loc.isDefault ? '${loc.name} · Default' : loc.name,
+                  style: const TextStyle(fontSize: 14),
+                ),
+                subtitle: Text(
+                  '${loc.code} · ${loc.typeDisplay}',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                ),
+                controlAffinity: ListTileControlAffinity.leading,
+                activeColor: kPrimary,
+              );
+            }),
+        ],
+      );
+    });
   }
 
   Widget _buildRoleDropdown() {

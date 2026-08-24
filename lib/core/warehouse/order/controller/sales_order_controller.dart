@@ -2,6 +2,7 @@
 
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/controller/location_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/order/model/customer_model.dart';
 import 'package:BisonsTechs_app/core/warehouse/order/model/order_model.dart';
 import 'package:BisonsTechs_app/core/warehouse/products/controller/product_controller.dart';
@@ -1054,6 +1055,10 @@ class SalesOrderController extends GetxController {
         'totalItems': totalItemsCount,
         'orderStatus': 'Pending',
         'orderDate': DateTime.now().toIso8601String(),
+        if (Get.isRegistered<LocationController>() &&
+            (Get.find<LocationController>().selectedLocationId?.isNotEmpty ??
+                false))
+          'locationId': Get.find<LocationController>().selectedLocationId,
       };
 
       print('🔵 [SalesOrderController] Submitting order payload:');

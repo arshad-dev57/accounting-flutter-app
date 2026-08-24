@@ -19,6 +19,7 @@ import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:BisonsTechs_app/core/settings/screens/currency_screen.dart';
 import 'package:BisonsTechs_app/core/settings/screens/pdf_report_settings_screen.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/screen/fiscal_year_list_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/widgets/location_switcher.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -323,6 +324,8 @@ class _PurchaseDrawerHeaderState extends State<_PurchaseDrawerHeader> {
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          const LocationSwitcher(compact: true, showManageLink: true),
           if (PermissionService.to.isAdmin) ...[
             const SizedBox(height: 12),
             Container(

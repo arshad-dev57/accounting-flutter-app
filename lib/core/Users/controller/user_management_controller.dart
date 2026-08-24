@@ -15,6 +15,9 @@ class User {
   final String? managerId;
   final UserRole? userRole;
   final List<UserPermission> permissions;
+  final List<String> locationIds;
+  final List<AssignedLocation> locations;
+  final bool isLocationAdmin;
 
   User({
     required this.id,
@@ -29,6 +32,9 @@ class User {
     this.managerId,
     this.userRole,
     this.permissions = const [],
+    this.locationIds = const [],
+    this.locations = const [],
+    this.isLocationAdmin = false,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -51,10 +57,67 @@ class User {
               ?.map((p) => UserPermission.fromJson(p))
               .toList() ??
           [],
+      locationIds: _parseLocationIds(json),
+      locations: _parseAssignedLocations(json),
+      isLocationAdmin: json['isLocationAdmin'] == true,
     );
   }
 
+  static List<String> _parseLocationIds(Map<String, dynamic> json) {
+    final ids = <String>{};
+    final rawIds = json['locationIds'];
+    if (rawIds is List) {
+      for (final id in rawIds) {
+        final s = id?.toString() ?? '';
+        if (s.isNotEmpty) ids.add(s);
+      }
+    }
+    final rawLocs = json['locations'];
+    if (rawLocs is List) {
+      for (final loc in rawLocs) {
+        if (loc is Map && loc['id'] != null) {
+          ids.add(loc['id'].toString());
+        }
+      }
+    }
+    return ids.toList();
+  }
+
+  static List<AssignedLocation> _parseAssignedLocations(
+    Map<String, dynamic> json,
+  ) {
+    final raw = json['locations'];
+    if (raw is! List) return const [];
+    return raw
+        .whereType<Map>()
+        .map((e) => AssignedLocation.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+  }
+
   String get fullName => '$firstName $lastName';
+}
+
+class AssignedLocation {
+  final String id;
+  final String name;
+  final String? code;
+  final String? type;
+
+  AssignedLocation({
+    required this.id,
+    required this.name,
+    this.code,
+    this.type,
+  });
+
+  factory AssignedLocation.fromJson(Map<String, dynamic> json) {
+    return AssignedLocation(
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      code: json['code']?.toString(),
+      type: json['type']?.toString(),
+    );
+  }
 }
 
 class UserRole {
@@ -516,6 +579,24 @@ class UserManagementController extends GetxController {
       ],
     ),
     ModuleConfig(
+      module: 'pos',
+      displayName: 'POS',
+      description: 'Point of sale register and management',
+      icon: Icons.point_of_sale,
+      subPages: [
+        SubPagePermission(
+          page: 'register',
+          displayName: 'Register',
+          icon: Icons.point_of_sale,
+        ),
+        SubPagePermission(
+          page: 'management',
+          displayName: 'Management',
+          icon: Icons.settings,
+        ),
+      ],
+    ),
+    ModuleConfig(
       module: 'users',
       displayName: 'Users',
       description: 'Manage user accounts and permissions',
@@ -597,6 +678,7 @@ class UserManagementController extends GetxController {
     String? roleId,
     String? managerId,
     List<UserPermission>? permissions,
+    List<String>? locationIds,
   }) async {
     try {
       isLoading.value = true;
@@ -616,6 +698,7 @@ class UserManagementController extends GetxController {
           if (managerId != null) 'managerId': managerId,
           if (permissions != null)
             'permissions': permissions.map((p) => p.toJson()).toList(),
+          if (locationIds != null) 'locationIds': locationIds,
         },
       );
 
@@ -653,6 +736,7 @@ class UserManagementController extends GetxController {
     String? managerId,
     bool? isActive,
     List<UserPermission>? permissions,
+    List<String>? locationIds,
   }) async {
     try {
       isLoading.value = true;
@@ -672,6 +756,7 @@ class UserManagementController extends GetxController {
           if (isActive != null) 'isActive': isActive,
           if (permissions != null)
             'permissions': permissions.map((p) => p.toJson()).toList(),
+          if (locationIds != null) 'locationIds': locationIds,
         },
       );
 
