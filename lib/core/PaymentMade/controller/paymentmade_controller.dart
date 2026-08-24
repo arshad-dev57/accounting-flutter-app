@@ -4,6 +4,7 @@
 import 'dart:io';
 
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
@@ -74,17 +75,28 @@ class PaymentMadeController extends GetxController {
   final ApiClient _api = Get.find<ApiClient>();
 
   @override
+  Worker? _fyWorker;
+
+  @override
   void onInit() {
     super.onInit();
     searchController.addListener(_onSearchChanged);
     loadSuppliers();
     loadBankAccounts();
-    loadPayments(resetPage: true);
-    loadSummary();
+    Future(() async {
+      await waitForFiscalYearReady();
+      loadPayments(resetPage: true);
+      loadSummary();
+    });
+    _fyWorker = listenFiscalYearChanges(() {
+      loadPayments(resetPage: true);
+      loadSummary();
+    });
   }
 
   @override
   void onClose() {
+    _fyWorker?.dispose();
     searchController.removeListener(_onSearchChanged);
     searchController.dispose();
     scrollController.dispose();

@@ -15,6 +15,8 @@ import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:BisonsTechs_app/core/settings/controller/pdf_report_settings_controller.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/Services/notification_Service.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -32,14 +34,22 @@ class LoginController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    ensureFreshControllers();
+  }
+
+  /// Get.offAll can dispose the previous Login route while this controller
+  /// is still reused. Always bind a live pair of text controllers.
+  void ensureFreshControllers() {
     emailController = TextEditingController();
     passwordController = TextEditingController();
+    emailError.value = '';
+    passwordError.value = '';
   }
 
   @override
   void onClose() {
-    emailController.dispose();
-    passwordController.dispose();
+    // Text controllers are owned for the life of the login UI. Get.offAll can
+    // close this controller while a new LoginScreen still holds the instance.
     super.onClose();
   }
 
@@ -186,6 +196,10 @@ class LoginController extends GetxController {
         }
 
         if (subscriptionController.hasAccess) {
+          final fy = Get.isRegistered<FiscalYearController>()
+              ? Get.find<FiscalYearController>()
+              : Get.put(FiscalYearController(), permanent: true);
+          await fy.ensureFiscalYearsLoaded(force: true);
           Get.offAllNamed('/dashboard');
         } else {
           Get.offAll(() => const SelectPlanScreen());
@@ -290,11 +304,13 @@ class LoginController extends GetxController {
             [];
 
         final userDataForPermissions = UserData(
-          id: userData['_id']?.toString() ?? '',
+          id: userData['_id']?.toString() ?? userData['id']?.toString() ?? '',
           firstName: userData['firstName']?.toString() ?? '',
           lastName: userData['lastName']?.toString() ?? '',
           email: userData['email']?.toString() ?? '',
-          role: userData['role']?.toString() ?? 'user',
+          role: (userData['role']?.toString().trim().isNotEmpty ?? false)
+              ? userData['role'].toString()
+              : 'user',
           permissions: userPermissions,
         );
 
@@ -330,6 +346,8 @@ class LoginController extends GetxController {
         await PdfReportSettingsController.persistFromLogin(
           data['pdfReportSettings'] ?? userData['pdfReportSettings'],
         );
+
+        await hydrateLocationsAfterAuth(userData);
       }
     } catch (e) {
       print('Error saving user data: $e');

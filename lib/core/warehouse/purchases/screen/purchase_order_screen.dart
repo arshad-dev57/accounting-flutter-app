@@ -1,5 +1,6 @@
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/core/tax/tax_rate_field.dart';
 import 'package:BisonsTechs_app/core/warehouse/purchases/controller/purchase_order_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/purchases/model/purchase_model.dart';
 import 'package:BisonsTechs_app/core/warehouse/supplier/screen/supplier_screen.dart';
@@ -821,12 +822,11 @@ class _CreateOrderWizard extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        flex: 1,
-                        child: _buildField(
-                          label: 'Tax%',
-                          value: line.taxRate.toString(),
-                          onChanged: (v) {
-                            final t = double.tryParse(v) ?? 0;
+                        flex: 2,
+                        child: TaxRateField(
+                          dense: true,
+                          value: line.taxRate,
+                          onRateChanged: (t) {
                             controller.updateProductTaxRate(
                               index,
                               t.clamp(0, 100),

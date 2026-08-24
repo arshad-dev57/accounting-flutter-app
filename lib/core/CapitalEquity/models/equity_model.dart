@@ -4,7 +4,9 @@
 String _deriveAccountType(String name) {
   final n = name.toLowerCase();
   if (n.contains('drawing')) return 'Drawings';
-  if (n.contains('retained') || n.contains('retention'))
+  if (n.contains('retained') ||
+      n.contains('retention') ||
+      n.contains('current year'))
     return 'Retained Earnings';
   if (n.contains('reserve')) return 'Reserves';
   if (n.contains('share')) return 'Share Capital';

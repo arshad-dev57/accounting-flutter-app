@@ -76,10 +76,10 @@ class AboutAppScreen extends StatelessWidget {
                 ),
               ],
             ),
-            child: Icon(
-              Icons.account_balance,
-              size: isWeb ? 80 : 60,
-              color: kPrimary,
+            child: Image.asset(
+              'assets/logo.png',
+              height: isWeb ? 96 : 72,
+              fit: BoxFit.contain,
             ),
           ),
           SizedBox(height: isWeb ? 24 : 20),

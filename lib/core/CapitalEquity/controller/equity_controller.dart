@@ -15,6 +15,8 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:excel/excel.dart' as excel;
 
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
+
 class EquityController extends GetxController {
   final ApiClient _apiClient = Get.find<ApiClient>();
 
@@ -52,22 +54,38 @@ class EquityController extends GetxController {
   var totalReserves = 0.0.obs;
   var totalDrawings = 0.0.obs;
   var totalEquity = 0.0.obs;
+  var ownerCapital = 0.0.obs;
+  var periodEarnings = 0.0.obs;
+  var equityNow = 0.0.obs;
+  var changeOnCapital = 0.0.obs;
+  var isCapitalIncrease = true.obs;
+  var bankAccounts = <Map<String, dynamic>>[].obs;
 
   // Controllers
   final TextEditingController searchController = TextEditingController();
   final ScrollController scrollController = ScrollController();
+  Worker? _fyWorker;
 
   @override
   void onInit() {
     super.onInit();
     searchController.addListener(_onSearchChanged);
-    loadEquityAccounts(resetPage: true);
-    loadTransactions();
-    loadSummary();
+    Future(() async {
+      await waitForFiscalYearReady();
+      loadEquityAccounts(resetPage: true);
+      loadTransactions();
+      loadSummary();
+      loadBankAccounts();
+    });
+    _fyWorker = listenFiscalYearChanges(() {
+      loadEquityAccounts(resetPage: true);
+      loadSummary();
+    });
   }
 
   @override
   void onClose() {
+    _fyWorker?.dispose();
     searchController.removeListener(_onSearchChanged);
     searchController.dispose();
     scrollController.dispose();
@@ -93,6 +111,7 @@ class EquityController extends GetxController {
 
       Map<String, dynamic> params = {};
       params['type'] = 'Equity';
+      putFiscalYearId(params);
 
       if (serverSupportsPagination.value) {
         params['page'] = currentPage.value;
@@ -211,7 +230,12 @@ class EquityController extends GetxController {
   // ─── LOAD SUMMARY ──────────────────────────────────────────────────
   Future<void> loadSummary() async {
     try {
-      final response = await _apiClient.get('/api/equity/summary');
+      final params = <String, dynamic>{};
+      putFiscalYearId(params);
+      final response = await _apiClient.get(
+        '/api/equity/summary',
+        queryParameters: params,
+      );
 
       if (response.success && response.statusCode == 200) {
         final responseData = response.data;
@@ -223,6 +247,19 @@ class EquityController extends GetxController {
           totalReserves.value = (data['totalReserves'] ?? 0).toDouble();
           totalDrawings.value = (data['totalDrawings'] ?? 0).toDouble();
           totalEquity.value = (data['totalEquity'] ?? 0).toDouble();
+          ownerCapital.value = (data['ownerCapital'] ?? data['totalCapital'] ?? 0)
+              .toDouble();
+          periodEarnings.value = (data['periodEarnings'] ??
+                  data['currentYearEarnings'] ??
+                  0)
+              .toDouble();
+          equityNow.value = (data['equityNow'] ?? data['totalEquity'] ?? 0)
+              .toDouble();
+          changeOnCapital.value = (data['changeOnCapital'] ??
+                  (equityNow.value - ownerCapital.value))
+              .toDouble();
+          isCapitalIncrease.value =
+              data['isIncrease'] ?? (periodEarnings.value >= 0);
         }
       }
     } catch (e) {
@@ -251,6 +288,7 @@ class EquityController extends GetxController {
       0.0,
       (sum, a) => sum + a.currentBalance,
     );
+    // Keep dashboard-style owner capital / period P&L from loadSummary.
   }
 
   // ─── SEARCH ──────────────────────────────────────────────────────
@@ -266,11 +304,26 @@ class EquityController extends GetxController {
   }
 
   // ─── ADD CAPITAL ──────────────────────────────────────────────────
+  Future<void> loadBankAccounts() async {
+    try {
+      final response = await _apiClient.get('/api/bank-accounts');
+      if (response.success) {
+        final data = response.data['data'];
+        if (data is List) {
+          bankAccounts.value =
+              data.map((e) => Map<String, dynamic>.from(e)).toList();
+        }
+      }
+    } catch (_) {}
+  }
+
   Future<void> addCapital({
     required String accountId,
     required double amount,
     required String description,
     required String reference,
+    String paymentMethod = 'Cash',
+    String? bankAccountId,
   }) async {
     // Show loading dialog
     Get.dialog(
@@ -323,6 +376,11 @@ class EquityController extends GetxController {
         'amount': amount,
         'description': description,
         'reference': reference,
+        'paymentMethod': paymentMethod,
+        if (paymentMethod != 'Cash' &&
+            bankAccountId != null &&
+            bankAccountId.isNotEmpty)
+          'bankAccountId': bankAccountId,
       };
 
       final response = await _apiClient.post(
@@ -367,6 +425,8 @@ class EquityController extends GetxController {
     required double amount,
     required String description,
     required String reference,
+    String paymentMethod = 'Cash',
+    String? bankAccountId,
   }) async {
     // Show loading dialog
     Get.dialog(
@@ -419,6 +479,11 @@ class EquityController extends GetxController {
         'amount': amount,
         'description': description,
         'reference': reference,
+        'paymentMethod': paymentMethod,
+        if (paymentMethod != 'Cash' &&
+            bankAccountId != null &&
+            bankAccountId.isNotEmpty)
+          'bankAccountId': bankAccountId,
       };
 
       final response = await _apiClient.post(
@@ -1517,6 +1582,8 @@ class EquityController extends GetxController {
     double amount = 0;
     String description = '';
     String reference = '';
+    String paymentMethod = 'Cash';
+    String? selectedBankAccountId;
 
     Get.dialog(
       Dialog(
@@ -1640,6 +1707,18 @@ class EquityController extends GetxController {
                               keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 16),
+                            _buildPaymentSourceFields(
+                              paymentMethod: paymentMethod,
+                              selectedBankAccountId: selectedBankAccountId,
+                              onPaymentMethodChanged: (v) => setState(() {
+                                paymentMethod = v!;
+                                if (v == 'Cash') selectedBankAccountId = null;
+                              }),
+                              onBankChanged: (v) => setState(
+                                () => selectedBankAccountId = v,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
 
                             _buildTextField(
                               label: 'Description *',
@@ -1706,11 +1785,19 @@ class EquityController extends GetxController {
                                   ? null
                                   : () {
                                       if (formKey.currentState!.validate()) {
+                                        if (!_validatePaymentSource(
+                                          paymentMethod,
+                                          selectedBankAccountId,
+                                        )) {
+                                          return;
+                                        }
                                         addCapital(
                                           accountId: account.id,
                                           amount: amount,
                                           description: description,
                                           reference: reference,
+                                          paymentMethod: paymentMethod,
+                                          bankAccountId: selectedBankAccountId,
                                         );
                                       }
                                     },
@@ -1765,6 +1852,8 @@ class EquityController extends GetxController {
     double amount = 0;
     String description = '';
     String reference = '';
+    String paymentMethod = 'Cash';
+    String? selectedBankAccountId;
 
     Get.dialog(
       Dialog(
@@ -1888,6 +1977,18 @@ class EquityController extends GetxController {
                               keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 16),
+                            _buildPaymentSourceFields(
+                              paymentMethod: paymentMethod,
+                              selectedBankAccountId: selectedBankAccountId,
+                              onPaymentMethodChanged: (v) => setState(() {
+                                paymentMethod = v!;
+                                if (v == 'Cash') selectedBankAccountId = null;
+                              }),
+                              onBankChanged: (v) => setState(
+                                () => selectedBankAccountId = v,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
 
                             _buildTextField(
                               label: 'Description *',
@@ -1954,11 +2055,19 @@ class EquityController extends GetxController {
                                   ? null
                                   : () {
                                       if (formKey.currentState!.validate()) {
+                                        if (!_validatePaymentSource(
+                                          paymentMethod,
+                                          selectedBankAccountId,
+                                        )) {
+                                          return;
+                                        }
                                         recordDrawings(
                                           accountId: account.id,
                                           amount: amount,
                                           description: description,
                                           reference: reference,
+                                          paymentMethod: paymentMethod,
+                                          bankAccountId: selectedBankAccountId,
                                         );
                                       }
                                     },
@@ -2014,6 +2123,8 @@ class EquityController extends GetxController {
     double amount = 0;
     String description = '';
     String reference = '';
+    String paymentMethod = 'Cash';
+    String? selectedBankAccountId;
 
     Get.dialog(
       Dialog(
@@ -2128,6 +2239,22 @@ class EquityController extends GetxController {
                                   v?.isEmpty == true ? 'Required' : null,
                               keyboardType: TextInputType.number,
                             ),
+                            if (transactionType != 'Reserve Transfer') ...[
+                              const SizedBox(height: 16),
+                              _buildPaymentSourceFields(
+                                paymentMethod: paymentMethod,
+                                selectedBankAccountId: selectedBankAccountId,
+                                onPaymentMethodChanged: (v) => setState(() {
+                                  paymentMethod = v!;
+                                  if (v == 'Cash') {
+                                    selectedBankAccountId = null;
+                                  }
+                                }),
+                                onBankChanged: (v) => setState(
+                                  () => selectedBankAccountId = v,
+                                ),
+                              ),
+                            ],
                             const SizedBox(height: 16),
 
                             _buildTextField(
@@ -2195,6 +2322,14 @@ class EquityController extends GetxController {
                                   ? null
                                   : () {
                                       if (formKey.currentState!.validate()) {
+                                        if (transactionType !=
+                                                'Reserve Transfer' &&
+                                            !_validatePaymentSource(
+                                              paymentMethod,
+                                              selectedBankAccountId,
+                                            )) {
+                                          return;
+                                        }
                                         if (transactionType ==
                                             'Additional Capital') {
                                           final capitalAccount = equityAccounts
@@ -2208,6 +2343,9 @@ class EquityController extends GetxController {
                                               amount: amount,
                                               description: description,
                                               reference: reference,
+                                              paymentMethod: paymentMethod,
+                                              bankAccountId:
+                                                  selectedBankAccountId,
                                             );
                                           } else {
                                             _showError(
@@ -2227,6 +2365,9 @@ class EquityController extends GetxController {
                                               amount: amount,
                                               description: description,
                                               reference: reference,
+                                              paymentMethod: paymentMethod,
+                                              bankAccountId:
+                                                  selectedBankAccountId,
                                             );
                                           } else {
                                             _showError(
@@ -2677,6 +2818,70 @@ class EquityController extends GetxController {
       maxLines: maxLines,
       onChanged: onChanged,
       validator: validator,
+    );
+  }
+
+  bool _validatePaymentSource(String paymentMethod, String? bankAccountId) {
+    if (paymentMethod != 'Cash' &&
+        (bankAccountId == null || bankAccountId.isEmpty)) {
+      _showError('Please select a bank account');
+      return false;
+    }
+    return true;
+  }
+
+  Widget _buildPaymentSourceFields({
+    required String paymentMethod,
+    required String? selectedBankAccountId,
+    required void Function(String?) onPaymentMethodChanged,
+    required void Function(String?) onBankChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildDropdownField(
+          label: 'Paid via *',
+          value: paymentMethod,
+          items: const ['Cash', 'Bank Transfer'],
+          onChanged: onPaymentMethodChanged,
+        ),
+        if (paymentMethod != 'Cash') ...[
+          const SizedBox(height: 16),
+          DropdownButtonFormField<String>(
+            value: selectedBankAccountId,
+            decoration: InputDecoration(
+              labelText: 'Bank Account *',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
+              isDense: true,
+              labelStyle: TextStyle(fontSize: 12, color: kSubText),
+            ),
+            style: const TextStyle(fontSize: 13, color: Colors.black),
+            hint: Text(
+              bankAccounts.isEmpty
+                  ? 'No bank accounts found'
+                  : 'Select bank account',
+              style: TextStyle(fontSize: 12, color: kSubText),
+            ),
+            items: bankAccounts.map((a) {
+              final id = a['id']?.toString() ?? a['_id']?.toString();
+              return DropdownMenuItem(
+                value: id,
+                child: Text(
+                  a['accountName']?.toString() ?? 'Bank',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              );
+            }).toList(),
+            onChanged: onBankChanged,
+          ),
+        ],
+      ],
     );
   }
 

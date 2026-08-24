@@ -149,7 +149,7 @@ class BankAccountController extends GetxController {
         AppSnackbar.success(
           Colors.green,
           'Success',
-          'Bank account added successfully\nJournal entry created for opening balance',
+          'Bank account added successfully',
           duration: const Duration(seconds: 3),
         );
 
@@ -173,6 +173,27 @@ class BankAccountController extends GetxController {
         duration: const Duration(seconds: 2),
       );
       return false;
+    }
+  }
+
+  final openingSourceAccounts = <Map<String, dynamic>>[].obs;
+
+  Future<void> loadOpeningSourceAccounts() async {
+    try {
+      final response = await _api.get(
+        '/api/chart-of-accounts',
+        queryParameters: {'type': 'Asset', 'limit': '100'},
+      );
+      if (response.success) {
+        final data = response.data['data'] ?? [];
+        openingSourceAccounts.assignAll(
+          List<Map<String, dynamic>>.from(
+            (data as List).map((e) => Map<String, dynamic>.from(e)),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error loading source accounts: $e');
     }
   }
 

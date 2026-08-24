@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/category/category_screen.dart';
+import 'package:BisonsTechs_app/core/tax/tax_rate_field.dart';
 import 'package:BisonsTechs_app/core/warehouse/products/controller/product_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/products/screen/product_qr_scan_screen.dart';
 import 'package:BisonsTechs_app/core/warehouse/supplier/screen/supplier_screen.dart';
@@ -854,7 +855,6 @@ class _AddProductPageState extends State<_AddProductPage> {
   // ── Snapshot lists ──
   late List<Map<String, dynamic>> _productTypes;
   late List<Map<String, dynamic>> _stockUnits;
-  late List<Map<String, dynamic>> _taxTypes;
   late List<Map<String, dynamic>> _categories;
   late List<Map<String, dynamic>> _suppliers;
   late List<Map<String, dynamic>> _rackLocations;
@@ -960,7 +960,6 @@ class _AddProductPageState extends State<_AddProductPage> {
 
     _productTypes = List<Map<String, dynamic>>.from(_c.productTypes);
     _stockUnits = List<Map<String, dynamic>>.from(_c.stockUnits);
-    _taxTypes = List<Map<String, dynamic>>.from(_c.taxTypes);
     _categories = List<Map<String, dynamic>>.from(_c.categories);
     _suppliers = List<Map<String, dynamic>>.from(_c.suppliers);
     _rackLocations = List<Map<String, dynamic>>.from(_c.rackLocations);
@@ -1023,8 +1022,18 @@ class _AddProductPageState extends State<_AddProductPage> {
     _selectedStockUnit = p?['stockUnitName'];
     _selectedTaxType = p?['taxType'];
 
-    _selectedCategoryId = p?['categoryId'];
-    _selectedSupplierId = p?['supplierId'];
+    _selectedCategoryId =
+        (p?['categoryId'] ?? (p?['category'] is Map ? p!['category']['id'] : null))
+            ?.toString();
+    _selectedSupplierId =
+        (p?['supplierId'] ?? (p?['supplier'] is Map ? p!['supplier']['id'] : null))
+            ?.toString();
+    if (_selectedCategoryId != null && _selectedCategoryId!.isEmpty) {
+      _selectedCategoryId = null;
+    }
+    if (_selectedSupplierId != null && _selectedSupplierId!.isEmpty) {
+      _selectedSupplierId = null;
+    }
     _brandCtrl = TextEditingController(
       text: safeToString(p?['brandName'] ?? p?['brand']),
     );
@@ -1189,7 +1198,6 @@ class _AddProductPageState extends State<_AddProductPage> {
     setState(() {
       _productTypes = List<Map<String, dynamic>>.from(_c.productTypes);
       _stockUnits = List<Map<String, dynamic>>.from(_c.stockUnits);
-      _taxTypes = List<Map<String, dynamic>>.from(_c.taxTypes);
       _categories = List<Map<String, dynamic>>.from(_c.categories);
       _suppliers = List<Map<String, dynamic>>.from(_c.suppliers);
       _rackLocations = List<Map<String, dynamic>>.from(_c.rackLocations);
@@ -1975,59 +1983,42 @@ class _AddProductPageState extends State<_AddProductPage> {
   }
 
   String _generateNumericBarcode(String sku, int requiredLength) {
-    // Extract numbers from SKU or generate hash-based number
+    final dataLength = requiredLength - 1;
     final numbers = sku.replaceAll(RegExp(r'[^0-9]'), '');
 
     String baseNumber;
-
-    if (numbers.length >= requiredLength - 1) {
-      // Use first (requiredLength - 1) digits (last digit is checksum)
-      baseNumber = numbers.substring(0, requiredLength - 1);
-    } else if (numbers.isNotEmpty) {
-      // Pad with zeros
-      final padding = '0' * ((requiredLength - 1) - numbers.length);
-      baseNumber = numbers + padding;
+    if (numbers.isNotEmpty) {
+      baseNumber = numbers;
     } else {
-      // Generate from SKU hash
-      final hash = sku.hashCode.abs();
-      final hashString = hash.toString();
-      final padding = '0' * ((requiredLength - 1) - hashString.length);
-      baseNumber = hashString + padding;
+      baseNumber = sku.hashCode.abs().toString();
     }
 
-    // Calculate and append checksum
-    final checksum = _calculateChecksum(baseNumber, requiredLength);
-    return baseNumber + checksum;
+    if (baseNumber.length >= dataLength) {
+      baseNumber = baseNumber.substring(0, dataLength);
+    } else {
+      baseNumber = baseNumber.padRight(dataLength, '0');
+    }
+
+    return baseNumber + _eanChecksum(baseNumber);
   }
 
-  String _calculateChecksum(String data, int totalLength) {
+  /// GS1 checksum: from the right, odd positions (1-based) weight 3.
+  String _eanChecksum(String data) {
     int sum = 0;
-
-    if (totalLength == 13 || totalLength == 8) {
-      // EAN checksum calculation
-      for (int i = 0; i < data.length; i++) {
-        final digit = int.parse(data[i]);
-        // Odd positions (1, 3, 5...) are multiplied by 1
-        // Even positions (2, 4, 6...) are multiplied by 3
-        final weight = (i % 2 == 0) ? 1 : 3;
-        sum += digit * weight;
-      }
-      final checksum = (10 - (sum % 10)) % 10;
-      return checksum.toString();
-    } else if (totalLength == 12) {
-      // UPC-A checksum calculation
-      for (int i = 0; i < data.length; i++) {
-        final digit = int.parse(data[i]);
-        // Odd positions (1, 3, 5...) are multiplied by 3
-        // Even positions (2, 4, 6...) are multiplied by 1
-        final weight = (i % 2 == 0) ? 3 : 1;
-        sum += digit * weight;
-      }
-      final checksum = (10 - (sum % 10)) % 10;
-      return checksum.toString();
+    for (int i = 0; i < data.length; i++) {
+      final digit = int.parse(data[data.length - 1 - i]);
+      sum += digit * (i % 2 == 0 ? 3 : 1);
     }
+    return ((10 - (sum % 10)) % 10).toString();
+  }
 
-    return '0';
+  String _withValidChecksum(String value, int totalLength) {
+    final digits = value.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.length < totalLength - 1) {
+      return _generateNumericBarcode(value, totalLength);
+    }
+    final data = digits.substring(0, totalLength - 1);
+    return data + _eanChecksum(data);
   }
 
   bool _validateBarcodeData(String data, String format) {
@@ -2049,33 +2040,50 @@ class _AddProductPageState extends State<_AddProductPage> {
   }
 
   Widget _buildBarcodeWidget() {
-    Barcode barcode;
-    switch (_selectedBarcodeFormat) {
-      case 'EAN-13':
-        barcode = Barcode.ean13();
-        break;
-      case 'EAN-8':
-        barcode = Barcode.ean8();
-        break;
-      case 'UPC-A':
-        barcode = Barcode.upcA();
-        break;
-      case 'Code-39':
-        barcode = Barcode.code39();
-        break;
-      case 'Code-128':
-      default:
-        barcode = Barcode.code128();
-        break;
-    }
+    final data = _generatedBarcodeData ?? '';
+    if (data.isEmpty) return const SizedBox.shrink();
 
-    final svgString = barcode.toSvg(
-      _generatedBarcodeData!,
+    return SvgPicture.string(
+      _barcodeSvg(data, _selectedBarcodeFormat),
       width: 200,
       height: 80,
     );
+  }
 
-    return SvgPicture.string(svgString, width: 200, height: 80);
+  String _barcodeSvg(String data, String? format) {
+    try {
+      late Barcode barcode;
+      var payload = data;
+      switch (format) {
+        case 'EAN-13':
+          barcode = Barcode.ean13();
+          payload = _withValidChecksum(data, 13);
+          break;
+        case 'EAN-8':
+          barcode = Barcode.ean8();
+          payload = _withValidChecksum(data, 8);
+          break;
+        case 'UPC-A':
+          barcode = Barcode.upcA();
+          payload = _withValidChecksum(data, 12);
+          break;
+        case 'Code-39':
+          barcode = Barcode.code39();
+          payload = data.toUpperCase().replaceAll(
+            RegExp(r'[^A-Z0-9\-\.\ \$\/\+\%]'),
+            '',
+          );
+          if (payload.isEmpty) payload = '0';
+          break;
+        case 'Code-128':
+        default:
+          barcode = Barcode.code128();
+          break;
+      }
+      return barcode.toSvg(payload, width: 200, height: 80);
+    } catch (_) {
+      return Barcode.code128().toSvg(data, width: 200, height: 80);
+    }
   }
 
   Widget _datePicker({
@@ -2402,23 +2410,15 @@ class _AddProductPageState extends State<_AddProductPage> {
         ),
         _sectionHeader('Tax', Icons.receipt_long_outlined),
         _field(
-          label: 'Tax Rate (%)',
-          child: TextFormField(
-            controller: _taxRateCtrl,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: _dec(hint: '0', suffix: '%'),
-            style: const TextStyle(fontSize: 13, color: Colors.black),
+          label: 'Tax class',
+          child: TaxRateField(
+            value: double.tryParse(_taxRateCtrl.text) ?? 0,
+            onRateChanged: (r) {
+              _taxRateCtrl.text = r.toString();
+              setState(() {});
+            },
+            onTypeChanged: (t) => setState(() => _selectedTaxType = t),
           ),
-        ),
-        _dropdownWithAdd<String>(
-          label: 'Tax Type',
-          hint: 'Select Tax Type',
-          value: _selectedTaxType,
-          items: _taxTypes,
-          labelKey: 'name',
-          valueKey: 'name',
-          onChanged: (v) => setState(() => _selectedTaxType = v),
-          settingsCategory: 'taxType',
         ),
         _sectionHeader('Stock Information', Icons.inventory_outlined),
         _dropdownWithAdd<String>(
@@ -3289,39 +3289,59 @@ class _AddProductPageState extends State<_AddProductPage> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
 
+    num? parseNum(String raw) {
+      final t = raw.trim();
+      if (t.isEmpty) return null;
+      return num.tryParse(t);
+    }
+
+    int? parseIntVal(String raw) {
+      final n = parseNum(raw);
+      return n?.toInt();
+    }
+
+    final barcode = (_generatedBarcodeData ?? _barcodeCtrl.text).trim();
+
     final payload = <String, dynamic>{
       'name': _nameCtrl.text.trim(),
       'sku': _skuCtrl.text.trim(),
-      'barcodeNumber': _barcodeCtrl.text.trim(),
-      'description': _descCtrl.text.trim(),
-      'tags': _tagsCtrl.text.trim(),
+      if (barcode.isNotEmpty) 'barcodeNumber': barcode,
+      if (_descCtrl.text.trim().isNotEmpty) 'description': _descCtrl.text.trim(),
+      if (_tagsCtrl.text.trim().isNotEmpty) 'tags': _tagsCtrl.text.trim(),
       'categoryId': _selectedCategoryId,
-      'costPrice': _costCtrl.text.trim(),
-      'sellingPrice': _sellCtrl.text.trim(),
-      'landingCost': _landingCostCtrl.text.trim(),
+      'costPrice': parseNum(_costCtrl.text) ?? 0,
+      'sellingPrice': parseNum(_sellCtrl.text) ?? 0,
+      if (parseNum(_landingCostCtrl.text) != null)
+        'landingCost': parseNum(_landingCostCtrl.text),
       'currencyCode': _currency,
-      'currencyName': _currencyName,
-      'currencySymbol': _currencySymbol,
-      'taxRate': _taxRateCtrl.text.trim(),
-      'currentStock': _stockCtrl.text.trim(),
-      'minimumStock': _minStockCtrl.text.trim(),
-      'maximumStock': _maxStockCtrl.text.trim(),
-      'reorderPoint': _reorderPointCtrl.text.trim(),
-      'leadTimeDays': _leadTimeCtrl.text.trim(),
-      'brandName': _brandCtrl.text.trim(),
-      'modelNumber': _modelCtrl.text.trim(),
-      'supplierSku': _supplierSkuCtrl.text.trim(),
-      'palletNumber': _palletCtrl.text.trim(),
-      'shelfNumber': _shelfCtrl.text.trim(),
-      'temperatureMin': _tempMinCtrl.text.trim(),
-      'temperatureMax': _tempMaxCtrl.text.trim(),
-      'weight': _weightCtrl.text.trim(),
-      'length': _lengthCtrl.text.trim(),
-      'width': _widthCtrl.text.trim(),
-      'height': _heightCtrl.text.trim(),
-      'color': _colorCtrl.text.trim(),
-      'material': _materialCtrl.text.trim(),
-      'finish': _finishCtrl.text.trim(),
+      if (parseNum(_taxRateCtrl.text) != null) 'taxRate': parseNum(_taxRateCtrl.text),
+      if (parseIntVal(_stockCtrl.text) != null)
+        'currentStock': parseIntVal(_stockCtrl.text),
+      if (parseIntVal(_minStockCtrl.text) != null)
+        'minimumStock': parseIntVal(_minStockCtrl.text),
+      if (parseIntVal(_maxStockCtrl.text) != null)
+        'maximumStock': parseIntVal(_maxStockCtrl.text),
+      if (parseIntVal(_reorderPointCtrl.text) != null)
+        'reorderPoint': parseIntVal(_reorderPointCtrl.text),
+      if (parseIntVal(_leadTimeCtrl.text) != null)
+        'leadTimeDays': parseIntVal(_leadTimeCtrl.text),
+      if (_brandCtrl.text.trim().isNotEmpty) 'brandName': _brandCtrl.text.trim(),
+      if (_modelCtrl.text.trim().isNotEmpty) 'modelNumber': _modelCtrl.text.trim(),
+      if (_supplierSkuCtrl.text.trim().isNotEmpty)
+        'supplierSku': _supplierSkuCtrl.text.trim(),
+      if (_palletCtrl.text.trim().isNotEmpty) 'palletNumber': _palletCtrl.text.trim(),
+      if (_shelfCtrl.text.trim().isNotEmpty) 'shelfNumber': _shelfCtrl.text.trim(),
+      if (parseNum(_tempMinCtrl.text) != null)
+        'temperatureMin': parseNum(_tempMinCtrl.text),
+      if (parseNum(_tempMaxCtrl.text) != null)
+        'temperatureMax': parseNum(_tempMaxCtrl.text),
+      if (parseNum(_weightCtrl.text) != null) 'weight': parseNum(_weightCtrl.text),
+      if (parseNum(_lengthCtrl.text) != null) 'length': parseNum(_lengthCtrl.text),
+      if (parseNum(_widthCtrl.text) != null) 'width': parseNum(_widthCtrl.text),
+      if (parseNum(_heightCtrl.text) != null) 'height': parseNum(_heightCtrl.text),
+      if (_colorCtrl.text.trim().isNotEmpty) 'color': _colorCtrl.text.trim(),
+      if (_materialCtrl.text.trim().isNotEmpty) 'material': _materialCtrl.text.trim(),
+      if (_finishCtrl.text.trim().isNotEmpty) 'finish': _finishCtrl.text.trim(),
       'hasExpiry': _hasExpiry,
       'isBatchManaged': _isBatchManaged,
       'isSerialManaged': _isSerialManaged,
@@ -3329,42 +3349,45 @@ class _AddProductPageState extends State<_AddProductPage> {
       'isBulkManaged': _isBulkManaged,
       'hasIndividualTracking': _hasIndividualTracking,
       'bulkUnit': _bulkUnit,
-      'batchNumber': _batchNumberCtrl.text.trim(),
-      'shelfLifeDays': _shelfLifeCtrl.text.trim(),
-      'defaultQuantityPerBatch': _defaultBatchQtyCtrl.text.trim(),
-      'hsCode': _hsCodeCtrl.text.trim(),
+      if (_batchNumberCtrl.text.trim().isNotEmpty)
+        'batchNumber': _batchNumberCtrl.text.trim(),
+      if (parseIntVal(_shelfLifeCtrl.text) != null)
+        'shelfLifeDays': parseIntVal(_shelfLifeCtrl.text),
+      if (parseIntVal(_defaultBatchQtyCtrl.text) != null)
+        'defaultQuantityPerBatch': parseIntVal(_defaultBatchQtyCtrl.text),
+      if (_hsCodeCtrl.text.trim().isNotEmpty) 'hsCode': _hsCodeCtrl.text.trim(),
       'countryOfOriginName': _countryOfOrigin,
-      'countryOfOriginFlag': _countryFlagEmoji,
-      'freightClass': _freightClassCtrl.text.trim(),
-      'stackingLimit': _stackingLimitCtrl.text.trim(),
+      if (_freightClassCtrl.text.trim().isNotEmpty)
+        'freightClass': _freightClassCtrl.text.trim(),
+      if (parseIntVal(_stackingLimitCtrl.text) != null)
+        'stackingLimit': parseIntVal(_stackingLimitCtrl.text),
       'dangerousGoods': _dangerousGoods,
-      'unNumber': _unNumberCtrl.text.trim(),
-      'handlingInstructions': _handlingCtrl.text.trim(),
-      'warrantyPeriod': _warrantyPeriodCtrl.text.trim(),
+      if (_unNumberCtrl.text.trim().isNotEmpty) 'unNumber': _unNumberCtrl.text.trim(),
+      if (_handlingCtrl.text.trim().isNotEmpty)
+        'handlingInstructions': _handlingCtrl.text.trim(),
+      if (parseIntVal(_warrantyPeriodCtrl.text) != null)
+        'warrantyPeriod': parseIntVal(_warrantyPeriodCtrl.text),
       'warrantyUnit': _warrantyUnit,
       'isReturnable': _isReturnable,
-      'returnDays': _returnDaysCtrl.text.trim(),
-      'notes': _notesCtrl.text.trim(),
-      if (_generatedBarcodeData != null) 'barcodeNumber': _generatedBarcodeData,
-      if (_selectedBarcodeFormat != null)
-        'barcodeFormat': _selectedBarcodeFormat,
+      if (parseIntVal(_returnDaysCtrl.text) != null)
+        'returnDays': parseIntVal(_returnDaysCtrl.text),
+      if (_notesCtrl.text.trim().isNotEmpty) 'notes': _notesCtrl.text.trim(),
+      if (_selectedBarcodeFormat != null) 'barcodeFormat': _selectedBarcodeFormat,
       if (_selectedProductType != null) 'productType': _selectedProductType,
       if (_selectedTaxType != null) 'taxType': _selectedTaxType,
       if (_selectedStockUnit != null) 'stockUnitName': _selectedStockUnit,
-      if (_selectedSupplierId != null) 'supplierId': _selectedSupplierId,
-      if (_selectedSubCategoryId != null)
+      if (_selectedSupplierId != null && _selectedSupplierId!.isNotEmpty)
+        'supplierId': _selectedSupplierId,
+      if (_selectedSubCategoryId != null && _selectedSubCategoryId!.isNotEmpty)
         'subCategoryId': _selectedSubCategoryId,
-      if (_selectedRackLocation != null)
-        'rackLocationName': _selectedRackLocation,
+      if (_selectedRackLocation != null) 'rackLocationName': _selectedRackLocation,
       if (_selectedZone != null) 'zoneName': _selectedZone,
       if (_selectedStorageCondition != null)
         'storageConditionName': _selectedStorageCondition,
       if (_selectedWeightUnit != null) 'weightUnitName': _selectedWeightUnit,
-      if (_selectedDimensionUnit != null)
-        'dimensionUnit': _selectedDimensionUnit,
+      if (_selectedDimensionUnit != null) 'dimensionUnit': _selectedDimensionUnit,
       if (_selectedSize != null) 'size': _selectedSize,
-      if (_selectedShippingClass != null)
-        'shippingClass': _selectedShippingClass,
+      if (_selectedShippingClass != null) 'shippingClass': _selectedShippingClass,
       if (_expiryDate != null) 'expiryDate': _expiryDate!.toIso8601String(),
       if (_manufacturingDate != null)
         'manufacturingDate': _manufacturingDate!.toIso8601String(),
@@ -3372,8 +3395,12 @@ class _AddProductPageState extends State<_AddProductPage> {
 
     bool success;
     if (_isEditing) {
+      final productId = (widget.editingProduct!['id'] ??
+              widget.editingProduct!['_id'] ??
+              '')
+          .toString();
       success = await _c.updateProduct(
-        widget.editingProduct!['_id'] ?? widget.editingProduct!['id'] ?? '',
+        productId,
         payload,
         imagePaths: _newImagePaths,
         existingImages: _existingImages,
@@ -3405,7 +3432,11 @@ class _AddProductPageState extends State<_AddProductPage> {
     } else {
       Get.snackbar(
         'Error',
-        _isEditing ? 'Failed to update product.' : 'Failed to create product.',
+        _c.lastSubmitError.isNotEmpty
+            ? _c.lastSubmitError
+            : (_isEditing
+                  ? 'Failed to update product.'
+                  : 'Failed to create product.'),
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: kDanger,
         colorText: Colors.black,

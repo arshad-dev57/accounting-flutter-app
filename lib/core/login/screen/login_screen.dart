@@ -22,7 +22,12 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    controller = Get.put(LoginController());
+    if (Get.isRegistered<LoginController>()) {
+      controller = Get.find<LoginController>();
+      controller.ensureFreshControllers();
+    } else {
+      controller = Get.put(LoginController(), permanent: true);
+    }
     _keyboardFocusNode = FocusNode();
   }
 
@@ -124,32 +129,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // Logo lockup
-                      Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: kPrimary,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.account_balance,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Text(
-                            'BisonsTechs',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1.8,
-                            ),
-                          ),
-                        ],
+                      Container(
+                        height: 96,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Image.asset(
+                          'assets/logo.png',
+                          fit: BoxFit.contain,
+                        ),
                       ),
                       const SizedBox(height: 20),
 
@@ -252,7 +245,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Center(
           child: Image.asset(
             'assets/logo.png',
-            height: isTablet || isWeb ? 72 : 64,
+            height: isTablet || isWeb ? 120 : 96,
             fit: BoxFit.contain,
             errorBuilder: (_, __, ___) => Icon(
               Icons.account_balance_rounded,

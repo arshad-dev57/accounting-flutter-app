@@ -121,7 +121,7 @@ class SettingsScreen extends StatelessWidget {
                   title: 'Product Settings',
                   icon: Icons.inventory_2_outlined,
                   description:
-                      'Manage product-related settings like units, brands, tax rates',
+                      'Manage product-related settings like units and brands. Tax rates live in Tax Compliance.',
                   categories: productSettingCategories,
                   ctrl: ctrl,
                 ),
@@ -260,6 +260,23 @@ class _SettingsTab extends StatelessWidget {
         ),
 
         const SizedBox(height: 12),
+
+        if (title == 'Product Settings')
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: ListTile(
+              tileColor: kWhite,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: kBorder),
+              ),
+              leading: const Icon(Icons.percent, color: kPrimary),
+              title: const Text('Tax rates live in Tax Compliance'),
+              subtitle: const Text('Country packs, inclusive/exclusive, exemptions'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Get.toNamed('/tax'),
+            ),
+          ),
 
         // ─── Category Chips ──────────────────────────────────────
         SizedBox(

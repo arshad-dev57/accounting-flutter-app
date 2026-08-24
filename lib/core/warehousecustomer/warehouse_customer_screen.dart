@@ -847,6 +847,7 @@ class _CustomerDetailSheetState extends State<_CustomerDetailSheet> {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Row(
           children: [
@@ -1237,22 +1238,37 @@ class _EditCustomerFormState extends State<_EditCustomerForm> {
     super.dispose();
   }
 
+  Future<void> _save() async {
+    widget.controller.nameController.text = _nameController.text;
+    widget.controller.emailController.text = _emailController.text;
+    widget.controller.phoneController.text = _phoneController.text;
+    widget.controller.companyController.text = _companyController.text;
+    widget.controller.taxIdController.text = _taxIdController.text;
+    widget.controller.notesController.text = _notesController.text;
+    widget.controller.customerType.value = _customerType;
+    widget.controller.status.value = _status;
+    final success = await widget.controller.updateCustomer(widget.customer.id);
+    if (success) widget.onSaved();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Row(
           children: [
-            const Text(
-              'Edit Customer',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: kPrimary,
+            const Expanded(
+              child: Text(
+                'Edit Customer',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: kPrimary,
+                ),
               ),
             ),
-            const Spacer(),
             IconButton(
               onPressed: widget.onCancel,
               icon: const Icon(Icons.close),
@@ -1260,11 +1276,7 @@ class _EditCustomerFormState extends State<_EditCustomerForm> {
           ],
         ),
         const SizedBox(height: 16),
-        Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                TextField(
+        TextField(
                   controller: _nameController,
                   decoration: const InputDecoration(
                     labelText: 'Customer Name *',
@@ -1434,47 +1446,41 @@ class _EditCustomerFormState extends State<_EditCustomerForm> {
                     const SizedBox(width: 12),
                     Expanded(
                       flex: 2,
-                      child: ElevatedButton(
-                        onPressed: widget.controller.isSubmitting.value
-                            ? null
-                            : () async {
-                                final success = await widget.controller
-                                    .updateCustomer(widget.customer.id);
-                                if (success) widget.onSaved();
-                              },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: kSuccess,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                      child: Obx(
+                        () => ElevatedButton(
+                          onPressed: widget.controller.isSubmitting.value
+                              ? null
+                              : _save,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: kSuccess,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            elevation: 0,
                           ),
-                          elevation: 0,
+                          child: widget.controller.isSubmitting.value
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text(
+                                  'Update',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                         ),
-                        child: widget.controller.isSubmitting.value
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Text(
-                                'Update',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-        ),
       ],
     );
   }

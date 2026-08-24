@@ -13,6 +13,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
@@ -62,8 +63,27 @@ class ExpenseController extends GetxController {
     'Maintenance',
     'Software',
     'Taxes',
+    'Miscellaneous',
     'Other',
   ];
+  final RxList<String> customExpenseTypes = <String>[].obs;
+
+  List<String> get formExpenseTypes {
+    final types = expenseTypes.where((t) => t != 'All').toList();
+    for (final custom in customExpenseTypes) {
+      if (!types.contains(custom)) types.add(custom);
+    }
+    return types;
+  }
+
+  void rememberCustomExpenseType(String type) {
+    final trimmed = type.trim();
+    if (trimmed.isEmpty) return;
+    if (expenseTypes.contains(trimmed)) return;
+    if (!customExpenseTypes.contains(trimmed)) {
+      customExpenseTypes.add(trimmed);
+    }
+  }
 
   // Summary data
   var totalExpense = 0.0.obs;
@@ -80,17 +100,27 @@ class ExpenseController extends GetxController {
   // Scroll controller for lazy loading
   final ScrollController scrollController = ScrollController();
 
+  Worker? _fyWorker;
+
   @override
   void onInit() {
     super.onInit();
     searchController.addListener(_onSearchChanged);
-    loadAllData();
-    loadSummary();
     _setupScrollListener();
+    Future(() async {
+      await waitForFiscalYearReady();
+      loadAllData();
+      loadSummary();
+    });
+    _fyWorker = listenFiscalYearChanges(() {
+      loadAllData();
+      loadSummary();
+    });
   }
 
   @override
   void onClose() {
+    _fyWorker?.dispose();
     searchController.removeListener(_onSearchChanged);
     searchController.dispose();
     scrollController.dispose();
@@ -370,6 +400,7 @@ class ExpenseController extends GetxController {
         params['startDate'] = DateFormat('yyyy-MM-dd').format(startDate.value!);
         params['endDate'] = DateFormat('yyyy-MM-dd').format(endDate.value!);
       }
+      putFiscalYearId(params);
 
       print('🔍 [loadExpenses] Loading expenses with params: $params');
       final response = await _api.get('/api/expenses', queryParameters: params);
@@ -488,6 +519,7 @@ class ExpenseController extends GetxController {
         params['startDate'] = DateFormat('yyyy-MM-dd').format(startDate.value!);
         params['endDate'] = DateFormat('yyyy-MM-dd').format(endDate.value!);
       }
+      putFiscalYearId(params);
 
       final response = await _api.get(
         '/api/expenses/summary',
@@ -625,6 +657,104 @@ class ExpenseController extends GetxController {
       if (Get.isDialogOpen ?? false) Get.back();
       print('Error creating expense: $e');
       _showError('Error creating expense');
+    } finally {
+      isSaving.value = false;
+    }
+  }
+
+  // ==================== UPDATE EXPENSE ====================
+  Future<void> updateExpense({
+    required String id,
+    required DateTime date,
+    required String expenseType,
+    required String? expenseAccountId,
+    required String? vendorId,
+    required List<Map<String, dynamic>> items,
+    required double? amount,
+    required double taxRate,
+    required String description,
+    required String reference,
+    required String paymentMethod,
+    required String? bankAccountId,
+  }) async {
+    Get.dialog(
+      Center(
+        child: Card(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: kPrimary,
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Updating expense...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kText,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+
+    try {
+      isSaving.value = true;
+      final Map<String, dynamic> expenseData = {
+        'date': DateFormat('yyyy-MM-dd').format(date),
+        'expenseType': expenseType,
+        'expenseAccountId': expenseAccountId,
+        'vendorId': vendorId,
+        'items': items,
+        'amount': amount ?? 0,
+        'taxRate': taxRate,
+        'description': description,
+        'reference': reference,
+        'paymentMethod': paymentMethod,
+        'bankAccountId': bankAccountId,
+      };
+
+      final response = await _api.put('/api/expenses/$id', body: expenseData);
+
+      Get.back();
+
+      if (response.success) {
+        final responseData = response.data;
+        if (responseData['success'] == true) {
+          AppSnackbar.success(
+            kSuccess,
+            'Success',
+            'Expense updated across ledger and reports',
+          );
+          _resetAndReload();
+          loadSummary();
+          loadBankAccounts();
+        } else {
+          _showError(responseData['message'] ?? 'Failed to update expense');
+        }
+      } else {
+        _showError(response.data['message'] ?? 'Failed to update expense');
+      }
+    } catch (e) {
+      if (Get.isDialogOpen ?? false) Get.back();
+      print('Error updating expense: $e');
+      _showError('Error updating expense');
     } finally {
       isSaving.value = false;
     }
@@ -1297,6 +1427,8 @@ class ExpenseController extends GetxController {
         return '#2980B9';
       case 'Taxes':
         return '#8E44AD';
+      case 'Miscellaneous':
+        return '#95A5A6';
       default:
         return '#7A8FA6';
     }
@@ -1326,6 +1458,8 @@ class ExpenseController extends GetxController {
         return Icons.computer;
       case 'Taxes':
         return Icons.receipt;
+      case 'Miscellaneous':
+        return Icons.category_outlined;
       default:
         return Icons.money_off;
     }

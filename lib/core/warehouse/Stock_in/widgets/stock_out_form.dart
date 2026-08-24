@@ -22,9 +22,10 @@ class _StockOutFormState extends State<StockOutForm> {
   Map<String, dynamic>? _selectedProduct;
   final _quantityCtrl = TextEditingController();
   final _customerCtrl = TextEditingController();
-  final _reasonCtrl = TextEditingController();
   final _referenceCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
+  String _stockOutReason = 'damage_expiry';
+  List<Map<String, dynamic>> _stockOutReasons = [];
   String? _error;
 
   int get _currentStock => (_selectedProduct?['currentStock'] as int?) ?? 0;
@@ -32,10 +33,29 @@ class _StockOutFormState extends State<StockOutForm> {
   int get _remaining => _currentStock - _qty;
 
   @override
+  void initState() {
+    super.initState();
+    _loadReasons();
+  }
+
+  Future<void> _loadReasons() async {
+    final reasons = await widget.controller.fetchStockReasons();
+    if (!mounted) return;
+    setState(() {
+      _stockOutReasons = List<Map<String, dynamic>>.from(
+        reasons['stockOut'] as List? ?? [],
+      );
+      if (_stockOutReasons.isNotEmpty) {
+        _stockOutReason =
+            _stockOutReasons.first['value']?.toString() ?? 'damage_expiry';
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _quantityCtrl.dispose();
     _customerCtrl.dispose();
-    _reasonCtrl.dispose();
     _referenceCtrl.dispose();
     _notesCtrl.dispose();
     super.dispose();
@@ -55,15 +75,15 @@ class _StockOutFormState extends State<StockOutForm> {
       setState(() => _error = 'Insufficient stock. Available: $_currentStock');
       return;
     }
-    if (_reasonCtrl.text.trim().isEmpty) {
-      setState(() => _error = 'Reason is required');
+    if (_stockOutReason.isEmpty) {
+      setState(() => _error = 'Please select a stock out reason');
       return;
     }
 
     final ok = await widget.controller.removeStock(
       productId: _selectedProduct!['id'].toString(),
       quantity: _qty,
-      reason: _reasonCtrl.text.trim(),
+      stockOutReason: _stockOutReason,
       customerName: _customerCtrl.text.trim().isEmpty
           ? null
           : _customerCtrl.text.trim(),
@@ -76,7 +96,6 @@ class _StockOutFormState extends State<StockOutForm> {
         _selectedProduct = null;
         _quantityCtrl.clear();
         _customerCtrl.clear();
-        _reasonCtrl.clear();
         _referenceCtrl.clear();
         _notesCtrl.clear();
       });
@@ -169,14 +188,28 @@ class _StockOutFormState extends State<StockOutForm> {
             ),
           ),
           const SizedBox(height: 12),
-          TextField(
-            controller: _reasonCtrl,
+          DropdownButtonFormField<String>(
+            value: _stockOutReason,
             decoration: const InputDecoration(
-              labelText: 'Reason *',
-              hintText: 'e.g., Sales Order, Damaged',
+              labelText: 'Stock Out Reason *',
               border: OutlineInputBorder(),
               isDense: true,
             ),
+            items: _stockOutReasons
+                .map(
+                  (r) => DropdownMenuItem(
+                    value: r['value']?.toString() ?? '',
+                    child: Text(r['label']?.toString() ?? ''),
+                  ),
+                )
+                .toList(),
+            onChanged: (v) =>
+                setState(() => _stockOutReason = v ?? 'damage_expiry'),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Posts Dr expense / Cr Inventory automatically',
+            style: TextStyle(fontSize: 11, color: kSubText),
           ),
           const SizedBox(height: 12),
           TextField(

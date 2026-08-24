@@ -13,6 +13,7 @@ import 'package:BisonsTechs_app/Services/notification_Service.dart';
 import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:BisonsTechs_app/core/settings/controller/pdf_report_settings_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -327,6 +328,8 @@ class LoginOtpController extends GetxController {
         await PdfReportSettingsController.persistFromLogin(
           data['pdfReportSettings'] ?? user['pdfReportSettings'],
         );
+
+        await hydrateLocationsAfterAuth(user);
       } else {
         print('Warning: User data is null');
       }

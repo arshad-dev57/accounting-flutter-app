@@ -6,6 +6,7 @@ import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -22,7 +23,7 @@ class CashFlowController extends GetxController {
   var isLoading = true.obs;
   var hasError = false.obs;
   var errorMessage = ''.obs;
-  var selectedPeriod = 'This Month'.obs;
+  var selectedPeriod = 'This Year'.obs;
   var selectedDateRange = Rxn<DateTimeRange>();
 
   // Cash Flow Data
@@ -80,9 +81,7 @@ class CashFlowController extends GetxController {
       await _fiscalYearController.fetchFiscalYears();
     }
 
-    _fiscalYearWorker = ever(_fiscalYearController.selectedFiscalYear, (_) {
-      loadCashFlowData();
-    });
+    _fiscalYearWorker = listenFiscalYearChanges(loadCashFlowData);
 
     await loadCashFlowData();
   }

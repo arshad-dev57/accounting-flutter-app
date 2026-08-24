@@ -1,6 +1,7 @@
 // controllers/journal_entry_controller.dart
 
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
@@ -44,16 +45,23 @@ class JournalEntryController extends GetxController {
 
   final ApiClient _api = Get.find<ApiClient>();
 
+  Worker? _fyWorker;
+
   @override
   void onInit() {
     super.onInit();
-    fetchJournalEntries();
     fetchAccountsForDropdown();
     _setupScrollListener();
+    Future(() async {
+      await waitForFiscalYearReady();
+      fetchJournalEntries();
+    });
+    _fyWorker = listenFiscalYearChanges(fetchJournalEntries);
   }
 
   @override
   void onClose() {
+    _fyWorker?.dispose();
     scrollController.dispose();
     super.onClose();
   }
@@ -122,6 +130,7 @@ class JournalEntryController extends GetxController {
       if (searchQuery.value.isNotEmpty) {
         params['search'] = searchQuery.value;
       }
+      putFiscalYearId(params);
 
       final response = await _api.get(
         '/api/journal-entries',
@@ -192,6 +201,7 @@ class JournalEntryController extends GetxController {
         params['startDate'] = selectedDateRange.value!.start.toIso8601String();
         params['endDate'] = selectedDateRange.value!.end.toIso8601String();
       }
+      putFiscalYearId(params);
 
       final response = await _api.get(
         '/api/journal-entries',

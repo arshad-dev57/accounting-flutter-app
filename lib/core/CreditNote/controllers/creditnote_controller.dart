@@ -3,6 +3,7 @@
 
 import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'dart:io';
 import 'package:BisonsTechs_app/Utils/colors.dart';
@@ -58,16 +59,27 @@ class CreditNoteController extends GetxController {
   final ScrollController scrollController = ScrollController();
 
   @override
+  Worker? _fyWorker;
+
+  @override
   void onInit() {
     super.onInit();
     searchController.addListener(_onSearchChanged);
-    loadCreditNotesData(resetPage: true);
     loadCustomers();
-    loadSummary();
+    Future(() async {
+      await waitForFiscalYearReady();
+      loadCreditNotesData(resetPage: true);
+      loadSummary();
+    });
+    _fyWorker = listenFiscalYearChanges(() {
+      loadCreditNotesData(resetPage: true);
+      loadSummary();
+    });
   }
 
   @override
   void onClose() {
+    _fyWorker?.dispose();
     searchController.removeListener(_onSearchChanged);
     searchController.dispose();
     scrollController.dispose();

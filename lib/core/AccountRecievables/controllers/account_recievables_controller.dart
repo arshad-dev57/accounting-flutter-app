@@ -3,6 +3,7 @@
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -47,11 +48,23 @@ class AccountsReceivableController extends GetxController {
     return CurrencyUtils.format(amount);
   }
 
+  Worker? _fyWorker;
+
   @override
   void onInit() {
     super.onInit();
-    fetchAllData();
     fetchBankAccounts();
+    Future(() async {
+      await waitForFiscalYearReady();
+      fetchAllData();
+    });
+    _fyWorker = listenFiscalYearChanges(fetchAllData);
+  }
+
+  @override
+  void onClose() {
+    _fyWorker?.dispose();
+    super.onClose();
   }
 
   Future<void> fetchAllData() async {

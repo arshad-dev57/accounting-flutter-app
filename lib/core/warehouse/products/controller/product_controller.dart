@@ -28,6 +28,7 @@ class ProductsController extends GetxController {
   var categories = <Map<String, dynamic>>[].obs;
   var suppliers = <Map<String, dynamic>>[].obs;
   var isSubmitting = false.obs;
+  String lastSubmitError = '';
 
   // ─── Settings dropdowns ───────────────────────────────────────
   var productTypes = <Map<String, dynamic>>[].obs;
@@ -292,6 +293,27 @@ class ProductsController extends GetxController {
   }
 
   // ─── CRUD ─────────────────────────────────────────────────────
+  Map<String, String> _toFields(Map<String, dynamic> data) {
+    final fields = <String, String>{};
+    data.forEach((key, value) {
+      if (value == null) return;
+      if (value is String && value.trim().isEmpty) return;
+      fields[key] = value is bool || value is num ? value.toString() : value.toString();
+    });
+    return fields;
+  }
+
+  String _errorMessage(dynamic response, String fallback) {
+    final data = response.data;
+    if (data is Map && data['message'] != null) {
+      return data['message'].toString();
+    }
+    if (response.message != null && response.message.toString().isNotEmpty) {
+      return response.message.toString();
+    }
+    return fallback;
+  }
+
   Future<bool> createProduct(
     Map<String, dynamic> data, {
     List<String>? imagePaths,
@@ -299,11 +321,8 @@ class ProductsController extends GetxController {
   }) async {
     try {
       isSubmitting.value = true;
-      final fields = <String, String>{};
-      data.forEach((key, value) {
-        if (value == null) return;
-        fields[key] = value is bool || value is num ? value.toString() : value.toString();
-      });
+      lastSubmitError = '';
+      final fields = _toFields(data);
       fields['existingImages'] = jsonEncode(existingImages ?? <String>[]);
 
       final multiFilePaths = <String, List<String>>{};
@@ -311,7 +330,6 @@ class ProductsController extends GetxController {
         multiFilePaths['images'] = imagePaths;
       }
 
-      // Always multipart so Cloudinary image flow matches web/register
       final response = await _api.postMultipart(
         '/api/warehouse/products',
         fields: fields,
@@ -322,9 +340,11 @@ class ProductsController extends GetxController {
         refreshAll();
         return true;
       }
+      lastSubmitError = _errorMessage(response, 'Failed to create product.');
       return false;
     } catch (e) {
       debugPrint('Error creating product: $e');
+      lastSubmitError = e.toString();
       return false;
     } finally {
       isSubmitting.value = false;
@@ -339,11 +359,12 @@ class ProductsController extends GetxController {
   }) async {
     try {
       isSubmitting.value = true;
-      final fields = <String, String>{};
-      data.forEach((key, value) {
-        if (value == null) return;
-        fields[key] = value is bool || value is num ? value.toString() : value.toString();
-      });
+      lastSubmitError = '';
+      if (id.trim().isEmpty) {
+        lastSubmitError = 'Product id is missing.';
+        return false;
+      }
+      final fields = _toFields(data);
       fields['existingImages'] = jsonEncode(existingImages ?? <String>[]);
 
       final multiFilePaths = <String, List<String>>{};
@@ -361,9 +382,11 @@ class ProductsController extends GetxController {
         refreshAll();
         return true;
       }
+      lastSubmitError = _errorMessage(response, 'Failed to update product.');
       return false;
     } catch (e) {
       debugPrint('Error updating product: $e');
+      lastSubmitError = e.toString();
       return false;
     } finally {
       isSubmitting.value = false;

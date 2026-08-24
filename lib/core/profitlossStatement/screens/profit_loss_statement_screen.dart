@@ -16,7 +16,9 @@ class ProfitLossStatementScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(PLController());
-    final fiscalYearController = Get.put(FiscalYearController());
+    final fiscalYearController = Get.isRegistered<FiscalYearController>()
+        ? Get.find<FiscalYearController>()
+        : Get.put(FiscalYearController(), permanent: true);
 
     return Scaffold(
       backgroundColor: kBgLight,

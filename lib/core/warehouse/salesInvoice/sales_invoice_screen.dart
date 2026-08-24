@@ -2,6 +2,7 @@
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/core/tax/tax_rate_field.dart';
 import 'package:BisonsTechs_app/core/warehouse/salesInvoice/sales_invoice_model.dart';
 import 'package:BisonsTechs_app/core/warehouse/salesInvoice/salesinvoice_controller.dart';
 import 'package:flutter/material.dart';
@@ -688,21 +689,11 @@ class _CreateInvoiceWizard extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        flex: 1,
-                        child: TextFormField(
-                          initialValue: line.taxRate.toString(),
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: 'Tax%',
-                            isDense: true,
-                            border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 6,
-                            ),
-                          ),
-                          onChanged: (v) {
-                            final t = double.tryParse(v) ?? 0;
+                        flex: 2,
+                        child: TaxRateField(
+                          dense: true,
+                          value: line.taxRate,
+                          onRateChanged: (t) {
                             if (index < controller.lineDrafts.length) {
                               final updatedLine = controller.lineDrafts[index];
                               updatedLine.taxRate = t.clamp(0, 100);

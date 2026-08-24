@@ -10,7 +10,7 @@ import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/About/about_app_screen.dart';
 import 'package:BisonsTechs_app/core/About/privacypolicy_screen.dart';
 import 'package:BisonsTechs_app/core/About/termsofservice_screen.dart';
-import 'package:BisonsTechs_app/core/Contact/Screens/Contact_Screen.dart';
+import 'package:BisonsTechs_app/core/contactsupport/contact_support_screen.dart';
 import 'package:BisonsTechs_app/core/Feedback/feedback_screen.dart';
 import 'package:BisonsTechs_app/core/ReportIsuue/Report_issue_screen.dart';
 import 'package:BisonsTechs_app/core/Sales/screens/sales_dashbaord_screen.dart';
@@ -26,6 +26,8 @@ import 'package:BisonsTechs_app/core/purchasedashboard/purchase_dashboard_screen
 import 'package:BisonsTechs_app/core/settings/screens/currency_screen.dart';
 import 'package:BisonsTechs_app/core/settings/screens/pdf_report_settings_screen.dart';
 import 'package:BisonsTechs_app/core/support/screens/support_tickets_screen.dart';
+import 'package:BisonsTechs_app/core/tax/tax_screen.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -241,6 +243,9 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
         ? Get.find<SupportController>()
         : Get.put(SupportController());
     _loadBusinessLogo();
+    PermissionService.to.loadUserData();
+    // Load FY here so Accounting dashboard does not wait on first open.
+    ensureFiscalYearController()?.ensureFiscalYearsLoaded();
   }
   
   Future<void> _loadBusinessLogo() async {
@@ -286,7 +291,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
       'btnText': 'Open Warehouse',
       'imageUrl':
           'https://images.unsplash.com/photo-1553413077-190dd305871c?w=1200&q=80',
-      'accentColor': const Color(0xFF7C4DFF),
+      'accentColor': const Color(0xFF014582),
       'bgColor': const Color(0xFF1A1A2E),
     },
     {
@@ -312,12 +317,12 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
       drawer: isMobile ? _buildDrawer() : null,
       body: Column(
         children: [
-          _buildSubscriptionStrip(),
+          if (PermissionService.to.isAdmin) _buildSubscriptionStrip(),
           Expanded(
             child: Stack(
               children: [
                 isMobile
-                    ? _buildBanner(isMobile: true)
+                    ? _buildHomeBody(isMobile: true)
                     : Row(
                         children: [
                           Padding(
@@ -331,10 +336,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                                 right: 12,
                                 bottom: 12,
                               ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(16),
-                                child: _buildBanner(isMobile: false),
-                              ),
+                              child: _buildHomeBody(isMobile: false),
                             ),
                           ),
                         ],
@@ -484,19 +486,31 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                                     _businessLogo,
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) {
-                                      return Icon(Icons.account_balance, color: kPrimary, size: 20);
+                                      return Image.asset(
+                                        'assets/logo.png',
+                                        height: 20,
+                                        fit: BoxFit.contain,
+                                      );
                                     },
                                   )
                                 : Image.file(
                                     File(_businessLogo),
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) {
-                                      return Icon(Icons.account_balance, color: kPrimary, size: 20);
+                                      return Image.asset(
+                                        'assets/logo.png',
+                                        height: 20,
+                                        fit: BoxFit.contain,
+                                      );
                                     },
                                   ),
                           ),
                         )
-                      : Icon(Icons.account_balance, color: kPrimary, size: 20),
+                      : Image.asset(
+                          'assets/logo.png',
+                          height: 22,
+                          fit: BoxFit.contain,
+                        ),
                   const SizedBox(width: 6),
                   Obx(
                     () => Text(
@@ -532,19 +546,31 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                                   _businessLogo,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
-                                    return Icon(Icons.account_balance, color: kPrimary, size: 18);
+                                    return Image.asset(
+                                      'assets/logo.png',
+                                      height: 18,
+                                      fit: BoxFit.contain,
+                                    );
                                   },
                                 )
                               : Image.file(
                                   File(_businessLogo),
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
-                                    return Icon(Icons.account_balance, color: kPrimary, size: 18);
+                                    return Image.asset(
+                                      'assets/logo.png',
+                                      height: 18,
+                                      fit: BoxFit.contain,
+                                    );
                                   },
                                 ),
                         ),
                       )
-                    : Icon(Icons.account_balance, color: kPrimary, size: 18),
+                    : Image.asset(
+                        'assets/logo.png',
+                        height: 20,
+                        fit: BoxFit.contain,
+                      ),
                 const SizedBox(width: 6),
                 Obx(
                   () => Text(
@@ -1010,26 +1036,74 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                 ),
               ),
             ),
-          if (PermissionService.to.hasModuleAccess('warehouse'))
-            _SidebarItemWidget(
-              icon: Icons.warehouse_outlined,
-              label: 'Warehouse',
-              index: 1,
-              selectedIndex: _selectedIndex,
-              collapsed: collapsed,
-              showArrow: true,
-              onTap: _navigateToWarehouse,
-            ),
-          if (PermissionService.to.hasModuleAccess('accounting'))
-            _SidebarItemWidget(
-              icon: Icons.account_balance_outlined,
-              label: 'Accounting',
-              index: 2,
-              selectedIndex: _selectedIndex,
-              collapsed: collapsed,
-              showArrow: true,
-              onTap: _navigateToAccounting,
-            ),
+          Obx(() {
+            final perms = PermissionService.to;
+            perms.user.value;
+            perms.loading.value;
+            return Column(
+              children: [
+                if (perms.canAccessModule('accounting'))
+                  _SidebarItemWidget(
+                    icon: Icons.account_balance_outlined,
+                    label: 'Accounting',
+                    index: 2,
+                    selectedIndex: _selectedIndex,
+                    collapsed: collapsed,
+                    showArrow: true,
+                    onTap: _navigateToAccounting,
+                  ),
+                if (perms.canAccessModule('warehouse'))
+                  _SidebarItemWidget(
+                    icon: Icons.warehouse_outlined,
+                    label: 'Warehouse',
+                    index: 1,
+                    selectedIndex: _selectedIndex,
+                    collapsed: collapsed,
+                    showArrow: true,
+                    onTap: _navigateToWarehouse,
+                  ),
+                if (perms.canAccessModule('sales'))
+                  _SidebarItemWidget(
+                    icon: Icons.point_of_sale_outlined,
+                    label: 'Sales',
+                    index: 3,
+                    selectedIndex: _selectedIndex,
+                    collapsed: collapsed,
+                    showArrow: true,
+                    onTap: _navigateToSales,
+                  ),
+                if (perms.canAccessModule('purchases'))
+                  _SidebarItemWidget(
+                    icon: Icons.shopping_cart_outlined,
+                    label: 'Purchase',
+                    index: 4,
+                    selectedIndex: _selectedIndex,
+                    collapsed: collapsed,
+                    showArrow: true,
+                    onTap: _navigateToPurchase,
+                  ),
+                if (perms.canAccessModule('users'))
+                  _SidebarItemWidget(
+                    icon: Icons.people_outline,
+                    label: 'Users',
+                    index: 6,
+                    selectedIndex: _selectedIndex,
+                    collapsed: collapsed,
+                    showArrow: true,
+                    onTap: _navigateToUsers,
+                  ),
+              ],
+            );
+          }),
+          _SidebarItemWidget(
+            icon: Icons.percent,
+            label: 'Tax Compliance',
+            index: 5,
+            selectedIndex: _selectedIndex,
+            collapsed: collapsed,
+            showArrow: true,
+            onTap: () => Get.to(() => const TaxComplianceScreen()),
+          ),
           const Spacer(),
           if (!collapsed)
             Padding(
@@ -1089,12 +1163,14 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                     'accounting',
                     'sales',
                     'purchases',
+                    'accounting',
                   ],
                   items: const [
                     ('Warehouse', Mdi.warehouse, '__warehouse'),
                     ('Accounting', Mdi.account_balance, '__accounting'),
                     ('Sales', Mdi.cart_outline, '__sales'),
                     ('Purchases', Mdi.cart_plus, '__purchase'),
+                    ('Tax Compliance', Mdi.percent, '__tax'),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -1144,14 +1220,15 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                   currentRoute: '',
                   items: const [('Feedback', Mdi.feedback, '__feedback')],
                 ),
-                _NavSection(
-                  title: 'Subscription',
-                  icon: Mdi.crown,
-                  currentRoute: '',
-                  items: const [
-                    ('Subscription Plans', Mdi.crown, '__subscription'),
-                  ],
-                ),
+                if (PermissionService.to.isAdmin)
+                  _NavSection(
+                    title: 'Subscription',
+                    icon: Mdi.crown,
+                    currentRoute: '',
+                    items: const [
+                      ('Subscription Plans', Mdi.crown, '__subscription'),
+                    ],
+                  ),
                 _NavSection(
                   title: 'About',
                   icon: Mdi.information,
@@ -1171,17 +1248,121 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
     );
   }
 
+  Widget _buildHomeBody({required bool isMobile}) {
+    final heroHeight = isMobile ? 210.0 : 280.0;
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(isMobile ? 16 : 0, isMobile ? 12 : 0, isMobile ? 16 : 0, 0),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: _buildBanner(isMobile: isMobile, height: heroHeight),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(isMobile ? 16 : 4, 20, isMobile ? 16 : 4, 28),
+            child: _buildProductGrid(isMobile: isMobile),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProductGrid({required bool isMobile}) {
+    return Obx(() {
+      final perms = PermissionService.to;
+      perms.user.value;
+      perms.loading.value;
+
+      final products = <_HomeProduct>[
+        if (perms.canAccessModule('accounting'))
+          _HomeProduct(
+            title: 'Accounting',
+            subtitle: 'Books, invoices, reports & ledgers',
+            icon: Icons.account_balance_outlined,
+            color: kPrimary,
+            onTap: _navigateToAccounting,
+          ),
+        if (perms.canAccessModule('warehouse'))
+          _HomeProduct(
+            title: 'Warehouse',
+            subtitle: 'Stock, products & inventory',
+            icon: Icons.warehouse_outlined,
+            color: const Color(0xFF0891B2),
+            onTap: _navigateToWarehouse,
+          ),
+        if (perms.canAccessModule('sales'))
+          _HomeProduct(
+            title: 'Sales',
+            subtitle: 'Orders, invoices & collections',
+            icon: Icons.point_of_sale_outlined,
+            color: const Color(0xFF22A869),
+            onTap: _navigateToSales,
+          ),
+        if (perms.canAccessModule('purchases'))
+          _HomeProduct(
+            title: 'Purchase',
+            subtitle: 'Bills, vendors & payments',
+            icon: Icons.shopping_cart_outlined,
+            color: const Color(0xFFF59E0B),
+            onTap: _navigateToPurchase,
+          ),
+        if (perms.canAccessModule('users'))
+          _HomeProduct(
+            title: 'Users',
+            subtitle: 'Team access & permissions',
+            icon: Icons.people_outline,
+            color: const Color(0xFF7C3AED),
+            onTap: _navigateToUsers,
+          ),
+      ];
+
+      return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Products',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF1A1D2E),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Open a workspace to continue',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey.shade500,
+          ),
+        ),
+        const SizedBox(height: 14),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: products.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: isMobile ? 2 : 3,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: isMobile ? 0.92 : 1.35,
+          ),
+          itemBuilder: (context, index) => _ProductCard(product: products[index]),
+        ),
+      ],
+    );
+    });
+  }
+
   // ─── Banner ───────────────────────────────────────────────────────────
 
-  Widget _buildBanner({required bool isMobile}) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final double bannerHeight = constraints.maxHeight > 0
-            ? constraints.maxHeight
-            : (isMobile ? 400 : 600);
-
+  Widget _buildBanner({required bool isMobile, required double height}) {
         return SizedBox(
-          height: bannerHeight,
+          height: height,
           width: double.infinity,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
@@ -1189,7 +1370,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
               carouselController: _carouselController,
               itemCount: _banners.length,
               options: CarouselOptions(
-                height: bannerHeight,
+                height: height,
                 autoPlay: true,
                 autoPlayInterval: const Duration(seconds: 4),
                 autoPlayAnimationDuration: const Duration(milliseconds: 600),
@@ -1232,9 +1413,11 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                       ),
                     ),
                     Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isMobile ? 24 : 52,
-                        vertical: isMobile ? 24 : 48,
+                      padding: EdgeInsets.fromLTRB(
+                        isMobile ? 18 : 40,
+                        isMobile ? 16 : 28,
+                        isMobile ? 18 : 40,
+                        isMobile ? 28 : 36,
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1263,56 +1446,25 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                               ),
                             ),
                           ),
-                          SizedBox(height: isMobile ? 14 : 20),
+                          SizedBox(height: isMobile ? 8 : 14),
                           Text(
                             b['title'] as String,
                             style: TextStyle(
-                              fontSize: isMobile ? 28 : 42,
+                              fontSize: isMobile ? 22 : 34,
                               fontWeight: FontWeight.w800,
                               color: Colors.white,
                               height: 1.15,
                             ),
                           ),
-                          SizedBox(height: isMobile ? 10 : 16),
+                          SizedBox(height: isMobile ? 6 : 10),
                           Text(
                             b['subtitle'] as String,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontSize: isMobile ? 13 : 16,
+                              fontSize: isMobile ? 12 : 15,
                               color: Colors.white60,
-                              height: 1.6,
-                            ),
-                          ),
-                          SizedBox(height: isMobile ? 20 : 32),
-                          GestureDetector(
-                            onTap: () {},
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: isMobile ? 18 : 26,
-                                vertical: isMobile ? 11 : 14,
-                              ),
-                              decoration: BoxDecoration(
-                                color: accentColor,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    b['btnText'] as String,
-                                    style: TextStyle(
-                                      fontSize: isMobile ? 13 : 15,
-                                      fontWeight: FontWeight.w700,
-                                      color: bgColor,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Icon(
-                                    Icons.arrow_forward_rounded,
-                                    size: 16,
-                                    color: bgColor,
-                                  ),
-                                ],
-                              ),
+                              height: 1.4,
                             ),
                           ),
                         ],
@@ -1350,14 +1502,108 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
             ),
           ),
         );
-      },
-    );
   }
 
   void _navigateToWarehouse() => Get.offAllNamed('/warehouse/dashboard');
   void _navigateToAccounting() => Get.offAllNamed('/accounting/dashboard');
-  void _navigateToSales() => Get.to(() => SalesDashboardScreen());
-  void _navigateToPurchase() => Get.to(() => PurchaseDashboardScreen());
+  void _navigateToSales() => Get.to(() => const SalesDashboardScreen());
+  void _navigateToPurchase() => Get.to(() => const PurchaseDashboardScreen());
+  void _navigateToUsers() => Get.to(() => const UserListScreen());
+}
+
+class _HomeProduct {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _HomeProduct({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+}
+
+class _ProductCard extends StatelessWidget {
+  final _HomeProduct product;
+
+  const _ProductCard({required this.product});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: product.onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFEEEFF4)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: product.color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(product.icon, color: product.color, size: 24),
+              ),
+              const Spacer(),
+              Text(
+                product.title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF1A1D2E),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                product.subtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  height: 1.35,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey.shade500,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Text(
+                    'Open',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: product.color,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 14,
+                    color: product.color,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _FilterChip extends StatelessWidget {
@@ -2153,11 +2399,11 @@ class _DrawerHeaderState extends State<_DrawerHeader> {
                                 _businessLogo,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
-                                  return const Center(
-                                    child: Icon(
-                                      Icons.account_balance_rounded,
-                                      color: Colors.white,
-                                      size: 22,
+                                  return Padding(
+                                    padding: const EdgeInsets.all(4),
+                                    child: Image.asset(
+                                      'assets/logo.png',
+                                      fit: BoxFit.contain,
                                     ),
                                   );
                                 },
@@ -2166,21 +2412,21 @@ class _DrawerHeaderState extends State<_DrawerHeader> {
                                 File(_businessLogo),
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
-                                  return const Center(
-                                    child: Icon(
-                                      Icons.account_balance_rounded,
-                                      color: Colors.white,
-                                      size: 22,
+                                  return Padding(
+                                    padding: const EdgeInsets.all(4),
+                                    child: Image.asset(
+                                      'assets/logo.png',
+                                      fit: BoxFit.contain,
                                     ),
                                   );
                                 },
                               ),
                       )
-                    : const Center(
-                        child: Icon(
-                          Icons.account_balance_rounded,
-                          color: Colors.white,
-                          size: 22,
+                    : Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Image.asset(
+                          'assets/logo.png',
+                          fit: BoxFit.contain,
                         ),
                       ),
               ),
@@ -2216,47 +2462,48 @@ class _DrawerHeaderState extends State<_DrawerHeader> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          // Plan badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Iconify(Mdi.shield_account, size: 14, color: Colors.white70),
-                const SizedBox(width: 6),
-                Text(
-                  'Current Plan',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.white.withOpacity(0.7),
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade600,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text(
-                    'Premium',
+          if (PermissionService.to.isAdmin) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Iconify(Mdi.shield_account, size: 14, color: Colors.white70),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Current Plan',
                     style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                      color: Colors.white.withOpacity(0.7),
                     ),
                   ),
-                ),
-              ],
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade600,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'Premium',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -2322,7 +2569,7 @@ class _NavSectionState extends State<_NavSection> {
       final item = widget.items[i];
       final module = widget.modules![i];
 
-      if (_permissionService.hasModuleAccess(module)) {
+      if (_permissionService.canAccessModule(module)) {
         filtered.add(item);
       }
     }
@@ -2417,6 +2664,9 @@ class _NavSectionState extends State<_NavSection> {
       case '__purchase':
         Get.to(() => const PurchaseDashboardScreen());
         break;
+      case '__tax':
+        Get.to(() => const TaxComplianceScreen());
+        break;
       case '__currency':
         Get.to(() => const CurrencyScreen());
         break;
@@ -2433,7 +2683,7 @@ class _NavSectionState extends State<_NavSection> {
         Get.to(() => const UserGuideScreen());
         break;
       case '__contact':
-        Get.to(() => const ContactScreen());
+        Get.to(() => const ContactSupportScreen());
         break;
       case '__reportissue':
         Get.to(() => const ReportIssueScreen());
@@ -2697,7 +2947,9 @@ class _DrawerFooter extends StatelessWidget {
                       Obx(
                         () => Text(
                           profileCtrl.organizationName.value.isEmpty
-                              ? 'Premium Account'
+                              ? (PermissionService.to.isAdmin
+                                    ? 'Premium Account'
+                                    : 'Account')
                               : profileCtrl.organizationName.value,
                           style: TextStyle(
                             fontSize: 10,

@@ -6,6 +6,8 @@ import 'dart:io';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/models/fiscal_year_model.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -20,6 +22,7 @@ import 'package:excel/excel.dart';
 class BalanceSheetController extends GetxController {
   // Observable variables
   var isLoading = true.obs;
+  var isRefreshing = false.obs;
   var hasError = false.obs;
   var errorMessage = ''.obs;
   var selectedPeriod = 'All Time'.obs;
@@ -36,6 +39,7 @@ class BalanceSheetController extends GetxController {
   var equity = 0.0.obs;
   var isBalanced = false.obs;
   var balanceDifference = 0.0.obs;
+  var isEmptyReport = false.obs;
 
   final List<String> periodOptions = [
     'All Time',
@@ -63,21 +67,49 @@ class BalanceSheetController extends GetxController {
   }
 
   Future<void> _bootstrap() async {
-    if (_fiscalYearController.isLoading.value) {
-      while (_fiscalYearController.isLoading.value) {
-        await Future.delayed(const Duration(milliseconds: 50));
-      }
-    }
-
+    await waitForFiscalYearReady();
     if (_fiscalYearController.fiscalYears.isEmpty) {
       await _fiscalYearController.fetchFiscalYears();
     }
-
-    _fiscalYearWorker = ever(_fiscalYearController.selectedFiscalYear, (_) {
-      loadBalanceSheet();
-    });
-
+    _fiscalYearWorker = listenFiscalYearChanges(loadBalanceSheet);
     await loadBalanceSheet();
+  }
+
+  DateTime _asOfForPeriod(String period, FiscalYear? fy) {
+    final now = DateTime.now();
+    DateTime anchor = DateTime(now.year, now.month, now.day, 23, 59, 59);
+
+    if (fy != null) {
+      final fyStart = DateTime(
+        fy.startDate.year,
+        fy.startDate.month,
+        fy.startDate.day,
+      );
+      final fyEnd = DateTime(
+        fy.endDate.year,
+        fy.endDate.month,
+        fy.endDate.day,
+        23,
+        59,
+        59,
+      );
+      if (anchor.isBefore(fyStart)) {
+        anchor = fyStart;
+      } else if (anchor.isAfter(fyEnd)) {
+        anchor = fyEnd;
+      }
+    }
+
+    if (period == 'This Month') {
+      final monthEnd = DateTime(anchor.year, anchor.month + 1, 0, 23, 59, 59);
+      return monthEnd.isBefore(anchor) ? monthEnd : anchor;
+    }
+    if (period == 'This Quarter') {
+      final q = (anchor.month - 1) ~/ 3;
+      final quarterEnd = DateTime(anchor.year, q * 3 + 4, 0, 23, 59, 59);
+      return quarterEnd.isBefore(anchor) ? quarterEnd : anchor;
+    }
+    return anchor;
   }
 
   String _formatAmount(double amount) {
@@ -90,15 +122,28 @@ class BalanceSheetController extends GetxController {
   // ─── LOAD BALANCE SHEET FROM API ──────────────────────────────
   Future<void> loadBalanceSheet() async {
     try {
-      isLoading.value = true;
+      final hasData = assetsData.isNotEmpty ||
+          liabilitiesData.isNotEmpty ||
+          equityData.isNotEmpty;
+      if (hasData) {
+        isRefreshing.value = true;
+      } else {
+        isLoading.value = true;
+      }
       hasError.value = false;
       errorMessage.value = '';
+      isEmptyReport.value = false;
 
-      final params = <String, dynamic>{'period': selectedPeriod.value};
-
-      if (_fiscalYearController.selectedFiscalYear.value != null) {
-        params['fiscalYearId'] =
-            _fiscalYearController.selectedFiscalYear.value!.id;
+      final fy = _fiscalYearController.selectedFiscalYear.value;
+      final params = <String, dynamic>{};
+      // Match Next.js: All Time omits period so the backend uses the FY window.
+      if (selectedPeriod.value != 'All Time') {
+        params['period'] = selectedPeriod.value;
+      }
+      if (fy != null && fy.id.isNotEmpty) {
+        params['fiscalYearId'] = fy.id;
+      } else {
+        putFiscalYearId(params);
       }
 
       final response = await _api.get(
@@ -115,7 +160,9 @@ class BalanceSheetController extends GetxController {
           final data = responseData['data'] as Map<String, dynamic>? ?? {};
 
           if (data['asOfDate'] != null) {
-            asOfDate.value = DateTime.parse(data['asOfDate'].toString());
+            asOfDate.value = _parseAsOfDate(data['asOfDate'].toString());
+          } else if (fy != null) {
+            asOfDate.value = _asOfForPeriod(selectedPeriod.value, fy);
           }
 
           // ─── PARSE ASSETS ──────────────────────────────────────
@@ -228,6 +275,14 @@ class BalanceSheetController extends GetxController {
             balanceDifference.value = diff;
             isBalanced.value = diff < 0.01;
           }
+
+          isEmptyReport.value = data['empty'] == true ||
+              (totalAssets.value.abs() < 0.01 &&
+                  totalLiabilities.value.abs() < 0.01 &&
+                  equity.value.abs() < 0.01);
+          assetsData.refresh();
+          liabilitiesData.refresh();
+          equityData.refresh();
         } else {
           hasError.value = true;
           errorMessage.value =
@@ -248,6 +303,7 @@ class BalanceSheetController extends GetxController {
       _showError(errorMessage.value);
     } finally {
       isLoading.value = false;
+      isRefreshing.value = false;
     }
   }
 
@@ -288,10 +344,28 @@ class BalanceSheetController extends GetxController {
     loadBalanceSheet();
   }
 
+  DateTime _parseAsOfDate(String raw) {
+    final iso = raw.split('T').first;
+    final parts = iso.split('-');
+    if (parts.length >= 3) {
+      return DateTime(
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+        int.parse(parts[2]),
+      );
+    }
+    return DateTime.tryParse(raw) ?? DateTime.now();
+  }
+
   void changePeriod(String period) {
     if (selectedPeriod.value == period) return;
     selectedPeriod.value = period;
     loadBalanceSheet();
+  }
+
+  Future<void> changeFiscalYear(FiscalYear year) async {
+    await _fiscalYearController.selectFiscalYear(year);
+    await loadBalanceSheet();
   }
 
   String formatAmount(double amount) => CurrencyUtils.format(amount);

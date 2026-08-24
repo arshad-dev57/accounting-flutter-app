@@ -1,7 +1,9 @@
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/dashboard/Screens/dashbaord_screen.dart';
+import 'package:BisonsTechs_app/core/tax/tax_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class ReceiptScreen extends StatefulWidget {
   const ReceiptScreen({super.key});
@@ -99,30 +101,12 @@ class _ReceiptScreenState extends State<ReceiptScreen>
     },
   ];
 
-  // Tax rates for Inclusive and Exclusive
-  final Map<String, List<Map<String, dynamic>>> _taxRates = {
-    'Inclusive': [
-      {'name': 'Sales Tax on Import', 'rate': '5%', 'code': 'IMP-5'},
-      {'name': 'Tax on Purchase', 'rate': '10%', 'code': 'PUR-10'},
-      {'name': 'Tax on Sales', 'rate': '13%', 'code': 'SAL-13'},
-      {'name': 'VAT Standard', 'rate': '18%', 'code': 'VAT-18'},
-      {'name': 'Service Tax', 'rate': '15%', 'code': 'SRV-15'},
-    ],
-    'Exclusive': [
-      {'name': 'Sales Tax on Import', 'rate': '5%', 'code': 'IMP-5'},
-      {'name': 'Tax on Purchase', 'rate': '10%', 'code': 'PUR-10'},
-      {'name': 'Tax on Sales', 'rate': '13%', 'code': 'SAL-13'},
-      {'name': 'VAT Standard', 'rate': '18%', 'code': 'VAT-18'},
-      {'name': 'Service Tax', 'rate': '15%', 'code': 'SRV-15'},
-    ],
-    'No Tax': [
-      {'name': 'Tax Exempt', 'rate': '0%', 'code': 'EXM-0'},
-    ],
-  };
+  late final TaxController _tax;
 
   @override
   void initState() {
     super.initState();
+    _tax = ensureTaxController();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(_handleTabSelection);
   }
@@ -826,46 +810,58 @@ class _ReceiptScreenState extends State<ReceiptScreen>
                 ),
               ),
               const SizedBox(height: 20),
-              ..._taxRates[_selectedTaxTab]!.map(
-                (rate) => ListTile(
-                  title: Text(
-                    rate['name'],
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: kText,
-                    ),
-                  ),
-                  subtitle: Text(
-                    'Rate: ${rate['rate']} | Code: ${rate['code']}',
-                    style: TextStyle(fontSize: 12, color: kSubText),
-                  ),
-                  trailing: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: kPrimary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      rate['rate'],
+              if (!_tax.enabled.value)
+                ListTile(
+                  title: const Text('Taxation is off'),
+                  subtitle: const Text('Enable it in Tax Compliance'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Get.toNamed('/tax');
+                  },
+                )
+              else if (_tax.rates.isEmpty)
+                const ListTile(title: Text('No rates yet. Apply a country pack.'))
+              else
+                ..._tax.rates.map(
+                  (rate) => ListTile(
+                    title: Text(
+                      _tax.rateLabel(rate),
                       style: TextStyle(
-                        fontSize: 12,
-                        color: kPrimary,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: kText,
                       ),
                     ),
+                    subtitle: Text(
+                      rate['jurisdictionName']?.toString() ?? '',
+                      style: TextStyle(fontSize: 12, color: kSubText),
+                    ),
+                    trailing: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: kPrimary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${rate['rate'] ?? 0}%',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: kPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    onTap: () {
+                      setState(() {
+                        _selectedTaxRate = _tax.rateLabel(rate);
+                      });
+                      Navigator.pop(context);
+                    },
                   ),
-                  onTap: () {
-                    setState(() {
-                      _selectedTaxRate = rate['name'];
-                    });
-                    Navigator.pop(context);
-                  },
                 ),
-              ),
               const SizedBox(height: 10),
               TextButton(
                 onPressed: () => Navigator.pop(context),

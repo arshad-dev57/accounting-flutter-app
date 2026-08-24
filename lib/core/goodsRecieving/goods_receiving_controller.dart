@@ -3,6 +3,7 @@
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/core/goodsRecieving/goods_receiving_model.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/controller/location_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -37,6 +38,7 @@ class GoodsReceivingController extends GetxController {
 
   final List<String> filters = [
     'all',
+    'Draft',
     'Partially Received',
     'Fully Received',
   ];
@@ -592,7 +594,11 @@ class GoodsReceivingController extends GetxController {
             ? null
             : notesController.text.trim(),
         'items': items,
-        'status': 'Confirmed',
+        'status': 'Draft',
+        if (Get.isRegistered<LocationController>() &&
+            (Get.find<LocationController>().selectedLocationId?.isNotEmpty ??
+                false))
+          'locationId': Get.find<LocationController>().selectedLocationId,
       };
 
       print('🔵 [GoodsReceivingController] Submitting GRN payload');

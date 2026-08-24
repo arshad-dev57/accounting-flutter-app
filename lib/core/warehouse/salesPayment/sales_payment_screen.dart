@@ -2,6 +2,7 @@
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/core/warehouse/salesPayment/sales_payment_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/salesPayment/sales_payment_model.dart';
 import 'package:flutter/material.dart';
@@ -578,13 +579,16 @@ class _CreatePaymentForm extends StatelessWidget {
               onChanged: (value) {
                 if (value != null) {
                   controller.paymentMethod.value = value;
+                  if (value == 'Cash') {
+                    controller.selectedBankAccount.value = null;
+                  }
                 }
               },
             ),
             const SizedBox(height: 12),
 
-            // Bank Account (for Bank Transfer)
-            if (controller.paymentMethod.value == 'Bank Transfer') ...[
+            // Bank account only when a bank method is chosen
+            if (controller.paymentMethod.value != 'Cash') ...[
               DropdownButtonFormField<Map<String, dynamic>>(
                 value: controller.selectedBankAccount.value,
                 decoration: const InputDecoration(
@@ -617,9 +621,9 @@ class _CreatePaymentForm extends StatelessWidget {
             TextField(
               controller: controller.amountController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Total Amount *',
-                prefixIcon: Icon(Icons.currency_rupee, size: 18),
+                prefixText: CurrencyUtils.prefix,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),
@@ -874,9 +878,9 @@ class _CreatePaymentForm extends StatelessWidget {
                     child: TextFormField(
                       initialValue: invoice.amountToPay.toStringAsFixed(2),
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Amount to Pay',
-                        prefixIcon: Icon(Icons.currency_rupee, size: 16),
+                        prefixText: CurrencyUtils.prefix,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(8)),
                         ),

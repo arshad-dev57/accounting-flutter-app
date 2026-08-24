@@ -5,6 +5,7 @@ import 'package:BisonsTechs_app/core/warehouse/order/widgets/customer_picker_she
 import 'package:BisonsTechs_app/core/warehouse/order/widgets/product_search_field.dart';
 import 'package:BisonsTechs_app/core/warehouse/order/widgets/setting_dropdown_field.dart';
 import 'package:BisonsTechs_app/core/warehouse/products/screen/product_screen.dart';
+import 'package:BisonsTechs_app/core/warehousecustomer/warehouse_customer_screen.dart';
 import 'package:BisonsTechs_app/core/warehousesettings/warehouse_settings_screen.dart'
     hide kBg;
 import 'package:country_picker_pro/country_picker_pro.dart';
@@ -713,57 +714,75 @@ class CreateOrderForm extends StatelessWidget {
           style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 4),
-        InkWell(
-          onTap: () {
-            showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-              ),
-              builder: (_) => CustomerPickerSheet(onSelect: c.applyCustomer),
-            );
-          },
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.withOpacity(0.3)),
-              borderRadius: BorderRadius.circular(8),
-              color: kBg,
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.person_outline, size: 16, color: kSubText),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    c.customerName.value.isEmpty
-                        ? 'Select customer...'
-                        : c.customerName.value,
-                    style: TextStyle(
-                      color: c.customerName.value.isEmpty
-                          ? kSubText
-                          : Colors.black87,
-                      fontWeight: c.customerName.value.isEmpty
-                          ? FontWeight.normal
-                          : FontWeight.w600,
-                      fontSize: 13,
+        Row(
+          children: [
+            Expanded(
+              child: InkWell(
+                onTap: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                     ),
-                    overflow: TextOverflow.ellipsis,
+                    builder: (_) => CustomerPickerSheet(onSelect: c.applyCustomer),
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                    borderRadius: BorderRadius.circular(8),
+                    color: kBg,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.person_outline, size: 16, color: kSubText),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          c.customerName.value.isEmpty
+                              ? 'Select customer...'
+                              : c.customerName.value,
+                          style: TextStyle(
+                            color: c.customerName.value.isEmpty
+                                ? kSubText
+                                : Colors.black87,
+                            fontWeight: c.customerName.value.isEmpty
+                                ? FontWeight.normal
+                                : FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (c.selectedCustomer.value != null)
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 16),
+                          onPressed: () => c.applyCustomer(null),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      const Icon(Icons.arrow_drop_down, size: 20),
+                    ],
                   ),
                 ),
-                if (c.selectedCustomer.value != null)
-                  IconButton(
-                    icon: const Icon(Icons.close, size: 16),
-                    onPressed: () => c.applyCustomer(null),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                const Icon(Icons.arrow_drop_down, size: 20),
-              ],
+              ),
             ),
-          ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () => Get.to(() => const WarehouseCustomerScreen()),
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: kPrimary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.add, size: 20, color: kPrimary),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 6),
         TextField(
