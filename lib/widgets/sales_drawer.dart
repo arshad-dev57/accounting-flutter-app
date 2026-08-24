@@ -296,11 +296,11 @@ class _DrawerHeader extends GetView<SalesDrawerController> {
                                   },
                                 ),
                         )
-                      : const Center(
-                          child: Icon(
-                            Icons.trending_up_rounded,
-                            color: Colors.white,
-                            size: 22,
+                      : Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: Image.asset(
+                            'assets/logo.png',
+                            fit: BoxFit.contain,
                           ),
                         ),
                 );

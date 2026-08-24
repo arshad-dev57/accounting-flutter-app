@@ -204,18 +204,10 @@ class _SalesDashboardView extends GetView<SalesController> {
                             ),
                     ),
                   )
-                : Container(
-                    width: 30,
+                : Image.asset(
+                    'assets/logo.png',
                     height: 30,
-                    decoration: BoxDecoration(
-                      color: kPrimary,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.trending_up_rounded,
-                      size: 16,
-                      color: Colors.white,
-                    ),
+                    fit: BoxFit.contain,
                   ),
             const SizedBox(width: 8),
             const Flexible(

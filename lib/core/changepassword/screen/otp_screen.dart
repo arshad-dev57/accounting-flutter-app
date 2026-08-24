@@ -129,32 +129,20 @@ class _OtpScreenState extends State<OtpScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // Logo lockup
-                      Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1AB4F5),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.account_balance,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Text(
-                            'BisonsTechs',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1.8,
-                            ),
-                          ),
-                        ],
+                      Container(
+                        height: 96,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Image.asset(
+                          'assets/logo.png',
+                          fit: BoxFit.contain,
+                        ),
                       ),
                       const SizedBox(height: 20),
 
@@ -308,7 +296,7 @@ class _OtpScreenState extends State<OtpScreen> {
       children: [
         Image.asset(
           'assets/logo.png',
-          height: 72,
+          height: 110,
           fit: BoxFit.contain,
           errorBuilder: (_, __, ___) => const Icon(
             Icons.account_balance_rounded,
@@ -430,21 +418,18 @@ class _OtpScreenState extends State<OtpScreen> {
       child: Column(
         children: [
           Container(
-            width: isTablet ? 88 : 72,
-            height: isTablet ? 88 : 72,
-            padding: EdgeInsets.all(isTablet ? 14 : 12),
-            decoration: const BoxDecoration(
+            height: isTablet ? 72 : 56,
+            padding: EdgeInsets.symmetric(
+              horizontal: isTablet ? 16 : 12,
+              vertical: isTablet ? 10 : 8,
+            ),
+            decoration: BoxDecoration(
               color: Colors.white,
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Image.asset(
               'assets/logo.png',
               fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => Icon(
-                Icons.account_balance_rounded,
-                color: kPrimary,
-                size: isTablet ? 40 : 32,
-              ),
             ),
           ),
           SizedBox(height: isTablet ? 20 : 16),

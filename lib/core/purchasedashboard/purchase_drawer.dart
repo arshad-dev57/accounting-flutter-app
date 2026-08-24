@@ -50,7 +50,7 @@ class PurchaseDrawer extends StatelessWidget {
                   permissions: const [
                     'dashboard',
                     'dashboard',
-                    'dashboard',
+                    'products',
                     'purchase-orders',
                     'suppliers',
                     'goods-receiving',
@@ -72,7 +72,7 @@ class PurchaseDrawer extends StatelessWidget {
                     (
                       'Products',
                       Mdi.package_variant_closed,
-                      '/warehouse/products',
+                      '/purchase/products',
                     ),
                     ('Purchase Orders', Mdi.receipt_text, '/purchase-order'),
                     ('Suppliers', Mdi.account_tie, '/warehouse/suppliers'),
@@ -287,11 +287,11 @@ class _PurchaseDrawerHeaderState extends State<_PurchaseDrawerHeader> {
                                 },
                               ),
                       )
-                    : const Center(
-                        child: Icon(
-                          Icons.shopping_bag_rounded,
-                          color: Colors.white,
-                          size: 22,
+                    : Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Image.asset(
+                          'assets/logo.png',
+                          fit: BoxFit.contain,
                         ),
                       ),
               ),

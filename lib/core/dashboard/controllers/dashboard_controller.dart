@@ -146,10 +146,18 @@ class DashboardController extends GetxController {
     loadUserData();
     loadBusinessLogo();
     Future(() async {
-      await waitForFiscalYearReady();
+      if (currentFiscalYearId() == null) {
+        await waitForFiscalYearReady(timeout: const Duration(seconds: 2));
+      }
+      if (!hasLoadedOnce.value && !isRefreshing.value) {
+        await loadDashboardData();
+      }
+    });
+    _fyWorker = listenFiscalYearChanges(() {
+      if (!hasLoadedOnce.value) return;
+      if (isLoading.value || isRefreshing.value) return;
       loadDashboardData();
     });
-    _fyWorker = listenFiscalYearChanges(loadDashboardData);
     // One-shot access check only — SubscriptionController already polls globally.
     _checkSubscriptionOnce();
   }

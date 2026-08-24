@@ -165,15 +165,29 @@ class _UserFormScreenState extends State<UserFormScreen> {
           (u) => u.email.toLowerCase() == email,
         );
         Get.back();
-        _showSetPermissionsPrompt(created?.id, _firstNameController.text.trim());
+        _showSetPermissionsPrompt(
+          created?.id,
+          _firstNameController.text.trim(),
+          emailSent: _controller.lastInviteEmailSent.value,
+          email: email,
+        );
       }
     } else {
+      final msg = _controller.errorMessage.value.trim().isNotEmpty
+          ? _controller.errorMessage.value.trim()
+          : (isEditMode ? 'Failed to update user' : 'Failed to create user');
+      final isDuplicate = msg.toLowerCase().contains('already exists');
       Get.snackbar(
-        'Error',
-        isEditMode ? 'Failed to update user' : 'Failed to create user',
+        isDuplicate
+            ? 'Already exists'
+            : (isEditMode ? 'Could not update user' : 'Could not create user'),
+        msg,
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: kDanger,
         colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 10,
+        duration: const Duration(seconds: 4),
       );
     }
   }
@@ -323,6 +337,15 @@ class _UserFormScreenState extends State<UserFormScreen> {
                         },
                       ),
                     ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Login email, this password, their role, and the BisonsTechs app link will be emailed to the user.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                        height: 1.4,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -386,7 +409,16 @@ class _UserFormScreenState extends State<UserFormScreen> {
     );
   }
 
-  void _showSetPermissionsPrompt(String? userId, String firstName) {
+  void _showSetPermissionsPrompt(
+    String? userId,
+    String firstName, {
+    bool emailSent = false,
+    String email = '',
+  }) {
+    final emailLine = emailSent
+        ? 'Login email, password, and role were sent to ${email.isEmpty ? 'their inbox' : email}.'
+        : 'User was created, but the invite email could not be sent. Share the login details with them manually.';
+
     Get.dialog(
       AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -396,8 +428,8 @@ class _UserFormScreenState extends State<UserFormScreen> {
         ),
         content: Text(
           userId == null
-              ? '$firstName was added. Open Team Members and tap “Set permissions” on their card to choose modules.'
-              : '$firstName was added successfully.\n\nNext: choose which modules and screens they can open (Sales, Accounting, etc.).',
+              ? '$firstName was added. $emailLine Open Team Members and tap “Set permissions” on their card to choose modules.'
+              : '$firstName was added successfully.\n\n$emailLine\n\nNext: choose which modules and screens they can open (Sales, Accounting, etc.).',
           style: TextStyle(fontSize: 14, color: Colors.grey.shade700, height: 1.4),
         ),
         actions: [

@@ -6,15 +6,12 @@ import 'package:BisonsTechs_app/core/FiscalYear/widgets/fiscal_year_select.dart'
 import 'package:BisonsTechs_app/core/Notifications/screens/notification_screen.dart';
 import 'package:BisonsTechs_app/widgets/reload_when_visible.dart';
 import 'package:BisonsTechs_app/core/purchasedashboard/purchase_controller.dart';
-import 'package:BisonsTechs_app/core/purchasedashboard/purchase_dashboard_model.dart';
 import 'package:BisonsTechs_app/core/purchasedashboard/purchase_drawer.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
-// ─── White theme palette (identical to DashboardScreen) ───────────────────
 const _kPageBg = Color(0xFFF5F6FA);
 const _kCardBg = Color(0xFFFFFFFF);
 const _kCardBorder = Color(0xFFEEEFF4);
@@ -24,7 +21,6 @@ const _kTextMuted = Color(0xFFB0B4C8);
 const _kAppBarBg = Color(0xFFF7F9FC);
 const _kChipBg = Color(0xFFF0F2F8);
 
-// Semantic colours — same as DashboardScreen
 const _kPrimaryBg = Color(0xFFE6EEF5);
 const _kGreen = Color(0xFF22A869);
 const _kGreenBg = Color(0xFFEAF7F1);
@@ -37,7 +33,6 @@ const _kPurpleBg = Color(0xFFF5F0FF);
 const _kTeal = Color(0xFF0891B2);
 const _kTealBg = Color(0xFFECFAFF);
 
-// Hero card — same gradient tint as DashboardScreen hero
 const _kHeroBg = Color(0xFFE6EEF5);
 const _kHeroBgEnd = Color(0xFFD6E4F0);
 const _kHeroBorder = Color(0xFFB8CFE0);
@@ -116,7 +111,6 @@ class _PurchaseDashboardView extends GetView<PurchaseController> {
     );
   }
 
-  // ─── AppBar (identical structure to DashboardScreen) ─────────────────────
   PreferredSizeWidget _buildAppBar(bool isMobile) {
     return AppBar(
       backgroundColor: _kAppBarBg,
@@ -194,18 +188,10 @@ class _PurchaseDashboardView extends GetView<PurchaseController> {
                             ),
                     ),
                   )
-                : Container(
-                    width: 30,
+                : Image.asset(
+                    'assets/logo.png',
                     height: 30,
-                    decoration: BoxDecoration(
-                      color: kPrimary,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.shopping_bag_outlined,
-                      size: 16,
-                      color: Colors.white,
-                    ),
+                    fit: BoxFit.contain,
                   ),
             const SizedBox(width: 8),
             const Flexible(
@@ -308,7 +294,6 @@ class _PurchaseDashboardView extends GetView<PurchaseController> {
     );
   }
 
-  // ─── Hero Card (same structure as DashboardScreen hero) ──────────────────
   Widget _buildHeroCard() {
     return Obx(() {
       final data = controller.dashboard.value;
@@ -600,7 +585,6 @@ class _PurchaseDashboardView extends GetView<PurchaseController> {
     });
   }
 
-  // ─── KPI Grid (same card style as DashboardScreen _KpiCard) ──────────────
   Widget _buildKpiGrid(bool isTablet) {
     return Obx(() {
       final data = controller.dashboard.value;
@@ -825,8 +809,6 @@ class _PurchaseDashboardView extends GetView<PurchaseController> {
       ),
     );
   }
-
-  // ─── Spend Trend Chart (wrapped in SectionCard matching dashboard style) ──
   Widget _buildSpendTrendCard() {
     return Obx(() {
       final trend = controller.spendTrend;
@@ -973,7 +955,6 @@ class _PurchaseDashboardView extends GetView<PurchaseController> {
     );
   }
 
-  // ─── Order Status Pie Chart ───────────────────────────────────────────────
   Widget _buildOrderStatusCard() {
     return Obx(() {
       final statuses = controller.orderStatuses
@@ -1102,7 +1083,6 @@ class _PurchaseDashboardView extends GetView<PurchaseController> {
     });
   }
 
-  // ─── Purchase Health (bar rows, same style as _buildKpiSources) ──────────
   Widget _buildPurchaseHealth() {
     return Obx(() {
       final data = controller.dashboard.value;
@@ -1248,7 +1228,6 @@ class _PurchaseDashboardView extends GetView<PurchaseController> {
     });
   }
 
-  // ─── Recent Activity (same transaction tile style as DashboardScreen) ─────
   Widget _buildRecentActivity() {
     return Obx(() {
       final shown = controller.activities.length > 5
@@ -1413,8 +1392,15 @@ class _PurchaseDashboardView extends GetView<PurchaseController> {
         () => Get.toNamed('/purchase-order'),
       ),
       _QuickAction(
-        'Receive',
+        'Products',
         Icons.inventory_2_outlined,
+        _kTeal,
+        _kTealBg,
+        () => Get.toNamed('/purchase/products'),
+      ),
+      _QuickAction(
+        'Receive',
+        Icons.move_to_inbox_outlined,
         _kGreen,
         _kGreenBg,
         () => Get.toNamed('/purchase/goods-receiving'),
@@ -1456,6 +1442,9 @@ class _PurchaseDashboardView extends GetView<PurchaseController> {
                   const SizedBox(height: 6),
                   Text(
                     a.label,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -1472,7 +1461,6 @@ class _PurchaseDashboardView extends GetView<PurchaseController> {
   }
 }
 
-// ─── Section Card wrapper (identical to DashboardScreen) ──────────────────
 class _SectionCard extends StatelessWidget {
   final String title;
   final Widget? trailing;
@@ -1514,7 +1502,6 @@ class _SectionCard extends StatelessWidget {
   }
 }
 
-// ─── KPI Card (identical to DashboardScreen _KpiCard) ─────────────────────
 class _KpiItem {
   final String label;
   final String value;
@@ -1534,6 +1521,7 @@ class _KpiItem {
     required this.trendUp,
   });
 }
+
 
 class _KpiCard extends StatelessWidget {
   final _KpiItem item;
@@ -1625,7 +1613,6 @@ class _KpiCard extends StatelessWidget {
   }
 }
 
-// ─── Bar Item model ────────────────────────────────────────────────────────
 class _BarItem {
   final String label;
   final String value;
@@ -1644,7 +1631,6 @@ class _BarItem {
   ]);
 }
 
-// ─── Quick Action model ────────────────────────────────────────────────────
 class _QuickAction {
   final String label;
   final IconData icon;
