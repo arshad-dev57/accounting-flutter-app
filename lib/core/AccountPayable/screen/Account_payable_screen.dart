@@ -1,5 +1,3 @@
-// screens/accounts_payable_screen.dart - COMPLETE FIXED VERSION
-
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/widgets/expandable_stat_card.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
@@ -8,7 +6,6 @@ import 'package:BisonsTechs_app/core/AccountPayable/controller/account_payable_c
 import 'package:BisonsTechs_app/core/purchasePaymentmade/purchase_payment_controller.dart';
 import 'package:BisonsTechs_app/core/purchasePaymentmade/purchase_payment_screen.dart';
 import 'package:BisonsTechs_app/core/tax/tax_rate_field.dart';
-import 'package:BisonsTechs_app/core/Vendor&Supplier/screens/vendor_supplier_screen.dart';
 import 'package:BisonsTechs_app/core/warehouse/supplier/screen/supplier_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -266,8 +263,8 @@ class AccountsPayableScreen extends StatelessWidget {
               amount: _formatAmount(controller.totalOutstanding.value),
               color: kDanger,
               icon: Icons.payment,
-              bgColor: kDanger.withOpacity(0.08),
-              borderColor: kDanger.withOpacity(0.2),
+              bgColor: kDanger.withValues(alpha: 0.08),
+              borderColor: kDanger.withValues(alpha: 0.2),
             ),
             const SizedBox(width: 8),
             _buildProfessionalCard(
@@ -275,8 +272,8 @@ class AccountsPayableScreen extends StatelessWidget {
               amount: _formatAmount(controller.totalOverdue.value),
               color: kWarning,
               icon: Icons.warning_amber_rounded,
-              bgColor: kWarning.withOpacity(0.08),
-              borderColor: kWarning.withOpacity(0.2),
+              bgColor: kWarning.withValues(alpha: 0.08),
+              borderColor: kWarning.withValues(alpha: 0.2),
             ),
             const SizedBox(width: 8),
             _buildProfessionalCard(
@@ -284,8 +281,8 @@ class AccountsPayableScreen extends StatelessWidget {
               amount: _formatAmount(controller.totalDueThisMonth.value),
               color: kPrimary,
               icon: Icons.calendar_month,
-              bgColor: kPrimary.withOpacity(0.08),
-              borderColor: kPrimary.withOpacity(0.2),
+              bgColor: kPrimary.withValues(alpha: 0.08),
+              borderColor: kPrimary.withValues(alpha: 0.2),
             ),
           ],
         ),
@@ -300,7 +297,6 @@ class AccountsPayableScreen extends StatelessWidget {
     required IconData icon,
     required Color bgColor,
     required Color borderColor,
-    bool isNumber = false,
   }) {
     return ExpandableStatCard(
       title: title,
@@ -311,7 +307,6 @@ class AccountsPayableScreen extends StatelessWidget {
       borderColor: borderColor,
     );
   }
-
 
   // ═══════════════════════════════════════════════════════════════
   // LIST VIEW WITH LAZY LOADING
@@ -641,7 +636,6 @@ class AccountsPayableScreen extends StatelessWidget {
     String supplierId = '';
     String reference = '';
     String description = '';
-    double subtotal = 0;
     double taxRate = 0;
     double discount = 0;
     List<Map<String, dynamic>> items = [

@@ -1,5 +1,6 @@
 // lib/core/warehouse/widgets/sidebar_widget.dart
 
+import 'package:BisonsTechs_app/Services/auth_logout_service.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
 import 'package:BisonsTechs_app/core/warehouse/dashboard/warehouse_dashboard_controller.dart';
@@ -329,6 +330,7 @@ class WarehouseSidebar extends StatelessWidget {
 
   void _logout(BuildContext context) async {
     try {
+      await AuthLogoutService.clearPushSession();
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
       Get.delete<WarehouseDashboardController>(force: true);

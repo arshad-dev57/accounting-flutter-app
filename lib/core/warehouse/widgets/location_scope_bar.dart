@@ -8,7 +8,10 @@ class LocationScopeController extends GetxController {
 
   void setRoute(String value) {
     if (route.value == value) return;
-    route.value = value;
+    // routingCallback fires during navigator build — defer Rx update.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (route.value != value) route.value = value;
+    });
   }
 
   bool get shouldShow {

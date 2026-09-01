@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:BisonsTechs_app/Services/auth_logout_service.dart';
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
@@ -962,6 +963,7 @@ class _DrawerFooter extends StatelessWidget {
 
   void _logout(BuildContext context) async {
     try {
+      await AuthLogoutService.clearPushSession();
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
       final permissionService = PermissionService.to;

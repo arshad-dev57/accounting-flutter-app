@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:BisonsTechs_app/Services/auth_logout_service.dart';
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
@@ -589,9 +590,11 @@ class _AccountingDashboardView extends GetView<DashboardController> {
           TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
+              await AuthLogoutService.clearPushSession();
               final permissionService = PermissionService.to;
               await permissionService.clearUserData();
-              SharedPreferences.getInstance().then((p) => p.clear());
+              final p = await SharedPreferences.getInstance();
+              await p.clear();
               Get.offAll(() => const LoginScreen());
             },
             style: ElevatedButton.styleFrom(backgroundColor: _kRed),

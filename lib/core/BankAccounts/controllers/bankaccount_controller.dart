@@ -129,7 +129,6 @@ class BankAccountController extends GetxController {
         );
       }
     } catch (e) {
-      print('Error fetching bank accounts: $e');
       AppSnackbar.error(
         Colors.red,
         'Error',
@@ -165,7 +164,6 @@ class BankAccountController extends GetxController {
         return false;
       }
     } catch (e) {
-      print('Error creating bank account: $e');
       AppSnackbar.error(
         Colors.red,
         'Error',
@@ -192,9 +190,7 @@ class BankAccountController extends GetxController {
           ),
         );
       }
-    } catch (e) {
-      print('Error loading source accounts: $e');
-    }
+    } catch (e) {}
   }
 
   Future<void> updateBankAccount(
@@ -226,7 +222,6 @@ class BankAccountController extends GetxController {
         );
       }
     } catch (e) {
-      print('Error updating bank account: $e');
       AppSnackbar.error(
         Colors.red,
         'Error',
@@ -259,7 +254,6 @@ class BankAccountController extends GetxController {
         );
       }
     } catch (e) {
-      print('Error deleting bank account: $e');
       AppSnackbar.error(
         Colors.red,
         'Error',
@@ -330,7 +324,6 @@ class BankAccountController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error: $e');
     } finally {
       isLoading(false);
     }
@@ -567,9 +560,8 @@ class BankAccountController extends GetxController {
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(24),
-          header: (ctx) => branding.buildHeader(
-            reportTitle: 'Bank Accounts Report',
-          ),
+          header: (ctx) =>
+              branding.buildHeader(reportTitle: 'Bank Accounts Report'),
           footer: (ctx) => branding.buildFooter(ctx),
           build: (ctx) => [
             _pdfSummarySection(branding.accent),
@@ -628,8 +620,6 @@ class BankAccountController extends GetxController {
       );
     }
   }
-
-
 
   pw.Widget _pdfSummarySection(PdfColor accent) {
     return pw.Container(

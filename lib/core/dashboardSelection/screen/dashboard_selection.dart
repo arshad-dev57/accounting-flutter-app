@@ -3,6 +3,7 @@
 import 'dart:io';
 import 'dart:convert';
 
+import 'package:BisonsTechs_app/Services/auth_logout_service.dart';
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
@@ -2850,6 +2851,7 @@ class _DrawerFooter extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
+                        await AuthLogoutService.clearPushSession();
                         final prefs = await SharedPreferences.getInstance();
                         await prefs.clear();
                         Get.offAll(() => const LoginScreen());

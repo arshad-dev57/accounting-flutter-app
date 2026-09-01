@@ -61,6 +61,8 @@ import 'package:BisonsTechs_app/core/Users/screen/user_form_screen.dart';
 import 'package:BisonsTechs_app/core/Users/screen/access_management_screen.dart';
 import 'package:BisonsTechs_app/core/Users/screen/enhanced_access_management_screen.dart';
 
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
@@ -108,10 +110,19 @@ class MyApp extends StatelessWidget {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         await NotificationService.instance.init();
         final prefs = await SharedPreferences.getInstance();
-        final userId = prefs.getString('auth_user_id');
+        String? userId = prefs.getString('auth_user_id');
+        if (userId == null || userId.isEmpty) {
+          final raw = prefs.getString('user_data');
+          if (raw != null && raw.isNotEmpty) {
+            try {
+              final user = json.decode(raw) as Map<String, dynamic>;
+              userId = user['_id']?.toString() ?? user['id']?.toString();
+            } catch (_) {}
+          }
+        }
         if (userId != null && userId.isNotEmpty) {
-          await NotificationService.instance.login(userId);
-          await NotificationService.instance.verifyDeviceRegistration();
+          final token = prefs.getString('auth_token');
+          await NotificationService.instance.login(userId, token: token);
         }
       });
     }

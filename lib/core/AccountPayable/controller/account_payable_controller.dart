@@ -117,7 +117,6 @@ class AccountsPayableController extends GetxController {
           suppliers.value = (data['data'] as List)
               .map((e) => Supplier.fromJson(e))
               .toList();
-          print('✅ Loaded ${suppliers.length} suppliers');
         }
       }
     } catch (e) {

@@ -170,12 +170,7 @@ class LoginController extends GetxController {
               print(
                 '🔔 [LoginController] Calling NotificationService.login()...',
               );
-              await NotificationService.instance.login(userId);
-
-              print(
-                '🔔 [LoginController] Calling verifyDeviceRegistration()...',
-              );
-              await NotificationService.instance.verifyDeviceRegistration();
+              await NotificationService.instance.login(userId, token: data['token']?.toString());
 
               print('✅ [LoginController] Notification service setup completed');
               print('🔔🔔🔔 [LoginController] NOTIFICATION SETUP END 🔔🔔🔔');
@@ -283,6 +278,11 @@ class LoginController extends GetxController {
       if (data['user'] != null) {
         final userData = data['user'] as Map<String, dynamic>;
         await prefs.setString('user_data', json.encode(userData));
+
+        final userId = userData['_id']?.toString() ?? userData['id']?.toString() ?? '';
+        if (userId.isNotEmpty) {
+          await prefs.setString('auth_user_id', userId);
+        }
 
         // ✅ Save user data in format expected by PermissionService
         final permissionService = Get.find<PermissionService>();

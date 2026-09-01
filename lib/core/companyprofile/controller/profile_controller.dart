@@ -113,23 +113,21 @@ class ProfileController extends GetxController {
     try {
       final prefs = await SharedPreferences.getInstance();
       final userDataString = prefs.getString('user_data');
-      
+
       if (userDataString != null) {
         final userData = json.decode(userDataString) as Map<String, dynamic>;
-        final businessDetails = userData['businessDetails'] as Map<String, dynamic>?;
-        
+        final businessDetails =
+            userData['businessDetails'] as Map<String, dynamic>?;
+
         if (businessDetails != null && businessDetails['logo'] != null) {
           final logo = businessDetails['logo'] as String;
           if (logo.isNotEmpty && !isClosed) {
             businessLogo.value = logo;
             _setText(businessLogoController, logo);
-            print('✅ [ProfileController] Business logo loaded from SharedPreferences: $logo');
           }
         }
       }
-    } catch (e) {
-      print('❌ [ProfileController] Error loading business logo from SharedPreferences: $e');
-    }
+    } catch (e) {}
   }
 
   // ─── IMAGE PICKER METHODS ──────────────────────────────────────
@@ -200,8 +198,6 @@ class ProfileController extends GetxController {
       final response = await _api.get('/api/profile');
       if (isClosed) return;
 
-      print('Profile API Response Status: ${response.statusCode}');
-
       if (response.success) {
         final data = response.data;
         if (data['success'] == true) {
@@ -239,7 +235,6 @@ class ProfileController extends GetxController {
         );
       }
     } catch (e) {
-      print('Error loading profile: $e');
       if (isClosed) return;
       final msg = e.toString();
       // Navigation race — not a real API outage
@@ -307,7 +302,8 @@ class ProfileController extends GetxController {
           fiscalYearController.text.trim().isNotEmpty) {
         fields['fiscalYear'] = fiscalYearController.text.trim();
       }
-      if (taxRegistrationController.text.trim() != taxRegistrationNumber.value &&
+      if (taxRegistrationController.text.trim() !=
+              taxRegistrationNumber.value &&
           taxRegistrationController.text.trim().isNotEmpty) {
         fields['taxRegistrationNumber'] = taxRegistrationController.text.trim();
       }
@@ -362,8 +358,6 @@ class ProfileController extends GetxController {
         fields: fields,
         filePaths: filePaths,
       );
-
-      print('Update Profile Response Status: ${response.statusCode}');
 
       if (response.success) {
         final data = response.data;
@@ -423,10 +417,10 @@ class ProfileController extends GetxController {
         }
 
         _showSuccess(data['message'] ?? 'Profile updated successfully!');
-        
+
         // Update SharedPreferences with new profile data
         await _updateSharedPreferencesUserData();
-        
+
         toggleEdit(); // Exit edit mode
       } else {
         _showError(
@@ -434,7 +428,6 @@ class ProfileController extends GetxController {
         );
       }
     } catch (e) {
-      print('Error saving profile: $e');
       _showError('error. Server Down. Please try again later.');
     } finally {
       isSaving.value = false;
@@ -455,7 +448,8 @@ class ProfileController extends GetxController {
           fiscalYearController.text.trim().isNotEmpty) {
         fields['fiscalYear'] = fiscalYearController.text.trim();
       }
-      if (taxRegistrationController.text.trim() != taxRegistrationNumber.value &&
+      if (taxRegistrationController.text.trim() !=
+              taxRegistrationNumber.value &&
           taxRegistrationController.text.trim().isNotEmpty) {
         fields['taxRegistrationNumber'] = taxRegistrationController.text.trim();
       }
@@ -518,16 +512,15 @@ class ProfileController extends GetxController {
         _showSuccess(
           data['message'] ?? 'Business details updated successfully!',
         );
-        
+
         // Update SharedPreferences with new business details
         await _updateSharedPreferencesUserData();
-        
+
         toggleEdit();
       } else {
         _showError(response.message ?? 'Failed to update business details.');
       }
     } catch (e) {
-      print('Error saving business details: $e');
       _showError('error. Server Down. Please try again later.');
     } finally {
       isSaving.value = false;
@@ -540,15 +533,15 @@ class ProfileController extends GetxController {
   Future<void> _updateSharedPreferencesUserData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       // Get existing user data
       final existingUserDataString = prefs.getString('user_data');
       Map<String, dynamic> userData = {};
-      
+
       if (existingUserDataString != null) {
         userData = json.decode(existingUserDataString) as Map<String, dynamic>;
       }
-      
+
       // Update user data with current profile values
       userData['organizationName'] = organizationName.value;
       userData['firstName'] = firstName.value;
@@ -559,22 +552,22 @@ class ProfileController extends GetxController {
       userData['phone'] = phone.value;
       userData['websiteLink'] = websiteLink.value;
       userData['country'] = country.value;
-      
+
       // Update business details
       if (userData['businessDetails'] == null) {
         userData['businessDetails'] = {};
       }
       userData['businessDetails']['logo'] = businessLogo.value;
       userData['businessDetails']['fiscalYear'] = fiscalYear.value;
-      userData['businessDetails']['taxRegistrationNumber'] = taxRegistrationNumber.value;
+      userData['businessDetails']['taxRegistrationNumber'] =
+          taxRegistrationNumber.value;
       userData['businessDetails']['signature'] = signature.value;
       userData['businessDetails']['industry'] = industry.value;
       userData['businessDetails']['businessType'] = businessType.value;
-      
+
       // Save updated user data
       await prefs.setString('user_data', json.encode(userData));
-      print('✅ [ProfileController] User data updated in SharedPreferences');
-      
+
       // Update PermissionService user data if available
       try {
         final permissionService = Get.find<PermissionService>();
@@ -588,20 +581,11 @@ class ProfileController extends GetxController {
             permissions: permissionService.user.value!.permissions,
           );
           await permissionService.saveUserData(updatedUserData);
-          print('✅ [ProfileController] PermissionService user data updated');
         }
-      } catch (e) {
-        print('⚠️ [ProfileController] Could not update PermissionService: $e');
-      }
-      
-    } catch (e) {
-      print('❌ [ProfileController] Error updating SharedPreferences: $e');
-    }
+      } catch (e) {}
+    } catch (e) {}
   }
 
-  // ════════════════════════════════════════════════════════════════
-  // TOGGLE EDIT MODE
-  // ════════════════════════════════════════════════════════════════
   void toggleEdit() {
     isEditing.value = !isEditing.value;
     if (!isEditing.value) {

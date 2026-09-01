@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:BisonsTechs_app/Services/auth_logout_service.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:image_picker/image_picker.dart';
@@ -666,6 +667,7 @@ class AuthController extends GetxController {
   }
 
   Future<void> logout() async {
+    await AuthLogoutService.clearPushSession();
     await _clearAuthData();
     Get.offAllNamed('/login');
     AppSnackbar.success(
