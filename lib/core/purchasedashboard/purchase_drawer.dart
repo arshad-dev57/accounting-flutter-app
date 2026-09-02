@@ -4,6 +4,9 @@ import 'dart:io';
 import 'package:BisonsTechs_app/Services/auth_logout_service.dart';
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
+import 'package:BisonsTechs_app/widgets/module_logout_dialog.dart';
+import 'package:BisonsTechs_app/widgets/module_settings_tab.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/About/about_app_screen.dart';
 import 'package:BisonsTechs_app/core/About/privacypolicy_screen.dart';
@@ -33,6 +36,8 @@ class PurchaseDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = ResponsiveUtils.isMobile(context);
+
     return Drawer(
       width: 272,
       backgroundColor: Colors.white,
@@ -100,6 +105,7 @@ class PurchaseDrawer extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (!isMobile) ...[
                 const SizedBox(height: 4),
                 _SectionLabel('ACCOUNT'),
                 _NavSection(
@@ -160,6 +166,7 @@ class PurchaseDrawer extends StatelessWidget {
                     ('Privacy Policy', Mdi.shield_lock_outline, '__privacy'),
                   ],
                 ),
+                ],
                 const SizedBox(height: 8),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -170,7 +177,57 @@ class PurchaseDrawer extends StatelessWidget {
               ],
             ),
           ),
-          _PurchaseDrawerFooter(),
+          if (!isMobile) _PurchaseDrawerFooter(),
+          if (!isMobile)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 16),
+              child: Material(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.pop(context);
+                    Get.to(
+                      () => ModuleSettingsTab(
+                        onLogout: showModuleLogoutDialog,
+                        embedded: false,
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Iconify(Mdi.cog, size: 18, color: kPrimary),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text(
+                            'Settings',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 18,
+                          color: Colors.grey.shade400,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );

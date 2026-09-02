@@ -5,6 +5,8 @@ import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
 import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
+import 'package:BisonsTechs_app/core/plans/views/pricing_section.dart';
+import 'package:BisonsTechs_app/core/plans/utils/subscription_pricing.dart';
 import 'package:BisonsTechs_app/core/support/controllers/support_ticket_controller.dart';
 import 'package:BisonsTechs_app/core/support/screens/support_tickets_screen.dart';
 import 'package:flutter/material.dart';
@@ -75,13 +77,27 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
   }
 
   Future<void> _startTrial() async {
-    await _withLoading('Starting your 30-day free trial...', () => _subCtrl.startTrial());
+    await _withLoading('Starting your $trialDays-day free trial...', () => _subCtrl.startTrial());
   }
 
-  Future<void> _subscribe(String planId, double amount) async {
+  Future<void> _subscribePlan({
+    required String billingCycle,
+    required double amount,
+    required String productTier,
+    required int licensedUsers,
+    required int licensedBranches,
+    required bool isUpgrade,
+  }) async {
     await _withLoading(
-      'Activating your subscription...',
-      () => _subCtrl.subscribe(planId, amount),
+      isUpgrade ? 'Updating your subscription...' : 'Activating your subscription...',
+      () => _subCtrl.subscribe(
+        billingCycle,
+        amount,
+        productTier: productTier,
+        licensedUsers: licensedUsers,
+        licensedBranches: licensedBranches,
+        isUpgrade: isUpgrade,
+      ),
     );
   }
 
@@ -216,7 +232,7 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
                             const SizedBox(height: 20),
                           ],
                           const Text(
-                            'INDIVIDUAL PLANS',
+                            'PLANS & PRICING',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
@@ -225,15 +241,13 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
                             ),
                           ),
                           const SizedBox(height: 14),
-                          _PlanCardsGrid(
-                            isWide: isWide,
-                            isMobile: isMobile,
+                          PricingSection(
                             processing: _isProcessing,
-                            currentPlan: _subCtrl.subscriptionPlan.value,
-                            hasAccess: _subCtrl.hasAccess,
-                            onTrial: _startTrial,
-                            onSubscribe: _subscribe,
-                            onCustom: _openCustomRequest,
+                            isTrial: _subCtrl.onTrial,
+                            isPaid: _subCtrl.hasAccess && !_subCtrl.onTrial,
+                            onComplete: () => Get.offAllNamed('/dashboard'),
+                            onStartTrial: _startTrial,
+                            onSubscribe: _subscribePlan,
                           ),
                           const SizedBox(height: 48),
                           const Text(
@@ -843,16 +857,16 @@ class _CompareRow {
 }
 
 const _kCompareCols = [
-  ('trial', 'Trial', '\$0 / month'),
-  ('monthly', 'Monthly', '\$15 / month'),
-  ('yearly', 'Yearly', '\$150 / year'),
+  ('trial', 'Trial', '\$0'),
+  ('monthly', 'Monthly', 'From \$36 / mo'),
+  ('yearly', 'Yearly', 'From \$257 / yr'),
   ('custom', 'Custom', 'Let’s talk'),
 ];
 
 final _kCompareRows = <_CompareRow>[
   const _CompareRow.section('Access & users'),
   const _CompareRow.feature('Active subscription access', {
-    'trial': '30 days',
+    'trial': '$trialDays days',
     'monthly': true,
     'yearly': true,
     'custom': true,
@@ -864,9 +878,9 @@ final _kCompareRows = <_CompareRow>[
     'custom': 'Unlimited',
   }),
   const _CompareRow.feature('User seats', {
-    'trial': 'Limited',
-    'monthly': 'Standard',
-    'yearly': 'Standard',
+    'trial': 'Unlimited',
+    'monthly': 'Scales with plan',
+    'yearly': 'Scales with plan',
     'custom': 'Unlimited / negotiated',
   }),
   const _CompareRow.section('Accounting'),

@@ -686,7 +686,7 @@ class StockSummaryReportScreen extends StatelessWidget {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: categories.length,
-            separatorBuilder: (_, __) =>
+            separatorBuilder: (context, index) =>
                 Divider(height: 1, color: Colors.grey.shade100),
             itemBuilder: (_, index) {
               final cat = categories[index];

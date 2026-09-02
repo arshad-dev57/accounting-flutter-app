@@ -62,8 +62,6 @@ class LowStockReportController extends GetxController {
             .map((item) => ProductModel.fromJson(item))
             .toList();
       }
-    } catch (e) {
-      print('Error loading low stock data: $e');
     } finally {
       isLoading.value = false;
     }
@@ -133,7 +131,6 @@ class LowStockReportController extends GetxController {
       AppSnackbar.success(kSuccess, 'Success', 'PDF exported successfully!');
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('PDF Export Error: $e');
       AppSnackbar.error(
         kDanger,
         'Error',
@@ -356,7 +353,7 @@ class LowStockReportController extends GetxController {
                     ],
                   ),
                 );
-              }).toList(),
+              }),
 
               branding.buildSignatureBlock(),
         ],

@@ -30,6 +30,16 @@ class LocationScopeController extends GetxController {
     for (final path in hidden) {
       if (r == path || r.startsWith('$path/')) return false;
     }
+    // Module dashboards already show location in their own AppBar.
+    const ownHeader = [
+      '/accounting/dashboard',
+      '/warehouse/dashboard',
+      '/warehouse/sales',
+      '/purchase/dashboard',
+    ];
+    for (final path in ownHeader) {
+      if (r == path || r.startsWith('$path/')) return false;
+    }
     return true;
   }
 }
@@ -47,7 +57,10 @@ class LocationScopeHost extends StatelessWidget {
     final scope = Get.find<LocationScopeController>();
 
     return Obx(() {
-      final show = scope.shouldShow;
+      final r = scope.route.value;
+      final isMobile = MediaQuery.sizeOf(context).width < 600;
+      // Mobile module screens use their own AppBar — keep scope bar on home only.
+      final show = scope.shouldShow && !(isMobile && r != '/dashboard');
       return Column(
         children: [
           if (show)
@@ -65,8 +78,8 @@ class LocationScopeHost extends StatelessWidget {
                       bottom: BorderSide(color: Color(0xFFE8EBF0)),
                     ),
                   ),
-                  child: const Align(
-                    alignment: Alignment.centerLeft,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
                     child: LocationSwitcher(
                       compact: true,
                       showManageLink: true,

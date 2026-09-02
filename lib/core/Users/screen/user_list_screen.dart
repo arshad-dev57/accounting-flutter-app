@@ -1,3 +1,4 @@
+import 'package:BisonsTechs_app/core/plans/services/subscription_limit_helper.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/Users/controller/user_management_controller.dart';
 import 'package:BisonsTechs_app/core/Users/screen/enhanced_access_management_screen.dart';
@@ -49,7 +50,10 @@ class _UserListScreenState extends State<UserListScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Get.toNamed('/admin/users/add'),
+        onPressed: () async {
+          final ok = await SubscriptionLimitHelper.guardAddUser(context);
+          if (ok) Get.toNamed('/admin/users/add');
+        },
         backgroundColor: kPrimary,
         icon: const Icon(Icons.person_add_rounded, color: Colors.white),
         label: const Text(

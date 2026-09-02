@@ -11,11 +11,64 @@ import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class SalesInvoiceScreen extends StatelessWidget {
-  const SalesInvoiceScreen({super.key});
+  final bool embedded;
+
+  const SalesInvoiceScreen({super.key, this.embedded = false});
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(SalesInvoiceController());
+
+    final body = Obx(() {
+      if (controller.showCreateWizard.value) {
+        return _CreateInvoiceWizard(
+          controller: controller,
+          onCancel: controller.closeCreateWizard,
+        );
+      }
+
+      return Column(
+        children: [
+          _buildTopHeader(controller),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+              child: _InvoiceListView(
+                controller: controller,
+                onCreate: controller.openCreateWizard,
+                onView: (item) => _showDetail(context, controller, item),
+              ),
+            ),
+          ),
+        ],
+      );
+    });
+
+    if (embedded) {
+      return ColoredBox(
+        color: kBgLight,
+        child: Stack(
+          children: [
+            body,
+            Obx(() {
+              if (controller.showCreateWizard.value) {
+                return const SizedBox.shrink();
+              }
+              return Positioned(
+                right: 16,
+                bottom: 16,
+                child: FloatingActionButton(
+                  onPressed: controller.openCreateWizard,
+                  backgroundColor: kPrimary,
+                  elevation: 2,
+                  child: const Icon(Icons.add, color: Colors.white, size: 24),
+                ),
+              );
+            }),
+          ],
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: kBgLight,
@@ -60,30 +113,7 @@ class SalesInvoiceScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Obx(() {
-        if (controller.showCreateWizard.value) {
-          return _CreateInvoiceWizard(
-            controller: controller,
-            onCancel: controller.closeCreateWizard,
-          );
-        }
-
-        return Column(
-          children: [
-            _buildTopHeader(controller),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-                child: _InvoiceListView(
-                  controller: controller,
-                  onCreate: controller.openCreateWizard,
-                  onView: (item) => _showDetail(context, controller, item),
-                ),
-              ),
-            ),
-          ],
-        );
-      }),
+      body: body,
       floatingActionButton: Obx(() {
         if (controller.showCreateWizard.value) {
           return const SizedBox.shrink();

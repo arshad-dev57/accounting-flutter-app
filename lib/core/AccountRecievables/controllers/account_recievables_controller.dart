@@ -7,9 +7,7 @@ import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:universal_html/html.dart' as html;
 import 'package:get/get.dart';
-import 'dart:convert';
 import 'dart:io';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -259,7 +257,6 @@ class AccountsReceivableController extends GetxController {
 
   // ─── View Invoices ───────────────────────────────────────────────
   void viewInvoices(Customer customer) {
-    // TODO: Navigate to invoices list for this customer
     AppSnackbar.success(
       Colors.blue,
       'Invoices',
@@ -270,7 +267,6 @@ class AccountsReceivableController extends GetxController {
 
   // ─── ✅ FIXED: Show Record Payment Dialog ─────────────────────────
   void showRecordPayment(Customer customer) {
-    // TODO: Show payment dialog with invoice selection
     AppSnackbar.success(
       Colors.green,
       'Record Payment',
@@ -379,13 +375,6 @@ class AccountsReceivableController extends GetxController {
           'accounts_receivable_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
 
       if (kIsWeb) {
-        final blob = html.Blob([bytes], 'application/pdf');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
-
         if (Get.isDialogOpen ?? false) Get.back();
 
         AppSnackbar.success(
@@ -567,77 +556,69 @@ class AccountsReceivableController extends GetxController {
             ],
           ),
         ),
-        ...dataToExport
-            .map(
-              (customer) => pw.Container(
-                padding: const pw.EdgeInsets.symmetric(vertical: 6),
-                decoration: const pw.BoxDecoration(
-                  border: pw.Border(
-                    bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.5),
+        ...dataToExport.map(
+          (customer) => pw.Container(
+            padding: const pw.EdgeInsets.symmetric(vertical: 6),
+            decoration: const pw.BoxDecoration(
+              border: pw.Border(
+                bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.5),
+              ),
+            ),
+            child: pw.Row(
+              children: [
+                pw.Expanded(
+                  flex: 3,
+                  child: pw.Text(
+                    customer.name,
+                    style: const pw.TextStyle(fontSize: 9),
                   ),
                 ),
-                child: pw.Row(
-                  children: [
-                    pw.Expanded(
-                      flex: 3,
-                      child: pw.Text(
-                        customer.name,
-                        style: const pw.TextStyle(fontSize: 9),
-                      ),
-                    ),
-                    pw.Expanded(
-                      flex: 2,
-                      child: pw.Text(
-                        customer.phone,
-                        style: const pw.TextStyle(fontSize: 9),
-                      ),
-                    ),
-                    pw.Expanded(
-                      flex: 2,
-                      child: pw.Text(
-                        customer.totalInvoices.toString(),
-                        textAlign: pw.TextAlign.right,
-                        style: const pw.TextStyle(fontSize: 9),
-                      ),
-                    ),
-                    pw.Expanded(
-                      flex: 2,
-                      child: pw.Text(
-                        _formatAmount(customer.totalAmount),
-                        textAlign: pw.TextAlign.right,
-                        style: pw.TextStyle(
-                          fontSize: 9,
-                          color: PdfColors.indigo700,
-                        ),
-                      ),
-                    ),
-                    pw.Expanded(
-                      flex: 2,
-                      child: pw.Text(
-                        _formatAmount(customer.paidAmount),
-                        textAlign: pw.TextAlign.right,
-                        style: pw.TextStyle(
-                          fontSize: 9,
-                          color: PdfColors.green700,
-                        ),
-                      ),
-                    ),
-                    pw.Expanded(
-                      flex: 2,
-                      child: pw.Text(
-                        _formatAmount(customer.outstandingAmount),
-                        textAlign: pw.TextAlign.right,
-                        style: pw.TextStyle(
-                          fontSize: 9,
-                          color: PdfColors.red700,
-                        ),
-                      ),
-                    ),
-                  ],
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Text(
+                    customer.phone,
+                    style: const pw.TextStyle(fontSize: 9),
+                  ),
                 ),
-              ),
-            )
-            .toList(),
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Text(
+                    customer.totalInvoices.toString(),
+                    textAlign: pw.TextAlign.right,
+                    style: const pw.TextStyle(fontSize: 9),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Text(
+                    _formatAmount(customer.totalAmount),
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(
+                      fontSize: 9,
+                      color: PdfColors.indigo700,
+                    ),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Text(
+                    _formatAmount(customer.paidAmount),
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(fontSize: 9, color: PdfColors.green700),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Text(
+                    _formatAmount(customer.outstandingAmount),
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(fontSize: 9, color: PdfColors.red700),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),
@@ -1022,15 +1003,6 @@ class AccountsReceivableController extends GetxController {
           'accounts_receivable_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
 
       if (kIsWeb) {
-        final blob = html.Blob([
-          bytes,
-        ], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
-
         if (Get.isDialogOpen ?? false) Get.back();
 
         AppSnackbar.success(

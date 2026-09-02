@@ -5,11 +5,19 @@ import 'package:BisonsTechs_app/core/warehouse/widgets/location_switcher.dart';
 import 'package:BisonsTechs_app/core/Notifications/screens/notification_screen.dart';
 import 'package:BisonsTechs_app/widgets/reload_when_visible.dart';
 import 'package:BisonsTechs_app/core/warehouse/dashboard/warehouse_dashboard_controller.dart';
+import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
+import 'package:BisonsTechs_app/core/warehouse/Reports/screen/reports_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/Stock_in/screen/stock_in_screen.dart';
+import 'package:BisonsTechs_app/widgets/dashboard_mobile_chrome.dart';
+import 'package:BisonsTechs_app/widgets/module_logout_dialog.dart';
+import 'package:BisonsTechs_app/widgets/module_settings_tab.dart';
+import 'package:BisonsTechs_app/widgets/module_shortcuts_tab.dart';
 import 'package:BisonsTechs_app/core/warehouse/widgets/drawer_widget.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:shimmer/shimmer.dart';
 
 const _kPageBg = Color(0xFFF5F6FA);
@@ -58,53 +66,232 @@ class _WarehouseDashboardState extends State<WarehouseDashboard>
   Widget build(BuildContext context) => const _WarehouseDashboardView();
 }
 
-class _WarehouseDashboardView extends GetView<WarehouseDashboardController> {
+class _WarehouseDashboardView extends StatefulWidget {
   const _WarehouseDashboardView();
+
+  @override
+  State<_WarehouseDashboardView> createState() => _WarehouseDashboardViewState();
+}
+
+class _WarehouseDashboardViewState extends State<_WarehouseDashboardView> {
+  int _tabIndex = 0;
+
+  static const _tabLabels = [
+    'Dashboard',
+    'Stock',
+    'More',
+    'Reports',
+    'Settings',
+  ];
+
+  void _selectTab(int index) {
+    if (_tabIndex == index) return;
+    setState(() => _tabIndex = index);
+  }
+
+  List<DashboardBreadcrumbSegment> _breadcrumbSegments() {
+    final segments = <DashboardBreadcrumbSegment>[
+      DashboardBreadcrumbSegment(
+        label: 'Home',
+        onTap: () => Get.offAllNamed('/dashboard'),
+      ),
+      const DashboardBreadcrumbSegment(label: 'Warehouse'),
+    ];
+    if (_tabIndex > 0) {
+      segments.add(DashboardBreadcrumbSegment(label: _tabLabels[_tabIndex]));
+    }
+    return segments;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _WarehouseDashboardBody(
+      tabIndex: _tabIndex,
+      onSelectTab: _selectTab,
+      breadcrumbSegments: _breadcrumbSegments(),
+    );
+  }
+}
+
+class _WarehouseDashboardBody extends GetView<WarehouseDashboardController> {
+  final int tabIndex;
+  final ValueChanged<int> onSelectTab;
+  final List<DashboardBreadcrumbSegment> breadcrumbSegments;
+
+  const _WarehouseDashboardBody({
+    required this.tabIndex,
+    required this.onSelectTab,
+    required this.breadcrumbSegments,
+  });
 
   @override
   Widget build(BuildContext context) {
     Get.put(WarehouseDashboardController());
+    final isMobile = ResponsiveUtils.isMobile(context);
     final isTablet = MediaQuery.of(context).size.width >= 600;
+    final bottomReserve =
+        isMobile ? DashboardGlassBottomNav.reservedHeight(context) : 100.0;
 
     return Scaffold(
       backgroundColor: _kPageBg,
+      extendBody: isMobile,
       drawer: const WarehouseDrawer(),
-      appBar: _buildAppBar(isMobile: !isTablet),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return _buildShimmer();
-        }
-        return RefreshIndicator(
-          color: kPrimary,
-          backgroundColor: _kCardBg,
-          onRefresh: controller.refreshDashboard,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeroCard(),
-                const SizedBox(height: 14),
-                _buildPeriodChips(),
-                const SizedBox(height: 16),
-                _buildKpiGrid(isTablet),
-                const SizedBox(height: 16),
-                _buildStockOverview(),
-                const SizedBox(height: 16),
-                _buildStockTrendCard(),
-                const SizedBox(height: 16),
-                _buildCategoryDistributionCard(),
-                const SizedBox(height: 16),
-                _buildStockHealthCard(),
-                const SizedBox(height: 16),
-                _buildRecentActivities(),
-              ],
+      appBar: _buildAppBar(isMobile: isMobile),
+      body: SizedBox.expand(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (isMobile)
+              _buildMobileTab(isTablet: isTablet, bottomReserve: bottomReserve)
+            else
+              _buildDashboardTab(isTablet: isTablet, bottomReserve: bottomReserve),
+            if (isMobile)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: DashboardGlassBottomNav(
+                items: [
+                  DashboardBottomNavItem(
+                    label: 'Dashboard',
+                    iconAsset: 'assets/icons/dashboard.svg',
+                    fallbackIcon: Icons.dashboard_outlined,
+                    selected: tabIndex == 0,
+                    onTap: () => onSelectTab(0),
+                  ),
+                  DashboardBottomNavItem(
+                    label: 'Stock',
+                    iconAsset: 'assets/icons/purchase.svg',
+                    fallbackIcon: Icons.inventory_2_outlined,
+                    selected: tabIndex == 1,
+                    onTap: () => onSelectTab(1),
+                  ),
+                  DashboardBottomNavItem(
+                    label: 'More',
+                    iconAsset: 'assets/icons/accounting.svg',
+                    fallbackIcon: Icons.grid_view_rounded,
+                    selected: tabIndex == 2,
+                    onTap: () => onSelectTab(2),
+                  ),
+                  DashboardBottomNavItem(
+                    label: 'Reports',
+                    iconAsset: 'assets/icons/reports.svg',
+                    fallbackIcon: Icons.assessment_outlined,
+                    selected: tabIndex == 3,
+                    onTap: () => onSelectTab(3),
+                  ),
+                  DashboardBottomNavItem(
+                    label: 'Settings',
+                    iconAsset: 'assets/icons/settings.svg',
+                    fallbackIcon: Icons.settings_outlined,
+                    selected: tabIndex == 4,
+                    onTap: () => onSelectTab(4),
+                  ),
+                ],
+              ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileTab({
+    required bool isTablet,
+    required double bottomReserve,
+  }) {
+    final pad = EdgeInsets.only(bottom: bottomReserve);
+    switch (tabIndex) {
+      case 1:
+        return Padding(
+          padding: pad,
+          child: const StockScreen(embedded: true),
+        );
+      case 2:
+        return Padding(
+          padding: pad,
+          child: ModuleShortcutsTab(
+            title: 'Warehouse',
+            items: [
+              ModuleShortcutItem(
+                label: 'Products',
+                icon: Mdi.package_variant_closed,
+                onTap: () => Get.toNamed('/warehouse/products'),
+              ),
+              ModuleShortcutItem(
+                label: 'Categories',
+                icon: Mdi.category,
+                onTap: () => Get.toNamed('/warehouse/categories'),
+              ),
+              ModuleShortcutItem(
+                label: 'Suppliers',
+                icon: Mdi.account_tie,
+                onTap: () => Get.toNamed('/warehouse/suppliers'),
+              ),
+              ModuleShortcutItem(
+                label: 'Locations',
+                icon: Mdi.map_marker,
+                onTap: () => Get.toNamed('/warehouse/locations'),
+              ),
+            ],
           ),
         );
-      }),
-    );
+      case 3:
+        return Padding(
+          padding: pad,
+          child: const ReportsScreen(embedded: true),
+        );
+      case 4:
+        return Padding(
+          padding: pad,
+          child: ModuleSettingsTab(
+            onLogout: showModuleLogoutDialog,
+            embedded: true,
+          ),
+        );
+      default:
+        return _buildDashboardTab(isTablet: isTablet, bottomReserve: bottomReserve);
+    }
+  }
+
+  Widget _buildDashboardTab({
+    required bool isTablet,
+    required double bottomReserve,
+  }) {
+    return Obx(() {
+      if (controller.isLoading.value) {
+        return _buildShimmer(bottomReserve: bottomReserve);
+      }
+      return RefreshIndicator(
+        color: kPrimary,
+        backgroundColor: _kCardBg,
+        onRefresh: controller.refreshDashboard,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(16, 16, 16, bottomReserve),
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeroCard(),
+              const SizedBox(height: 14),
+              _buildPeriodChips(),
+              const SizedBox(height: 16),
+              _buildKpiGrid(isTablet),
+              const SizedBox(height: 16),
+              _buildStockOverview(),
+              const SizedBox(height: 16),
+              _buildStockTrendCard(),
+              const SizedBox(height: 16),
+              _buildCategoryDistributionCard(),
+              const SizedBox(height: 16),
+              _buildStockHealthCard(),
+              const SizedBox(height: 16),
+              _buildRecentActivities(),
+            ],
+          ),
+        ),
+      );
+    });
   }
 
   // ─── AppBar ───────────────────────────────────────────────────────────────
@@ -114,10 +301,15 @@ class _WarehouseDashboardView extends GetView<WarehouseDashboardController> {
       elevation: 0,
       scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(0.5),
-        child: Container(height: 0.5, color: _kCardBorder),
-      ),
+      bottom: isMobile
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(44),
+              child: DashboardBreadcrumbBar(segments: breadcrumbSegments),
+            )
+          : PreferredSize(
+              preferredSize: const Size.fromHeight(0.5),
+              child: Container(height: 0.5, color: _kCardBorder),
+            ),
       leading: Builder(
         builder: (ctx) => IconButton(
           icon: const Icon(Icons.menu_rounded, color: _kTextPrimary, size: 22),
@@ -125,90 +317,7 @@ class _WarehouseDashboardView extends GetView<WarehouseDashboardController> {
         ),
       ),
       titleSpacing: isMobile ? 0 : NavigationToolbar.kMiddleSpacing,
-      title: Obx(() {
-        final logo = controller.businessLogo.value;
-        return Row(
-          children: [
-            logo.isNotEmpty
-                ? Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: logo.startsWith('http')
-                          ? Image.network(
-                              logo,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  width: 30,
-                                  height: 30,
-                                  decoration: BoxDecoration(
-                                    color: kPrimary,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Icon(
-                                    Icons.warehouse_rounded,
-                                    size: 16,
-                                    color: Colors.white,
-                                  ),
-                                );
-                              },
-                            )
-                          : Image.file(
-                              File(logo),
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  width: 30,
-                                  height: 30,
-                                  decoration: BoxDecoration(
-                                    color: kPrimary,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Icon(
-                                    Icons.warehouse_rounded,
-                                    size: 16,
-                                    color: Colors.white,
-                                  ),
-                                );
-                              },
-                            ),
-                    ),
-                  )
-                : Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: kPrimary,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.warehouse_rounded,
-                      size: 16,
-                      color: Colors.white,
-                    ),
-                  ),
-            const SizedBox(width: 8),
-            const Flexible(
-              child: Text(
-                'Inventory',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: _kTextPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.3,
-                ),
-              ),
-            ),
-          ],
-        );
-      }),
+      title: const SizedBox.shrink(),
       actions: [
         LocationSwitcher(compact: true, showManageLink: !isMobile),
         FiscalYearSelect(
@@ -232,13 +341,13 @@ class _WarehouseDashboardView extends GetView<WarehouseDashboardController> {
   }
 
   // ─── Shimmer Loading ──────────────────────────────────────────────────────
-  Widget _buildShimmer() {
+  Widget _buildShimmer({double bottomReserve = 100}) {
     return Shimmer.fromColors(
       baseColor: const Color(0xFFEEEFF4),
       highlightColor: const Color(0xFFF8F9FC),
       period: const Duration(milliseconds: 1200),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+        padding: EdgeInsets.fromLTRB(16, 16, 16, bottomReserve),
         physics: const NeverScrollableScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

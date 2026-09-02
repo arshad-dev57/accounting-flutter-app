@@ -168,80 +168,8 @@ class TermsOfServiceScreen extends StatelessWidget {
     );
   }
 
-  // ==================== WEB ACKNOWLEDGEMENT ====================
-  Widget _buildWebAcknowledgement() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF3E0),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFFB74D)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.info_outline, color: Color(0xFFFF9800), size: 24),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              'By using this platform, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.',
-              style: const TextStyle(fontSize: 13, color: Color(0xFFE65100)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  // ==================== WEB ACCEPT BUTTON ====================
-  Widget _buildWebAcceptButton() {
-    return Row(
-      children: [
-        Expanded(
-          child: SizedBox(
-            height: 50,
-            child: ElevatedButton(
-              onPressed: () {
-                Get.back();
-                AppSnackbar.success(
-                  Colors.green,
-                  'Accepted',
-                  'You have accepted the Terms of Service',
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                'I Accept the Terms',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: SizedBox(
-            height: 50,
-            child: OutlinedButton(
-              onPressed: () => Get.back(),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: kPrimary),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text('Decline', style: TextStyle(fontSize: 15)),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ==================== MOBILE WIDGETS ====================
+  
   Widget _buildLastUpdated() {
     return Container(
       padding: const EdgeInsets.all(12),

@@ -244,7 +244,7 @@ class RefundListView extends StatelessWidget {
       ),
       child: ListView.separated(
         itemCount: controller.refunds.length,
-        separatorBuilder: (_, __) =>
+        separatorBuilder: (context, index) =>
             Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
         itemBuilder: (context, index) {
           final refund = controller.refunds[index];

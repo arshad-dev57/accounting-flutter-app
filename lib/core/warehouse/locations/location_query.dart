@@ -29,7 +29,10 @@ bool shouldAttachLocationId(String endpoint) {
       path.contains('/api/purchase') ||
       path.contains('/api/pos') ||
       path.contains('/api/goods') ||
-      path.contains('/api/accounting');
+      path.contains('/api/accounting') ||
+      path.contains('/api/expenses') ||
+      path.contains('/api/income') ||
+      path.contains('/api/journal-entries');
 }
 
 Worker? listenLocationChanges(void Function() reload) {

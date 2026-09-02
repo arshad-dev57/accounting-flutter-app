@@ -14,6 +14,7 @@ import 'package:intl/intl.dart';
 import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
@@ -562,12 +563,8 @@ class ExpenseController extends GetxController {
     try {
       isSaving.value = true;
 
-      print('🔍 [Flutter] Creating expense with bankAccountId: $bankAccountId');
-      print('🔍 [Flutter] bankAccountId type: ${bankAccountId.runtimeType}');
-      print('🔍 [Flutter] bankAccountId is null: ${bankAccountId == null}');
-      print(
-        '🔍 [Flutter] bankAccountId isEmpty: ${bankAccountId?.isEmpty ?? true}',
-      );
+    
+    
 
       final Map<String, dynamic> expenseData = {
         'date': DateFormat('yyyy-MM-dd').format(date),
@@ -583,7 +580,11 @@ class ExpenseController extends GetxController {
         'bankAccountId': bankAccountId,
       };
 
-      print('📦 [Flutter] Sending expense data: $expenseData');
+      final locationId = currentLocationId();
+      if (locationId != null && locationId.isNotEmpty) {
+        expenseData['locationId'] = locationId;
+      }
+
 
       final response = await _api.post('/api/expenses', body: expenseData);
 
@@ -610,7 +611,6 @@ class ExpenseController extends GetxController {
     } catch (e) {
       // ✅ Close loading dialog on error
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error creating expense: $e');
       _showError('Error creating expense');
     } finally {
       isSaving.value = false;
@@ -708,7 +708,6 @@ class ExpenseController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error updating expense: $e');
       _showError('Error updating expense');
     } finally {
       isSaving.value = false;
@@ -780,7 +779,6 @@ class ExpenseController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error deleting expense: $e');
       _showError('Error deleting expense');
     } finally {
       isDeleting.value = false;
@@ -848,7 +846,6 @@ class ExpenseController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error posting expense: $e');
       _showError('Error posting expense');
     } finally {
       isPosting.value = false;

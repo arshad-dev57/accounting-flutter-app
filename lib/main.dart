@@ -10,6 +10,8 @@ import 'package:BisonsTechs_app/core/Sales/screens/sales_credits_screen.dart';
 import 'package:BisonsTechs_app/core/Sales/screens/sales_dashbaord_screen.dart';
 import 'package:BisonsTechs_app/core/Sales/screens/sales_report_screen.dart';
 import 'package:BisonsTechs_app/core/accountingReports/accounting_report_screen.dart';
+import 'package:BisonsTechs_app/core/purchasedashboard/purchase_controller.dart';
+import 'package:BisonsTechs_app/core/purchasedashboard/purchase_dashboard_screen.dart';
 import 'package:BisonsTechs_app/core/purchasedashboard/purchase_report_screen.dart';
 import 'package:BisonsTechs_app/core/Splash/screen/splash_screen.dart';
 import 'package:BisonsTechs_app/core/dashboard/Screens/dashbaord_screen.dart';
@@ -175,6 +177,13 @@ class MyApp extends StatelessWidget {
               page: () => const DashboardScreen(),
               binding: BindingsBuilder(() {
                 Get.lazyPut(() => DashboardController(), fenix: true);
+              }),
+            ),
+            GetPage(
+              name: '/purchase/dashboard',
+              page: () => const PurchaseDashboardScreen(),
+              binding: BindingsBuilder(() {
+                Get.lazyPut(() => PurchaseController(), fenix: true);
               }),
             ),
             GetPage(

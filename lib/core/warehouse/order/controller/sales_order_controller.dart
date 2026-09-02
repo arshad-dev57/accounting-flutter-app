@@ -1185,20 +1185,14 @@ class SalesOrderController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🟣 [SalesOrderController] Response Status: ${response.statusCode}',
-      );
-      print('🟣 [SalesOrderController] Response Success: ${response.success}');
+   
 
       if (response.success) {
-        print('✅ [SalesOrderController] Order deleted successfully');
         await fetchOrders();
         return true;
       }
-      print('❌ [SalesOrderController] Failed to delete order');
       return false;
     } catch (e) {
-      print('❌ [SalesOrderController] deleteOrder error: $e');
       return false;
     } finally {
       isSubmitting.value = false;

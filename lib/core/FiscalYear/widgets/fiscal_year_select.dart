@@ -66,11 +66,44 @@ class FiscalYearSelect extends StatelessWidget {
           c.fiscalYears.first;
       final isClosed = current.isClosed;
 
+      final chip = _FiscalYearChip(
+        compact: compact,
+        current: current,
+        isClosed: isClosed,
+      );
+
+      final useSheet =
+          compact || Overlay.maybeOf(context) == null;
+
+      if (useSheet) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            InkWell(
+              onTap: () {
+                final sheetContext = Get.overlayContext ?? context;
+                _showFiscalYearPicker(
+                  sheetContext,
+                  c,
+                  selectedId,
+                  showManageLink: showManageLink,
+                );
+              },
+              borderRadius: BorderRadius.circular(8),
+              child: chip,
+            ),
+            if (showManageLink && !useSheet)
+              _ManageFiscalYearsButton(
+                onPressed: () => Get.to(() => const FiscalYearListScreen()),
+              ),
+          ],
+        );
+      }
+
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           PopupMenuButton<String>(
-            tooltip: '${current.name} (${current.statusDisplay})',
             initialValue: selectedId,
             onSelected: (id) {
               final match = c.fiscalYears.firstWhereOrNull((y) => y.id == id);
@@ -96,96 +129,194 @@ class FiscalYearSelect extends StatelessWidget {
                 ),
               );
             }).toList(),
-            child: Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: compact ? 6 : 8,
-                vertical: compact ? 5 : 6,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFE5E7EB)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.calendar_month_rounded,
-                    size: compact ? 14 : 16,
-                    color: kPrimary,
-                  ),
-                  SizedBox(width: compact ? 4 : 6),
-                  ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: compact ? 64 : 110),
-                    child: Text(
-                      current.name,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: compact ? 12 : 13,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF1A1D2E),
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    Icons.expand_more,
-                    size: compact ? 16 : 18,
-                    color: const Color(0xFF1A1D2E),
-                  ),
-                  // Status pill only on non-compact headers (avoids AppBar overflow)
-                  if (!compact) ...[
-                    const SizedBox(width: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isClosed
-                            ? Colors.grey.shade100
-                            : const Color(0xFFECFDF5),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        isClosed ? 'Closed' : 'Open',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: isClosed
-                              ? Colors.grey.shade700
-                              : const Color(0xFF047857),
-                        ),
-                      ),
-                    ),
-                  ] else ...[
-                    // Compact: tiny status dot instead of "Open"/"Closed" chip
-                    const SizedBox(width: 4),
-                    Container(
-                      width: 7,
-                      height: 7,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isClosed
-                            ? Colors.grey.shade500
-                            : const Color(0xFF047857),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
+            child: chip,
           ),
           if (showManageLink)
-            IconButton(
-              tooltip: 'Manage fiscal years',
-              icon: Icon(Icons.settings_outlined, size: 18, color: kPrimary),
+            _ManageFiscalYearsButton(
               onPressed: () => Get.to(() => const FiscalYearListScreen()),
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.all(4),
-              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             ),
         ],
       );
     });
+  }
+}
+
+void _showFiscalYearPicker(
+  BuildContext context,
+  FiscalYearController c,
+  String? selectedId, {
+  bool showManageLink = false,
+}) {
+  showModalBottomSheet<void>(
+    context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (ctx) {
+      return SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Select fiscal year',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+            ),
+            ...c.fiscalYears.map((y) {
+              final selected = y.id == selectedId;
+              return ListTile(
+                leading: Icon(
+                  selected ? Icons.check_circle : Icons.calendar_month_outlined,
+                  color: selected ? kPrimary : Colors.grey,
+                ),
+                title: Text(y.name),
+                subtitle: Text(y.isClosed ? 'Closed' : 'Open'),
+                onTap: () {
+                  c.selectFiscalYear(y);
+                  Navigator.pop(ctx);
+                },
+              );
+            }),
+            if (showManageLink) ...[
+              const Divider(height: 1),
+              ListTile(
+                leading: Icon(Icons.settings_outlined, color: kPrimary),
+                title: const Text('Manage fiscal years'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Get.to(() => const FiscalYearListScreen());
+                },
+              ),
+            ],
+            const SizedBox(height: 8),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+class _ManageFiscalYearsButton extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const _ManageFiscalYearsButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(8),
+        child: const Padding(
+          padding: EdgeInsets.all(4),
+          child: Icon(Icons.settings_outlined, size: 18, color: kPrimary),
+        ),
+      ),
+    );
+  }
+}
+
+class _FiscalYearChip extends StatelessWidget {
+  final bool compact;
+  final FiscalYear current;
+  final bool isClosed;
+
+  const _FiscalYearChip({
+    required this.compact,
+    required this.current,
+    required this.isClosed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 6 : 8,
+        vertical: compact ? 5 : 6,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.calendar_month_rounded,
+            size: compact ? 14 : 16,
+            color: kPrimary,
+          ),
+          SizedBox(width: compact ? 4 : 6),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: compact ? 52 : 110),
+            child: Text(
+              current.name,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: compact ? 12 : 13,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF1A1D2E),
+              ),
+            ),
+          ),
+          Icon(
+            Icons.expand_more,
+            size: compact ? 16 : 18,
+            color: const Color(0xFF1A1D2E),
+          ),
+          if (!compact) ...[
+            const SizedBox(width: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: isClosed
+                    ? Colors.grey.shade100
+                    : const Color(0xFFECFDF5),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                isClosed ? 'Closed' : 'Open',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: isClosed
+                      ? Colors.grey.shade700
+                      : const Color(0xFF047857),
+                ),
+              ),
+            ),
+          ] else ...[
+            const SizedBox(width: 4),
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isClosed
+                    ? Colors.grey.shade500
+                    : const Color(0xFF047857),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }
