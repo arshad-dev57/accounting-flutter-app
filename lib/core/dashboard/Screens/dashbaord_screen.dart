@@ -5,78 +5,27 @@ import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
-import 'package:BisonsTechs_app/core/About/about_app_screen.dart';
-import 'package:BisonsTechs_app/core/About/privacypolicy_screen.dart';
-import 'package:BisonsTechs_app/core/About/termsofservice_screen.dart';
-import 'package:BisonsTechs_app/core/AccountPayable/screen/Account_payable_screen.dart';
-import 'package:BisonsTechs_app/core/AccountRecievables/screens/account_recievables_screen.dart';
-import 'package:BisonsTechs_app/core/AgedRecievables/screens/aged_recievables_screen.dart';
-import 'package:BisonsTechs_app/core/BankAccounts/screens/bank_acccounts_screen.dart';
-import 'package:BisonsTechs_app/core/Bills/Screen/bill_Screen.dart';
-import 'package:BisonsTechs_app/core/CapitalEquity/screens/capital_equity_screen.dart';
-import 'package:BisonsTechs_app/core/companyprofile/screen/company_profile_screen.dart';
-import 'package:BisonsTechs_app/core/contactsupport/contact_support_screen.dart';
-import 'package:BisonsTechs_app/core/CreditNote/screens/credit_notes_screen.dart';
-import 'package:BisonsTechs_app/core/Customers/Screens/customers_screen.dart';
+
+
 import 'package:BisonsTechs_app/core/Expense/screen/expense_screen.dart';
-import 'package:BisonsTechs_app/core/Feedback/feedback_screen.dart';
-import 'package:BisonsTechs_app/core/FixedAssets/Screens/fixed_assets_screen.dart';
-import 'package:BisonsTechs_app/core/GeneralLedger/Screen/general_ledger_screen.dart';
+
 import 'package:BisonsTechs_app/core/Income/Screen/income_screen.dart';
 import 'package:BisonsTechs_app/core/Notifications/screens/notification_screen.dart';
-import 'package:BisonsTechs_app/core/PaymentMade/screens/payment_made_screen.dart';
-import 'package:BisonsTechs_app/core/ReportIsuue/Report_issue_screen.dart';
-import 'package:BisonsTechs_app/core/TrailBalance/Screen/trail_balance_screen.dart';
-import 'package:BisonsTechs_app/core/UserGuide/screen/user_guide_screen.dart';
-import 'package:BisonsTechs_app/core/balancesheet/screens/balance_sheet_screen.dart';
-import 'package:BisonsTechs_app/core/cashflowstatement/screen/cash_flow_statement_screen.dart';
-import 'package:BisonsTechs_app/core/changepassword/screen/change_password_screen.dart';
-import 'package:BisonsTechs_app/core/chartofaccounts/screens/chart_of_account_screen.dart';
-import 'package:BisonsTechs_app/core/settings/screens/currency_screen.dart';
-import 'package:BisonsTechs_app/core/settings/screens/pdf_report_settings_screen.dart';
+
 import 'package:BisonsTechs_app/core/dashboard/controllers/dashboard_controller.dart';
 import 'package:BisonsTechs_app/core/dashboard/utils/accounting_route_navigator.dart';
 import 'package:BisonsTechs_app/core/dashboard/widgets/accounting_settings_tab.dart';
 import 'package:BisonsTechs_app/widgets/dashboard_mobile_chrome.dart';
 import 'package:BisonsTechs_app/widgets/reload_when_visible.dart';
-import 'package:BisonsTechs_app/core/AccountPayable/controller/account_payable_controller.dart';
-import 'package:BisonsTechs_app/core/AccountRecievables/controllers/account_recievables_controller.dart';
-import 'package:BisonsTechs_app/core/BankAccounts/controllers/bankaccount_controller.dart';
-import 'package:BisonsTechs_app/core/Bills/controller/bills_controller.dart';
-import 'package:BisonsTechs_app/core/CapitalEquity/controller/equity_controller.dart';
-import 'package:BisonsTechs_app/core/CreditNote/controllers/creditnote_controller.dart';
-import 'package:BisonsTechs_app/core/Expense/controller/expense_controller.dart';
-import 'package:BisonsTechs_app/core/FixedAssets/controllers/fixed_asset_controller.dart';
-import 'package:BisonsTechs_app/core/GeneralLedger/Controller/general_ledger_controller.dart';
-import 'package:BisonsTechs_app/core/Income/controller/income_controller.dart';
-import 'package:BisonsTechs_app/core/PaymentMade/controller/paymentmade_controller.dart';
-import 'package:BisonsTechs_app/core/TrailBalance/controller/trail_balance_controller.dart';
-import 'package:BisonsTechs_app/core/accountingReports/accounting_report_controller.dart';
+
 import 'package:BisonsTechs_app/core/accountingReports/accounting_report_screen.dart';
-import 'package:BisonsTechs_app/core/balancesheet/controller/balance_sheet_controller.dart';
-import 'package:BisonsTechs_app/core/cashflowstatement/controller/cashflow_controller.dart';
-import 'package:BisonsTechs_app/core/chartofaccounts/controller/chart_of_account_controller.dart';
-import 'package:BisonsTechs_app/core/journalEntries/Controllers/journal_entry_controller.dart';
-import 'package:BisonsTechs_app/core/loanBorrowing/controller/loan_controller.dart';
-import 'package:BisonsTechs_app/core/paymentRecieved/controller/payment_recieved_controller.dart';
-import 'package:BisonsTechs_app/core/profitlossStatement/controllers/profit_and_loss_controller.dart';
-import 'package:BisonsTechs_app/core/settings/controller/pdf_report_settings_controller.dart';
-import 'package:BisonsTechs_app/core/tax/tax_controller.dart';
-import 'package:BisonsTechs_app/core/warehouse/invoice/controller/warehouse_invoice_controller.dart';
-import 'package:BisonsTechs_app/core/warehousecustomer/warehouse_customer_controller.dart';
-import 'package:BisonsTechs_app/core/tax/tax_screen.dart';
-import 'package:BisonsTechs_app/core/FiscalYear/screen/fiscal_year_list_screen.dart';
+
 import 'package:BisonsTechs_app/core/FiscalYear/widgets/fiscal_year_select.dart';
 import 'package:BisonsTechs_app/core/warehouse/widgets/location_switcher.dart';
-import 'package:BisonsTechs_app/core/journalEntries/Screens/journal_entries_screen.dart';
-import 'package:BisonsTechs_app/core/loanBorrowing/screen/_loan_borrowing_screen.dart';
+
 import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
-import 'package:BisonsTechs_app/core/paymentRecieved/Screens/payment_recieved_screen.dart';
 import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
-import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
-import 'package:BisonsTechs_app/core/profitlossStatement/screens/profit_loss_statement_screen.dart';
-import 'package:BisonsTechs_app/core/warehouse/invoice/screen/warehouse_invoice_screen.dart';
-import 'package:BisonsTechs_app/core/warehousecustomer/warehouse_customer_screen.dart';
+
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:get/get.dart';
@@ -138,7 +87,7 @@ class _LogoAvatar extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         color: onPrimaryBackground
-            ? Colors.white.withOpacity(0.18)
+            ? Colors.white.withValues(alpha: 0.18)
             : const Color(0xFFE6EEF5),
         borderRadius: BorderRadius.circular(size * 0.27),
       ),
@@ -174,7 +123,7 @@ class _LogoAvatar extends StatelessWidget {
                 height: size,
                 cacheWidth: (size * 2).toInt(),
                 cacheHeight: (size * 2).toInt(),
-                errorBuilder: (_, __, ___) => _placeholder(),
+                errorBuilder: (context, error, stackTrace) => _placeholder(),
               )
             : Image.file(
                 File(logo),
@@ -183,7 +132,7 @@ class _LogoAvatar extends StatelessWidget {
                 height: size,
                 cacheWidth: (size * 2).toInt(),
                 cacheHeight: (size * 2).toInt(),
-                errorBuilder: (_, __, ___) => _placeholder(),
+                errorBuilder: (context, error, stackTrace) => _placeholder(),
               ),
       ),
     );
@@ -611,7 +560,7 @@ class _AccountingDashboardViewState extends State<_AccountingDashboardView> {
       titleSpacing: isMobile ? 0 : NavigationToolbar.kMiddleSpacing,
       title: const SizedBox.shrink(),
       actions: [
-        LocationSwitcher(compact: true, showManageLink: !isMobile),
+        LocationSwitcher(compact: true, showManageLink: !isMobile, allowAll: true),
         FiscalYearSelect(compact: true, showManageLink: !isMobile),
         IconButton(
           icon: const Icon(Icons.notifications_none_rounded, color: _kTextSub, size: 22),
@@ -772,7 +721,7 @@ class _HeroCard extends GetView<DashboardController> {
           border: Border.all(color: _kHeroBorder),
           boxShadow: [
             BoxShadow(
-              color: kPrimary.withOpacity(0.10),
+              color: kPrimary.withValues(alpha: 0.10),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -996,7 +945,7 @@ class _PeriodChips extends GetView<DashboardController> {
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           itemCount: DashboardController.timePeriodLabels.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          separatorBuilder: (context, index) => const SizedBox(width: 8),
           itemBuilder: (_, i) {
             final period = DashboardController.timePeriodLabels[i];
             final isActive = period == selected;
@@ -1414,14 +1363,14 @@ class _CapitalCard extends GetView<DashboardController> {
                         barWidth: 2.5,
                         dotData: FlDotData(
                           show: capitalSpots.length <= 8,
-                          getDotPainter: (_, __, ___, ____) => FlDotCirclePainter(radius: 3, color: _kPurple, strokeWidth: 0),
+                          getDotPainter: (context, index, spot, series) => FlDotCirclePainter(radius: 3, color: _kPurple, strokeWidth: 0),
                         ),
                         belowBarData: BarAreaData(
                           show: true,
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: [_kPurple.withOpacity(0.16), _kPurple.withOpacity(0.0)],
+                            colors: [_kPurple.withValues(alpha: 0.16), _kPurple.withValues(alpha: 0.0)],
                           ),
                         ),
                       ),
@@ -1671,14 +1620,14 @@ class _RevenueTrendCard extends GetView<DashboardController> {
       isStrokeCapRound: true,
       dotData: FlDotData(
         show: true,
-        getDotPainter: (_, __, ___, ____) => FlDotCirclePainter(radius: 3, color: color, strokeWidth: 0),
+        getDotPainter: (context, index, spot, series) => FlDotCirclePainter(radius: 3, color: color, strokeWidth: 0),
       ),
       belowBarData: BarAreaData(
         show: true,
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [color.withOpacity(0.15), color.withOpacity(0.0)],
+          colors: [color.withValues(alpha: 0.15), color.withValues(alpha: 0.0)],
         ),
       ),
     );
@@ -1903,7 +1852,7 @@ class _DrawerHeader extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(Icons.arrow_back_rounded, size: 16, color: Colors.white),
@@ -1945,7 +1894,7 @@ class _DrawerHeader extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.12),
+                color: Colors.white.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -2105,9 +2054,9 @@ class _NavItem extends StatelessWidget {
             Container(
               width: 2, height: 14,
               margin: const EdgeInsets.only(right: 12),
-              decoration: BoxDecoration(color: kPrimary.withOpacity(0.35), borderRadius: BorderRadius.circular(2)),
+              decoration: BoxDecoration(color: kPrimary.withValues(alpha: 0.35), borderRadius: BorderRadius.circular(2)),
             ),
-            Iconify(icon, size: 16, color: kPrimary.withOpacity(0.75)),
+            Iconify(icon, size: 16, color: kPrimary.withValues(alpha: 0.75)),
             const SizedBox(width: 10),
             Expanded(
               child: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: _kTextPrimary), overflow: TextOverflow.ellipsis),

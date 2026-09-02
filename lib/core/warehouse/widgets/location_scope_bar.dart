@@ -1,4 +1,4 @@
-import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'package:BisonsTechs_app/core/warehouse/widgets/location_switcher.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -8,15 +8,13 @@ class LocationScopeController extends GetxController {
 
   void setRoute(String value) {
     if (route.value == value) return;
-    // routingCallback fires during navigator build — defer Rx update.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (route.value != value) route.value = value;
     });
   }
 
-  bool get shouldShow {
-    final r = route.value;
-    if (r.isEmpty || r == '/') return false;
+  bool shouldShow(String route) {
+    if (route.isEmpty || route == '/') return false;
     const hidden = [
       '/login',
       '/register',
@@ -28,23 +26,27 @@ class LocationScopeController extends GetxController {
       '/login-otp',
     ];
     for (final path in hidden) {
-      if (r == path || r.startsWith('$path/')) return false;
+      if (route == path || route.startsWith('$path/')) return false;
     }
-    // Module dashboards already show location in their own AppBar.
-    const ownHeader = [
-      '/accounting/dashboard',
-      '/warehouse/dashboard',
-      '/warehouse/sales',
-      '/purchase/dashboard',
-    ];
-    for (final path in ownHeader) {
-      if (r == path || r.startsWith('$path/')) return false;
-    }
+    if (_routeHasOwnLocationHeader(route)) return false;
     return true;
   }
 }
 
-/// Persistent location header for every signed-in screen (Next.js layout parity).
+bool _routeHasOwnLocationHeader(String route) {
+  const ownHeader = [
+    '/accounting/dashboard',
+    '/warehouse/dashboard',
+    '/warehouse/sales',
+    '/purchase/dashboard',
+  ];
+  for (final path in ownHeader) {
+    if (route == path || route.startsWith('$path/')) return true;
+  }
+  return false;
+}
+
+/// Persistent location header (web layout parity — all module screens).
 class LocationScopeHost extends StatelessWidget {
   final Widget child;
   const LocationScopeHost({super.key, required this.child});
@@ -58,9 +60,7 @@ class LocationScopeHost extends StatelessWidget {
 
     return Obx(() {
       final r = scope.route.value;
-      final isMobile = MediaQuery.sizeOf(context).width < 600;
-      // Mobile module screens use their own AppBar — keep scope bar on home only.
-      final show = scope.shouldShow && !(isMobile && r != '/dashboard');
+      final show = scope.shouldShow(r);
       return Column(
         children: [
           if (show)
@@ -83,6 +83,7 @@ class LocationScopeHost extends StatelessWidget {
                     child: LocationSwitcher(
                       compact: true,
                       showManageLink: true,
+                      allowAll: routeAllowsAllLocations(r),
                     ),
                   ),
                 ),

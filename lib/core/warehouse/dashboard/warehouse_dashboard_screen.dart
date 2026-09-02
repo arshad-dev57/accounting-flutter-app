@@ -862,7 +862,7 @@ class _WarehouseDashboardBody extends GetView<WarehouseDashboardController> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [color.withOpacity(0.15), color.withOpacity(0.0)],
+          colors: [color.withValues(alpha: 0.15), color.withValues(alpha: 0.0)],
         ),
       ),
     );
@@ -1000,7 +1000,7 @@ class _WarehouseDashboardBody extends GetView<WarehouseDashboardController> {
                     Icon(
                       Icons.pie_chart_outline,
                       size: 32,
-                      color: _kTextMuted.withOpacity(0.5),
+                      color: _kTextMuted.withValues(alpha: 0.5),
                     ),
                     const SizedBox(height: 8),
                     const Text(
@@ -1054,7 +1054,7 @@ class _WarehouseDashboardBody extends GetView<WarehouseDashboardController> {
                 decoration: BoxDecoration(
                   color: _kRedBg,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: _kRed.withOpacity(0.25)),
+                  border: Border.all(color: _kRed.withValues(alpha: 0.25)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -1112,14 +1112,14 @@ class _WarehouseDashboardBody extends GetView<WarehouseDashboardController> {
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
                 colors: [
-                  item.color.withOpacity(0.08),
-                  item.color.withOpacity(0.02),
+                  item.color.withValues(alpha: 0.08),
+                  item.color.withValues(alpha: 0.02),
                 ],
               )
             : null,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: isAlert ? item.color.withOpacity(0.25) : _kCardBorder,
+          color: isAlert ? item.color.withValues(alpha: 0.25) : _kCardBorder,
         ),
       ),
       child: Row(
@@ -1127,7 +1127,7 @@ class _WarehouseDashboardBody extends GetView<WarehouseDashboardController> {
           Container(
             padding: const EdgeInsets.all(5),
             decoration: BoxDecoration(
-              color: isAlert ? item.color.withOpacity(0.12) : _kCardBorder,
+              color: isAlert ? item.color.withValues(alpha: 0.12) : _kCardBorder,
               borderRadius: BorderRadius.circular(7),
             ),
             child: Icon(
@@ -1151,7 +1151,7 @@ class _WarehouseDashboardBody extends GetView<WarehouseDashboardController> {
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: isAlert ? item.color.withOpacity(0.15) : _kCardBorder,
+              color: isAlert ? item.color.withValues(alpha: 0.15) : _kCardBorder,
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -1189,7 +1189,7 @@ class _WarehouseDashboardBody extends GetView<WarehouseDashboardController> {
                     Icon(
                       Icons.inbox_outlined,
                       size: 32,
-                      color: _kTextMuted.withOpacity(0.5),
+                      color: _kTextMuted.withValues(alpha: 0.5),
                     ),
                     const SizedBox(height: 8),
                     const Text(
@@ -1320,7 +1320,7 @@ class _HeroCardWrapper extends GetView<WarehouseDashboardController> {
           border: Border.all(color: _kHeroBorder),
           boxShadow: [
             BoxShadow(
-              color: kPrimary.withOpacity(0.10),
+              color: kPrimary.withValues(alpha: 0.10),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),

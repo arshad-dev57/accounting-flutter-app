@@ -29,7 +29,7 @@ class InventoryValuationScreen extends StatelessWidget {
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
@@ -339,10 +339,10 @@ class InventoryValuationScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.withOpacity(0.08)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.08)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 4,
             offset: const Offset(0, 1),
           ),
@@ -356,7 +356,7 @@ class InventoryValuationScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(3),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Icon(icon, size: 12, color: color),
@@ -424,10 +424,10 @@ class InventoryValuationScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.withOpacity(0.08)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.08)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 4,
             offset: const Offset(0, 1),
           ),
@@ -442,7 +442,7 @@ class InventoryValuationScreen extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.08),
+                  color: kPrimary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Icon(
@@ -476,7 +476,7 @@ class InventoryValuationScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: item.getStatusColor().withOpacity(0.08),
+                  color: item.getStatusColor().withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
@@ -567,7 +567,7 @@ class InventoryValuationScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: kCardBg,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.grey.withOpacity(0.08)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.08)),
         ),
         child: Column(
           children: [
@@ -580,7 +580,7 @@ class InventoryValuationScreen extends StatelessWidget {
                   top: Radius.circular(10),
                 ),
                 border: Border(
-                  bottom: BorderSide(color: Colors.grey.withOpacity(0.08)),
+                  bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.08)),
                 ),
               ),
               child: Row(
@@ -612,7 +612,7 @@ class InventoryValuationScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       border: Border(
                         bottom: BorderSide(
-                          color: Colors.grey.withOpacity(0.05),
+                          color: Colors.grey.withValues(alpha: 0.05),
                         ),
                       ),
                     ),
@@ -676,7 +676,7 @@ class InventoryValuationScreen extends StatelessWidget {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: item.getStatusColor().withOpacity(0.08),
+                                color: item.getStatusColor().withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -729,7 +729,7 @@ class InventoryValuationScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: kCardBg,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.grey.withOpacity(0.08)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.08)),
         ),
         child: Column(
           children: [
@@ -742,7 +742,7 @@ class InventoryValuationScreen extends StatelessWidget {
                   top: Radius.circular(10),
                 ),
                 border: Border(
-                  bottom: BorderSide(color: Colors.grey.withOpacity(0.08)),
+                  bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.08)),
                 ),
               ),
               child: Row(
@@ -796,7 +796,7 @@ class InventoryValuationScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       border: Border(
                         bottom: BorderSide(
-                          color: Colors.grey.withOpacity(0.05),
+                          color: Colors.grey.withValues(alpha: 0.05),
                         ),
                       ),
                     ),
@@ -873,7 +873,7 @@ class InventoryValuationScreen extends StatelessWidget {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: item.getStatusColor().withOpacity(0.08),
+                                color: item.getStatusColor().withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
@@ -946,7 +946,7 @@ class InventoryValuationScreen extends StatelessWidget {
               controller.getSortIcon(field),
               style: TextStyle(
                 fontSize: 9,
-                color: isActive ? kPrimary : kSubText.withOpacity(0.3),
+                color: isActive ? kPrimary : kSubText.withValues(alpha: 0.3),
               ),
             ),
           ],
@@ -970,10 +970,10 @@ class InventoryValuationScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: kCardBg,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.grey.withOpacity(0.08)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.08)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 4,
               offset: const Offset(0, 1),
             ),
@@ -987,7 +987,7 @@ class InventoryValuationScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.08),
+                    color: kPrimary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: const Icon(
@@ -1057,7 +1057,7 @@ class InventoryValuationScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(2),
                   child: LinearProgressIndicator(
                     value: percentage / 100,
-                    backgroundColor: Colors.grey.withOpacity(0.08),
+                    backgroundColor: Colors.grey.withValues(alpha: 0.08),
                     color: kPrimary,
                     minHeight: 4,
                   ),
@@ -1092,7 +1092,7 @@ class InventoryValuationScreen extends StatelessWidget {
             Icon(
               Icons.inventory_2_outlined,
               size: 48,
-              color: kSubText.withOpacity(0.3),
+              color: kSubText.withValues(alpha: 0.3),
             ),
             const SizedBox(height: 12),
             Text(

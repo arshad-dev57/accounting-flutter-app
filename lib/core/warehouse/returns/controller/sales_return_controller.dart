@@ -104,14 +104,11 @@ class SalesReturnController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    print('🟢 [SalesReturnController] onInit called');
-    print('🟢 [SalesReturnController] Fetching returns...');
     fetchReturns();
   }
 
   @override
   void onClose() {
-    print('🟢 [SalesReturnController] onClose called - disposing controllers');
     orderSearchController.dispose();
     reasonController.dispose();
     notesController.dispose();
@@ -144,11 +141,6 @@ class SalesReturnController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   Future<void> fetchReturns({bool resetPage = false}) async {
-    print('🔵 [SalesReturnController] fetchReturns called');
-    print(
-      '🔵 [SalesReturnController] Current Page: ${currentPage.value}, Limit: ${pageLimit.value}',
-    );
-    print('🔵 [SalesReturnController] Reset Page: $resetPage');
 
     if (resetPage) currentPage.value = 1;
     try {
@@ -159,49 +151,32 @@ class SalesReturnController extends GetxController {
       };
       if (searchFilter.value.isNotEmpty) {
         params['search'] = searchFilter.value;
-        print(
-          '🔵 [SalesReturnController] Search filter: ${searchFilter.value}',
-        );
       }
       if (statusFilter.value != 'all') {
         params['status'] = statusFilter.value;
-        print(
-          '🔵 [SalesReturnController] Status filter: ${statusFilter.value}',
-        );
       }
       if (typeFilter.value != 'all') {
         params['type'] = typeFilter.value;
-        print('🔵 [SalesReturnController] Type filter: ${typeFilter.value}');
       }
       if (fromDate.value != null) {
         params['fromDate'] = fromDate.value!.toIso8601String().split('T').first;
-        print('🔵 [SalesReturnController] From date: ${params['fromDate']}');
       }
       if (toDate.value != null) {
         params['toDate'] = toDate.value!.toIso8601String().split('T').first;
-        print('🔵 [SalesReturnController] To date: ${params['toDate']}');
       }
 
       final query = params.entries
           .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
           .join('&');
-      print(
-        '🔵 [SalesReturnController] API Request: GET /api/warehouse/returns?$query',
-      );
 
       final response = await _api.get(
         '/api/warehouse/returns?$query',
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [SalesReturnController] Response Status: ${response.statusCode}',
-      );
-      print('🔵 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
-        print('🔵 [SalesReturnController] Data length: ${list.length}');
 
         returns.value = list
             .map((e) => ReturnModel.fromJson(Map<String, dynamic>.from(e)))
@@ -214,7 +189,6 @@ class SalesReturnController extends GetxController {
           stats.value = ReturnStats.fromJson(
             Map<String, dynamic>.from(response.data['stats']),
           );
-          print('🔵 [SalesReturnController] Stats: ${stats.value}');
         }
 
         final pagination = response.data['pagination'] as Map<String, dynamic>?;
@@ -227,38 +201,20 @@ class SalesReturnController extends GetxController {
           hasPrev.value = pagination['hasPrev'] == true;
           hasMore.value = pagination['hasNext'] == true;
 
-          print(
-            '✅ [SalesReturnController] Returns fetched successfully: ${returns.length} returns',
-          );
-          print(
-            '✅ [SalesReturnController] Total records: ${totalRecords.value}, Total pages: ${totalPages.value}',
-          );
         }
       } else {
-        print('❌ [SalesReturnController] Failed to fetch returns');
-        print('❌ [SalesReturnController] Response data: ${response.data}');
-        Get.snackbar('Error', response.message ?? 'Failed to load returns');
+        Get.snackbar('Error', response.message);
       }
     } catch (e) {
-      print('❌ [SalesReturnController] fetchReturns error: $e');
-      print('❌ [SalesReturnController] Stack trace: ${StackTrace.current}');
       Get.snackbar('Error', e.toString());
     } finally {
       isLoading.value = false;
-      print(
-        '🔵 [SalesReturnController] fetchReturns completed, isLoading: ${isLoading.value}',
-      );
     }
   }
 
   // ─── LOCAL FILTERS ──────────────────────────────────────────
 
   void applyLocalFilters() {
-    print('🟣 [SalesReturnController] applyLocalFilters called');
-    print(
-      '🟣 [SalesReturnController] Selected filter: ${selectedFilter.value}',
-    );
-    print('🟣 [SalesReturnController] Search filter: ${searchFilter.value}');
 
     final list = returns.toList();
     final filtered = list.where((item) {
@@ -279,26 +235,20 @@ class SalesReturnController extends GetxController {
       return true;
     }).toList();
 
-    print(
-      '🟣 [SalesReturnController] Filtered returns: ${filtered.length} out of ${list.length}',
-    );
     filteredReturns.value = filtered;
   }
 
   void filterReturns(String filter) {
-    print('🟣 [SalesReturnController] filterReturns called with: $filter');
     selectedFilter.value = filter;
     applyLocalFilters();
   }
 
   void searchReturns(String query) {
-    print('🟣 [SalesReturnController] searchReturns called with: $query');
     searchFilter.value = query;
     applyLocalFilters();
   }
 
   void clearSearch() {
-    print('🟣 [SalesReturnController] clearSearch called');
     searchFilter.value = '';
     applyLocalFilters();
     fetchReturns(resetPage: true);
@@ -307,22 +257,14 @@ class SalesReturnController extends GetxController {
   // ─── LOAD MORE (Infinite Scroll) ────────────────────────────
 
   Future<void> fetchMoreReturns() async {
-    print('🟡 [SalesReturnController] fetchMoreReturns called');
-    print(
-      '🟡 [SalesReturnController] hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}',
-    );
 
     if (!hasMore.value || isLoadingMore.value) {
-      print(
-        '🟡 [SalesReturnController] Skipping load more - hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}',
-      );
       return;
     }
 
     try {
       isLoadingMore.value = true;
       currentPage.value += 1;
-      print('🟡 [SalesReturnController] Loading page: ${currentPage.value}');
 
       final params = <String, String>{
         'page': currentPage.value.toString(),
@@ -335,9 +277,6 @@ class SalesReturnController extends GetxController {
       final query = params.entries
           .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
           .join('&');
-      print(
-        '🟡 [SalesReturnController] API Request: GET /api/warehouse/returns?$query (Page ${currentPage.value})',
-      );
 
       final response = await _api.get(
         '/api/warehouse/returns?$query',
@@ -350,9 +289,6 @@ class SalesReturnController extends GetxController {
             .map((e) => ReturnModel.fromJson(Map<String, dynamic>.from(e)))
             .toList();
 
-        print(
-          '🟡 [SalesReturnController] Loaded ${newReturns.length} more returns',
-        );
         returns.addAll(newReturns);
         applyLocalFilters();
 
@@ -362,38 +298,27 @@ class SalesReturnController extends GetxController {
           totalRecords.value = (pagination['total'] as num?)?.toInt() ?? 0;
           totalPages.value = (pagination['pages'] as num?)?.toInt() ?? 1;
         }
-        print(
-          '🟡 [SalesReturnController] Total returns now: ${returns.length}, hasMore: ${hasMore.value}',
-        );
       } else {
-        print('❌ [SalesReturnController] Failed to load more returns');
       }
     } catch (e) {
-      print('❌ [SalesReturnController] fetchMoreReturns error: $e');
+      debugPrint('Error: $e');
     } finally {
       isLoadingMore.value = false;
-      print('🟡 [SalesReturnController] fetchMoreReturns completed');
     }
   }
 
   // ─── REFRESH ──────────────────────────────────────────────────
 
   Future<void> refreshReturns() {
-    print('🟢 [SalesReturnController] refreshReturns called');
     return fetchReturns(resetPage: true);
   }
 
   void applyFilters() {
-    print('🟣 [SalesReturnController] applyFilters called');
     fetchReturns(resetPage: true);
   }
 
   void goToPage(int page) {
-    print('🟣 [SalesReturnController] goToPage called: $page');
     if (page < 1 || page > totalPages.value) {
-      print(
-        '🟣 [SalesReturnController] Invalid page: $page, totalPages: ${totalPages.value}',
-      );
       return;
     }
     currentPage.value = page;
@@ -405,25 +330,16 @@ class SalesReturnController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   void openCreateWizard() {
-    print('🟢 [SalesReturnController] openCreateWizard called');
     _resetWizard();
     showCreateWizard.value = true;
-    print(
-      '🟢 [SalesReturnController] showCreateWizard: ${showCreateWizard.value}',
-    );
   }
 
   void closeCreateWizard() {
-    print('🟢 [SalesReturnController] closeCreateWizard called');
     showCreateWizard.value = false;
     _resetWizard();
-    print(
-      '🟢 [SalesReturnController] showCreateWizard: ${showCreateWizard.value}',
-    );
   }
 
   void _resetWizard() {
-    print('🟢 [SalesReturnController] _resetWizard called');
     wizardStep.value = 0;
     selectedOrder.value = null;
     orderSearchResults.clear();
@@ -435,14 +351,11 @@ class SalesReturnController extends GetxController {
     shippingCostController.text = '0';
     returnType.value = 'Return';
     returnMethod.value = 'Original Payment';
-    print('✅ [SalesReturnController] Wizard reset complete');
   }
 
   Future<void> searchOrders(String query) async {
-    print('🔵 [SalesReturnController] searchOrders called with: $query');
 
     if (query.trim().length < 2) {
-      print('🔵 [SalesReturnController] Query too short, clearing results');
       orderSearchResults.clear();
       return;
     }
@@ -450,9 +363,6 @@ class SalesReturnController extends GetxController {
     try {
       isSearchingOrders.value = true;
       final encoded = Uri.encodeComponent(query.trim());
-      print(
-        '🔵 [SalesReturnController] API Request: GET /api/warehouse/order?search=$encoded&limit=10',
-      );
 
       final response = await _api.get(
         '/api/warehouse/order?search=$encoded&limit=10',
@@ -464,27 +374,17 @@ class SalesReturnController extends GetxController {
         orderSearchResults.value = list
             .map((e) => OrderModel.fromJson(Map<String, dynamic>.from(e)))
             .toList();
-        print(
-          '🔵 [SalesReturnController] Found ${orderSearchResults.length} orders for query: $query',
-        );
       } else {
-        print('❌ [SalesReturnController] No orders found for query: $query');
         orderSearchResults.clear();
       }
     } catch (e) {
-      print('❌ [SalesReturnController] searchOrders error: $e');
       orderSearchResults.clear();
     } finally {
       isSearchingOrders.value = false;
-      print('🔵 [SalesReturnController] searchOrders completed');
     }
   }
 
   void selectOrderForReturn(OrderModel order) {
-    print('🔵 [SalesReturnController] selectOrderForReturn called');
-    print(
-      '🔵 [SalesReturnController] Selected order: ${order.orderNumber} - ${order.customerName}',
-    );
 
     selectedOrder.value = order;
     orderSearchResults.clear();
@@ -499,14 +399,10 @@ class SalesReturnController extends GetxController {
       );
     }).toList();
 
-    print(
-      '🔵 [SalesReturnController] Created ${lineDrafts.length} line drafts for order',
-    );
   }
 
   bool canGoToStep2() {
     final canGo = selectedOrder.value != null;
-    print('🔵 [SalesReturnController] canGoToStep2: $canGo');
     return canGo;
   }
 
@@ -514,42 +410,27 @@ class SalesReturnController extends GetxController {
     final canGo = lineDrafts.any(
       (l) => l.selected.value && l.returnQuantity > 0,
     );
-    print('🔵 [SalesReturnController] canGoToStep3: $canGo');
     return canGo;
   }
 
   void nextStep() {
-    print(
-      '🟡 [SalesReturnController] nextStep called, current step: ${wizardStep.value}',
-    );
 
     if (wizardStep.value == 0 && !canGoToStep2()) {
-      print(
-        '❌ [SalesReturnController] Cannot go to step 2 - no order selected',
-      );
       Get.snackbar('Validation', 'Select an order first');
       return;
     }
     if (wizardStep.value == 1 && !canGoToStep3()) {
-      print(
-        '❌ [SalesReturnController] Cannot go to step 3 - no items selected',
-      );
       Get.snackbar('Validation', 'Select at least one item to return');
       return;
     }
     if (wizardStep.value < 2) {
       wizardStep.value++;
-      print('🟡 [SalesReturnController] Step changed to: ${wizardStep.value}');
     }
   }
 
   void previousStep() {
-    print(
-      '🟡 [SalesReturnController] previousStep called, current step: ${wizardStep.value}',
-    );
     if (wizardStep.value > 0) {
       wizardStep.value--;
-      print('🟡 [SalesReturnController] Step changed to: ${wizardStep.value}');
     }
   }
 
@@ -558,26 +439,21 @@ class SalesReturnController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   Future<bool> createReturn() async {
-    print('🔵 [SalesReturnController] createReturn called');
 
     final order = selectedOrder.value;
     if (order == null) {
-      print('❌ [SalesReturnController] No order selected');
       return false;
     }
 
     final selectedItems = lineDrafts
         .where((l) => l.selected.value && l.returnQuantity > 0)
         .toList();
-    print('🔵 [SalesReturnController] Selected items: ${selectedItems.length}');
 
     if (selectedItems.isEmpty) {
-      print('❌ [SalesReturnController] No items selected');
       Get.snackbar('Validation', 'Select at least one item');
       return false;
     }
     if (reasonController.text.trim().isEmpty) {
-      print('❌ [SalesReturnController] No reason provided');
       Get.snackbar('Validation', 'Return reason is required');
       return false;
     }
@@ -602,10 +478,6 @@ class SalesReturnController extends GetxController {
         'shippingCost': shippingCost,
       };
 
-      print('🔵 [SalesReturnController] Submitting return payload:');
-      print(
-        '🔵 [SalesReturnController] ${payload.toString().substring(0, payload.toString().length > 500 ? 500 : payload.toString().length)}...',
-      );
 
       final response = await _api.post(
         '/api/warehouse/returns',
@@ -613,45 +485,29 @@ class SalesReturnController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [SalesReturnController] Response Status: ${response.statusCode}',
-      );
-      print('🔵 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success) {
-        print('✅ [SalesReturnController] Return request created successfully!');
         Get.snackbar('Success', 'Return request created');
         closeCreateWizard();
         await fetchReturns(resetPage: true);
         return true;
       }
 
-      print(
-        '❌ [SalesReturnController] Failed to create return: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to create return');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [SalesReturnController] createReturn error: $e');
-      print('❌ [SalesReturnController] Stack trace: ${StackTrace.current}');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
       isSubmitting.value = false;
-      print('🔵 [SalesReturnController] createReturn completed');
     }
   }
 
   void selectReturn(ReturnModel item) {
-    print(
-      '🔵 [SalesReturnController] selectReturn called for: ${item.returnNumber}',
-    );
     selectedReturn.value = item;
   }
 
   Future<bool> updateReturn(String id, Map<String, dynamic> data) async {
-    print('🔵 [SalesReturnController] updateReturn called for ID: $id');
-    print('🔵 [SalesReturnController] Update data: $data');
 
     try {
       isSubmitting.value = true;
@@ -661,25 +517,16 @@ class SalesReturnController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [SalesReturnController] Response Status: ${response.statusCode}',
-      );
-      print('🔵 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success) {
-        print('✅ [SalesReturnController] Return updated successfully');
         Get.snackbar('Success', 'Return updated successfully');
         await fetchReturns(resetPage: true);
         return true;
       }
 
-      print(
-        '❌ [SalesReturnController] Failed to update return: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to update return');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [SalesReturnController] updateReturn error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -688,7 +535,6 @@ class SalesReturnController extends GetxController {
   }
 
   Future<bool> deleteReturn(String id) async {
-    print('🔵 [SalesReturnController] deleteReturn called for ID: $id');
 
     try {
       isSubmitting.value = true;
@@ -697,25 +543,16 @@ class SalesReturnController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [SalesReturnController] Response Status: ${response.statusCode}',
-      );
-      print('🔵 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success) {
-        print('✅ [SalesReturnController] Return deleted successfully');
         Get.snackbar('Success', 'Return deleted successfully');
         await fetchReturns(resetPage: true);
         return true;
       }
 
-      print(
-        '❌ [SalesReturnController] Failed to delete return: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to delete return');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [SalesReturnController] deleteReturn error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -728,7 +565,6 @@ class SalesReturnController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   Future<bool> approveReturn(String id) async {
-    print('🟣 [SalesReturnController] approveReturn called for ID: $id');
 
     try {
       isSubmitting.value = true;
@@ -738,25 +574,16 @@ class SalesReturnController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🟣 [SalesReturnController] Response Status: ${response.statusCode}',
-      );
-      print('🟣 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success) {
-        print('✅ [SalesReturnController] Return approved successfully');
         Get.snackbar('Success', 'Return approved');
         await fetchReturns();
         return true;
       }
 
-      print(
-        '❌ [SalesReturnController] Failed to approve return: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to approve return');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [SalesReturnController] approveReturn error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -765,11 +592,8 @@ class SalesReturnController extends GetxController {
   }
 
   Future<bool> rejectReturn(String id, String reason) async {
-    print('🟣 [SalesReturnController] rejectReturn called for ID: $id');
-    print('🟣 [SalesReturnController] Reason: $reason');
 
     if (reason.trim().isEmpty) {
-      print('❌ [SalesReturnController] No rejection reason provided');
       Get.snackbar('Validation', 'Rejection reason is required');
       return false;
     }
@@ -782,25 +606,16 @@ class SalesReturnController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🟣 [SalesReturnController] Response Status: ${response.statusCode}',
-      );
-      print('🟣 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success) {
-        print('✅ [SalesReturnController] Return rejected successfully');
         Get.snackbar('Success', 'Return rejected');
         await fetchReturns();
         return true;
       }
 
-      print(
-        '❌ [SalesReturnController] Failed to reject return: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to reject return');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [SalesReturnController] rejectReturn error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -809,7 +624,6 @@ class SalesReturnController extends GetxController {
   }
 
   Future<bool> completeReturn(String id) async {
-    print('🟣 [SalesReturnController] completeReturn called for ID: $id');
 
     try {
       isSubmitting.value = true;
@@ -819,25 +633,16 @@ class SalesReturnController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🟣 [SalesReturnController] Response Status: ${response.statusCode}',
-      );
-      print('🟣 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success) {
-        print('✅ [SalesReturnController] Return completed successfully');
         Get.snackbar('Success', 'Return completed');
         await fetchReturns();
         return true;
       }
 
-      print(
-        '❌ [SalesReturnController] Failed to complete return: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to complete return');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [SalesReturnController] completeReturn error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -846,8 +651,6 @@ class SalesReturnController extends GetxController {
   }
 
   Future<bool> cancelReturn(String id, {String? reason}) async {
-    print('🟣 [SalesReturnController] cancelReturn called for ID: $id');
-    print('🟣 [SalesReturnController] Reason: $reason');
 
     try {
       isSubmitting.value = true;
@@ -857,25 +660,16 @@ class SalesReturnController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🟣 [SalesReturnController] Response Status: ${response.statusCode}',
-      );
-      print('🟣 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success) {
-        print('✅ [SalesReturnController] Return cancelled successfully');
         Get.snackbar('Success', 'Return cancelled');
         await fetchReturns();
         return true;
       }
 
-      print(
-        '❌ [SalesReturnController] Failed to cancel return: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to cancel return');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [SalesReturnController] cancelReturn error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -888,7 +682,6 @@ class SalesReturnController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   Future<ReturnModel?> getReturnById(String id) async {
-    print('🔵 [SalesReturnController] getReturnById called for ID: $id');
 
     try {
       final response = await _api.get(
@@ -896,24 +689,15 @@ class SalesReturnController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [SalesReturnController] Response Status: ${response.statusCode}',
-      );
-      print('🔵 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success && response.data != null) {
         final returnData = ReturnModel.fromJson(
           Map<String, dynamic>.from(response.data['data']),
         );
-        print(
-          '✅ [SalesReturnController] Return found: ${returnData.returnNumber}',
-        );
         return returnData;
       }
-      print('❌ [SalesReturnController] Return not found');
       return null;
     } catch (e) {
-      print('❌ [SalesReturnController] getReturnById error: $e');
       return null;
     }
   }
@@ -926,10 +710,6 @@ class SalesReturnController extends GetxController {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
-    print('🔵 [SalesReturnController] fetchReturnStats called');
-    print(
-      '🔵 [SalesReturnController] Start date: $startDate, End date: $endDate',
-    );
 
     try {
       final params = <String, String>{};
@@ -943,30 +723,21 @@ class SalesReturnController extends GetxController {
           .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
           .join('&');
 
-      print(
-        '🔵 [SalesReturnController] API Request: GET /api/warehouse/returns/stats?$query',
-      );
 
       final response = await _api.get(
         '/api/warehouse/returns/stats?$query',
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [SalesReturnController] Response Status: ${response.statusCode}',
-      );
-      print('🔵 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success && response.data != null) {
         stats.value = ReturnStats.fromJson(
           Map<String, dynamic>.from(response.data['data']),
         );
-        print('✅ [SalesReturnController] Stats updated: ${stats.value}');
       } else {
-        print('❌ [SalesReturnController] Failed to fetch stats');
       }
     } catch (e) {
-      print('❌ [SalesReturnController] fetchReturnStats error: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -978,9 +749,6 @@ class SalesReturnController extends GetxController {
     List<String> ids,
     Map<String, dynamic> data,
   ) async {
-    print('🔵 [SalesReturnController] bulkUpdateReturns called');
-    print('🔵 [SalesReturnController] IDs: $ids');
-    print('🔵 [SalesReturnController] Data: $data');
 
     try {
       isSubmitting.value = true;
@@ -990,27 +758,16 @@ class SalesReturnController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [SalesReturnController] Response Status: ${response.statusCode}',
-      );
-      print('🔵 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success) {
-        print(
-          '✅ [SalesReturnController] ${ids.length} returns updated successfully',
-        );
         Get.snackbar('Success', '${ids.length} returns updated successfully');
         await fetchReturns(resetPage: true);
         return true;
       }
 
-      print(
-        '❌ [SalesReturnController] Failed to update returns: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to update returns');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [SalesReturnController] bulkUpdateReturns error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -1023,9 +780,6 @@ class SalesReturnController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   Future<List<ReturnModel>> getReturnsByOrder(String orderId) async {
-    print(
-      '🔵 [SalesReturnController] getReturnsByOrder called for order: $orderId',
-    );
 
     try {
       final response = await _api.get(
@@ -1033,25 +787,16 @@ class SalesReturnController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [SalesReturnController] Response Status: ${response.statusCode}',
-      );
-      print('🔵 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
         final returnsList = list
             .map((e) => ReturnModel.fromJson(Map<String, dynamic>.from(e)))
             .toList();
-        print(
-          '✅ [SalesReturnController] Found ${returnsList.length} returns for order',
-        );
         return returnsList;
       }
-      print('❌ [SalesReturnController] No returns found for order');
       return [];
     } catch (e) {
-      print('❌ [SalesReturnController] getReturnsByOrder error: $e');
       return [];
     }
   }
@@ -1065,10 +810,6 @@ class SalesReturnController extends GetxController {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
-    print('🔵 [SalesReturnController] exportReturns called');
-    print(
-      '🔵 [SalesReturnController] Format: $format, Start: $startDate, End: $endDate',
-    );
 
     try {
       final params = <String, String>{};
@@ -1083,36 +824,23 @@ class SalesReturnController extends GetxController {
           .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
           .join('&');
 
-      print(
-        '🔵 [SalesReturnController] API Request: GET /api/warehouse/returns/export?$query',
-      );
 
       final response = await _api.get(
         '/api/warehouse/returns/export?$query',
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [SalesReturnController] Response Status: ${response.statusCode}',
-      );
-      print('🔵 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success && response.data != null) {
-        print(
-          '✅ [SalesReturnController] Export URL: ${response.data?['url'] ?? response.data?['data']}',
-        );
         return response.data?['url'] ?? response.data?['data'];
       }
-      print('❌ [SalesReturnController] Failed to export returns');
       return null;
     } catch (e) {
-      print('❌ [SalesReturnController] exportReturns error: $e');
       return null;
     }
   }
 
   Future<Map<String, dynamic>> getReturnSummary() async {
-    print('🔵 [SalesReturnController] getReturnSummary called');
 
     try {
       final response = await _api.get(
@@ -1120,27 +848,18 @@ class SalesReturnController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [SalesReturnController] Response Status: ${response.statusCode}',
-      );
-      print('🔵 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success && response.data != null) {
         final summary = Map<String, dynamic>.from(response.data['data']);
-        print('✅ [SalesReturnController] Summary: $summary');
         return summary;
       }
-      print('❌ [SalesReturnController] Failed to fetch summary');
       return {};
     } catch (e) {
-      print('❌ [SalesReturnController] getReturnSummary error: $e');
       return {};
     }
   }
 
   Future<bool> updateReturnStatus(String id, String status) async {
-    print('🟣 [SalesReturnController] updateReturnStatus called');
-    print('🟣 [SalesReturnController] ID: $id, New Status: $status');
 
     try {
       isSubmitting.value = true;
@@ -1150,25 +869,16 @@ class SalesReturnController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🟣 [SalesReturnController] Response Status: ${response.statusCode}',
-      );
-      print('🟣 [SalesReturnController] Response Success: ${response.success}');
 
       if (response.success) {
-        print('✅ [SalesReturnController] Return status updated to $status');
         Get.snackbar('Success', 'Return status updated to $status');
         await fetchReturns();
         return true;
       }
 
-      print(
-        '❌ [SalesReturnController] Failed to update status: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to update status');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [SalesReturnController] updateReturnStatus error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {

@@ -1,0 +1,10 @@
+name: remove_prints
+description: Temporary script to remove print() calls from lib/
+publish_to: none
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  analyzer: ^7.4.5
+  path: ^1.9.1

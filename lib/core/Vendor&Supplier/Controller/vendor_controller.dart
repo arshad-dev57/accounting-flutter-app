@@ -24,14 +24,6 @@ class VendorsController extends GetxController {
 
   final ApiClient _api = Get.find<ApiClient>();
 
-  double _toDouble(dynamic value) {
-    if (value == null) return 0.0;
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    if (value is String) return double.tryParse(value) ?? 0.0;
-    return 0.0;
-  }
-
   String _formatAmount(double amount) {
     return CurrencyUtils.format(amount);
   }
@@ -270,7 +262,7 @@ class VendorsController extends GetxController {
         // WEB: Download using HTML anchor tag
         final blob = html.Blob([bytes], 'application/pdf');
         final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
+        html.AnchorElement(href: url)
           ..setAttribute('download', fileName)
           ..click();
         html.Url.revokeObjectUrl(url);
@@ -625,7 +617,7 @@ class VendorsController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+           ,
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),
@@ -946,7 +938,7 @@ class VendorsController extends GetxController {
           bytes,
         ], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
+        html.AnchorElement(href: url)
           ..setAttribute('download', fileName)
           ..click();
         html.Url.revokeObjectUrl(url);

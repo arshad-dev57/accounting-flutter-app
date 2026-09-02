@@ -110,7 +110,7 @@ class _StockOutFormState extends State<StockOutForm> {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -189,7 +189,7 @@ class _StockOutFormState extends State<StockOutForm> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: _stockOutReason,
+            initialValue: _stockOutReason,
             decoration: const InputDecoration(
               labelText: 'Stock Out Reason *',
               border: OutlineInputBorder(),

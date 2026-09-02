@@ -60,7 +60,6 @@ import 'package:BisonsTechs_app/core/warehousecustomer/warehouse_customer_contro
 import 'package:BisonsTechs_app/core/warehousecustomer/warehouse_customer_screen.dart';
 import 'package:BisonsTechs_app/core/Users/screen/user_list_screen.dart';
 import 'package:BisonsTechs_app/core/Users/screen/user_form_screen.dart';
-import 'package:BisonsTechs_app/core/Users/screen/access_management_screen.dart';
 import 'package:BisonsTechs_app/core/Users/screen/enhanced_access_management_screen.dart';
 
 import 'dart:convert';
@@ -73,7 +72,7 @@ import 'package:sizer/sizer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:BisonsTechs_app/Services/api_client.dart';
-import 'package:BisonsTechs_app/Services/notification_Service.dart';
+import 'package:BisonsTechs_app/Services/notification_service.dart';
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/locations/controller/location_controller.dart';
@@ -354,7 +353,7 @@ class MyApp extends StatelessWidget {
             GetPage(
               name: '/sales/invoices',
               page: () =>
-                  const SalesDashboardScreen(), // TODO: Replace with actual invoice screen
+                  const SalesDashboardScreen(),
             ),
             GetPage(
               name: '/sales/returns',

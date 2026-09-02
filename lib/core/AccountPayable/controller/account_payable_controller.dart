@@ -118,7 +118,9 @@ class AccountsPayableController extends GetxController {
               .toList();
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      debugPrint('Error: $e');
+    }
   }
 
   // ─── Fetch Summary ───────────────────────────────────────────────
@@ -136,7 +138,9 @@ class AccountsPayableController extends GetxController {
           activeSuppliers.value = data['data']['activeSuppliers'] ?? 0;
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      debugPrint('Error: $e');
+    }
   }
 
   // ─── Fetch Bills with Pagination ─────────────────────────────────
@@ -238,6 +242,7 @@ class AccountsPayableController extends GetxController {
         }
       }
     } catch (e) {
+      debugPrint('Error: $e');
     } finally {
       isLoading.value = false;
       isLoadingMore.value = false;
@@ -275,7 +280,7 @@ class AccountsPayableController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error fetching bank accounts: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -293,7 +298,7 @@ class AccountsPayableController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error fetching next bill number: $e');
+      debugPrint('Error: $e');
     }
 
     // Fallback: generate locally based on existing bills
@@ -686,7 +691,7 @@ class AccountsPayableController extends GetxController {
             ),
             Text(
               subtitle,
-              style: TextStyle(fontSize: 10, color: color.withOpacity(0.7)),
+              style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.7)),
             ),
           ],
         ),
@@ -1019,7 +1024,7 @@ class AccountsPayableController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+          ,
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),
@@ -1230,7 +1235,7 @@ class AccountsPayableController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+     ,
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),

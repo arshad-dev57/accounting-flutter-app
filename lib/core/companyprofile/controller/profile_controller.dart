@@ -127,7 +127,9 @@ class ProfileController extends GetxController {
           }
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      debugPrint('Error: $e');
+    }
   }
 
   // ─── IMAGE PICKER METHODS ──────────────────────────────────────
@@ -231,7 +233,7 @@ class ProfileController extends GetxController {
         }
       } else {
         _showError(
-          response.message ?? 'Failed to load profile. Please try again.',
+          response.message,
         );
       }
     } catch (e) {
@@ -424,7 +426,7 @@ class ProfileController extends GetxController {
         toggleEdit(); // Exit edit mode
       } else {
         _showError(
-          response.message ?? 'Failed to update profile. Please try again.',
+          response.message,
         );
       }
     } catch (e) {
@@ -518,7 +520,7 @@ class ProfileController extends GetxController {
 
         toggleEdit();
       } else {
-        _showError(response.message ?? 'Failed to update business details.');
+        _showError(response.message);
       }
     } catch (e) {
       _showError('error. Server Down. Please try again later.');
@@ -582,8 +584,12 @@ class ProfileController extends GetxController {
           );
           await permissionService.saveUserData(updatedUserData);
         }
-      } catch (e) {}
-    } catch (e) {}
+      } catch (e) {
+        debugPrint('Error: $e');
+      }
+    } catch (e) {
+      debugPrint('Error: $e');
+    }
   }
 
   void toggleEdit() {

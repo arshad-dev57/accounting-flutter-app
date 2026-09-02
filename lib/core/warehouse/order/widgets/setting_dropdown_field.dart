@@ -44,7 +44,7 @@ class SettingDropdownField extends StatelessWidget {
           children: [
             Expanded(
               child: DropdownButtonFormField<String>(
-                value: safeValue.isEmpty ? null : safeValue,
+                initialValue: safeValue.isEmpty ? null : safeValue,
                 decoration: InputDecoration(
                   hintText: 'Select $label',
                   isDense: true,

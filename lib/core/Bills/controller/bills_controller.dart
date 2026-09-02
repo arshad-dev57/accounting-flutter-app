@@ -10,7 +10,6 @@ import 'package:get/get.dart';
 import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
-import 'dart:convert';
 import 'dart:io';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -58,13 +57,7 @@ class BillController extends GetxController {
 
   final ApiClient _api = Get.find<ApiClient>();
 
-  double _toDouble(dynamic value) {
-    if (value == null) return 0.0;
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    if (value is String) return double.tryParse(value) ?? 0.0;
-    return 0.0;
-  }
+ 
 
   String _formatAmount(double amount) {
     return CurrencyUtils.format(amount);
@@ -115,7 +108,7 @@ class BillController extends GetxController {
         }).toList();
 
         if (selectedSupplierId.value.isNotEmpty) {
-          bool supplierExists = suppliers.value.any(
+          bool supplierExists = suppliers.any(
             (s) => s['_id'] == selectedSupplierId.value,
           );
           if (!supplierExists) {
@@ -123,7 +116,9 @@ class BillController extends GetxController {
           }
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      debugPrint('Error: $e');
+    }
   }
 
   // ─── Fetch Bank Accounts ──────────────────────────────────────────
@@ -136,7 +131,9 @@ class BillController extends GetxController {
           response.data['data'],
         );
       }
-    } catch (e) {}
+    } catch (e) {
+      debugPrint('Error: $e');
+    }
   }
 
   // ─── Fetch Bills with Pagination ──────────────────────────────────
@@ -233,7 +230,8 @@ class BillController extends GetxController {
         _calculateSummary();
         bills.refresh();
       }
-    } catch (e) {
+    } catch (e) { 
+      debugPrint('Error: $e');
     } finally {
       isLoading.value = false;
       isLoadingMore.value = false;
@@ -641,7 +639,7 @@ class BillController extends GetxController {
             ),
             Text(
               subtitle,
-              style: TextStyle(fontSize: 10, color: color.withOpacity(0.7)),
+              style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.7)),
             ),
           ],
         ),
@@ -720,7 +718,7 @@ class BillController extends GetxController {
       if (kIsWeb) {
         final blob = html.Blob([bytes], 'application/pdf');
         final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
+        html.AnchorElement(href: url)
           ..setAttribute('download', fileName)
           ..click();
         html.Url.revokeObjectUrl(url);
@@ -979,7 +977,7 @@ class BillController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+          ,
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),
@@ -1347,7 +1345,7 @@ class BillController extends GetxController {
           bytes,
         ], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
+        html.AnchorElement(href: url)
           ..setAttribute('download', fileName)
           ..click();
         html.Url.revokeObjectUrl(url);
@@ -1458,10 +1456,6 @@ class Bill {
       return 0.0;
     }
 
-    String safeString(dynamic value) {
-      if (value == null) return '';
-      return value.toString();
-    }
 
     dynamic vendorData = json['vendor'] ?? json['vendorId'] ?? {};
     String supplierId = '';

@@ -149,7 +149,7 @@ class CashFlowStatementScreen extends StatelessWidget {
                             controller.periodText.value,
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -163,13 +163,13 @@ class CashFlowStatementScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 18,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -180,13 +180,13 @@ class CashFlowStatementScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.download_outlined,
                         size: 18,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -316,9 +316,9 @@ class CashFlowStatementScreen extends StatelessWidget {
                   height: 40,
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.08),
+                    color: kPrimary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: kPrimary.withOpacity(0.2)),
+                    border: Border.all(color: kPrimary.withValues(alpha: 0.2)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -365,8 +365,8 @@ class CashFlowStatementScreen extends StatelessWidget {
               ),
               color: kPrimary,
               icon: Icons.account_balance,
-              bgColor: kPrimary.withOpacity(0.08),
-              borderColor: kPrimary.withOpacity(0.2),
+              bgColor: kPrimary.withValues(alpha: 0.08),
+              borderColor: kPrimary.withValues(alpha: 0.2),
             ),
             const SizedBox(width: 8),
             _buildProfessionalCard(
@@ -377,11 +377,11 @@ class CashFlowStatementScreen extends StatelessWidget {
                   ? Icons.trending_up
                   : Icons.trending_down,
               bgColor: controller.netCashFlow.value >= 0
-                  ? kSuccess.withOpacity(0.08)
-                  : kDanger.withOpacity(0.08),
+                  ? kSuccess.withValues(alpha: 0.08)
+                  : kDanger.withValues(alpha: 0.08),
               borderColor: controller.netCashFlow.value >= 0
-                  ? kSuccess.withOpacity(0.2)
-                  : kDanger.withOpacity(0.2),
+                  ? kSuccess.withValues(alpha: 0.2)
+                  : kDanger.withValues(alpha: 0.2),
             ),
             const SizedBox(width: 8),
             _buildProfessionalCard(
@@ -391,8 +391,8 @@ class CashFlowStatementScreen extends StatelessWidget {
               ),
               color: kSuccess,
               icon: Icons.account_balance_wallet,
-              bgColor: kSuccess.withOpacity(0.08),
-              borderColor: kSuccess.withOpacity(0.2),
+              bgColor: kSuccess.withValues(alpha: 0.08),
+              borderColor: kSuccess.withValues(alpha: 0.2),
             ),
           ],
         ),
@@ -407,7 +407,6 @@ class CashFlowStatementScreen extends StatelessWidget {
     required IconData icon,
     required Color bgColor,
     required Color borderColor,
-    bool isNumber = false,
   }) {
     return ExpandableStatCard(
       title: title,
@@ -439,10 +438,10 @@ class CashFlowStatementScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: kCardBg,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.15)),
+          border: Border.all(color: color.withValues(alpha: 0.15)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -454,7 +453,7 @@ class CashFlowStatementScreen extends StatelessWidget {
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, size: 16, color: color),
@@ -480,10 +479,10 @@ class CashFlowStatementScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.15)),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -501,7 +500,7 @@ class CashFlowStatementScreen extends StatelessWidget {
                   width: 34,
                   height: 34,
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(icon, size: 18, color: color),
@@ -520,7 +519,7 @@ class CashFlowStatementScreen extends StatelessWidget {
               ],
             ),
           ),
-          Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+          Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
           // Items
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
@@ -562,13 +561,13 @@ class CashFlowStatementScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.05),
+              color: color.withValues(alpha: 0.05),
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(14),
                 bottomRight: Radius.circular(14),
               ),
               border: Border(
-                top: BorderSide(color: Colors.grey.withOpacity(0.12)),
+                top: BorderSide(color: Colors.grey.withValues(alpha: 0.12)),
               ),
             ),
             child: Row(
@@ -588,7 +587,7 @@ class CashFlowStatementScreen extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -622,15 +621,15 @@ class CashFlowStatementScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [color.withOpacity(0.08), color.withOpacity(0.02)],
+            colors: [color.withValues(alpha: 0.08), color.withValues(alpha: 0.02)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 3),
             ),
@@ -647,7 +646,7 @@ class CashFlowStatementScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.15),
+                        color: color.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
@@ -681,7 +680,7 @@ class CashFlowStatementScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.08),
+                color: color.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -723,7 +722,7 @@ class CashFlowStatementScreen extends StatelessWidget {
         border: Border.all(color: kBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -739,7 +738,7 @@ class CashFlowStatementScreen extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.1),
+                    color: kPrimary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
@@ -770,7 +769,7 @@ class CashFlowStatementScreen extends StatelessWidget {
               isAdd: true,
               color: controller.netCashFlow.value >= 0 ? kSuccess : kDanger,
             ),
-            Divider(color: Colors.grey.withOpacity(0.15), height: 16),
+            Divider(color: Colors.grey.withValues(alpha: 0.15), height: 16),
             _buildReconciliationRow(
               'Closing Cash Balance',
               controller.formatAmount(controller.closingCashBalance.value),
@@ -811,7 +810,7 @@ class CashFlowStatementScreen extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.08),
+                    color: kPrimary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(

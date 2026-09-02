@@ -1,5 +1,4 @@
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
-import 'dart:convert';
 import 'dart:io';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
@@ -64,7 +63,7 @@ class InvoiceController extends GetxController {
         );
       }
     } catch (e) {
-      print('Error fetching bank accounts: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -134,7 +133,7 @@ class InvoiceController extends GetxController {
         );
       }
     } catch (e) {
-      print('Error fetching customers: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -190,7 +189,6 @@ class InvoiceController extends GetxController {
         }
       }
     } catch (e) {
-      print('❌ Error loading invoices: $e');
       // Clear invoices on error
       invoices.clear();
       totalAmount.value = 0.0;
@@ -444,7 +442,7 @@ class InvoiceController extends GetxController {
       // Web-specific download
       final blob = html.Blob([pdfBytes], 'application/pdf');
       final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
+      html.AnchorElement(href: url)
         ..setAttribute(
           'download',
           'invoice_${invoice.invoiceNumber}_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf',
@@ -815,7 +813,7 @@ class InvoiceController extends GetxController {
         bytes,
       ], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
+      html.AnchorElement(href: url)
         ..setAttribute(
           'download',
           'invoice_${invoice.invoiceNumber}_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx',
@@ -1061,7 +1059,7 @@ class InvoiceController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+            ,
         pw.Divider(),
         // Totals
         pw.Padding(
@@ -1254,7 +1252,7 @@ class InvoiceController extends GetxController {
 
       final blob = html.Blob([pdfBytes], 'application/pdf');
       final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
+      html.AnchorElement(href: url)
         ..setAttribute(
           'download',
           'invoices_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf',
@@ -1925,7 +1923,7 @@ class InvoiceController extends GetxController {
         bytes,
       ], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
+      html.AnchorElement(href: url)
         ..setAttribute(
           'download',
           'invoices_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx',
@@ -2257,7 +2255,7 @@ class InvoiceController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+          ,
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),
@@ -2347,9 +2345,7 @@ class InvoiceController extends GetxController {
     AppSnackbar.info('Print', 'Printing invoice ${invoice.invoiceNumber}');
   }
 
-  void _handleSessionExpired() {
-    AppSnackbar.error(kWarning, 'Session Expired', 'Please login again');
-  }
+ 
 }
 
 class Invoice {

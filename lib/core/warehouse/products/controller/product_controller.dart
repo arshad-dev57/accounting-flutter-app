@@ -5,9 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -658,13 +656,15 @@ class ProductsController extends GetxController {
   }
 
   // ─── Share Scanned Data ──────────────────────────────────────
-  void shareScannedData() {
-    Share.share(
-      'Scanned QR Code Data:\n${scannedData.value}\n\n'
-      'Time: ${DateTime.now().toString()}\n'
-      'BisonsTechs App',
-    );
-  }
+void shareScannedData() {
+  SharePlus.instance.share(
+    ShareParams(
+      text: 'Scanned QR Code Data:\n${scannedData.value}\n\n'
+          'Time: ${DateTime.now()}\n'
+          'BisonsTechs App',
+    ),
+  );
+}
 
   // ─── Generate QR Code ────────────────────────────────────────
   Future<void> generateQRCode() async {
@@ -805,37 +805,6 @@ class ProductsController extends GetxController {
     );
   }
 
-  // ─── Parse Scanned Data ──────────────────────────────────────
-  void _parseScannedData(String data) {
-    try {
-      if (data.startsWith('{') && data.endsWith('}')) {
-        // Try to parse as JSON
-        final Map<String, dynamic> json = {};
-        final cleaned = data.substring(1, data.length - 1);
-        final pairs = cleaned.split(',');
-        for (var pair in pairs) {
-          final parts = pair.split(':');
-          if (parts.length == 2) {
-            final key = parts[0].trim().replaceAll('"', '');
-            final value = parts[1].trim().replaceAll('"', '');
-            json[key] = value;
-          }
-        }
-        selectedProductForQR.value = json;
-      } else if (data.startsWith('http://') || data.startsWith('https://')) {
-        selectedProductForQR.value = {'url': data};
-      } else if (data.contains('PROD-')) {
-        selectedProductForQR.value = {'id': data, 'type': 'product'};
-      } else {
-        selectedProductForQR.value = {'text': data};
-      }
-      qrData.value = data;
-    } catch (e) {
-      selectedProductForQR.value = {'text': data};
-      qrData.value = data;
-    }
-  }
-
   // ─── Clear Scan History ──────────────────────────────────────
   void clearScanHistory() {
     scanHistory.clear();
@@ -883,7 +852,6 @@ class ProductsController extends GetxController {
 
       return null;
     } catch (e) {
-      print('Error checking barcode: $e');
       return null;
     }
   }

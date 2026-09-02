@@ -155,7 +155,7 @@ class CreateReturnWizard extends StatelessWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: line.condition.value?.toString(),
+                            initialValue: line.condition.value.toString(),
                             decoration: const InputDecoration(
                               labelText: 'Condition',
                               isDense: true,
@@ -200,7 +200,7 @@ class CreateReturnWizard extends StatelessWidget {
   Widget _stepDetails() {
     return _section('Step 3: Return Details', [
       DropdownButtonFormField<String>(
-        value: controller.returnType.value,
+        initialValue: controller.returnType.value,
         decoration: const InputDecoration(
           labelText: 'Return Type',
           border: OutlineInputBorder(),
@@ -213,7 +213,7 @@ class CreateReturnWizard extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       DropdownButtonFormField<String>(
-        value: controller.returnMethod.value?.toString(),
+        initialValue: controller.returnMethod.value.toString(),
         decoration: const InputDecoration(
           labelText: 'Refund Method',
           border: OutlineInputBorder(),
@@ -278,7 +278,7 @@ class CreateReturnWizard extends StatelessWidget {
       Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: kPrimary.withOpacity(0.08),
+          color: kPrimary.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
@@ -368,7 +368,7 @@ class CreateReturnWizard extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -402,9 +402,9 @@ class CreateReturnWizard extends StatelessWidget {
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: kPrimary.withOpacity(0.08),
+        color: kPrimary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: kPrimary.withOpacity(0.3)),
+        border: Border.all(color: kPrimary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

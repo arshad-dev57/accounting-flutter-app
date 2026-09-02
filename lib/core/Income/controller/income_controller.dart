@@ -1,14 +1,11 @@
 // core/Income/controller/income_controller.dart - COMPLETE WITH ALL REQUIRED METHODS
 
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
-import 'dart:convert';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
-import 'package:BisonsTechs_app/config/apiconfig.dart';
 import 'package:BisonsTechs_app/core/Income/models/income_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:universal_html/html.dart' as html;
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
@@ -126,11 +123,9 @@ class IncomeController extends GetxController {
           incomeAccounts.value = List<Map<String, dynamic>>.from(
             responseData['data'],
           );
-          print('✅ Loaded ${incomeAccounts.length} income accounts');
         }
       }
     } catch (e) {
-      print('Error loading income accounts: $e');
     }
   }
 
@@ -174,7 +169,6 @@ class IncomeController extends GetxController {
       if (response.success) {
         final Map<String, dynamic> responseData = response.data;
 
-        print("📥 Income API Response: ${json.encode(responseData)}");
 
         if (responseData['success'] == true) {
           List<dynamic> incomesData = [];
@@ -187,23 +181,16 @@ class IncomeController extends GetxController {
             incomesData = [];
           }
 
-          print("📊 Incomes data count: ${incomesData.length}");
-          print(
-            "🔍 Current filters - Type: ${selectedType.value}, Filter: ${selectedFilter.value}, Search: ${searchQuery.value}",
-          );
 
           final newIncomes = incomesData
               .map((json) => Income.fromJson(json))
               .toList();
 
-          print("✅ Parsed incomes count: ${newIncomes.length}");
 
           if (resetPage) {
             incomes.value = newIncomes;
-            print("🔄 Reset page - Total incomes: ${incomes.length}");
           } else {
             incomes.addAll(newIncomes);
-            print("➕ Added incomes - Total: ${incomes.length}");
           }
 
           if (responseData['pagination'] != null) {
@@ -253,7 +240,6 @@ class IncomeController extends GetxController {
         _showError('Server error: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error loading incomes: $e');
       _showError('Error loading incomes: $e');
     } finally {
       isLoading.value = false;
@@ -302,7 +288,6 @@ class IncomeController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error loading customers: $e');
     }
   }
 
@@ -319,7 +304,6 @@ class IncomeController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error loading bank accounts: $e');
     }
   }
 
@@ -357,7 +341,6 @@ class IncomeController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error loading summary: $e');
     }
   }
 
@@ -450,11 +433,9 @@ class IncomeController extends GetxController {
         incomeData['locationId'] = locationId;
       }
 
-      print("📤 Creating income: ${json.encode(incomeData)}");
 
       final response = await _api.post('/api/income', body: incomeData);
 
-      print("📥 Create Income Response: ${json.encode(response.data)}");
 
       // Close loading dialog
       Get.back();
@@ -468,18 +449,15 @@ class IncomeController extends GetxController {
             'Income recorded and posted to ledger',
             duration: const Duration(seconds: 3),
           );
-          print("🔄 Calling refreshData after successful income creation");
           await refreshData();
-          print("✅ refreshData completed");
         } else {
           _showError(responseData['message'] ?? 'Failed to create income');
         }
       } else {
-        _showError(response.message ?? 'Failed to create income');
+        _showError(response.message);
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('❌ Error creating income: $e');
       _showError('Error creating income: $e');
     } finally {
       isSaving.value = false;
@@ -577,11 +555,10 @@ class IncomeController extends GetxController {
           _showError(responseData['message'] ?? 'Failed to update income');
         }
       } else {
-        _showError(response.message ?? 'Failed to update income');
+        _showError(response.message);
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('❌ Error updating income: $e');
       _showError('Error updating income: $e');
     } finally {
       isSaving.value = false;
@@ -648,11 +625,10 @@ class IncomeController extends GetxController {
         );
         await refreshData();
       } else {
-        _showError(response.message ?? 'Failed to delete income');
+        _showError(response.message);
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error deleting income: $e');
       _showError('Error deleting income');
     } finally {
       isDeleting.value = false;
@@ -715,11 +691,10 @@ class IncomeController extends GetxController {
         AppSnackbar.success(kSuccess, 'Success', 'Income posted to ledger');
         await refreshData();
       } else {
-        _showError(response.message ?? 'Failed to post income');
+        _showError(response.message);
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error posting income: $e');
       _showError('Error posting income');
     } finally {
       isPosting.value = false;
@@ -877,7 +852,7 @@ class IncomeController extends GetxController {
             ),
             Text(
               subtitle,
-              style: TextStyle(fontSize: 10, color: color.withOpacity(0.7)),
+              style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.7)),
             ),
           ],
         ),
@@ -955,12 +930,7 @@ class IncomeController extends GetxController {
           'incomes_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
 
       if (kIsWeb) {
-        final blob = html.Blob([bytes], 'application/pdf');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
+
 
         if (Get.isDialogOpen ?? false) Get.back();
         AppSnackbar.success(
@@ -1183,14 +1153,7 @@ class IncomeController extends GetxController {
           'incomes_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
 
       if (kIsWeb) {
-        final blob = html.Blob([
-          bytes,
-        ], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
+      
 
         if (Get.isDialogOpen ?? false) Get.back();
         AppSnackbar.success(

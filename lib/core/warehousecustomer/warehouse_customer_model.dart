@@ -1,6 +1,5 @@
 // lib/core/warehouse/customer/model/customer_model.dart
 
-import 'package:intl/intl.dart';
 
 // ═══════════════════════════════════════════════════════════════
 // CUSTOMER MODEL

@@ -59,8 +59,8 @@ class SalesDrawerController extends GetxController {
         }
       }
     } catch (e) {
-      print('❌ [SalesDrawerController] Error loading business logo: $e');
-    }
+  debugPrint('Error: $e');
+}
   }
 
   void toggleSection(String title, {bool fallback = false}) {
@@ -301,7 +301,7 @@ class _DrawerHeader extends GetView<SalesDrawerController> {
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
@@ -320,7 +320,7 @@ class _DrawerHeader extends GetView<SalesDrawerController> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: logo.isNotEmpty
@@ -382,7 +382,7 @@ class _DrawerHeader extends GetView<SalesDrawerController> {
                     Text(
                       'jhon@gmail.com',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         fontSize: 11,
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -399,7 +399,7 @@ class _DrawerHeader extends GetView<SalesDrawerController> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.12),
+                color: Colors.white.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -407,14 +407,14 @@ class _DrawerHeader extends GetView<SalesDrawerController> {
                   Iconify(
                     Mdi.shield_account,
                     size: 14,
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                   ),
                   const SizedBox(width: 6),
                   Text(
                     'Current Plan',
                     style: TextStyle(
                       fontSize: 11,
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                     ),
                   ),
                   const Spacer(),
@@ -696,7 +696,7 @@ class _NavItem extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 1),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         decoration: BoxDecoration(
-          color: isActive ? kPrimary.withOpacity(0.10) : Colors.transparent,
+          color: isActive ? kPrimary.withValues(alpha: 0.10) : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
@@ -861,7 +861,7 @@ class _DrawerFooter extends StatelessWidget {
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.10),
+                    color: Colors.green.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -898,9 +898,9 @@ class _DrawerFooter extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.05),
+                color: Colors.red.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.red.withOpacity(0.12)),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.12)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,

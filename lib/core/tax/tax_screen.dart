@@ -296,7 +296,7 @@ class _SetupTab extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: countryValue,
+                  initialValue: countryValue,
                   isExpanded: true,
                   decoration: _fieldDec('Country'),
                   items: packs
@@ -323,7 +323,7 @@ class _SetupTab extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: c.pricingModel.value,
+                  initialValue: c.pricingModel.value,
                   isExpanded: true,
                   decoration: _fieldDec('Pricing model'),
                   items: const [
@@ -336,7 +336,7 @@ class _SetupTab extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: const ['VAT', 'GST', 'SALES_TAX', 'SST'].contains(c.regime.value)
+                  initialValue: const ['VAT', 'GST', 'SALES_TAX', 'SST'].contains(c.regime.value)
                       ? c.regime.value
                       : 'VAT',
                   isExpanded: true,
@@ -353,7 +353,7 @@ class _SetupTab extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: const ['monthly', 'quarterly', 'annually']
+                  initialValue: const ['monthly', 'quarterly', 'annually']
                           .contains(c.filingFrequency.value)
                       ? c.filingFrequency.value
                       : 'quarterly',
@@ -532,7 +532,7 @@ class _RatesTab extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<String>(
-                value: jurisdictionId,
+                initialValue: jurisdictionId,
                 isExpanded: true,
                 decoration: _fieldDec('Jurisdiction'),
                 items: c.jurisdictions
@@ -547,7 +547,7 @@ class _RatesTab extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: taxTypeId,
+                initialValue: taxTypeId,
                 isExpanded: true,
                 decoration: _fieldDec('Tax type'),
                 items: c.types
@@ -683,7 +683,7 @@ class _ExemptionsTab extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<String>(
-                value: typeId,
+                initialValue: typeId,
                 isExpanded: true,
                 decoration: _fieldDec('Type'),
                 items: c.exemptionTypes

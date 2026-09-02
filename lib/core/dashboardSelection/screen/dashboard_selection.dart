@@ -264,12 +264,11 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
             setState(() {
               _businessLogo = logo;
             });
-            print('✅ [DashboardSelection] Business logo loaded: $logo');
           }
         }
       }
     } catch (e) {
-      print('❌ [DashboardSelection] Error loading business logo: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -658,9 +657,6 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
     );
   }
 
-  void _toggleSupportDropdown() {
-    _supportCtrl.toggleDropdown();
-  }
 
   Widget _topBarAction({
     required IconData icon,
@@ -717,12 +713,12 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
         border: Border.all(color: Colors.grey[200]!, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.12),
+            color: Colors.black.withValues(alpha: 0.12),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -969,7 +965,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
         border: Border.all(color: Colors.grey[200]!, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.12),
+            color: Colors.black.withValues(alpha: 0.12),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -996,7 +992,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
         border: Border.all(color: Colors.grey.shade200, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 2),
           ),
@@ -1112,7 +1108,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.06),
+                  color: kPrimary.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Column(
@@ -1393,7 +1389,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                     Image.network(
                       b['imageUrl'] as String,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(color: bgColor),
+                      errorBuilder: (context, error, stackTrace) => Container(color: bgColor),
                       loadingBuilder: (_, child, loadingProgress) {
                         if (loadingProgress == null) return child;
                         return Container(color: bgColor);
@@ -1403,9 +1399,9 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            bgColor.withOpacity(0.95),
-                            bgColor.withOpacity(0.65),
-                            bgColor.withOpacity(0.15),
+                            bgColor.withValues(alpha: 0.95),
+                            bgColor.withValues(alpha: 0.65),
+                            bgColor.withValues(alpha: 0.15),
                           ],
                           stops: const [0.0, 0.5, 1.0],
                           begin: Alignment.centerLeft,
@@ -1430,10 +1426,10 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: accentColor.withOpacity(0.18),
+                              color: accentColor.withValues(alpha: 0.18),
                               borderRadius: BorderRadius.circular(4),
                               border: Border.all(
-                                color: accentColor.withOpacity(0.6),
+                                color: accentColor.withValues(alpha: 0.6),
                                 width: 0.8,
                               ),
                             ),
@@ -1489,7 +1485,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                               decoration: BoxDecoration(
                                 color: active
                                     ? Colors.white
-                                    : Colors.white.withOpacity(0.35),
+                                    : Colors.white.withValues(alpha: 0.35),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                             ),
@@ -1722,7 +1718,7 @@ class _TicketItem extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                 decoration: BoxDecoration(
-                  color: _getStatusColor(ticket.status).withOpacity(0.1),
+                  color: _getStatusColor(ticket.status).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -1741,7 +1737,7 @@ class _TicketItem extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                 decoration: BoxDecoration(
-                  color: _getPriorityColor(ticket.priority).withOpacity(0.1),
+                  color: _getPriorityColor(ticket.priority).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -2260,9 +2256,9 @@ class _SidebarItemWidgetState extends State<_SidebarItemWidget> {
           ),
           decoration: BoxDecoration(
             color: isActive
-                ? kPrimary.withOpacity(0.08)
+                ? kPrimary.withValues(alpha: 0.08)
                 : _isHovered
-                ? kPrimary.withOpacity(0.05)
+                ? kPrimary.withValues(alpha: 0.05)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
@@ -2391,7 +2387,7 @@ class _CompanyAvatar extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.15),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(10),
       ),
       alignment: Alignment.center,
@@ -2419,12 +2415,12 @@ class _CompanyAvatar extends StatelessWidget {
             ? Image.network(
                 logo,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _placeholder(),
+                errorBuilder: (context, error, stackTrace) => _placeholder(),
               )
             : Image.file(
                 File(logo),
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _placeholder(),
+                errorBuilder: (context, error, stackTrace) => _placeholder(),
               ),
       ),
     );
@@ -2464,12 +2460,11 @@ class _DrawerHeaderState extends State<_DrawerHeader> {
             setState(() {
               _businessLogo = logo;
             });
-            print('✅ [DrawerHeader] Business logo loaded: $logo');
           }
         }
       }
     } catch (e) {
-      print('❌ [DrawerHeader] Error loading business logo: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -2522,7 +2517,7 @@ class _DrawerHeaderState extends State<_DrawerHeader> {
                     Text(
                       'Dashboard Selection',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                         fontSize: 11,
                       ),
                     ),
@@ -2536,7 +2531,7 @@ class _DrawerHeaderState extends State<_DrawerHeader> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.12),
+                color: Colors.white.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -2547,7 +2542,7 @@ class _DrawerHeaderState extends State<_DrawerHeader> {
                     'Current Plan',
                     style: TextStyle(
                       fontSize: 11,
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                     ),
                   ),
                   const Spacer(),
@@ -2802,7 +2797,7 @@ class _NavItem extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 1),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         decoration: BoxDecoration(
-          color: isActive ? kPrimary.withOpacity(0.10) : Colors.transparent,
+          color: isActive ? kPrimary.withValues(alpha: 0.10) : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
@@ -2868,7 +2863,7 @@ class _DrawerFooter extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.08),
+                  color: Colors.red.withValues(alpha: 0.08),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -3037,7 +3032,7 @@ class _DrawerFooter extends StatelessWidget {
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.10),
+                    color: Colors.green.withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -3074,9 +3069,9 @@ class _DrawerFooter extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.05),
+                color: Colors.red.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.red.withOpacity(0.12)),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.12)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,

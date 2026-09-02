@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserPermission {
@@ -112,14 +113,10 @@ class PermissionService extends GetxController {
           json.decode(userDataString) as Map<String, dynamic>,
         );
         user.value = userData;
-        print('🔍 [PermissionService] User data loaded: ${userData.fullName}');
-        print('🔍 [PermissionService] User role: "${userData.role}" | isAdmin: $isAdmin');
-        print('🔍 [PermissionService] Permissions count: ${userData.permissions.length}');
       } else {
-        print('⚠️ [PermissionService] No user data found in SharedPreferences');
       }
     } catch (e) {
-      print('❌ [PermissionService] Error loading user data: $e');
+      debugPrint('Error: $e');
     } finally {
       loading.value = false;
     }
@@ -130,9 +127,8 @@ class PermissionService extends GetxController {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('user', json.encode(userData.toJson()));
       user.value = userData;
-      print('✅ [PermissionService] User data saved');
     } catch (e) {
-      print('❌ [PermissionService] Error saving user data: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -141,9 +137,8 @@ class PermissionService extends GetxController {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('user');
       user.value = null;
-      print('✅ [PermissionService] User data cleared');
     } catch (e) {
-      print('❌ [PermissionService] Error clearing user data: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -177,20 +172,15 @@ class PermissionService extends GetxController {
     if (isAdmin) return true;
     if (user.value == null) return false;
     
-    print('🔍 [hasModuleAccess] Checking module access for: $module');
-    print('🔍 [hasModuleAccess] User role: ${user.value!.role}');
-    print('🔍 [hasModuleAccess] User permissions: ${user.value!.permissions.map((p) => p.page).toList()}');
     
     // Check if user has any permission for this module
     final hasModulePermission = user.value!.permissions.any((p) {
       final pageLower = p.page.toLowerCase();
       final moduleLower = module.toLowerCase();
       final matches = pageLower.startsWith(moduleLower) || pageLower == moduleLower;
-      print('🔍 [hasModuleAccess] Checking permission: ${p.page} against $module -> $matches (canView: ${p.canView})');
       return matches && p.canView;
     });
     
-    print('🔍 [hasModuleAccess] Has module permission: $hasModulePermission');
     return hasModulePermission;
   }
 

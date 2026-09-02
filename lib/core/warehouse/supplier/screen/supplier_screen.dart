@@ -1,7 +1,6 @@
 // lib/core/warehouse/supplier/views/suppliers_screen.dart - UPDATED WITH PRODUCTS SCREEN DESIGN
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
-import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/core/warehouse/supplier/controller/supplier_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -85,7 +84,7 @@ class SuppliersScreen extends StatelessWidget {
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(9),
                     ),
                     child: const Icon(
@@ -113,7 +112,7 @@ class SuppliersScreen extends StatelessWidget {
                             '${controller.totalSuppliers.value} suppliers',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -146,13 +145,13 @@ class SuppliersScreen extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(9),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 17,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -169,7 +168,7 @@ class SuppliersScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
+                      color: Colors.black.withValues(alpha: 0.06),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -200,12 +199,12 @@ class SuppliersScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? Colors.white
-                                : Colors.white.withOpacity(0.18),
+                                : Colors.white.withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color: isSelected
                                   ? Colors.white
-                                  : Colors.white.withOpacity(0.4),
+                                  : Colors.white.withValues(alpha: 0.4),
                             ),
                           ),
                           child: Text(
@@ -245,7 +244,7 @@ class SuppliersScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -306,7 +305,7 @@ class SuppliersScreen extends StatelessWidget {
                             width: 52,
                             height: 52,
                             decoration: BoxDecoration(
-                              color: kPrimary.withOpacity(0.12),
+                              color: kPrimary.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Icon(
@@ -346,7 +345,7 @@ class SuppliersScreen extends StatelessWidget {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: statusColor.withOpacity(0.1),
+                              color: statusColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
@@ -361,7 +360,7 @@ class SuppliersScreen extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
                       const SizedBox(height: 16),
                       _detailRow(
                         'Contact Person',
@@ -515,7 +514,7 @@ class SuppliersScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.1),
+                  color: kPrimary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -614,7 +613,7 @@ class SuppliersScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
                       color: kCardBg,
-                      border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                      border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: DropdownButtonHideUnderline(
@@ -623,7 +622,7 @@ class SuppliersScreen extends StatelessWidget {
                         hint: Text(
                           'Select terms',
                           style: TextStyle(
-                            color: kSubText.withOpacity(0.5),
+                            color: kSubText.withValues(alpha: 0.5),
                             fontSize: 13,
                           ),
                         ),
@@ -778,7 +777,7 @@ class SuppliersScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.1),
+                  color: kPrimary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(Icons.edit_outlined, color: kPrimary, size: 20),
@@ -858,7 +857,7 @@ class SuppliersScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
                       color: kCardBg,
-                      border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                      border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: DropdownButtonHideUnderline(
@@ -867,7 +866,7 @@ class SuppliersScreen extends StatelessWidget {
                         hint: Text(
                           'Select',
                           style: TextStyle(
-                            color: kSubText.withOpacity(0.5),
+                            color: kSubText.withValues(alpha: 0.5),
                             fontSize: 13,
                           ),
                         ),
@@ -906,7 +905,7 @@ class SuppliersScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
                       color: kCardBg,
-                      border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                      border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: DropdownButtonHideUnderline(
@@ -1028,105 +1027,6 @@ class SuppliersScreen extends StatelessWidget {
     );
   }
 
-  void _showDeleteConfirmDialog(
-    BuildContext context,
-    Map<String, dynamic> supplier,
-    SupplierController controller,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: Row(
-          children: [
-            Icon(Icons.warning_amber_rounded, color: kDanger, size: 22),
-            const SizedBox(width: 10),
-            Text(
-              'Delete Supplier',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: kText,
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Are you sure you want to delete "${supplier['name']}"?',
-              style: TextStyle(fontSize: 14, color: kText),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: kDanger.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: kDanger.withOpacity(0.2)),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, color: kDanger, size: 16),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'If this supplier has linked products or purchases, they will be deactivated instead.',
-                      style: TextStyle(fontSize: 13, color: kDanger),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: kSubText)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              final success = await controller.deleteSupplier(
-                supplier['_id'] ?? supplier['id'] ?? '',
-              );
-              Get.snackbar(
-                success ? 'Success' : 'Error',
-                success
-                    ? 'Supplier removed successfully'
-                    : 'Failed to remove supplier',
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: success ? kSuccess : kDanger,
-                colorText: Colors.black,
-                margin: const EdgeInsets.all(16),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: kDanger,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text(
-              'Delete',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: Colors.black,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─── HELPERS ────────────────────────────────────────────────────
-
   Widget _fieldLabel(String text) => Padding(
     padding: const EdgeInsets.only(bottom: 4),
     child: Text(
@@ -1142,15 +1042,15 @@ class SuppliersScreen extends StatelessWidget {
   InputDecoration _inputDec({String hint = '', IconData? icon}) =>
       InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: kSubText.withOpacity(0.5), fontSize: 13),
+        hintStyle: TextStyle(color: kSubText.withValues(alpha: 0.5), fontSize: 13),
         prefixIcon: icon != null ? Icon(icon, size: 16, color: kSubText) : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.grey.withOpacity(0.3)),
+          borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.grey.withOpacity(0.3)),
+          borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -1279,13 +1179,13 @@ class _MobileSuppliersListState extends State<_MobileSuppliersList> {
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.08),
+                  color: kPrimary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Icon(
                   Icons.people_outline,
                   size: 36,
-                  color: kPrimary.withOpacity(0.5),
+                  color: kPrimary.withValues(alpha: 0.5),
                 ),
               ),
               const SizedBox(height: 16),
@@ -1359,10 +1259,10 @@ class _MobileSuppliersListState extends State<_MobileSuppliersList> {
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                      border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.03),
+                          color: Colors.black.withValues(alpha: 0.03),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -1376,7 +1276,7 @@ class _MobileSuppliersListState extends State<_MobileSuppliersList> {
                           width: 48,
                           height: 48,
                           decoration: BoxDecoration(
-                            color: kPrimary.withOpacity(0.1),
+                            color: kPrimary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
@@ -1421,7 +1321,7 @@ class _MobileSuppliersListState extends State<_MobileSuppliersList> {
                                         vertical: 2,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: kPrimary.withOpacity(0.08),
+                                        color: kPrimary.withValues(alpha: 0.08),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
@@ -1441,7 +1341,7 @@ class _MobileSuppliersListState extends State<_MobileSuppliersList> {
                                       vertical: 2,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: statusColor.withOpacity(0.1),
+                                      color: statusColor.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(
@@ -1496,7 +1396,7 @@ class _MobileSuppliersListState extends State<_MobileSuppliersList> {
         child: Center(
           child: Text(
             'All suppliers loaded',
-            style: TextStyle(fontSize: 12, color: kSubText.withOpacity(0.7)),
+            style: TextStyle(fontSize: 12, color: kSubText.withValues(alpha: 0.7)),
           ),
         ),
       );

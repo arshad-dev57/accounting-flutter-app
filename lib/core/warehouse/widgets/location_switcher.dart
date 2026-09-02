@@ -2,7 +2,8 @@
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Services/permission_service.dart';
-import 'package:BisonsTechs_app/core/warehouse/locations/controller/location_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/controller/location_controller.dart'
+    show LocationController, kAllLocationsId;
 import 'package:BisonsTechs_app/core/warehouse/locations/model/location_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -11,11 +12,13 @@ import 'package:get/get.dart';
 class LocationSwitcher extends StatelessWidget {
   final bool compact;
   final bool showManageLink;
+  final bool allowAll;
 
   const LocationSwitcher({
     super.key,
     this.compact = true,
     this.showManageLink = true,
+    this.allowAll = false,
   });
 
   @override
@@ -73,16 +76,21 @@ class LocationSwitcher extends StatelessWidget {
       }
 
       final selected = c.selectedLocation.value;
-      final selectedId = c.locations.any((l) => l.id == selected?.id)
-          ? selected?.id
-          : c.locations.first.id;
-      final current =
-          c.locations.firstWhereOrNull((l) => l.id == selectedId) ??
-          c.locations.first;
+      final allSelected = allowAll && c.isAllLocationsSelected;
+      final selectedId = allSelected
+          ? kAllLocationsId
+          : (c.locations.any((l) => l.id == selected?.id)
+              ? selected?.id
+              : c.locations.first.id);
+      final current = allSelected
+          ? null
+          : (c.locations.firstWhereOrNull((l) => l.id == selectedId) ??
+              c.locations.first);
 
       final chip = _LocationChip(
         compact: compact,
         current: current,
+        allSelected: allSelected,
       );
 
       final useSheet =
@@ -100,6 +108,7 @@ class LocationSwitcher extends StatelessWidget {
                   c,
                   selectedId,
                   showManageLink: showManageLink,
+                  allowAll: allowAll,
                 );
               },
               borderRadius: BorderRadius.circular(8),
@@ -122,15 +131,36 @@ class LocationSwitcher extends StatelessWidget {
           PopupMenuButton<String>(
             initialValue: selectedId,
             onSelected: (id) {
+              if (id == kAllLocationsId) {
+                c.selectAllLocations();
+                return;
+              }
               final match = c.locations.firstWhereOrNull((l) => l.id == id);
               if (match != null) c.selectLocation(match);
             },
-            itemBuilder: (ctx) => c.locations.map((WarehouseLocation loc) {
+            itemBuilder: (ctx) => [
+              if (allowAll &&
+                  Get.isRegistered<PermissionService>() &&
+                  PermissionService.to.isAdmin)
+                PopupMenuItem<String>(
+                  value: kAllLocationsId,
+                  child: Row(
+                    children: [
+                      if (allSelected)
+                        Icon(Icons.check, size: 16, color: kPrimary)
+                      else
+                        const SizedBox(width: 16),
+                      const SizedBox(width: 8),
+                      const Text('All locations'),
+                    ],
+                  ),
+                ),
+              ...c.locations.map((WarehouseLocation loc) {
               return PopupMenuItem<String>(
                 value: loc.id,
                 child: Row(
                   children: [
-                    if (loc.id == selectedId)
+                    if (loc.id == selectedId && !allSelected)
                       Icon(Icons.check, size: 16, color: kPrimary)
                     else
                       const SizedBox(width: 16),
@@ -144,7 +174,8 @@ class LocationSwitcher extends StatelessWidget {
                   ],
                 ),
               );
-            }).toList(),
+            }),
+            ],
             child: chip,
           ),
           if (showManageLink &&
@@ -164,9 +195,11 @@ void _showLocationPicker(
   LocationController c,
   String? selectedId, {
   bool showManageLink = false,
+  bool allowAll = false,
 }) {
   final isAdmin = Get.isRegistered<PermissionService>() &&
       PermissionService.to.isAdmin;
+  final allSelected = c.isAllLocationsSelected;
 
   showModalBottomSheet<void>(
     context: context,
@@ -198,6 +231,19 @@ void _showLocationPicker(
                 ],
               ),
             ),
+            if (allowAll && isAdmin)
+              ListTile(
+                leading: Icon(
+                  allSelected ? Icons.check_circle : Icons.public,
+                  color: allSelected ? kPrimary : Colors.grey,
+                ),
+                title: const Text('All locations'),
+                subtitle: const Text('Company-wide data'),
+                onTap: () {
+                  c.selectAllLocations();
+                  Navigator.pop(ctx);
+                },
+              ),
             ...c.locations.map((loc) {
               final selected = loc.id == selectedId;
               return ListTile(
@@ -255,12 +301,18 @@ class _ManageLocationsButton extends StatelessWidget {
 
 class _LocationChip extends StatelessWidget {
   final bool compact;
-  final WarehouseLocation current;
+  final WarehouseLocation? current;
+  final bool allSelected;
 
-  const _LocationChip({required this.compact, required this.current});
+  const _LocationChip({
+    required this.compact,
+    required this.current,
+    this.allSelected = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final label = allSelected ? 'All locations' : (current?.name ?? 'Location');
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: compact ? 6 : 8,
@@ -283,7 +335,7 @@ class _LocationChip extends StatelessWidget {
           ConstrainedBox(
             constraints: BoxConstraints(maxWidth: compact ? 56 : 120),
             child: Text(
-              current.name,
+              label,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: compact ? 12 : 13,
@@ -297,7 +349,7 @@ class _LocationChip extends StatelessWidget {
             size: compact ? 16 : 18,
             color: const Color(0xFF1A1D2E),
           ),
-          if (!compact) ...[
+          if (!compact && !allSelected && current != null) ...[
             const SizedBox(width: 4),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
@@ -306,7 +358,7 @@ class _LocationChip extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                current.code,
+                current!.code,
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,

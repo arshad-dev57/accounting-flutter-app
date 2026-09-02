@@ -47,7 +47,7 @@ class CategoriesController extends GetxController {
         _updateKpi();
       }
     } catch (e) {
-      print('Error fetching categories: $e');
+      debugPrint('Error: $e');
     } finally {
       isLoading.value = false;
     }
@@ -124,7 +124,6 @@ class CategoriesController extends GetxController {
       }
       return false;
     } catch (e) {
-      print('Error creating category: $e');
       return false;
     } finally {
       isSubmitting.value = false;
@@ -144,7 +143,6 @@ class CategoriesController extends GetxController {
       }
       return false;
     } catch (e) {
-      print('Error updating category: $e');
       return false;
     } finally {
       isSubmitting.value = false;
@@ -160,7 +158,6 @@ class CategoriesController extends GetxController {
       }
       return false;
     } catch (e) {
-      print('Error deleting category: $e');
       return false;
     }
   }
@@ -177,7 +174,6 @@ class CategoriesController extends GetxController {
       }
       return [];
     } catch (e) {
-      print('Error fetching sub-categories: $e');
       return [];
     }
   }

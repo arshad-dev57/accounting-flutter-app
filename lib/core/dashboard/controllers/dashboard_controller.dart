@@ -13,7 +13,6 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sizer/sizer.dart';
 
 class DashboardController extends GetxController {
   var isLoading = true.obs;
@@ -377,7 +376,6 @@ class DashboardController extends GetxController {
       }
     }
 
-    print('🔵 [Dashboard] overview period=${selectedTimePeriod.value} fy=${params['fiscalYearId']}');
 
     final response = await _api.get('/api/dashboard/overview', queryParameters: params);
 
@@ -571,32 +569,6 @@ class DashboardController extends GetxController {
     } else {
       recentTransactions.clear();
     }
-  }
-
-  void _showSubscriptionRequiredDialog(String message) {
-    Get.dialog(
-      AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.w)),
-        title: Row(
-          children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 6.w),
-            SizedBox(width: 2.w),
-            Text('Subscription Required', style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w700)),
-          ],
-        ),
-        content: Text(message, style: TextStyle(fontSize: 13.sp, color: Colors.grey[700])),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Get.back();
-              Get.to(() => SelectPlanScreen());
-            },
-            child: Text('Subscribe Now', style: TextStyle(color: kPrimary, fontWeight: FontWeight.w600)),
-          ),
-        ],
-      ),
-      barrierDismissible: false,
-    );
   }
 
   double getMonthlyRevenue(int monthIndex) {

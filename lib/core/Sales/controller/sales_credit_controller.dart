@@ -143,7 +143,7 @@ class SalesCreditController extends GetxController {
             .toList();
         applyLocalFilters();
       } else {
-        Get.snackbar('Error', response.message ?? 'Failed to load credits');
+        Get.snackbar('Error', response.message);
       }
     } catch (e) {
       Get.snackbar('Error', e.toString());
@@ -287,9 +287,7 @@ class SalesCreditController extends GetxController {
         availableInvoices.clear();
         Get.snackbar(
           'Error',
-          response.data?['message']?.toString() ??
-              response.message ??
-              'Failed to load sales invoices',
+          response.data?['message']?.toString() ?? response.message,
         );
       }
     } catch (e) {
@@ -432,9 +430,7 @@ class SalesCreditController extends GetxController {
       }
       Get.snackbar(
         'Error',
-        response.data?['message']?.toString() ??
-            response.message ??
-            'Failed to create credit',
+        response.data?['message']?.toString() ?? response.message,
       );
       return false;
     } catch (e) {
@@ -531,9 +527,7 @@ class SalesCreditController extends GetxController {
       }
       Get.snackbar(
         'Error',
-        response.data?['message']?.toString() ??
-            response.message ??
-            'Failed to apply credit',
+        response.data?['message']?.toString() ?? response.message,
       );
       return false;
     } catch (e) {
@@ -557,9 +551,7 @@ class SalesCreditController extends GetxController {
       } else {
         Get.snackbar(
           'Error',
-          response.data?['message']?.toString() ??
-              response.message ??
-              'Failed to void',
+          response.data?['message']?.toString() ?? response.message,
         );
       }
     } catch (e) {

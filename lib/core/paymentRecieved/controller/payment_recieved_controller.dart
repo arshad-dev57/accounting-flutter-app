@@ -121,7 +121,7 @@ class PaymentReceivedController extends GetxController {
         }
       }
     } catch (e) {
-      print('❌ Error fetching customers: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -138,7 +138,7 @@ class PaymentReceivedController extends GetxController {
         }
       }
     } catch (e) {
-      print('❌ Error fetching bank accounts: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -166,7 +166,6 @@ class PaymentReceivedController extends GetxController {
         unpaidInvoices.value = [];
       }
     } catch (e) {
-      print('❌ Error fetching unpaid invoices: $e');
       unpaidInvoices.value = [];
     }
   }
@@ -276,12 +275,11 @@ class PaymentReceivedController extends GetxController {
             serverSupportsPagination.value = false;
           }
 
-          _updateSummaryForFiltered(payments.value);
+          _updateSummaryForFiltered(payments);
           payments.refresh();
         }
       }
     } catch (e) {
-      print('❌ Error fetching payments: $e');
       AppSnackbar.error(Colors.red, 'Error', 'Failed to load payments: $e');
     } finally {
       isLoading.value = false;
@@ -322,7 +320,7 @@ class PaymentReceivedController extends GetxController {
         }
       }
     } catch (e) {
-      print('❌ Error fetching summary: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -792,7 +790,7 @@ class PaymentReceivedController extends GetxController {
             ),
             Text(
               subtitle,
-              style: TextStyle(fontSize: 10, color: color.withOpacity(0.7)),
+              style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.7)),
             ),
           ],
         ),
@@ -1087,7 +1085,7 @@ class PaymentReceivedController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+       ,
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),
@@ -1441,9 +1439,7 @@ class PaymentReceivedController extends GetxController {
     AppSnackbar.success(kPrimary, 'Print', 'Preparing payments report...');
   }
 
-  void _handleSessionExpired() {
-    AppSnackbar.error(kDanger, 'Session Expired', 'Please login again');
-  }
+ 
 }
 
 // ─────────────────────── MODELS ───────────────────────

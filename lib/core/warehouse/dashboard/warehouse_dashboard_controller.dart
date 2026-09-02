@@ -157,7 +157,7 @@ class WarehouseDashboardController extends GetxController {
         }
       }
     } catch (e) {
-      print('❌ [WarehouseDashboardController] Error loading business logo: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -288,10 +288,8 @@ class WarehouseDashboardController extends GetxController {
         _fetchOrderStatus(),
       ]);
 
-      print('✅ Dashboard data loaded successfully');
     } catch (e) {
       error.value = e.toString();
-      print('❌ Error loading dashboard: $e');
     } finally {
       isLoading.value = false;
     }
@@ -319,10 +317,8 @@ class WarehouseDashboardController extends GetxController {
         pendingOrders.value = data['pendingOrders'] ?? 0;
         todayRevenue.value = (data['todayRevenue'] ?? 0).toDouble();
       } else {
-        print('❌ Metrics API failed: ${response.message}');
       }
     } catch (e) {
-      print('❌ Error fetching metrics: $e');
     }
   }
 
@@ -333,7 +329,6 @@ class WarehouseDashboardController extends GetxController {
         requiresAuth: true,
       );
 
-      print('📋 Activities Response: ${response.statusCode}');
 
       if (response.success && response.data != null) {
         final data = response.data['data'] as Map<String, dynamic>;
@@ -349,12 +344,10 @@ class WarehouseDashboardController extends GetxController {
           };
         }).toList();
 
-        print('✅ Activities loaded: ${recentActivities.length}');
       } else {
-        print('❌ Activities API failed: ${response.message}');
       }
     } catch (e) {
-      print('❌ Error fetching activities: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -378,7 +371,7 @@ class WarehouseDashboardController extends GetxController {
         }).toList();
       }
     } catch (e) {
-      print('❌ Error fetching stock movement chart: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -400,10 +393,9 @@ class WarehouseDashboardController extends GetxController {
             'color': item['color'] ?? '#2196F3',
           };
         }).toList();
-        print('✅ Category distribution loaded: ${categoryDistribution.length}');
       }
     } catch (e) {
-      print('❌ Error fetching category distribution: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -423,10 +415,9 @@ class WarehouseDashboardController extends GetxController {
             'color': item['color'] ?? '#2196F3',
           };
         }).toList();
-        print('✅ Top products loaded: ${topProducts.length}');
       }
     } catch (e) {
-      print('❌ Error fetching top products: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -448,10 +439,9 @@ class WarehouseDashboardController extends GetxController {
           'cancelled': data['cancelled'] ?? 0,
         };
 
-        print('✅ Order status loaded: ${orderStatus.value}');
       }
     } catch (e) {
-      print('❌ Error fetching order status: $e');
+      debugPrint('Error: $e');
     }
   }
 

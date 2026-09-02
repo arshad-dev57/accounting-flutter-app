@@ -1,7 +1,6 @@
 // core/profitlossStatement/controllers/profit_and_loss_controller.dart
 // COMPLETE CONTROLLER - NO WEB
 
-import 'dart:convert';
 import 'dart:io';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
@@ -166,11 +165,10 @@ class PLController extends GetxController {
         AppSnackbar.error(
           kDanger,
           'Error',
-          response.message ?? 'Server error: ${response.statusCode}',
+          response.message,
         );
       }
     } catch (e) {
-      print('Error loading P&L report: $e');
       AppSnackbar.error(kDanger, 'Error', 'error: $e');
     } finally {
       isLoading.value = false;
@@ -626,7 +624,7 @@ class PLController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+         ,
         pw.Divider(),
         pw.Container(
           padding: const pw.EdgeInsets.symmetric(vertical: 4),

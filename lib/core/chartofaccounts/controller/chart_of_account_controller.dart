@@ -90,10 +90,11 @@ class ChartOfAccountController extends GetxController {
             data['data']?['issues']?['hasIssues'] ?? false;
 
         if (hasIncorrectCashAccounts.value) {
-          final count = data['data']?['issues']?['incorrectCashAccounts'] ?? 0;
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      debugPrint('Error: $e');
+    }
   }
 
   // ─── Fix cash accounts ──────────────────────────────────────────
@@ -192,9 +193,6 @@ class ChartOfAccountController extends GetxController {
           hasPrevPage.value = data['pagination']['hasPrev'] ?? false;
 
           // 🔥 ADD: Debug logging for pagination
-          print(
-            '📊 Total items: ${totalItems.value}, Total pages: ${totalPages.value}, Has next: ${hasNextPage.value}',
-          );
         }
 
         if (resetPage && data['summary'] != null) {
@@ -216,7 +214,6 @@ class ChartOfAccountController extends GetxController {
         );
       }
     } catch (e) {
-      print('❌ Error fetching accounts: $e');
       AppSnackbar.error(Colors.red, 'Error', 'Failed to load accounts: $e');
     } finally {
       isLoading(false);
@@ -640,7 +637,6 @@ class ChartOfAccountController extends GetxController {
       }
       return false;
     } catch (e) {
-      print('Error checking opening balance: $e');
       return false;
     }
   }
@@ -656,7 +652,6 @@ class ChartOfAccountController extends GetxController {
       }
       return {};
     } catch (e) {
-      print('Error getting opening balance details: $e');
       return {};
     }
   }

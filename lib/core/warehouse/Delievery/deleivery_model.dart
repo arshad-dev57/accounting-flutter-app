@@ -1,6 +1,5 @@
 // lib/core/warehouse/delivery/model/delivery_model.dart
 
-import 'package:intl/intl.dart';
 
 class DeliveryModel {
   final String id;

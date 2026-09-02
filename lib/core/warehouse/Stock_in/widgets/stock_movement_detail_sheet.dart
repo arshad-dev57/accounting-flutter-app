@@ -43,7 +43,7 @@ class StockMovementDetailSheet extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
@@ -67,7 +67,7 @@ class StockMovementDetailSheet extends StatelessWidget {
                           Text(
                             movement.getTypeLabel(),
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.85),
+                              color: Colors.white.withValues(alpha: 0.85),
                               fontWeight: FontWeight.w600,
                             ),
                           ),

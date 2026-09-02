@@ -159,7 +159,7 @@ class ExpenseScreen extends StatelessWidget {
                             '${controller.expenses.length} entries',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -173,13 +173,13 @@ class ExpenseScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 18,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -190,13 +190,13 @@ class ExpenseScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.download_outlined,
                         size: 18,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -216,7 +216,7 @@ class ExpenseScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
+                            color: Colors.black.withValues(alpha: 0.06),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -253,7 +253,7 @@ class ExpenseScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
+                          color: Colors.black.withValues(alpha: 0.06),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -388,7 +388,7 @@ class ExpenseScreen extends StatelessWidget {
               Icon(
                 Icons.trending_down,
                 size: 64,
-                color: kSubText.withOpacity(0.5),
+                color: kSubText.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               Text(
@@ -461,15 +461,15 @@ class ExpenseScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: statusColor.withOpacity(0.2), width: 1.5),
+        border: Border.all(color: statusColor.withValues(alpha: 0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
           BoxShadow(
-            color: statusColor.withOpacity(0.06),
+            color: statusColor.withValues(alpha: 0.06),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -494,10 +494,10 @@ class ExpenseScreen extends StatelessWidget {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: typeColor.withOpacity(0.12),
+                        color: typeColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: typeColor.withOpacity(0.2),
+                          color: typeColor.withValues(alpha: 0.2),
                           width: 1,
                         ),
                       ),
@@ -557,9 +557,9 @@ class ExpenseScreen extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: kDanger.withOpacity(0.1),
+                        color: kDanger.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: kDanger.withOpacity(0.2)),
+                        border: Border.all(color: kDanger.withValues(alpha: 0.2)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -611,7 +611,7 @@ class ExpenseScreen extends StatelessWidget {
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                          side: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
                           padding: const EdgeInsets.symmetric(vertical: 9),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -661,7 +661,7 @@ class ExpenseScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
@@ -734,16 +734,16 @@ class ExpenseScreen extends StatelessWidget {
               decoration: InputDecoration(
                 hintText: 'Search expenses...',
                 hintStyle: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 13,
                 ),
                 prefixIcon: Icon(
                   Icons.search,
                   size: 16,
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                 ),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.3),
+                fillColor: Colors.white.withValues(alpha: 0.3),
                 contentPadding: const EdgeInsets.symmetric(
                   vertical: 0,
                   horizontal: 12,
@@ -760,7 +760,7 @@ class ExpenseScreen extends StatelessWidget {
             width: 130,
             height: 34,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: DropdownButtonHideUnderline(
@@ -772,7 +772,7 @@ class ExpenseScreen extends StatelessWidget {
                   icon: Icon(
                     Icons.arrow_drop_down,
                     size: 20,
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   isExpanded: true,
@@ -820,19 +820,19 @@ class ExpenseScreen extends StatelessWidget {
         height: 34,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.white.withOpacity(0.2)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 15, color: Colors.white.withOpacity(0.9)),
+            Icon(icon, size: 15, color: Colors.white.withValues(alpha: 0.9)),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
                 fontSize: 13,
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -919,7 +919,7 @@ class ExpenseScreen extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(9),
             ),
             child: Icon(icon, size: 18, color: color),
@@ -955,7 +955,7 @@ class ExpenseScreen extends StatelessWidget {
   }
 
   Widget _kpiDivider() =>
-      Container(width: 1, height: 36, color: Colors.grey.withOpacity(0.15));
+      Container(width: 1, height: 36, color: Colors.grey.withValues(alpha: 0.15));
 
   Widget _buildWebToolbar(ExpenseController controller, BuildContext context) {
     return Container(
@@ -964,8 +964,8 @@ class ExpenseScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kBg,
         border: Border(
-          bottom: BorderSide(color: Colors.grey.withOpacity(0.15)),
-          top: BorderSide(color: Colors.grey.withOpacity(0.1)),
+          bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.15)),
+          top: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
         ),
       ),
       child: Row(
@@ -983,7 +983,7 @@ class ExpenseScreen extends StatelessWidget {
             () => Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: kPrimary.withOpacity(0.1),
+                color: kPrimary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -1016,7 +1016,7 @@ class ExpenseScreen extends StatelessWidget {
               Icon(
                 Icons.trending_down,
                 size: 56,
-                color: kSubText.withOpacity(0.4),
+                color: kSubText.withValues(alpha: 0.4),
               ),
               const SizedBox(height: 12),
               Text(
@@ -1078,12 +1078,12 @@ class ExpenseScreen extends StatelessWidget {
               ],
             ),
           ),
-          Container(height: 1, color: Colors.grey.withOpacity(0.15)),
+          Container(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
           Expanded(
             child: ListView.separated(
               itemCount: expenses.length,
-              separatorBuilder: (_, __) =>
-                  Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
+              separatorBuilder: (context, index) =>
+                  Divider(height: 1, color: Colors.grey.withValues(alpha: 0.1)),
               itemBuilder: (context, index) =>
                   _buildWebTableRow(expenses[index], controller, context),
             ),
@@ -1129,7 +1129,7 @@ class ExpenseScreen extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: () => _showExpenseDetails(expense, controller, context),
-        hoverColor: kPrimary.withOpacity(0.03),
+        hoverColor: kPrimary.withValues(alpha: 0.03),
         child: Container(
           height: 56,
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -1140,10 +1140,10 @@ class ExpenseScreen extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: typeColor.withOpacity(0.12),
+                  color: typeColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: typeColor.withOpacity(0.2),
+                    color: typeColor.withValues(alpha: 0.2),
                     width: 1,
                   ),
                 ),
@@ -1194,7 +1194,7 @@ class ExpenseScreen extends StatelessWidget {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: typeColor.withOpacity(0.08),
+                        color: typeColor.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -1296,7 +1296,7 @@ class ExpenseScreen extends StatelessWidget {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
+                        color: statusColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -1333,10 +1333,10 @@ class ExpenseScreen extends StatelessWidget {
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.05),
+          color: Colors.black.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(icon, size: 16, color: Colors.black.withOpacity(0.5)),
+        child: Icon(icon, size: 16, color: Colors.black.withValues(alpha: 0.5)),
       ),
     );
   }
@@ -1352,8 +1352,8 @@ class ExpenseScreen extends StatelessWidget {
       height: 52,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
-        color: kPrimary.withOpacity(0.04),
-        border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.15))),
+        color: kPrimary.withValues(alpha: 0.04),
+        border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.15))),
       ),
       child: Row(
         children: [
@@ -1381,7 +1381,7 @@ class ExpenseScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
               decoration: BoxDecoration(
-                color: kDanger.withOpacity(0.08),
+                color: kDanger.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
@@ -1562,7 +1562,7 @@ class ExpenseScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -1574,7 +1574,7 @@ class ExpenseScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
                     decoration: BoxDecoration(
-                      color: kDanger.withOpacity(0.05),
+                      color: kDanger.withValues(alpha: 0.05),
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(24),
                       ),
@@ -1774,7 +1774,7 @@ class ExpenseScreen extends StatelessWidget {
                                     ],
                                   ),
                                 );
-                              }).toList(),
+                              }),
                               TextButton.icon(
                                 onPressed: () => setState(
                                   () => items.add({
@@ -1880,10 +1880,10 @@ class ExpenseScreen extends StatelessWidget {
                                 vertical: 12,
                               ),
                               decoration: BoxDecoration(
-                                color: kDanger.withOpacity(0.06),
+                                color: kDanger.withValues(alpha: 0.06),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: kDanger.withOpacity(0.15),
+                                  color: kDanger.withValues(alpha: 0.15),
                                 ),
                               ),
                               child: Row(
@@ -1925,7 +1925,7 @@ class ExpenseScreen extends StatelessWidget {
                                 ? null
                                 : () => Navigator.pop(context),
                             style: OutlinedButton.styleFrom(
-                              backgroundColor: Colors.grey.withOpacity(0.1),
+                              backgroundColor: Colors.grey.withValues(alpha: 0.1),
                               elevation: 0,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
@@ -2010,24 +2010,6 @@ class ExpenseScreen extends StatelessWidget {
                                           ? null
                                           : selectedBankAccountId;
 
-                                      print(
-                                        '🔍 [Flutter Screen] Before createExpense:',
-                                      );
-                                      print(
-                                        '🔍 [Flutter Screen] paymentMethod: $paymentMethod',
-                                      );
-                                      print(
-                                        '🔍 [Flutter Screen] selectedBankAccountId: $selectedBankAccountId',
-                                      );
-                                      print(
-                                        '🔍 [Flutter Screen] selectedBankAccountId type: ${selectedBankAccountId.runtimeType}',
-                                      );
-                                      print(
-                                        '🔍 [Flutter Screen] finalBankAccountId: $finalBankAccountId',
-                                      );
-                                      print(
-                                        '🔍 [Flutter Screen] finalBankAccountId type: ${finalBankAccountId.runtimeType}',
-                                      );
 
                                       Navigator.pop(context);
                                       if (isEditing) {
@@ -2120,7 +2102,7 @@ class ExpenseScreen extends StatelessWidget {
     bool isWeb,
   ) {
     return DropdownButtonFormField<String>(
-      value: selectedId,
+      initialValue: selectedId,
       decoration: InputDecoration(
         labelText: 'Expense Account *',
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
@@ -2163,7 +2145,7 @@ class ExpenseScreen extends StatelessWidget {
     bool isWeb,
   ) {
     return DropdownButtonFormField<String>(
-      value: selectedId,
+      initialValue: selectedId,
       decoration: InputDecoration(
         labelText: 'Vendor',
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
@@ -2197,7 +2179,7 @@ class ExpenseScreen extends StatelessWidget {
     bool isWeb,
   ) {
     return DropdownButtonFormField<String>(
-      value: selectedId,
+      initialValue: selectedId,
       decoration: InputDecoration(
         labelText: 'Bank Account',
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
@@ -2214,9 +2196,6 @@ class ExpenseScreen extends StatelessWidget {
       ),
       items: bankAccounts.map((a) {
         final accountId = a['id']?.toString() ?? a['_id']?.toString();
-        print(
-          '🔍 [Flutter Bank Dropdown] Account: ${a['accountName']}, id: ${a['id']}, _id: ${a['_id']}, final: $accountId',
-        );
         return DropdownMenuItem(
           value: accountId,
           child: Text(a['accountName'], overflow: TextOverflow.ellipsis),
@@ -2246,7 +2225,7 @@ class ExpenseScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.withOpacity(0.4)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.4)),
           borderRadius: BorderRadius.circular(6),
         ),
         child: Row(
@@ -2282,7 +2261,7 @@ class ExpenseScreen extends StatelessWidget {
     required void Function(T?) onChanged,
   }) {
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
@@ -2364,7 +2343,7 @@ class ExpenseScreen extends StatelessWidget {
                     width: isWeb ? 44 : 50,
                     height: isWeb ? 44 : 50,
                     decoration: BoxDecoration(
-                      color: kDanger.withOpacity(0.1),
+                      color: kDanger.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
@@ -2402,7 +2381,7 @@ class ExpenseScreen extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(5),
                     ),
                     child: Text(
@@ -2424,7 +2403,7 @@ class ExpenseScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 14),
-              Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
+              Divider(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
               const SizedBox(height: 14),
               Flexible(
                 child: SingleChildScrollView(
@@ -2462,7 +2441,7 @@ class ExpenseScreen extends StatelessWidget {
                           _formatAmount(expense.taxAmount),
                           isWeb,
                         ),
-                      Divider(height: 20, color: Colors.grey.withOpacity(0.15)),
+                      Divider(height: 20, color: Colors.grey.withValues(alpha: 0.15)),
                       _buildDetailRow(
                         'Total Amount',
                         _formatAmount(expense.totalAmount),
@@ -2617,7 +2596,7 @@ class ExpenseScreen extends StatelessWidget {
                         padding: EdgeInsets.symmetric(
                           vertical: isWeb ? 10 : 12,
                         ),
-                        side: BorderSide(color: Colors.grey.withOpacity(0.4)),
+                        side: BorderSide(color: Colors.grey.withValues(alpha: 0.4)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(6),
                         ),

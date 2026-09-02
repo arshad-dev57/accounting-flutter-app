@@ -1,14 +1,11 @@
 // core/Expense/controller/expense_controller.dart - COMPLETE FIXED
 
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
-import 'dart:convert';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
-import 'package:BisonsTechs_app/config/apiconfig.dart';
 import 'package:BisonsTechs_app/core/Expense/model/expense_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:universal_html/html.dart' as html;
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
@@ -20,7 +17,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:excel/excel.dart';
 
 class ExpenseController extends GetxController {
   // Observable variables
@@ -461,7 +457,8 @@ class ExpenseController extends GetxController {
           hasMore.value = currentPage.value < totalPages.value;
         }
       }
-    } catch (e) {
+    } catch (e) { 
+      debugPrint('Error: $e');
     } finally {
       isLoadingMore.value = false;
     }
@@ -1008,13 +1005,7 @@ class ExpenseController extends GetxController {
           'expenses_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
 
       if (kIsWeb) {
-        final blob = html.Blob([bytes], 'application/pdf');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
-
+     
         if (Get.isDialogOpen ?? false) Get.back();
         AppSnackbar.success(
           kSuccess,
@@ -1276,7 +1267,7 @@ class ExpenseController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+           ,
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),
@@ -1308,36 +1299,6 @@ class ExpenseController extends GetxController {
           ),
         ),
       ],
-    );
-  }
-
-  // ==================== EXCEL HELPER ====================
-  void _excelSetCell(
-    Sheet sheet,
-    int row,
-    int col,
-    dynamic value, {
-    bool bold = false,
-    double fontSize = 10,
-    String? bgColor,
-    String fontColor = '000000',
-  }) {
-    final cell = sheet.cell(
-      CellIndex.indexByColumnRow(columnIndex: col, rowIndex: row),
-    );
-    cell.value = value is double
-        ? DoubleCellValue(value)
-        : value is int
-        ? IntCellValue(value)
-        : TextCellValue(value.toString());
-
-    cell.cellStyle = CellStyle(
-      bold: bold,
-      fontSize: fontSize.toInt(),
-      fontColorHex: ExcelColor.fromHexString('#$fontColor'),
-      backgroundColorHex: bgColor != null
-          ? ExcelColor.fromHexString('#$bgColor')
-          : ExcelColor.fromHexString('#FFFFFF'),
     );
   }
 

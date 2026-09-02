@@ -203,7 +203,7 @@ class PaymentMadeController extends GetxController {
             serverSupportsPagination.value = false;
           }
 
-          _updateSummaryForFiltered(payments.value);
+          _updateSummaryForFiltered(payments);
           payments.refresh();
         }
       } else {
@@ -239,7 +239,7 @@ class PaymentMadeController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error loading suppliers: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -256,7 +256,7 @@ class PaymentMadeController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error loading bank accounts: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -287,7 +287,7 @@ class PaymentMadeController extends GetxController {
         pendingCount.value = data['pending'] ?? 0;
       }
     } catch (e) {
-      print('Error loading summary: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -811,7 +811,7 @@ class PaymentMadeController extends GetxController {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
@@ -834,7 +834,7 @@ class PaymentMadeController extends GetxController {
             ),
             Text(
               subtitle,
-              style: TextStyle(fontSize: 10, color: color.withOpacity(0.7)),
+              style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.7)),
             ),
           ],
         ),
@@ -914,7 +914,7 @@ class PaymentMadeController extends GetxController {
       if (kIsWeb) {
         final blob = html.Blob([bytes], 'application/pdf');
         final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
+        html.AnchorElement(href: url)
           ..setAttribute('download', fileName)
           ..click();
         html.Url.revokeObjectUrl(url);

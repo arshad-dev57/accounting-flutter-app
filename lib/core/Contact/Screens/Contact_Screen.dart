@@ -1,5 +1,4 @@
 import 'package:BisonsTechs_app/Utils/colors.dart';
-import 'package:BisonsTechs_app/core/dashboard/Screens/dashbaord_screen.dart';
 import 'package:flutter/material.dart';
 
 class ContactScreen extends StatefulWidget {
@@ -211,7 +210,7 @@ class _ContactScreenState extends State<ContactScreen> {
               decoration: InputDecoration(
                 hintText: 'Enter contact name',
                 hintStyle: TextStyle(
-                  color: kSubText.withOpacity(0.5),
+                  color: kSubText.withValues(alpha: 0.5),
                   fontSize: 14,
                 ),
                 prefixIcon: Icon(
@@ -259,7 +258,7 @@ class _ContactScreenState extends State<ContactScreen> {
               decoration: InputDecoration(
                 hintText: 'Enter an account number',
                 hintStyle: TextStyle(
-                  color: kSubText.withOpacity(0.5),
+                  color: kSubText.withValues(alpha: 0.5),
                   fontSize: 14,
                 ),
                 prefixIcon: Icon(
@@ -341,7 +340,7 @@ class _ContactScreenState extends State<ContactScreen> {
             decoration: InputDecoration(
               hintText: 'Enter $label',
               hintStyle: TextStyle(
-                color: kSubText.withOpacity(0.5),
+                color: kSubText.withValues(alpha: 0.5),
                 fontSize: 13,
               ),
               prefixIcon: Icon(icon, color: kSubText, size: 18),
@@ -382,7 +381,7 @@ class _ContactScreenState extends State<ContactScreen> {
               decoration: InputDecoration(
                 hintText: 'Enter email address',
                 hintStyle: TextStyle(
-                  color: kSubText.withOpacity(0.5),
+                  color: kSubText.withValues(alpha: 0.5),
                   fontSize: 14,
                 ),
                 prefixIcon: Icon(
@@ -421,7 +420,7 @@ class _ContactScreenState extends State<ContactScreen> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _phoneNumbers.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               return _buildPhoneNumberTile(index);
             },
@@ -451,7 +450,7 @@ class _ContactScreenState extends State<ContactScreen> {
   Widget _buildPhoneNumberTile(int index) {
     return Row(
       children: [
-        Container(
+        SizedBox(
           width: 80,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -497,7 +496,7 @@ class _ContactScreenState extends State<ContactScreen> {
               decoration: InputDecoration(
                 hintText: 'Enter phone number',
                 hintStyle: TextStyle(
-                  color: kSubText.withOpacity(0.5),
+                  color: kSubText.withValues(alpha: 0.5),
                   fontSize: 13,
                 ),
                 prefixIcon: Icon(
@@ -545,7 +544,7 @@ class _ContactScreenState extends State<ContactScreen> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _addresses.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               return _buildAddressTile(index);
             },
@@ -632,7 +631,7 @@ class _ContactScreenState extends State<ContactScreen> {
             decoration: InputDecoration(
               hintText: 'Enter full address',
               hintStyle: TextStyle(
-                color: kSubText.withOpacity(0.5),
+                color: kSubText.withValues(alpha: 0.5),
                 fontSize: 13,
               ),
               border: OutlineInputBorder(
@@ -680,7 +679,7 @@ class _ContactScreenState extends State<ContactScreen> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _notes.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               return _buildNoteTile(index);
             },
@@ -726,7 +725,7 @@ class _ContactScreenState extends State<ContactScreen> {
               decoration: InputDecoration(
                 hintText: 'Enter note',
                 hintStyle: TextStyle(
-                  color: kSubText.withOpacity(0.5),
+                  color: kSubText.withValues(alpha: 0.5),
                   fontSize: 13,
                 ),
                 prefixIcon: Icon(

@@ -2,7 +2,6 @@ import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/widgets/expandable_stat_card.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
-import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/AccountRecievables/controllers/account_recievables_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -1605,74 +1604,6 @@ Widget _buildDetailRow(
               fontSize: isWeb ? 13 : 14,
               fontWeight: FontWeight.w600,
               color: valueColor ?? kText,
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-Widget _buildInvoiceItem(Invoice invoice, bool isWeb) {
-  final statusColor = invoice.status == 'Paid'
-      ? kSuccess
-      : invoice.status == 'Overdue'
-      ? kDanger
-      : kWarning;
-  final outstanding = invoice.amount - invoice.paidAmount;
-
-  return Container(
-    margin: EdgeInsets.only(bottom: isWeb ? 8 : 6),
-    padding: EdgeInsets.all(isWeb ? 12 : 10),
-    decoration: BoxDecoration(
-      color: kBg,
-      borderRadius: BorderRadius.circular(isWeb ? 10 : 8),
-    ),
-    child: Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                invoice.id,
-                style: TextStyle(
-                  fontSize: isWeb ? 12 : 11,
-                  fontWeight: FontWeight.w600,
-                  color: kText,
-                ),
-              ),
-              Text(
-                DateFormat('dd MMM yyyy').format(invoice.date),
-                style: TextStyle(fontSize: isWeb ? 10 : 9, color: kSubText),
-              ),
-            ],
-          ),
-        ),
-        Text(
-          _formatAmount(outstanding),
-          style: TextStyle(
-            fontSize: isWeb ? 13 : 11,
-            fontWeight: FontWeight.w700,
-            color: statusColor,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: isWeb ? 8 : 6,
-            vertical: isWeb ? 4 : 2,
-          ),
-          decoration: BoxDecoration(
-            color: statusColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(isWeb ? 6 : 4),
-          ),
-          child: Text(
-            invoice.status,
-            style: TextStyle(
-              fontSize: isWeb ? 10 : 9,
-              color: statusColor,
-              fontWeight: FontWeight.w600,
             ),
           ),
         ),

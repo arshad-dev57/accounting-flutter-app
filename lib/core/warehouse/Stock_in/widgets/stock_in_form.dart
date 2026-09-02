@@ -176,7 +176,7 @@ class _StockInFormState extends State<StockInForm> {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -323,7 +323,7 @@ class _StockInFormState extends State<StockInForm> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: _stockSourceReason,
+            initialValue: _stockSourceReason,
             decoration: const InputDecoration(
               labelText: 'Stock Source *',
               border: OutlineInputBorder(),
@@ -358,7 +358,7 @@ class _StockInFormState extends State<StockInForm> {
           if (_requiresBankAccount) ...[
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: _bankAccountId,
+              initialValue: _bankAccountId,
               decoration: const InputDecoration(
                 labelText: 'Pay From Bank Account *',
                 border: OutlineInputBorder(),
@@ -384,7 +384,7 @@ class _StockInFormState extends State<StockInForm> {
           ],
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: _supplierId,
+            initialValue: _supplierId,
             decoration: InputDecoration(
               labelText: _requiresSupplier ? 'Supplier *' : 'Supplier',
               border: const OutlineInputBorder(),
@@ -485,7 +485,7 @@ class _StockInFormState extends State<StockInForm> {
             color: selected ? kPrimary : Colors.grey.shade300,
             width: selected ? 2 : 1,
           ),
-          color: selected ? kPrimary.withOpacity(0.05) : Colors.transparent,
+          color: selected ? kPrimary.withValues(alpha: 0.05) : Colors.transparent,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

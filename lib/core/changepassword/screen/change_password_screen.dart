@@ -83,7 +83,7 @@ class ChangePasswordScreen extends StatelessWidget {
                       ),
                     );
                   },
-                  errorBuilder: (context, _, __) => Container(
+                  errorBuilder: (context, error, stackTrace) => Container(
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
@@ -102,7 +102,7 @@ class ChangePasswordScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                Container(color: const Color(0xFF0A7FA8).withOpacity(0.25)),
+                Container(color: const Color(0xFF0A7FA8).withValues(alpha: 0.25)),
 
                 // Branding content pinned to bottom-left
                 Positioned(
@@ -142,7 +142,7 @@ class ChangePasswordScreen extends StatelessWidget {
                       Text(
                         _heroSubtitle,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.75),
+                          color: Colors.white.withValues(alpha: 0.75),
                           fontSize: 13.5,
                           height: 1.6,
                         ),
@@ -236,7 +236,7 @@ class ChangePasswordScreen extends StatelessWidget {
           'assets/logo.png',
           height: 110,
           fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) => const Icon(
+          errorBuilder: (context, error, stackTrace) => const Icon(
             Icons.account_balance_rounded,
             size: 56,
             color: kPrimary,
@@ -302,7 +302,7 @@ class ChangePasswordScreen extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: kPrimary.withOpacity(0.3),
+            color: kPrimary.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -340,7 +340,7 @@ class ChangePasswordScreen extends StatelessWidget {
             _subtitle,
             style: TextStyle(
               fontSize: ResponsiveUtils.isTablet(context) ? 14 : 12,
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
             ),
             textAlign: TextAlign.center,
           ),
@@ -362,7 +362,7 @@ class ChangePasswordScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(isWeb ? 20 : 16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -474,7 +474,7 @@ class ChangePasswordScreen extends StatelessWidget {
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(isWeb ? 12 : 10),
-                borderSide: BorderSide(color: kBorder.withOpacity(0.5)),
+                borderSide: BorderSide(color: kBorder.withValues(alpha: 0.5)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(isWeb ? 12 : 10),
@@ -532,9 +532,9 @@ class ChangePasswordScreen extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(isWeb ? 16 : 14),
       decoration: BoxDecoration(
-        color: kBg.withOpacity(0.5),
+        color: kBg.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(isWeb ? 12 : 10),
-        border: Border.all(color: kBorder.withOpacity(0.5)),
+        border: Border.all(color: kBorder.withValues(alpha: 0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -638,7 +638,7 @@ class ChangePasswordScreen extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.85),
+            color: Colors.white.withValues(alpha: 0.85),
             fontSize: 13,
             fontWeight: FontWeight.w500,
           ),

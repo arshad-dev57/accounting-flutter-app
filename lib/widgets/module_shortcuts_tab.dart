@@ -1,6 +1,5 @@
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 
 class ModuleShortcutItem {

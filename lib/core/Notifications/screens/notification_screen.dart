@@ -103,7 +103,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                           'Stay updated with your activities',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.black.withOpacity(0.55),
+                            color: Colors.black.withValues(alpha: 0.55),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -121,14 +121,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.1),
+                                color: Colors.black.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
                                 'Mark all read',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: Colors.black.withOpacity(0.75),
+                                  color: Colors.black.withValues(alpha: 0.75),
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -180,7 +180,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
+                    color: Colors.black.withValues(alpha: 0.2),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -213,14 +213,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
               Icon(
                 Icons.notifications_none,
                 size: 64,
-                color: kSubText.withOpacity(0.3),
+                color: kSubText.withValues(alpha: 0.3),
               ),
               const SizedBox(height: 16),
               Text(
                 'No notifications',
                 style: TextStyle(
                   fontSize: 16,
-                  color: kSubText.withOpacity(0.6),
+                  color: kSubText.withValues(alpha: 0.6),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -229,7 +229,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 'You\'re all caught up!',
                 style: TextStyle(
                   fontSize: 14,
-                  color: kSubText.withOpacity(0.4),
+                  color: kSubText.withValues(alpha: 0.4),
                 ),
               ),
             ],
@@ -282,17 +282,17 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: isUnread ? kPrimary.withOpacity(0.05) : kCardBg,
+        color: isUnread ? kPrimary.withValues(alpha: 0.05) : kCardBg,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isUnread
-              ? kPrimary.withOpacity(0.2)
-              : Colors.grey.withOpacity(0.15),
+              ? kPrimary.withValues(alpha: 0.2)
+              : Colors.grey.withValues(alpha: 0.15),
           width: isUnread ? 1.5 : 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -317,14 +317,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        color.withOpacity(0.15),
-                        color.withOpacity(0.05),
+                        color.withValues(alpha: 0.15),
+                        color.withValues(alpha: 0.05),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: color.withOpacity(0.2), width: 1),
+                    border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
                   ),
                   child: Icon(icon, size: 22, color: color),
                 ),
@@ -378,14 +378,14 @@ class _NotificationScreenState extends State<NotificationScreen> {
                           Icon(
                             Icons.access_time,
                             size: 12,
-                            color: kSubText.withOpacity(0.6),
+                            color: kSubText.withValues(alpha: 0.6),
                           ),
                           const SizedBox(width: 4),
                           Text(
                             time,
                             style: TextStyle(
                               fontSize: 11,
-                              color: kSubText.withOpacity(0.7),
+                              color: kSubText.withValues(alpha: 0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -423,7 +423,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(

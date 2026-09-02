@@ -230,15 +230,7 @@ class BankReconciliationController extends GetxController {
     clearedTransactionIds.clear();
   }
 
-  void _handleSessionExpired() {
-    Get.snackbar(
-      'Session Expired',
-      'Please login again',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: kDanger,
-      colorText: Colors.white,
-    );
-  }
+ 
 }
 
 // Models

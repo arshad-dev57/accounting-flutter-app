@@ -159,9 +159,6 @@ class SubscriptionService {
     try {
       final headers = await _getHeaders();
 
-      print(
-        '[SubscriptionService] Subscribing to plan: $plan (amount: $amount)',
-      );
 
       final response = await http.post(
         Uri.parse('$baseUrl/api/subscription/subscribe'),
@@ -178,9 +175,6 @@ class SubscriptionService {
         }),
       );
 
-      print(
-        '[SubscriptionService] Response ${response.statusCode}: ${response.body}',
-      );
 
       final data = json.decode(response.body) as Map<String, dynamic>;
 
@@ -197,7 +191,6 @@ class SubscriptionService {
         };
       }
     } catch (e) {
-      print('[SubscriptionService] Error: $e');
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
     }
   }

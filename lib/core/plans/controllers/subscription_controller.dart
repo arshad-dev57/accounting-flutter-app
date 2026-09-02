@@ -45,7 +45,6 @@ class SubscriptionController extends GetxController {
   // ─── Check subscription status from backend ─────────────────────
   Future<void> checkSubscriptionStatus() async {
     if (justSubscribed.value) {
-      print('[SubscriptionController] Just subscribed — skipping status check');
       return;
     }
 
@@ -61,7 +60,6 @@ class SubscriptionController extends GetxController {
         _showTrialExpiryWarning();
       }
     } catch (e) {
-      print('[SubscriptionController] Error checking subscription: $e');
     } finally {
       isLoading.value = false;
     }
@@ -142,7 +140,6 @@ class SubscriptionController extends GetxController {
         plans.value = List<Map<String, dynamic>>.from(response['data'] as List);
       }
     } catch (e) {
-      print('[SubscriptionController] Error loading plans: $e');
     } finally {
       isLoading.value = false;
     }

@@ -147,7 +147,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   'Help us improve BisonsTechs',
                   style: TextStyle(
                     fontSize: isWeb ? 14 : 12,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -172,7 +172,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(icon, color: Colors.white, size: size),
@@ -189,7 +189,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(isWeb ? 20 : 16),
         boxShadow: [
-          BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 10),
+          BoxShadow(color: Colors.grey.withValues(alpha: 0.1), blurRadius: 10),
         ],
       ),
       child: Column(
@@ -244,7 +244,6 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
   Widget _buildFeedbackForm() {
     final isWeb = ResponsiveUtils.isWeb(Get.context!);
-    final isMobile = ResponsiveUtils.isMobile(Get.context!);
 
     return Container(
       padding: EdgeInsets.all(isWeb ? 24 : 20),
@@ -252,7 +251,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(isWeb ? 20 : 16),
         boxShadow: [
-          BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 10),
+          BoxShadow(color: Colors.grey.withValues(alpha: 0.1), blurRadius: 10),
         ],
       ),
       child: Column(

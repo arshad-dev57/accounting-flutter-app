@@ -28,7 +28,6 @@ class PermissionService extends GetxService {
         _currentUser = User.fromJson(userMap);
       }
     } catch (e) {
-      print('Error loading current user: $e');
     } finally {
       isLoading.value = false;
     }

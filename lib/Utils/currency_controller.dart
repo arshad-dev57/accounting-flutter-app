@@ -1,6 +1,7 @@
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AppCurrency {
@@ -144,7 +145,6 @@ class CurrencyController extends GetxController {
   }
 
   Future<void> setCurrency(String code, {String? symbol}) async {
-    print('🔄 [CurrencyController] setCurrency called with: $code');
 
     final currency = findByCode(code);
     final resolvedSymbol = (symbol != null && symbol.isNotEmpty)
@@ -185,6 +185,7 @@ class CurrencyController extends GetxController {
      
       }
     } catch (e) {
+      debugPrint('Error: $e');
     }
   }
 

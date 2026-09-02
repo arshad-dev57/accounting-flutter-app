@@ -61,7 +61,7 @@ class StockSummaryController extends GetxController {
         _calculateCategorySummary();
       }
     } catch (e) {
-      print('Error loading stock summary: $e');
+      debugPrint('Error: $e');
     } finally {
       isLoading.value = false;
     }
@@ -76,15 +76,15 @@ class StockSummaryController extends GetxController {
     double totalPrice = 0;
 
     for (var product in products) {
-      final stock = product.currentStock ?? 0;
-      final price = product.sellingPrice ?? 0;
+      final stock = product.currentStock;
+      final price = product.sellingPrice;
 
       totalValue += stock * price;
       totalPrice += price;
 
       if (stock <= 0) {
         outOfStock++;
-      } else if (stock <= (product.minimumStock ?? 5)) {
+      } else if (stock <= product.minimumStock) {
         lowStock++;
       }
     }
@@ -114,7 +114,7 @@ class StockSummaryController extends GetxController {
           categoryMap[categoryName]!['count'] + 1;
       categoryMap[categoryName]!['value'] =
           (categoryMap[categoryName]!['value'] ?? 0.0) +
-          ((product.currentStock ?? 0) * (product.sellingPrice ?? 0));
+          (product.currentStock * product.sellingPrice);
     }
 
     categorySummary.value = categoryMap.values.toList();
@@ -201,7 +201,6 @@ class StockSummaryController extends GetxController {
       AppSnackbar.success(kSuccess, 'Success', 'PDF exported successfully!');
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('PDF Export Error: $e');
       AppSnackbar.error(
         kDanger,
         'Error',
@@ -380,7 +379,7 @@ class StockSummaryController extends GetxController {
                     ],
                   ),
                 );
-              }).toList(),
+              }),
 
               // Total Row
               pw.Container(

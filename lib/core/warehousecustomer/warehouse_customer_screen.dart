@@ -25,7 +25,7 @@ class WarehouseCustomerScreen extends StatelessWidget {
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
@@ -113,7 +113,7 @@ class WarehouseCustomerScreen extends StatelessWidget {
                   width: 34,
                   height: 34,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(9),
                   ),
                   child: const Icon(
@@ -141,7 +141,7 @@ class WarehouseCustomerScreen extends StatelessWidget {
                           '${controller.totalRecords.value} customers',
                           style: TextStyle(
                             fontSize: 11,
-                            color: Colors.white.withOpacity(0.7),
+                            color: Colors.white.withValues(alpha: 0.7),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -180,13 +180,13 @@ class WarehouseCustomerScreen extends StatelessWidget {
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(9),
                     ),
                     child: Icon(
                       Icons.refresh_rounded,
                       size: 17,
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                     ),
                   ),
                 ),
@@ -202,7 +202,7 @@ class WarehouseCustomerScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
+                    color: Colors.black.withValues(alpha: 0.06),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -275,7 +275,7 @@ class WarehouseCustomerScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -292,10 +292,10 @@ class WarehouseCustomerScreen extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
-            color: selected ? Colors.white : Colors.white.withOpacity(0.18),
+            color: selected ? Colors.white : Colors.white.withValues(alpha: 0.18),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: selected ? Colors.white : Colors.white.withOpacity(0.4),
+              color: selected ? Colors.white : Colors.white.withValues(alpha: 0.4),
             ),
           ),
           child: Text(
@@ -446,7 +446,7 @@ class _CreateCustomerForm extends StatelessWidget {
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
@@ -563,7 +563,7 @@ class _CreateCustomerForm extends StatelessWidget {
 
         _section('Customer Details', [
           DropdownButtonFormField<String>(
-            value: controller.customerType.value,
+            initialValue: controller.customerType.value,
             decoration: const InputDecoration(
               labelText: 'Customer Type',
               border: OutlineInputBorder(
@@ -584,7 +584,7 @@ class _CreateCustomerForm extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: controller.status.value,
+            initialValue: controller.status.value,
             decoration: const InputDecoration(
               labelText: 'Status',
               border: OutlineInputBorder(
@@ -668,10 +668,10 @@ class _CreateCustomerForm extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -704,7 +704,7 @@ class _CreateCustomerForm extends StatelessWidget {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withValues(alpha: 0.06),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),
@@ -855,7 +855,7 @@ class _CustomerDetailSheetState extends State<_CustomerDetailSheet> {
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: kPrimary.withOpacity(0.1),
+                color: kPrimary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
@@ -888,7 +888,7 @@ class _CustomerDetailSheetState extends State<_CustomerDetailSheet> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: _statusColor(customer.status).withOpacity(0.1),
+                color: _statusColor(customer.status).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -903,7 +903,7 @@ class _CustomerDetailSheetState extends State<_CustomerDetailSheet> {
           ],
         ),
         const SizedBox(height: 16),
-        Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+        Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
         const SizedBox(height: 16),
 
         // Contact Info
@@ -944,13 +944,13 @@ class _CustomerDetailSheetState extends State<_CustomerDetailSheet> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: customer.outstandingBalance > 0
-                ? Colors.red.withOpacity(0.05)
-                : Colors.green.withOpacity(0.05),
+                ? Colors.red.withValues(alpha: 0.05)
+                : Colors.green.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: customer.outstandingBalance > 0
-                  ? Colors.red.withOpacity(0.2)
-                  : Colors.green.withOpacity(0.2),
+                  ? Colors.red.withValues(alpha: 0.2)
+                  : Colors.green.withValues(alpha: 0.2),
             ),
           ),
           child: Row(
@@ -1345,7 +1345,7 @@ class _EditCustomerFormState extends State<_EditCustomerForm> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _customerType,
+                  initialValue: _customerType,
                   decoration: const InputDecoration(
                     labelText: 'Customer Type',
                     border: OutlineInputBorder(
@@ -1369,7 +1369,7 @@ class _EditCustomerFormState extends State<_EditCustomerForm> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _status,
+                  initialValue: _status,
                   decoration: const InputDecoration(
                     labelText: 'Status',
                     border: OutlineInputBorder(
@@ -1542,13 +1542,13 @@ class _CustomerListView extends StatelessWidget {
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.08),
+                  color: kPrimary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Icon(
                   Icons.people_outline,
                   size: 36,
-                  color: kPrimary.withOpacity(0.5),
+                  color: kPrimary.withValues(alpha: 0.5),
                 ),
               ),
               const SizedBox(height: 16),
@@ -1617,10 +1617,10 @@ class _CustomerListView extends StatelessWidget {
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
+                        color: Colors.black.withValues(alpha: 0.03),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -1633,7 +1633,7 @@ class _CustomerListView extends StatelessWidget {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: kPrimary.withOpacity(0.1),
+                          color: kPrimary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Center(
@@ -1671,7 +1671,7 @@ class _CustomerListView extends StatelessWidget {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: color.withOpacity(0.1),
+                                    color: color.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(

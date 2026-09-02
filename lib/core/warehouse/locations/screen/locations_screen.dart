@@ -168,7 +168,7 @@ class _LocationsBodyState extends State<_LocationsBody> {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
+                  color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(9),
                 ),
                 child: const Icon(
@@ -276,7 +276,7 @@ class _LocationsBodyState extends State<_LocationsBody> {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: kPrimary.withOpacity(0.15),
+                        color: kPrimary.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Text(
@@ -442,7 +442,7 @@ class _LocationsBodyState extends State<_LocationsBody> {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: LocationController.locationTypes.contains(type)
+                    initialValue: LocationController.locationTypes.contains(type)
                         ? type
                         : 'Shop',
                     decoration: const InputDecoration(
@@ -468,7 +468,7 @@ class _LocationsBodyState extends State<_LocationsBody> {
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Default location'),
                     value: isDefault,
-                    activeColor: kPrimary,
+                    activeThumbColor: kPrimary,
                     onChanged: (v) => setDialogState(() => isDefault = v),
                   ),
                 ],

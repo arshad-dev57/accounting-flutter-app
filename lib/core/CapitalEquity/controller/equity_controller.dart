@@ -187,7 +187,7 @@ class EquityController extends GetxController {
             serverSupportsPagination.value = false;
           }
 
-          _updateSummaryForFiltered(equityAccounts.value);
+          _updateSummaryForFiltered(equityAccounts);
           equityAccounts.refresh();
         }
       }
@@ -698,7 +698,7 @@ class EquityController extends GetxController {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
@@ -721,7 +721,7 @@ class EquityController extends GetxController {
             ),
             Text(
               subtitle,
-              style: TextStyle(fontSize: 10, color: color.withOpacity(0.7)),
+              style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.7)),
             ),
           ],
         ),
@@ -1035,7 +1035,7 @@ class EquityController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+         ,
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),
@@ -1203,7 +1203,7 @@ class EquityController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+         ,
       ],
     );
   }
@@ -1589,7 +1589,7 @@ class EquityController extends GetxController {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -1604,7 +1604,7 @@ class EquityController extends GetxController {
                   Container(
                     padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
                     decoration: BoxDecoration(
-                      color: kSuccess.withOpacity(0.05),
+                      color: kSuccess.withValues(alpha: 0.05),
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(24),
                       ),
@@ -1670,7 +1670,7 @@ class EquityController extends GetxController {
                                 color: kBgLight,
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
-                                  color: Colors.grey.withOpacity(0.1),
+                                  color: Colors.grey.withValues(alpha: 0.1),
                                 ),
                               ),
                               child: Column(
@@ -1734,7 +1734,7 @@ class EquityController extends GetxController {
                       color: Colors.white,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, -5),
                         ),
@@ -1858,7 +1858,7 @@ class EquityController extends GetxController {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -1873,7 +1873,7 @@ class EquityController extends GetxController {
                   Container(
                     padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
                     decoration: BoxDecoration(
-                      color: kDanger.withOpacity(0.05),
+                      color: kDanger.withValues(alpha: 0.05),
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(24),
                       ),
@@ -1939,7 +1939,7 @@ class EquityController extends GetxController {
                                 color: kBgLight,
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
-                                  color: Colors.grey.withOpacity(0.1),
+                                  color: Colors.grey.withValues(alpha: 0.1),
                                 ),
                               ),
                               child: Column(
@@ -2003,7 +2003,7 @@ class EquityController extends GetxController {
                       color: Colors.white,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, -5),
                         ),
@@ -2128,7 +2128,7 @@ class EquityController extends GetxController {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -2143,7 +2143,7 @@ class EquityController extends GetxController {
                   Container(
                     padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
                     decoration: BoxDecoration(
-                      color: kPrimary.withOpacity(0.05),
+                      color: kPrimary.withValues(alpha: 0.05),
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(24),
                       ),
@@ -2269,7 +2269,7 @@ class EquityController extends GetxController {
                       color: Colors.white,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, -5),
                         ),
@@ -2457,7 +2457,7 @@ class EquityController extends GetxController {
                             width: 52,
                             height: 52,
                             decoration: BoxDecoration(
-                              color: typeColor.withOpacity(0.12),
+                              color: typeColor.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Icon(
@@ -2494,7 +2494,7 @@ class EquityController extends GetxController {
                                         vertical: 2,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: typeColor.withOpacity(0.08),
+                                        color: typeColor.withValues(alpha: 0.08),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
@@ -2556,7 +2556,7 @@ class EquityController extends GetxController {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
                       const SizedBox(height: 16),
 
                       // Details
@@ -2582,7 +2582,7 @@ class EquityController extends GetxController {
                       if (account.notes.isNotEmpty)
                         _detailRow('Notes', account.notes),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
                       const SizedBox(height: 16),
 
                       // Close Button
@@ -2681,9 +2681,9 @@ class EquityController extends GetxController {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.06),
+          color: color.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.15)),
+          border: Border.all(color: color.withValues(alpha: 0.15)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -2704,7 +2704,7 @@ class EquityController extends GetxController {
               label,
               style: TextStyle(
                 fontSize: 9,
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withValues(alpha: 0.5),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -2834,7 +2834,7 @@ class EquityController extends GetxController {
         if (paymentMethod != 'Cash') ...[
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            value: selectedBankAccountId,
+            initialValue: selectedBankAccountId,
             decoration: InputDecoration(
               labelText: 'Bank Account *',
               border: OutlineInputBorder(
@@ -2878,7 +2878,7 @@ class EquityController extends GetxController {
     required void Function(String?) onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),

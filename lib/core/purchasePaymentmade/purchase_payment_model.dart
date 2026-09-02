@@ -1,6 +1,5 @@
 // lib/core/warehouse/purchase_payment/model/purchase_payment_model.dart
 
-import 'package:intl/intl.dart';
 
 class PurchasePaymentModel {
   final String id;

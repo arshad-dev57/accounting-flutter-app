@@ -88,7 +88,6 @@ class PurchaseOrderController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    print('🟢 [PurchaseOrderController] onInit called');
     selectedOrderDate.value = DateTime.now();
     selectedExpectedDeliveryDate.value = DateTime.now().add(
       const Duration(days: 7),
@@ -104,9 +103,6 @@ class PurchaseOrderController extends GetxController {
 
   @override
   void onClose() {
-    print(
-      '🟢 [PurchaseOrderController] onClose called - disposing controllers',
-    );
     supplierSearchController.dispose();
     productSearchController.dispose();
     orderDateController.dispose();
@@ -143,11 +139,6 @@ class PurchaseOrderController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   Future<void> fetchOrders({bool resetPage = false}) async {
-    print('🔵 [PurchaseOrderController] fetchOrders called');
-    print(
-      '🔵 [PurchaseOrderController] Current Page: ${currentPage.value}, Limit: ${pageLimit.value}',
-    );
-    print('🔵 [PurchaseOrderController] Reset Page: $resetPage');
 
     if (resetPage) currentPage.value = 1;
     try {
@@ -158,47 +149,29 @@ class PurchaseOrderController extends GetxController {
       };
       if (searchFilter.value.isNotEmpty) {
         params['search'] = searchFilter.value;
-        print(
-          '🔵 [PurchaseOrderController] Search filter: ${searchFilter.value}',
-        );
       }
       if (statusFilter.value != 'all') {
         params['status'] = statusFilter.value;
-        print(
-          '🔵 [PurchaseOrderController] Status filter: ${statusFilter.value}',
-        );
       }
       if (fromDate.value != null) {
         params['fromDate'] = fromDate.value!.toIso8601String().split('T').first;
-        print('🔵 [PurchaseOrderController] From date: ${params['fromDate']}');
       }
       if (toDate.value != null) {
         params['toDate'] = toDate.value!.toIso8601String().split('T').first;
-        print('🔵 [PurchaseOrderController] To date: ${params['toDate']}');
       }
 
       final query = params.entries
           .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
           .join('&');
-      print(
-        '🔵 [PurchaseOrderController] API Request: GET /api/purchase/orders?$query',
-      );
 
       final response = await _api.get(
         '/api/purchase/orders?$query',
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [PurchaseOrderController] Response Status: ${response.statusCode}',
-      );
-      print(
-        '🔵 [PurchaseOrderController] Response Success: ${response.success}',
-      );
 
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
-        print('🔵 [PurchaseOrderController] Data length: ${list.length}');
 
         orders.value = list
             .map(
@@ -216,10 +189,6 @@ class PurchaseOrderController extends GetxController {
           if (statsData['status'] != null) {
             statusCounts.value = PurchaseOrderStatusCounts.fromJson(statsData);
           }
-          print('🔵 [PurchaseOrderController] Stats: ${stats.value}');
-          print(
-            '🔵 [PurchaseOrderController] Status counts: ${statusCounts.value}',
-          );
         }
 
         final pagination = response.data['pagination'] as Map<String, dynamic>?;
@@ -232,41 +201,23 @@ class PurchaseOrderController extends GetxController {
           hasPrev.value = pagination['hasPrev'] == true;
           hasMore.value = pagination['hasNext'] == true;
 
-          print(
-            '✅ [PurchaseOrderController] Orders fetched successfully: ${orders.length} orders',
-          );
-          print(
-            '✅ [PurchaseOrderController] Total records: ${totalRecords.value}, Total pages: ${totalPages.value}',
-          );
         }
       } else {
-        print('❌ [PurchaseOrderController] Failed to fetch orders');
-        print('❌ [PurchaseOrderController] Response data: ${response.data}');
         Get.snackbar(
           'Error',
-          response.message ?? 'Failed to load purchase orders',
+          response.message,
         );
       }
     } catch (e) {
-      print('❌ [PurchaseOrderController] fetchOrders error: $e');
-      print('❌ [PurchaseOrderController] Stack trace: ${StackTrace.current}');
       Get.snackbar('Error', e.toString());
     } finally {
       isLoading.value = false;
-      print(
-        '🔵 [PurchaseOrderController] fetchOrders completed, isLoading: ${isLoading.value}',
-      );
     }
   }
 
   // ─── LOCAL FILTERS ──────────────────────────────────────────
 
   void applyLocalFilters() {
-    print('🟣 [PurchaseOrderController] applyLocalFilters called');
-    print(
-      '🟣 [PurchaseOrderController] Selected filter: ${selectedFilter.value}',
-    );
-    print('🟣 [PurchaseOrderController] Search filter: ${searchFilter.value}');
 
     final list = orders.toList();
     final filtered = list.where((item) {
@@ -287,27 +238,21 @@ class PurchaseOrderController extends GetxController {
       return true;
     }).toList();
 
-    print(
-      '🟣 [PurchaseOrderController] Filtered orders: ${filtered.length} out of ${list.length}',
-    );
     filteredOrders.value = filtered;
   }
 
   void filterOrders(String filter) {
-    print('🟣 [PurchaseOrderController] filterOrders called with: $filter');
     selectedFilter.value = filter;
     statusFilter.value = filter;
     fetchOrders(resetPage: true);
   }
 
   void searchOrders(String query) {
-    print('🟣 [PurchaseOrderController] searchOrders called with: $query');
     searchFilter.value = query;
     applyLocalFilters();
   }
 
   void clearSearch() {
-    print('🟣 [PurchaseOrderController] clearSearch called');
     searchFilter.value = '';
     applyLocalFilters();
     fetchOrders(resetPage: true);
@@ -316,20 +261,14 @@ class PurchaseOrderController extends GetxController {
   // ─── LOAD MORE ────────────────────────────────────────────
 
   Future<void> fetchMoreOrders() async {
-    print('🟡 [PurchaseOrderController] fetchMoreOrders called');
-    print(
-      '🟡 [PurchaseOrderController] hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}',
-    );
 
     if (!hasMore.value || isLoadingMore.value) {
-      print('🟡 [PurchaseOrderController] Skipping load more');
       return;
     }
 
     try {
       isLoadingMore.value = true;
       currentPage.value += 1;
-      print('🟡 [PurchaseOrderController] Loading page: ${currentPage.value}');
 
       final params = <String, String>{
         'page': currentPage.value.toString(),
@@ -341,9 +280,6 @@ class PurchaseOrderController extends GetxController {
       final query = params.entries
           .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
           .join('&');
-      print(
-        '🟡 [PurchaseOrderController] API Request: GET /api/purchase/orders?$query',
-      );
 
       final response = await _api.get(
         '/api/purchase/orders?$query',
@@ -358,9 +294,6 @@ class PurchaseOrderController extends GetxController {
             )
             .toList();
 
-        print(
-          '🟡 [PurchaseOrderController] Loaded ${newOrders.length} more orders',
-        );
         orders.addAll(newOrders);
         applyLocalFilters();
 
@@ -370,29 +303,22 @@ class PurchaseOrderController extends GetxController {
           totalRecords.value = (pagination['total'] as num?)?.toInt() ?? 0;
           totalPages.value = (pagination['pages'] as num?)?.toInt() ?? 1;
         }
-        print(
-          '🟡 [PurchaseOrderController] Total orders now: ${orders.length}, hasMore: ${hasMore.value}',
-        );
       } else {
-        print('❌ [PurchaseOrderController] Failed to load more orders');
       }
     } catch (e) {
-      print('❌ [PurchaseOrderController] fetchMoreOrders error: $e');
+      debugPrint('Error: $e');
     } finally {
       isLoadingMore.value = false;
-      print('🟡 [PurchaseOrderController] fetchMoreOrders completed');
     }
   }
 
   // ─── REFRESH ──────────────────────────────────────────────────
 
   Future<void> refreshOrders() {
-    print('🟢 [PurchaseOrderController] refreshOrders called');
     return fetchOrders(resetPage: true);
   }
 
   void applyFilters() {
-    print('🟣 [PurchaseOrderController] applyFilters called');
     fetchOrders(resetPage: true);
   }
 
@@ -401,25 +327,16 @@ class PurchaseOrderController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   void openCreateWizard() {
-    print('🟢 [PurchaseOrderController] openCreateWizard called');
     _resetWizard();
     showCreateWizard.value = true;
-    print(
-      '🟢 [PurchaseOrderController] showCreateWizard: ${showCreateWizard.value}',
-    );
   }
 
   void closeCreateWizard() {
-    print('🟢 [PurchaseOrderController] closeCreateWizard called');
     showCreateWizard.value = false;
     _resetWizard();
-    print(
-      '🟢 [PurchaseOrderController] showCreateWizard: ${showCreateWizard.value}',
-    );
   }
 
   void _resetWizard() {
-    print('🟢 [PurchaseOrderController] _resetWizard called');
     wizardStep.value = 0;
     selectedSupplier.value = null;
     supplierSearchResults.clear();
@@ -439,16 +356,13 @@ class PurchaseOrderController extends GetxController {
     expectedDeliveryDateController.text = DateFormat(
       'dd MMM yyyy',
     ).format(selectedExpectedDeliveryDate.value!);
-    print('✅ [PurchaseOrderController] Wizard reset complete');
   }
 
   // ─── SUPPLIER SEARCH ─────────────────────────────────────────
 
   Future<void> searchSuppliers(String query) async {
-    print('🔵 [PurchaseOrderController] searchSuppliers called with: "$query"');
 
     if (query.trim().length < 2) {
-      print('🔵 [PurchaseOrderController] Query too short, clearing results');
       supplierSearchResults.clear();
       return;
     }
@@ -456,9 +370,6 @@ class PurchaseOrderController extends GetxController {
     try {
       isSearchingSuppliers.value = true;
       final encoded = Uri.encodeComponent(query.trim());
-      print(
-        '🔵 [PurchaseOrderController] API Request: GET /api/warehouse/supplier?search=$encoded&limit=10',
-      );
 
       final response = await _api.get(
         '/api/warehouse/supplier?search=$encoded&limit=10',
@@ -470,27 +381,17 @@ class PurchaseOrderController extends GetxController {
         supplierSearchResults.value = list
             .map((e) => Map<String, dynamic>.from(e))
             .toList();
-        print(
-          '🔵 [PurchaseOrderController] Found ${supplierSearchResults.length} suppliers for query: $query',
-        );
       } else {
-        print('❌ [PurchaseOrderController] No suppliers found');
         supplierSearchResults.clear();
       }
     } catch (e) {
-      print('❌ [PurchaseOrderController] searchSuppliers error: $e');
       supplierSearchResults.clear();
     } finally {
       isSearchingSuppliers.value = false;
-      print('🔵 [PurchaseOrderController] searchSuppliers completed');
     }
   }
 
   void selectSupplier(Map<String, dynamic> supplier) {
-    print('🔵 [PurchaseOrderController] selectSupplier called');
-    print(
-      '🔵 [PurchaseOrderController] Selected supplier: ${supplier['name']}',
-    );
 
     selectedSupplier.value = supplier;
     supplierSearchResults.clear();
@@ -500,10 +401,8 @@ class PurchaseOrderController extends GetxController {
   // ─── PRODUCT SEARCH ──────────────────────────────────────────
 
   Future<void> searchProducts(String query) async {
-    print('🔵 [PurchaseOrderController] searchProducts called with: "$query"');
 
     if (query.trim().length < 2) {
-      print('🔵 [PurchaseOrderController] Query too short, clearing results');
       productSearchResults.clear();
       return;
     }
@@ -511,9 +410,6 @@ class PurchaseOrderController extends GetxController {
     try {
       isSearchingProducts.value = true;
       final encoded = Uri.encodeComponent(query.trim());
-      print(
-        '🔵 [PurchaseOrderController] API Request: GET /api/warehouse/products?search=$encoded&limit=10',
-      );
 
       final response = await _api.get(
         '/api/warehouse/products?search=$encoded&limit=10',
@@ -525,24 +421,17 @@ class PurchaseOrderController extends GetxController {
         productSearchResults.value = list
             .map((e) => Map<String, dynamic>.from(e))
             .toList();
-        print(
-          '🔵 [PurchaseOrderController] Found ${productSearchResults.length} products for query: $query',
-        );
       } else {
-        print('❌ [PurchaseOrderController] No products found');
         productSearchResults.clear();
       }
     } catch (e) {
-      print('❌ [PurchaseOrderController] searchProducts error: $e');
       productSearchResults.clear();
     } finally {
       isSearchingProducts.value = false;
-      print('🔵 [PurchaseOrderController] searchProducts completed');
     }
   }
 
   void addProductToOrder(Map<String, dynamic> product) {
-    print('🔵 [PurchaseOrderController] addProductToOrder called');
 
     // Check if product already exists in drafts
     final existingIndex = lineDrafts.indexWhere(
@@ -554,9 +443,6 @@ class PurchaseOrderController extends GetxController {
       final existing = lineDrafts[existingIndex];
       existing.quantity += 1;
       lineDrafts[existingIndex] = existing;
-      print(
-        '🔵 [PurchaseOrderController] Incremented quantity for existing product: ${product['name']}',
-      );
     } else {
       // Add new product
       final newLine = PurchaseOrderLineDraft(
@@ -569,9 +455,6 @@ class PurchaseOrderController extends GetxController {
         taxRate: product['taxRate']?.toDouble() ?? 0,
       );
       lineDrafts.add(newLine);
-      print(
-        '🔵 [PurchaseOrderController] Added new product: ${product['name']}',
-      );
     }
 
     // Clear product search
@@ -580,9 +463,6 @@ class PurchaseOrderController extends GetxController {
   }
 
   void removeProductFromOrder(int index) {
-    print(
-      '🔵 [PurchaseOrderController] removeProductFromOrder called for index: $index',
-    );
     lineDrafts.removeAt(index);
   }
 
@@ -592,9 +472,6 @@ class PurchaseOrderController extends GetxController {
       if (quantity > 0) {
         line.quantity = quantity;
         lineDrafts[index] = line;
-        print(
-          '🔵 [PurchaseOrderController] Updated quantity for product ${line.productName} to $quantity',
-        );
       }
     }
   }
@@ -605,9 +482,6 @@ class PurchaseOrderController extends GetxController {
       if (unitPrice >= 0) {
         line.unitPrice = unitPrice;
         lineDrafts[index] = line;
-        print(
-          '🔵 [PurchaseOrderController] Updated unit price for product ${line.productName} to $unitPrice',
-        );
       }
     }
   }
@@ -618,9 +492,6 @@ class PurchaseOrderController extends GetxController {
       if (discount >= 0 && discount <= 100) {
         line.discount = discount;
         lineDrafts[index] = line;
-        print(
-          '🔵 [PurchaseOrderController] Updated discount for product ${line.productName} to $discount%',
-        );
       }
     }
   }
@@ -631,9 +502,6 @@ class PurchaseOrderController extends GetxController {
       if (taxRate >= 0) {
         line.taxRate = taxRate;
         lineDrafts[index] = line;
-        print(
-          '🔵 [PurchaseOrderController] Updated tax rate for product ${line.productName} to $taxRate%',
-        );
       }
     }
   }
@@ -676,50 +544,32 @@ class PurchaseOrderController extends GetxController {
 
   bool canGoToStep2() {
     final canGo = selectedSupplier.value != null;
-    print('🔵 [PurchaseOrderController] canGoToStep2: $canGo');
     return canGo;
   }
 
   bool canGoToStep3() {
     final canGo = lineDrafts.isNotEmpty;
-    print('🔵 [PurchaseOrderController] canGoToStep3: $canGo');
     return canGo;
   }
 
   void nextStep() {
-    print(
-      '🟡 [PurchaseOrderController] nextStep called, current step: ${wizardStep.value}',
-    );
 
     if (wizardStep.value == 0 && !canGoToStep2()) {
-      print(
-        '❌ [PurchaseOrderController] Cannot go to step 2 - no supplier selected',
-      );
       Get.snackbar('Validation', 'Select a supplier first');
       return;
     }
     if (wizardStep.value == 1 && !canGoToStep3()) {
-      print('❌ [PurchaseOrderController] Cannot go to step 3 - no items added');
       Get.snackbar('Validation', 'Add at least one item to the order');
       return;
     }
     if (wizardStep.value < 2) {
       wizardStep.value++;
-      print(
-        '🟡 [PurchaseOrderController] Step changed to: ${wizardStep.value}',
-      );
     }
   }
 
   void previousStep() {
-    print(
-      '🟡 [PurchaseOrderController] previousStep called, current step: ${wizardStep.value}',
-    );
     if (wizardStep.value > 0) {
       wizardStep.value--;
-      print(
-        '🟡 [PurchaseOrderController] Step changed to: ${wizardStep.value}',
-      );
     }
   }
 
@@ -728,16 +578,13 @@ class PurchaseOrderController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   Future<bool> createOrder() async {
-    print('🔵 [PurchaseOrderController] createOrder called');
 
     final supplier = selectedSupplier.value;
     if (supplier == null) {
-      print('❌ [PurchaseOrderController] No supplier selected');
       return false;
     }
 
     if (lineDrafts.isEmpty) {
-      print('❌ [PurchaseOrderController] No items in order');
       Get.snackbar('Validation', 'Add at least one item');
       return false;
     }
@@ -746,7 +593,6 @@ class PurchaseOrderController extends GetxController {
     final expectedDeliveryDate = selectedExpectedDeliveryDate.value;
 
     if (orderDate == null) {
-      print('❌ [PurchaseOrderController] Order date not selected');
       Get.snackbar('Validation', 'Please select order date');
       return false;
     }
@@ -790,10 +636,6 @@ class PurchaseOrderController extends GetxController {
         'status': 'Approved',
       };
 
-      print('🔵 [PurchaseOrderController] Submitting purchase order payload');
-      print(
-        '🔵 [PurchaseOrderController] Supplier: ${supplier['name']}, Items: ${items.length}',
-      );
 
       final response = await _api.post(
         '/api/purchase/orders',
@@ -801,33 +643,20 @@ class PurchaseOrderController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [PurchaseOrderController] Response Status: ${response.statusCode}',
-      );
-      print(
-        '🔵 [PurchaseOrderController] Response Success: ${response.success}',
-      );
 
       if (response.success) {
-        print(
-          '✅ [PurchaseOrderController] Purchase order created successfully!',
-        );
         Get.snackbar('Success', 'Purchase order created successfully');
         closeCreateWizard();
         await fetchOrders(resetPage: true);
         return true;
       }
 
-      print(
-        '❌ [PurchaseOrderController] Failed to create purchase order: ${response.message}',
-      );
       Get.snackbar(
         'Error',
-        response.message ?? 'Failed to create purchase order',
+        response.message,
       );
       return false;
     } catch (e) {
-      print('❌ [PurchaseOrderController] createOrder error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -840,9 +669,6 @@ class PurchaseOrderController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   void selectOrder(PurchaseOrderModel order) {
-    print(
-      '🔵 [PurchaseOrderController] selectOrder called for: ${order.orderNumber}',
-    );
     selectedOrder.value = order;
   }
 
@@ -851,8 +677,6 @@ class PurchaseOrderController extends GetxController {
     String status, {
     String? notes,
   }) async {
-    print('🟣 [PurchaseOrderController] updateOrderStatus called');
-    print('🟣 [PurchaseOrderController] ID: $id, New Status: $status');
 
     try {
       isSubmitting.value = true;
@@ -862,27 +686,16 @@ class PurchaseOrderController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🟣 [PurchaseOrderController] Response Status: ${response.statusCode}',
-      );
-      print(
-        '🟣 [PurchaseOrderController] Response Success: ${response.success}',
-      );
 
       if (response.success) {
-        print('✅ [PurchaseOrderController] Order status updated to $status');
         Get.snackbar('Success', 'Order status updated to $status');
         await fetchOrders();
         return true;
       }
 
-      print(
-        '❌ [PurchaseOrderController] Failed to update status: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to update status');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [PurchaseOrderController] updateOrderStatus error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -891,7 +704,6 @@ class PurchaseOrderController extends GetxController {
   }
 
   Future<bool> sendOrder(String id) async {
-    print('🟣 [PurchaseOrderController] sendOrder called for ID: $id');
 
     try {
       isSubmitting.value = true;
@@ -901,27 +713,16 @@ class PurchaseOrderController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🟣 [PurchaseOrderController] Response Status: ${response.statusCode}',
-      );
-      print(
-        '🟣 [PurchaseOrderController] Response Success: ${response.success}',
-      );
 
       if (response.success) {
-        print('✅ [PurchaseOrderController] Order sent successfully');
         Get.snackbar('Success', 'Purchase order sent to supplier');
         await fetchOrders();
         return true;
       }
 
-      print(
-        '❌ [PurchaseOrderController] Failed to send order: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to send order');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [PurchaseOrderController] sendOrder error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -930,8 +731,6 @@ class PurchaseOrderController extends GetxController {
   }
 
   Future<bool> cancelOrder(String id, {String? reason}) async {
-    print('🟣 [PurchaseOrderController] cancelOrder called for ID: $id');
-    print('🟣 [PurchaseOrderController] Reason: $reason');
 
     try {
       isSubmitting.value = true;
@@ -941,27 +740,16 @@ class PurchaseOrderController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🟣 [PurchaseOrderController] Response Status: ${response.statusCode}',
-      );
-      print(
-        '🟣 [PurchaseOrderController] Response Success: ${response.success}',
-      );
 
       if (response.success) {
-        print('✅ [PurchaseOrderController] Order cancelled successfully');
         Get.snackbar('Success', 'Purchase order cancelled');
         await fetchOrders();
         return true;
       }
 
-      print(
-        '❌ [PurchaseOrderController] Failed to cancel order: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to cancel order');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [PurchaseOrderController] cancelOrder error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -970,7 +758,6 @@ class PurchaseOrderController extends GetxController {
   }
 
   Future<bool> deleteOrder(String id) async {
-    print('🔵 [PurchaseOrderController] deleteOrder called for ID: $id');
 
     try {
       isSubmitting.value = true;
@@ -979,27 +766,16 @@ class PurchaseOrderController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [PurchaseOrderController] Response Status: ${response.statusCode}',
-      );
-      print(
-        '🔵 [PurchaseOrderController] Response Success: ${response.success}',
-      );
 
       if (response.success) {
-        print('✅ [PurchaseOrderController] Order deleted successfully');
         Get.snackbar('Success', 'Purchase order deleted successfully');
         await fetchOrders(resetPage: true);
         return true;
       }
 
-      print(
-        '❌ [PurchaseOrderController] Failed to delete order: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to delete order');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [PurchaseOrderController] deleteOrder error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -1008,7 +784,6 @@ class PurchaseOrderController extends GetxController {
   }
 
   Future<PurchaseOrderModel?> getOrderById(String id) async {
-    print('🔵 [PurchaseOrderController] getOrderById called for ID: $id');
 
     try {
       final response = await _api.get(
@@ -1016,24 +791,15 @@ class PurchaseOrderController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [PurchaseOrderController] Response Status: ${response.statusCode}',
-      );
-      print(
-        '🔵 [PurchaseOrderController] Response Success: ${response.success}',
-      );
 
       if (response.success && response.data != null) {
         final order = PurchaseOrderModel.fromJson(
           Map<String, dynamic>.from(response.data['data']),
         );
-        print('✅ [PurchaseOrderController] Order found: ${order.orderNumber}');
         return order;
       }
-      print('❌ [PurchaseOrderController] Order not found');
       return null;
     } catch (e) {
-      print('❌ [PurchaseOrderController] getOrderById error: $e');
       return null;
     }
   }

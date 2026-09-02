@@ -59,8 +59,8 @@ class CreditNoteController extends GetxController {
   final ScrollController scrollController = ScrollController();
 
   @override
-  Worker? _fyWorker;
-
+  Worker? fyWorker;
+    
   @override
   void onInit() {
     super.onInit();
@@ -71,7 +71,7 @@ class CreditNoteController extends GetxController {
       loadCreditNotesData(resetPage: true);
       loadSummary();
     });
-    _fyWorker = listenFiscalYearChanges(() {
+    fyWorker = listenFiscalYearChanges(() {
       loadCreditNotesData(resetPage: true);
       loadSummary();
     });
@@ -79,7 +79,7 @@ class CreditNoteController extends GetxController {
 
   @override
   void onClose() {
-    _fyWorker?.dispose();
+    fyWorker?.dispose();
     searchController.removeListener(_onSearchChanged);
     searchController.dispose();
     scrollController.dispose();
@@ -188,7 +188,7 @@ class CreditNoteController extends GetxController {
             serverSupportsPagination.value = false;
           }
 
-          _updateSummaryForFiltered(creditNotes.value);
+          _updateSummaryForFiltered(creditNotes);
           creditNotes.refresh();
         }
       }
@@ -304,7 +304,7 @@ class CreditNoteController extends GetxController {
             .map((j) => InvoiceForCreditNote.fromJson(j))
             .toList();
       }
-      return unpaidInvoices.value;
+      return unpaidInvoices;
     } catch (e) {
       unpaidInvoices.value = [];
       return [];
@@ -378,7 +378,6 @@ class CreditNoteController extends GetxController {
         'reasonType': reasonType,
         'items': items,
         'notes': notes ?? '',
-        if (expiryDays != null) 'expiryDays': expiryDays,
       };
 
       final response = await _apiClient.post('/api/credit-notes', body: body);
@@ -582,7 +581,7 @@ class CreditNoteController extends GetxController {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -594,7 +593,7 @@ class CreditNoteController extends GetxController {
               Container(
                 padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
                 decoration: BoxDecoration(
-                  color: kWarning.withOpacity(0.05),
+                  color: kWarning.withValues(alpha: 0.05),
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(24),
                   ),
@@ -675,7 +674,7 @@ class CreditNoteController extends GetxController {
                                     color: Colors.black,
                                   ),
                                   dropdownColor: kCardBg,
-                                  value: selectedCustomerId.value.isEmpty
+                                  initialValue: selectedCustomerId.value.isEmpty
                                       ? null
                                       : selectedCustomerId.value,
                                   items: customers.map((c) {
@@ -705,7 +704,7 @@ class CreditNoteController extends GetxController {
                                   Get.toNamed('/sales/warehouse-customers'),
                               icon: Icon(Icons.add, size: 20, color: kPrimary),
                               style: IconButton.styleFrom(
-                                backgroundColor: kPrimary.withOpacity(0.1),
+                                backgroundColor: kPrimary.withValues(alpha: 0.1),
                                 padding: const EdgeInsets.all(8),
                                 minimumSize: const Size(36, 36),
                               ),
@@ -744,7 +743,7 @@ class CreditNoteController extends GetxController {
                                   margin: const EdgeInsets.only(bottom: 6),
                                   decoration: BoxDecoration(
                                     color: isSelected
-                                        ? kPrimary.withOpacity(0.05)
+                                        ? kPrimary.withValues(alpha: 0.05)
                                         : kBgLight,
                                     borderRadius: BorderRadius.circular(8),
                                   ),
@@ -829,7 +828,7 @@ class CreditNoteController extends GetxController {
                                     },
                                   ),
                                 );
-                              }).toList(),
+                              }),
                             ],
                           );
                         }),
@@ -844,10 +843,10 @@ class CreditNoteController extends GetxController {
                             padding: const EdgeInsets.all(14),
                             margin: const EdgeInsets.only(bottom: 16),
                             decoration: BoxDecoration(
-                              color: kPrimary.withOpacity(0.05),
+                              color: kPrimary.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                color: kPrimary.withOpacity(0.2),
+                                color: kPrimary.withValues(alpha: 0.2),
                               ),
                             ),
                             child: Column(
@@ -1020,7 +1019,7 @@ class CreditNoteController extends GetxController {
                         // Reason Type
                         Obx(
                           () => DropdownButtonFormField<String>(
-                            value: selectedReasonType.value,
+                            initialValue: selectedReasonType.value,
                             decoration: _inputDecoration('Reason Type *'),
                             style: const TextStyle(
                               fontSize: 13,
@@ -1159,7 +1158,7 @@ class CreditNoteController extends GetxController {
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, -5),
                     ),
@@ -1344,7 +1343,7 @@ class CreditNoteController extends GetxController {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -1356,7 +1355,7 @@ class CreditNoteController extends GetxController {
               Container(
                 padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
                 decoration: BoxDecoration(
-                  color: kSuccess.withOpacity(0.05),
+                  color: kSuccess.withValues(alpha: 0.05),
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(24),
                   ),
@@ -1448,7 +1447,7 @@ class CreditNoteController extends GetxController {
                                   margin: const EdgeInsets.only(bottom: 6),
                                   decoration: BoxDecoration(
                                     color: isSelected
-                                        ? kPrimary.withOpacity(0.05)
+                                        ? kPrimary.withValues(alpha: 0.05)
                                         : kBgLight,
                                     borderRadius: BorderRadius.circular(8),
                                   ),
@@ -1527,7 +1526,7 @@ class CreditNoteController extends GetxController {
                                     },
                                   ),
                                 );
-                              }).toList(),
+                              }),
                             ],
                           );
                         }),
@@ -1604,7 +1603,7 @@ class CreditNoteController extends GetxController {
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, -5),
                     ),
@@ -1754,7 +1753,7 @@ class CreditNoteController extends GetxController {
                             width: 52,
                             height: 52,
                             decoration: BoxDecoration(
-                              color: statusColor.withOpacity(0.12),
+                              color: statusColor.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Icon(
@@ -1791,7 +1790,7 @@ class CreditNoteController extends GetxController {
                                         vertical: 2,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: statusColor.withOpacity(0.08),
+                                        color: statusColor.withValues(alpha: 0.08),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
@@ -1846,7 +1845,7 @@ class CreditNoteController extends GetxController {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
                       const SizedBox(height: 16),
 
                       // Details
@@ -1872,7 +1871,7 @@ class CreditNoteController extends GetxController {
                         DateFormat('dd MMM yyyy, hh:mm a').format(cn.createdAt),
                       ),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
                       const SizedBox(height: 16),
 
                       // Footer Buttons
@@ -2067,7 +2066,7 @@ class CreditNoteController extends GetxController {
             ),
             Text(
               subtitle,
-              style: TextStyle(fontSize: 10, color: color.withOpacity(0.7)),
+              style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.7)),
             ),
           ],
         ),
@@ -2363,7 +2362,7 @@ class CreditNoteController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+            ,
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),
@@ -2654,7 +2653,7 @@ class CreditNoteController extends GetxController {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.06),
+          color: color.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
@@ -2676,7 +2675,7 @@ class CreditNoteController extends GetxController {
               label,
               style: TextStyle(
                 fontSize: 9,
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withValues(alpha: 0.5),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -2721,17 +2720,17 @@ class CreditNoteController extends GetxController {
     return InputDecoration(
       labelText: label,
       hintText: hint,
-      hintStyle: TextStyle(color: kSubText.withOpacity(0.6), fontSize: 12),
+      hintStyle: TextStyle(color: kSubText.withValues(alpha: 0.6), fontSize: 12),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       filled: true,
       fillColor: kBgLight,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: Colors.grey.withOpacity(0.25)),
+        borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.25)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: Colors.grey.withOpacity(0.25)),
+        borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.25)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
@@ -2788,7 +2787,7 @@ class CreditNoteController extends GetxController {
               Icon(
                 Icons.inbox_outlined,
                 size: 18,
-                color: kSubText.withOpacity(0.5),
+                color: kSubText.withValues(alpha: 0.5),
               ),
               const SizedBox(width: 8),
               Text(
@@ -2801,7 +2800,7 @@ class CreditNoteController extends GetxController {
             onPressed: () => Get.toNamed('/warehouse/invoices'),
             icon: Icon(Icons.add, size: 20, color: kPrimary),
             style: IconButton.styleFrom(
-              backgroundColor: kPrimary.withOpacity(0.1),
+              backgroundColor: kPrimary.withValues(alpha: 0.1),
               padding: const EdgeInsets.all(8),
               minimumSize: const Size(36, 36),
             ),

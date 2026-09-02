@@ -179,7 +179,7 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [kPrimary, kPrimary.withOpacity(0.82)],
+          colors: [kPrimary, kPrimary.withValues(alpha: 0.82)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

@@ -56,7 +56,7 @@ class InventoryValuationModel {
     }
 
     // Helper function to safely parse int
-    int _parseInt(dynamic value) {
+    int parseInt(dynamic value) {
       if (value == null) return 0;
       if (value is int) return value;
       if (value is String) return int.tryParse(value) ?? 0;
@@ -70,15 +70,15 @@ class InventoryValuationModel {
       sku: json['sku']?.toString() ?? '',
       category: json['category']?.toString() ?? 'Uncategorized',
       categoryId: json['categoryId']?.toString(),
-      qty: _parseInt(json['qty']),
+      qty: parseInt(json['qty']),
       unitCost: _parseDouble(json['unitCost']),
       sellingPrice: _parseDouble(json['sellingPrice']),
       totalCostValue: _parseDouble(json['totalCostValue']),
       sellingValue: _parseDouble(json['sellingValue']),
       potentialProfit: _parseDouble(json['potentialProfit']),
       profitMargin: _parseDouble(json['profitMargin']),
-      minStock: _parseInt(json['minStock']),
-      maxStock: _parseInt(json['maxStock']),
+      minStock: parseInt(json['minStock']),
+      maxStock: parseInt(json['maxStock']),
       status: json['status']?.toString() ?? 'OK',
       location: json['location']?.toString(),
       expiryDate: json['expiryDate'] != null
@@ -165,7 +165,7 @@ class ValuationSummary {
   });
 
   factory ValuationSummary.fromJson(Map<String, dynamic> json) {
-    double _parseDouble(dynamic value) {
+    double parseDouble(dynamic value) {
       if (value == null) return 0.0;
       if (value is double) return value;
       if (value is int) return value.toDouble();
@@ -176,7 +176,7 @@ class ValuationSummary {
       return 0.0;
     }
 
-    int _parseInt(dynamic value) {
+    int parseInt(dynamic value) {
       if (value == null) return 0;
       if (value is int) return value;
       if (value is String) return int.tryParse(value) ?? 0;
@@ -185,14 +185,14 @@ class ValuationSummary {
     }
 
     return ValuationSummary(
-      totalItems: _parseInt(json['totalItems']),
-      totalQty: _parseInt(json['totalQty']),
-      totalCostValue: _parseDouble(json['totalCostValue']),
-      totalSellingValue: _parseDouble(json['totalSellingValue']),
-      totalPotentialProfit: _parseDouble(json['totalPotentialProfit']),
-      avgProfitMargin: _parseDouble(json['avgProfitMargin']),
-      lowStockCount: _parseInt(json['lowStockCount']),
-      overStockCount: _parseInt(json['overStockCount']),
+      totalItems: parseInt(json['totalItems']),
+      totalQty: parseInt(json['totalQty']),
+      totalCostValue: parseDouble(json['totalCostValue']),
+      totalSellingValue: parseDouble(json['totalSellingValue']),
+      totalPotentialProfit: parseDouble(json['totalPotentialProfit']),
+      avgProfitMargin: parseDouble(json['avgProfitMargin']),
+      lowStockCount: parseInt(json['lowStockCount']),
+      overStockCount: parseInt(json['overStockCount']),
     );
   }
 }
@@ -211,7 +211,7 @@ class CategoryBreakdown {
   });
 
   factory CategoryBreakdown.fromJson(Map<String, dynamic> json) {
-    double _parseDouble(dynamic value) {
+    double parseDouble(dynamic value) {
       if (value == null) return 0.0;
       if (value is double) return value;
       if (value is int) return value.toDouble();
@@ -222,7 +222,7 @@ class CategoryBreakdown {
       return 0.0;
     }
 
-    int _parseInt(dynamic value) {
+    int parseInt(dynamic value) {
       if (value == null) return 0;
       if (value is int) return value;
       if (value is String) return int.tryParse(value) ?? 0;
@@ -232,9 +232,9 @@ class CategoryBreakdown {
 
     return CategoryBreakdown(
       category: json['category']?.toString() ?? '',
-      items: _parseInt(json['items']),
-      qty: _parseInt(json['qty']),
-      value: _parseDouble(json['value']),
+      items: parseInt(json['items']),
+      qty: parseInt(json['qty']),
+      value: parseDouble(json['value']),
     );
   }
 }

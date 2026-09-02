@@ -128,7 +128,7 @@ class RefundListView extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,7 +154,7 @@ class RefundListView extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
       ),
       child: Wrap(
         spacing: 8,
@@ -178,7 +178,7 @@ class RefundListView extends StatelessWidget {
           SizedBox(
             width: fieldWidth,
             child: DropdownButtonFormField<String>(
-              value: controller.statusFilter.value,
+              initialValue: controller.statusFilter.value,
               decoration: const InputDecoration(
                 labelText: 'Status',
                 isDense: true,
@@ -201,7 +201,7 @@ class RefundListView extends StatelessWidget {
           SizedBox(
             width: fieldWidth,
             child: DropdownButtonFormField<String>(
-              value: controller.methodFilter.value,
+              initialValue: controller.methodFilter.value,
               decoration: const InputDecoration(
                 labelText: 'Method',
                 isDense: true,
@@ -240,12 +240,12 @@ class RefundListView extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
       ),
       child: ListView.separated(
         itemCount: controller.refunds.length,
         separatorBuilder: (context, index) =>
-            Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
+            Divider(height: 1, color: Colors.grey.withValues(alpha: 0.1)),
         itemBuilder: (context, index) {
           final refund = controller.refunds[index];
           final color = _statusColor(refund.refundStatus);
@@ -311,7 +311,7 @@ class RefundListView extends StatelessWidget {
                     children: [
                       _badge(
                         refund.refundStatus,
-                        color.withOpacity(0.12),
+                        color.withValues(alpha: 0.12),
                         color,
                       ),
                       _badge(

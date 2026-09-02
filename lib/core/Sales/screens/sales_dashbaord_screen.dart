@@ -20,7 +20,6 @@ import 'package:BisonsTechs_app/widgets/sales_drawer.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
 const _kPageBg = Color(0xFFF5F6FA);
@@ -380,7 +379,7 @@ class _SalesDashboardBody extends GetView<SalesController> {
                 mainAxisSpacing: 10,
                 childAspectRatio: 1.55,
               ),
-              itemBuilder: (_, __) => _shimmerBox(radius: 14),
+              itemBuilder: (context, index) => _shimmerBox(radius: 14),
             ),
             const SizedBox(height: 16),
             _shimmerBox(height: 220, radius: 16),
@@ -431,7 +430,7 @@ class _SalesDashboardBody extends GetView<SalesController> {
           border: Border.all(color: _kHeroBorder),
           boxShadow: [
             BoxShadow(
-              color: kPrimary.withOpacity(0.10),
+              color: kPrimary.withValues(alpha: 0.10),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -669,7 +668,7 @@ class _SalesDashboardBody extends GetView<SalesController> {
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           itemCount: SalesController.timePeriodLabels.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          separatorBuilder: (context, index) => const SizedBox(width: 8),
           itemBuilder: (_, i) {
             final period = SalesController.timePeriodLabels[i];
             final isActive = period == selected;
@@ -1044,10 +1043,19 @@ class _SalesDashboardBody extends GetView<SalesController> {
       final orderTrend = data?.orders.trend ?? [];
       final posTrend = data?.pos.trend ?? [];
 
-      final allDates = <String>{};
-      for (final p in invoiceTrend) allDates.add(p.date);
-      for (final p in orderTrend) allDates.add(p.date);
-      for (final p in posTrend) allDates.add(p.date);
+     final allDates = <String>{};
+
+for (final p in invoiceTrend) {
+  allDates.add(p.date);
+}
+
+for (final p in orderTrend) {
+  allDates.add(p.date);
+}
+
+for (final p in posTrend) {
+  allDates.add(p.date);
+}
       final sorted = allDates.toList()..sort();
 
       final invoiceSpots = <FlSpot>[];
@@ -1182,7 +1190,7 @@ class _SalesDashboardBody extends GetView<SalesController> {
         isStrokeCapRound: true,
         dotData: FlDotData(
           show: true,
-          getDotPainter: (_, __, ___, ____) =>
+          getDotPainter: (context, index, data, spot) =>
               FlDotCirclePainter(radius: 3, color: color, strokeWidth: 0),
         ),
         belowBarData: BarAreaData(
@@ -1190,7 +1198,7 @@ class _SalesDashboardBody extends GetView<SalesController> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [color.withOpacity(0.15), color.withOpacity(0.0)],
+            colors: [color.withValues(alpha: 0.15), color.withValues(alpha: 0.0)],
           ),
         ),
       );
@@ -1717,7 +1725,7 @@ class _SalesDashboardBody extends GetView<SalesController> {
   Widget _buildRevenueBreakdown() {
     return Obx(() {
       final data = controller.dashboard.value;
-      final items = data?.revenueBreakdown?.items ?? [];
+      final items = data?.revenueBreakdown.items ?? [];
 
       if (items.isEmpty) return const SizedBox.shrink();
 
@@ -1740,7 +1748,7 @@ class _SalesDashboardBody extends GetView<SalesController> {
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.10),
+                      color: color.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     alignment: Alignment.center,
@@ -1907,7 +1915,7 @@ class _SectionCard extends StatelessWidget {
                   color: _kTextPrimary,
                 ),
               ),
-              if (trailing != null) trailing!,
+              if (trailing != null) trailing as Widget,
             ],
           ),
           const SizedBox(height: 14),

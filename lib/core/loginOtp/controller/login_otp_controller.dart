@@ -9,7 +9,7 @@ import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
-import 'package:BisonsTechs_app/Services/notification_Service.dart';
+import 'package:BisonsTechs_app/Services/notification_service.dart';
 import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:BisonsTechs_app/core/settings/controller/pdf_report_settings_controller.dart';
@@ -129,7 +129,6 @@ class LoginOtpController extends GetxController {
       final data = response.data;
 
       // ✅ PRINT THE RESPONSE FOR LOGIN/OTP VERIFICATION
-      print('🔐 VERIFY OTP API RESPONSE: ${json.encode(data)}');
 
       if (response.success) {
         // ✅ Check if data has required fields
@@ -150,46 +149,21 @@ class LoginOtpController extends GetxController {
         // ✅ Notification Service Setup (mobile only)
         if (!kIsWeb) {
           try {
-            print(
-              '🔔🔔🔔 [LoginOtpController] NOTIFICATION SETUP START 🔔🔔🔔',
-            );
             final userData = data['user'] as Map<String, dynamic>?;
             if (userData != null && userData['id'] != null) {
               final userId = userData['id'].toString();
-              print(
-                '🔔 [LoginOtpController] Setting up notification service for user: $userId',
-              );
 
-              print(
-                '🔔 [LoginOtpController] Calling NotificationService.login()...',
-              );
               await NotificationService.instance.login(
                 userId,
                 token: data['token']?.toString(),
               );
 
-              print(
-                '✅ [LoginOtpController] Notification service setup completed',
-              );
-              print(
-                '🔔🔔🔔 [LoginOtpController] NOTIFICATION SETUP END 🔔🔔🔔',
-              );
             } else {
-              print(
-                '⚠️ [LoginOtpController] User data or user ID is null, skipping notification setup',
-              );
             }
           } catch (e) {
-            print(
-              '❌ [LoginOtpController] Notification service setup error: $e',
-            );
-            print('❌ [LoginOtpController] Error type: ${e.runtimeType}');
             // Don't block login on notification error
           }
         } else {
-          print(
-            '🔔 [LoginOtpController] Running on web, skipping notification setup',
-          );
         }
 
         if (subscriptionController.hasAccess) {
@@ -204,7 +178,6 @@ class LoginOtpController extends GetxController {
         clearPin();
       }
     } catch (e) {
-      print('OTP verification error: $e');
       const msg = 'Something went wrong. Please try again.';
       otpError.value = msg;
       AppSnackbar.error(kDanger, 'Error', msg);
@@ -258,7 +231,6 @@ class LoginOtpController extends GetxController {
       if (token.isNotEmpty && refreshToken.isNotEmpty) {
         await _api.setBothTokens(token, refreshToken);
       } else {
-        print('Warning: Tokens are empty');
       }
 
       // ✅ Safe user data saving
@@ -300,7 +272,6 @@ class LoginOtpController extends GetxController {
         );
 
         await permissionService.saveUserData(userDataForPermissions);
-        print('✅ [OTP] User data saved for PermissionService');
 
         // Sync/load currency dynamically from database payload
         Get.find<CurrencyController>().updateFromUserData(user);
@@ -334,10 +305,8 @@ class LoginOtpController extends GetxController {
 
         await hydrateLocationsAfterAuth(user);
       } else {
-        print('Warning: User data is null');
       }
     } catch (e) {
-      print('Error saving user data: $e');
       rethrow;
     }
   }

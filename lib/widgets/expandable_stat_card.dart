@@ -11,7 +11,7 @@ void showStatCardDetailDialog({
 }) {
   showDialog(
     context: context,
-    barrierColor: Colors.black.withOpacity(0.45),
+    barrierColor: Colors.black.withValues(alpha: 0.45),
     builder: (ctx) {
       return Dialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
@@ -35,7 +35,7 @@ void showStatCardDetailDialog({
                 width: 64,
                 height: 64,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
+                  color: color.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: color, size: 30),
@@ -72,7 +72,7 @@ void showStatCardDetailDialog({
               const SizedBox(height: 12),
               Text(
                 hint ?? 'Full value',
-                style: TextStyle(fontSize: 11, color: kSubText.withOpacity(0.8)),
+                style: TextStyle(fontSize: 11, color: kSubText.withValues(alpha: 0.8)),
               ),
             ],
           ),
@@ -92,10 +92,10 @@ class ExpandHintIcon extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(5),
       ),
-      child: Icon(Icons.open_in_full_rounded, size: 10, color: color.withOpacity(0.75)),
+      child: Icon(Icons.open_in_full_rounded, size: 10, color: color.withValues(alpha: 0.75)),
     );
   }
 }
@@ -142,7 +142,7 @@ class ExpandableStatCard extends StatelessWidget {
             border: Border.all(color: borderColor, width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: color.withOpacity(0.08),
+                color: color.withValues(alpha: 0.08),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -197,7 +197,7 @@ class ExpandableStatCard extends StatelessWidget {
                 width: 30,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [color, color.withOpacity(0.3)],
+                    colors: [color, color.withValues(alpha: 0.3)],
                   ),
                   borderRadius: BorderRadius.circular(2),
                 ),
@@ -246,7 +246,7 @@ class ExpandableStatTile extends StatelessWidget {
           decoration: BoxDecoration(
             color: kCardBg,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: accentColor.withOpacity(0.18), width: 1.2),
+            border: Border.all(color: accentColor.withValues(alpha: 0.18), width: 1.2),
           ),
           child: Row(
             children: [
@@ -254,7 +254,7 @@ class ExpandableStatTile extends StatelessWidget {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: accentColor.withOpacity(0.1),
+                  color: accentColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, size: 18, color: accentColor),

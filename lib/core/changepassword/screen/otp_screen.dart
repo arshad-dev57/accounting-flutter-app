@@ -94,7 +94,7 @@ class _OtpScreenState extends State<OtpScreen> {
                       ),
                     );
                   },
-                  errorBuilder: (context, _, __) => Container(
+                  errorBuilder: (context, error, stackTrace) => Container(
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
@@ -117,7 +117,7 @@ class _OtpScreenState extends State<OtpScreen> {
                 ),
 
                 // Blue brand tint
-                Container(color: const Color(0xFF0A7FA8).withOpacity(0.25)),
+                Container(color: const Color(0xFF0A7FA8).withValues(alpha: 0.25)),
 
                 // Branding content pinned to bottom-left
                 Positioned(
@@ -160,7 +160,7 @@ class _OtpScreenState extends State<OtpScreen> {
                       Text(
                         'Follow the steps to securely reset your\npassword and regain access to your account.',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.75),
+                          color: Colors.white.withValues(alpha: 0.75),
                           fontSize: 13.5,
                           height: 1.6,
                         ),
@@ -298,7 +298,7 @@ class _OtpScreenState extends State<OtpScreen> {
           'assets/logo.png',
           height: 110,
           fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) => const Icon(
+          errorBuilder: (context, error, stackTrace) => const Icon(
             Icons.account_balance_rounded,
             size: 56,
             color: kPrimary,
@@ -409,7 +409,7 @@ class _OtpScreenState extends State<OtpScreen> {
         borderRadius: BorderRadius.circular(isTablet ? 24 : 20),
         boxShadow: [
           BoxShadow(
-            color: kPrimary.withOpacity(0.3),
+            color: kPrimary.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -447,7 +447,7 @@ class _OtpScreenState extends State<OtpScreen> {
             subtitle,
             style: TextStyle(
               fontSize: isTablet ? 14 : 12,
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
             ),
             textAlign: TextAlign.center,
           ),
@@ -504,7 +504,7 @@ class _OtpScreenState extends State<OtpScreen> {
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(isWeb ? 12 : 10),
-                borderSide: BorderSide(color: kBorder.withOpacity(0.5)),
+                borderSide: BorderSide(color: kBorder.withValues(alpha: 0.5)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(isWeb ? 12 : 10),
@@ -750,7 +750,7 @@ class _OtpScreenState extends State<OtpScreen> {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.85),
+            color: Colors.white.withValues(alpha: 0.85),
             fontSize: 13,
             fontWeight: FontWeight.w500,
           ),

@@ -183,13 +183,13 @@ class _StockProductSearchState extends State<StockProductSearch> {
             decoration: BoxDecoration(
               color: kCardBg,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.withOpacity(0.2)),
+              border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
             ),
             child: ListView.separated(
               shrinkWrap: true,
               itemCount: _results.length,
-              separatorBuilder: (_, __) =>
-                  Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
+              separatorBuilder: (context, index) =>
+                  Divider(height: 1, color: Colors.grey.withValues(alpha: 0.1)),
               itemBuilder: (context, index) {
                 final product = _results[index];
                 return ListTile(
@@ -229,9 +229,9 @@ class _StockProductSearchState extends State<StockProductSearch> {
             margin: const EdgeInsets.only(top: 8),
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: kPrimary.withOpacity(0.08),
+              color: kPrimary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: kPrimary.withOpacity(0.25)),
+              border: Border.all(color: kPrimary.withValues(alpha: 0.25)),
             ),
             child: Row(
               children: [

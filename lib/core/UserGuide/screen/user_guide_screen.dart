@@ -75,7 +75,7 @@ class UserGuideScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.menu_book, size: 60, color: Colors.white),
@@ -111,7 +111,7 @@ class UserGuideScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: Colors.grey.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -125,7 +125,7 @@ class UserGuideScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1AB4F5).withOpacity(0.1),
+                    color: const Color(0xFF1AB4F5).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -224,7 +224,7 @@ class UserGuideScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
+            color: Colors.grey.withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -363,7 +363,7 @@ class UserGuideScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
+            color: Colors.grey.withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -375,7 +375,7 @@ class UserGuideScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 32),
@@ -461,7 +461,7 @@ class UserGuideScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
+            color: Colors.grey.withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -472,7 +472,7 @@ class UserGuideScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFF1AB4F5).withOpacity(0.1),
+              color: const Color(0xFF1AB4F5).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: const Color(0xFF1AB4F5), size: 24),
@@ -506,76 +506,6 @@ class UserGuideScreen extends StatelessWidget {
     );
   }
 
-  // Quick Tips Section
-  Widget _buildQuickTipsSection() {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF1AB4F5), Color(0xFF0D8BC0)],
-          ),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.lightbulb, color: Colors.white, size: 28),
-                const SizedBox(width: 12),
-                Text(
-                  'Pro Tips',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            _buildTipItem(
-              '📊',
-              'Regularly reconcile your accounts to avoid discrepancies',
-            ),
-            _buildTipItem('💾', 'Take regular backups of your financial data'),
-            _buildTipItem(
-              '📅',
-              'Set reminders for bill payments and invoice due dates',
-            ),
-            _buildTipItem(
-              '📈',
-              'Review financial reports monthly to track business growth',
-            ),
-            _buildTipItem(
-              '🔒',
-              'Keep your password secure and change it periodically',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTipItem(String emoji, String tip) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Text(emoji, style: const TextStyle(fontSize: 20)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              tip,
-              style: TextStyle(fontSize: 13, color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   // FAQ Section
   Widget _buildFAQSection() {
@@ -632,7 +562,7 @@ class UserGuideScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
+            color: Colors.grey.withValues(alpha: 0.08),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -689,7 +619,7 @@ class UserGuideScreen extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: const Color(0xFF1AB4F5).withOpacity(0.3),
+            color: const Color(0xFF1AB4F5).withValues(alpha: 0.3),
             width: 1.5,
           ),
         ),
@@ -717,7 +647,7 @@ class UserGuideScreen extends StatelessWidget {
             //     Expanded(
             //       child: OutlinedButton.icon(
             //         onPressed: () {
-            //           // TODO: Open email
+            //       
             //         },
             //         icon: const Icon(Icons.email, size: 18),
             //         label: const Text('Email'),
@@ -735,7 +665,6 @@ class UserGuideScreen extends StatelessWidget {
             //     Expanded(
             //       child: ElevatedButton.icon(
             //         onPressed: () {
-            //           // TODO: Open chat or FAQ
             //         },
             //         icon: const Icon(Icons.chat, size: 18),
             //         label: const Text('Live Chat'),

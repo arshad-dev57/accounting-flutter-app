@@ -1,6 +1,5 @@
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
-import 'package:BisonsTechs_app/core/dashboard/Screens/dashbaord_screen.dart';
 import 'package:BisonsTechs_app/core/tax/tax_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -26,7 +25,7 @@ class _ReceiptScreenState extends State<ReceiptScreen>
   late TabController _tabController;
   String _selectedTaxTab = 'Inclusive';
   String? _selectedTaxRate;
-  bool _isTaxExempt = false;
+  bool isTaxExempt = false;
 
   final List<Map<String, dynamic>> _paymentMethods = [
     {'name': 'Cash', 'icon': Icons.money},
@@ -125,7 +124,7 @@ class _ReceiptScreenState extends State<ReceiptScreen>
           break;
       }
       _selectedTaxRate = null;
-      _isTaxExempt = false;
+      isTaxExempt = false;
     });
   }
 
@@ -256,7 +255,7 @@ class _ReceiptScreenState extends State<ReceiptScreen>
               decoration: InputDecoration(
                 hintText: 'Store name or location',
                 hintStyle: TextStyle(
-                  color: kSubText.withOpacity(0.5),
+                  color: kSubText.withValues(alpha: 0.5),
                   fontSize: 14,
                 ),
                 prefixIcon: Icon(
@@ -306,7 +305,7 @@ class _ReceiptScreenState extends State<ReceiptScreen>
               decoration: InputDecoration(
                 hintText: 'Description of the expense',
                 hintStyle: TextStyle(
-                  color: kSubText.withOpacity(0.5),
+                  color: kSubText.withValues(alpha: 0.5),
                   fontSize: 14,
                 ),
                 border: InputBorder.none,
@@ -451,7 +450,7 @@ class _ReceiptScreenState extends State<ReceiptScreen>
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.1),
+                  color: kPrimary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -476,7 +475,7 @@ class _ReceiptScreenState extends State<ReceiptScreen>
                   leading: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: kPrimary.withOpacity(0.1),
+                      color: kPrimary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(method['icon'], color: kPrimary),
@@ -636,7 +635,7 @@ class _ReceiptScreenState extends State<ReceiptScreen>
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: category['color'].withOpacity(0.1),
+          color: category['color'].withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(category['icon'], color: category['color']),
@@ -842,7 +841,7 @@ class _ReceiptScreenState extends State<ReceiptScreen>
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: kPrimary.withOpacity(0.1),
+                        color: kPrimary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -1038,7 +1037,7 @@ class _ReceiptScreenState extends State<ReceiptScreen>
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: kPrimary.withOpacity(0.1),
+          color: kPrimary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(icon, color: kPrimary),

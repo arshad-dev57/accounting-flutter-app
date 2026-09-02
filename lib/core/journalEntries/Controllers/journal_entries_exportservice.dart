@@ -14,8 +14,6 @@ import 'package:open_file/open_file.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:excel/excel.dart';
-import 'package:BisonsTechs_app/core/journalEntries/Controllers/journal_entry_controller.dart';
-import 'package:universal_html/html.dart' as html;
 
 class JournalExportService {
   static String _formatAmount(double amount) => CurrencyUtils.format(amount);
@@ -75,13 +73,7 @@ class JournalExportService {
           'journal_entries_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
 
       if (kIsWeb) {
-        // WEB: Download using HTML anchor tag
-        final blob = html.Blob([bytes], 'application/pdf');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
+     
 
         if (Get.isDialogOpen ?? false) Get.back();
         AppSnackbar.success(
@@ -524,13 +516,7 @@ class JournalExportService {
           'journal_entries_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.png';
 
       if (kIsWeb) {
-        // WEB: Download image
-        final blob = html.Blob([byteData.buffer.asUint8List()], 'image/png');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
+     
 
         if (Get.isDialogOpen ?? false) Get.back();
         AppSnackbar.success(
@@ -833,15 +819,7 @@ class JournalExportService {
           'journal_entries_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
 
       if (kIsWeb) {
-        // WEB: Download Excel
-        final blob = html.Blob([
-          bytes,
-        ], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
+      
 
         if (Get.isDialogOpen ?? false) Get.back();
         AppSnackbar.success(

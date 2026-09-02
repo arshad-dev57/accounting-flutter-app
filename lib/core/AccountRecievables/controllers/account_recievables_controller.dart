@@ -79,7 +79,7 @@ class AccountsReceivableController extends GetxController {
           bankAccounts.value = List<Map<String, dynamic>>.from(data['data']);
         }
       }
-    } catch (e) {}
+    } catch (error) {}
   }
 
   // ─── Fetch Summary ────────────────────────────────────────────────
@@ -1071,55 +1071,8 @@ class AccountsReceivableController extends GetxController {
     );
   }
 
-  double _getDueThisWeekAmount() {
-    final now = DateTime.now();
-    final endOfWeek = now.add(Duration(days: 7 - now.weekday));
-    double total = 0;
-    for (var customer in customers) {
-      for (var invoice in customer.invoices) {
-        if (invoice.dueDate.isAfter(now) &&
-            invoice.dueDate.isBefore(endOfWeek) &&
-            invoice.status != 'Paid') {
-          total += invoice.amount - invoice.paidAmount;
-        }
-      }
-    }
-    return total;
-  }
 
-  double _getDueThisMonthAmount() {
-    final now = DateTime.now();
-    final endOfMonth = DateTime(now.year, now.month + 1, 0);
-    double total = 0;
-    for (var customer in customers) {
-      for (var invoice in customer.invoices) {
-        if (invoice.dueDate.isAfter(now) &&
-            invoice.dueDate.isBefore(endOfMonth) &&
-            invoice.status != 'Paid') {
-          total += invoice.amount - invoice.paidAmount;
-        }
-      }
-    }
-    return total;
-  }
 
-  bool _isDueSoon(DateTime dueDate) {
-    final now = DateTime.now();
-    final daysUntilDue = dueDate.difference(now).inDays;
-    return daysUntilDue >= 0 && daysUntilDue <= 7;
-  }
-
-  bool _isDueThisWeek(DateTime dueDate) {
-    final now = DateTime.now();
-    final endOfWeek = now.add(Duration(days: 7 - now.weekday));
-    return dueDate.isAfter(now) && dueDate.isBefore(endOfWeek);
-  }
-
-  bool _isDueThisMonth(DateTime dueDate) {
-    final now = DateTime.now();
-    final endOfMonth = DateTime(now.year, now.month + 1, 0);
-    return dueDate.isAfter(now) && dueDate.isBefore(endOfMonth);
-  }
 }
 
 // ─────────────────────── MODELS ───────────────────────

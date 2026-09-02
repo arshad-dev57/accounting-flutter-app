@@ -88,7 +88,6 @@ class PurchaseController extends GetxController {
         }
       }
     } catch (e) {
-      print('❌ [PurchaseController] Error loading business logo: $e');
     }
   }
 
@@ -178,9 +177,6 @@ class PurchaseController extends GetxController {
   Future<void> fetchDashboard() async {
     try {
       isLoading.value = true;
-      print(
-        '🔵 [PurchaseDashboard] fetch period=${period.value} params=$_periodParams',
-      );
 
       await Future.wait([
         _fetchMetrics(),
@@ -190,15 +186,7 @@ class PurchaseController extends GetxController {
         _fetchActivities(),
       ]);
 
-      print(
-        '✅ [PurchaseDashboard] loaded '
-        'spend=${dashboard.value?.invoices.totalSpend} '
-        'orders=${dashboard.value?.orders.total} '
-        'trend=${spendTrend.length} '
-        'activities=${activities.length}',
-      );
     } catch (e) {
-      print('Purchase dashboard fetch error: $e');
       Get.snackbar('Purchase Dashboard', 'Failed to load dashboard data');
     } finally {
       isLoading.value = false;
@@ -212,13 +200,11 @@ class PurchaseController extends GetxController {
         requiresAuth: true,
         queryParameters: _periodParams,
       );
-      print('🔵 [PurchaseDashboard] metrics success=${res.success}');
       if (res.success && res.data != null) {
         final data = Map<String, dynamic>.from(res.data['data'] ?? {});
         dashboard.value = PurchaseDashboardModel.fromMetrics(data);
       }
     } catch (e) {
-      print('Metrics error: $e');
     }
   }
 
@@ -238,7 +224,6 @@ class PurchaseController extends GetxController {
             .toList();
       }
     } catch (e) {
-      print('Spend trend error: $e');
     }
   }
 
@@ -258,7 +243,6 @@ class PurchaseController extends GetxController {
             .toList();
       }
     } catch (e) {
-      print('Order status error: $e');
     }
   }
 
@@ -276,7 +260,6 @@ class PurchaseController extends GetxController {
             .toList();
       }
     } catch (e) {
-      print('Top suppliers error: $e');
     }
   }
 
@@ -295,7 +278,6 @@ class PurchaseController extends GetxController {
             .toList();
       }
     } catch (e) {
-      print('Activities error: $e');
     }
   }
 

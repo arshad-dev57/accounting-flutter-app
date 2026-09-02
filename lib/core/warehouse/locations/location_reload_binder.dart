@@ -1,3 +1,5 @@
+import 'package:BisonsTechs_app/core/accountingReports/accounting_report_controller.dart';
+import 'package:BisonsTechs_app/core/profitlossStatement/controllers/profit_and_loss_controller.dart';
 import 'package:BisonsTechs_app/core/AccountPayable/controller/account_payable_controller.dart';
 import 'package:BisonsTechs_app/core/AccountRecievables/controllers/account_recievables_controller.dart';
 import 'package:BisonsTechs_app/core/Bills/controller/bills_controller.dart';
@@ -18,7 +20,6 @@ import 'package:BisonsTechs_app/core/purchaseInvoice/purchase_invoice_controller
 import 'package:BisonsTechs_app/core/purchasePaymentmade/purchase_payment_controller.dart';
 import 'package:BisonsTechs_app/core/purchaseReturn/purchase_return_controller.dart';
 import 'package:BisonsTechs_app/core/purchasedashboard/purchase_controller.dart';
-import 'package:BisonsTechs_app/core/purchasedashboard/purchase_report_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/Delievery/deleivery_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/Reports/controller/expiry_report_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/Reports/controller/low_stock_report_controller.dart';
@@ -51,7 +52,7 @@ class LocationReloadBinder extends GetxController {
     super.onInit();
     if (!Get.isRegistered<LocationController>()) return;
     _worker = ever(
-      Get.find<LocationController>().selectedLocation,
+      Get.find<LocationController>().storedSelectedId,
       (_) => reloadOpenScreens(),
     );
   }
@@ -103,7 +104,8 @@ class LocationReloadBinder extends GetxController {
     _run<PaymentReceivedController>((c) => c.fetchPayments());
     _run<SalesCreditController>((c) => c.refreshAll());
     _run<SalesReportController>((c) => c.loadReport());
-    _run<PurchaseReportController>((c) => c.loadReport());
+    _run<AccountingReportController>((c) => c.loadReport());
+    _run<PLController>((c) => c.loadReportData());
   }
 
   void _run<T>(void Function(T controller) fn) {

@@ -52,9 +52,9 @@ class CreateOrderForm extends StatelessWidget {
                       margin: const EdgeInsets.only(bottom: 10),
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: kDanger.withOpacity(0.08),
+                        color: kDanger.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: kDanger.withOpacity(0.2)),
+                        border: Border.all(color: kDanger.withValues(alpha: 0.2)),
                       ),
                       child: Text(
                         c.formError.value,
@@ -231,7 +231,7 @@ class CreateOrderForm extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     DropdownButtonFormField<String>(
-                      value: c.paymentStatus.value,
+                      initialValue: c.paymentStatus.value,
                       decoration: InputDecoration(
                         labelText: 'Payment Status',
                         border: OutlineInputBorder(
@@ -265,7 +265,7 @@ class CreateOrderForm extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     DropdownButtonFormField<String>(
-                      value: c.discountType.value,
+                      initialValue: c.discountType.value,
                       decoration: InputDecoration(
                         labelText: 'Discount Type',
                         border: OutlineInputBorder(
@@ -372,7 +372,7 @@ class CreateOrderForm extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -394,7 +394,7 @@ class CreateOrderForm extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.1),
+                    color: kPrimary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(Icons.add, size: 20, color: kPrimary),
@@ -506,7 +506,7 @@ class CreateOrderForm extends StatelessWidget {
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(6),
-                      side: BorderSide(color: Colors.grey.withOpacity(0.1)),
+                      side: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
                     ),
                     child: ListTile(
                       title: Text(
@@ -577,7 +577,7 @@ class CreateOrderForm extends StatelessWidget {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
+                  color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(9),
                 ),
                 child: const Icon(
@@ -613,7 +613,7 @@ class CreateOrderForm extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: kCardBg,
-        border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.15))),
+        border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.15))),
       ),
       child: Row(
         children: [
@@ -679,7 +679,7 @@ class CreateOrderForm extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -732,7 +732,7 @@ class CreateOrderForm extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
                     borderRadius: BorderRadius.circular(8),
                     color: kBg,
                   ),
@@ -776,7 +776,7 @@ class CreateOrderForm extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.1),
+                  color: kPrimary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(Icons.add, size: 20, color: kPrimary),

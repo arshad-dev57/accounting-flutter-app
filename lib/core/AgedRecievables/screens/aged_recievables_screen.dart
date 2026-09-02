@@ -20,7 +20,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:universal_html/html.dart' as html;
 
 class AgedReceivablesScreen extends StatefulWidget {
   const AgedReceivablesScreen({super.key});
@@ -404,7 +403,6 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
     required IconData icon,
     required Color bgColor,
     required Color borderColor,
-    bool isNumber = false,
   }) {
     return ExpandableStatCard(
       title: title,

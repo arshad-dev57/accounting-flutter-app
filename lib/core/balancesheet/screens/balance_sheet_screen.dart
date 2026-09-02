@@ -117,7 +117,7 @@ class BalanceSheetScreen extends StatelessWidget {
                               child: LinearProgressIndicator(
                                 minHeight: 2,
                                 color: kPrimary,
-                                backgroundColor: kPrimary.withOpacity(0.12),
+                                backgroundColor: kPrimary.withValues(alpha: 0.12),
                               ),
                             ),
                         ],
@@ -176,7 +176,7 @@ class BalanceSheetScreen extends StatelessWidget {
                             'As of ${DateFormat('dd MMM yyyy').format(controller.asOfDate.value)}',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -190,13 +190,13 @@ class BalanceSheetScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 18,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -207,13 +207,13 @@ class BalanceSheetScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.download_outlined,
                         size: 18,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -241,12 +241,12 @@ class BalanceSheetScreen extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? Colors.white
-                                  : Colors.white.withOpacity(0.16),
+                                  : Colors.white.withValues(alpha: 0.16),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
                                 color: isSelected
                                     ? Colors.white
-                                    : Colors.white.withOpacity(0.35),
+                                    : Colors.white.withValues(alpha: 0.35),
                               ),
                             ),
                             child: Text(
@@ -371,7 +371,7 @@ class BalanceSheetScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.08),
+                  color: kPrimary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -405,8 +405,8 @@ class BalanceSheetScreen extends StatelessWidget {
               amount: controller.formatAmount(controller.totalAssets.value),
               color: kPrimary,
               icon: Icons.account_balance_wallet,
-              bgColor: kPrimary.withOpacity(0.08),
-              borderColor: kPrimary.withOpacity(0.2),
+              bgColor: kPrimary.withValues(alpha: 0.08),
+              borderColor: kPrimary.withValues(alpha: 0.2),
             ),
             const SizedBox(width: 8),
             _buildProfessionalCard(
@@ -416,8 +416,8 @@ class BalanceSheetScreen extends StatelessWidget {
               ),
               color: kDanger,
               icon: Icons.money_off,
-              bgColor: kDanger.withOpacity(0.08),
-              borderColor: kDanger.withOpacity(0.2),
+              bgColor: kDanger.withValues(alpha: 0.08),
+              borderColor: kDanger.withValues(alpha: 0.2),
             ),
             const SizedBox(width: 8),
             _buildProfessionalCard(
@@ -425,8 +425,8 @@ class BalanceSheetScreen extends StatelessWidget {
               amount: controller.formatAmount(controller.equity.value),
               color: kSuccess,
               icon: Icons.trending_up,
-              bgColor: kSuccess.withOpacity(0.08),
-              borderColor: kSuccess.withOpacity(0.2),
+              bgColor: kSuccess.withValues(alpha: 0.08),
+              borderColor: kSuccess.withValues(alpha: 0.2),
             ),
           ],
         ),
@@ -441,7 +441,6 @@ class BalanceSheetScreen extends StatelessWidget {
     required IconData icon,
     required Color bgColor,
     required Color borderColor,
-    bool isNumber = false,
   }) {
     return ExpandableStatCard(
       title: title,
@@ -472,10 +471,10 @@ class BalanceSheetScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: kCardBg,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.15)),
+          border: Border.all(color: color.withValues(alpha: 0.15)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -487,7 +486,7 @@ class BalanceSheetScreen extends StatelessWidget {
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, size: 16, color: color),
@@ -512,10 +511,10 @@ class BalanceSheetScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.15)),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -533,7 +532,7 @@ class BalanceSheetScreen extends StatelessWidget {
                   width: 34,
                   height: 34,
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(icon, size: 18, color: color),
@@ -550,7 +549,7 @@ class BalanceSheetScreen extends StatelessWidget {
               ],
             ),
           ),
-          Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+          Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
           // Items
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
@@ -569,13 +568,13 @@ class BalanceSheetScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.05),
+              color: color.withValues(alpha: 0.05),
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(14),
                 bottomRight: Radius.circular(14),
               ),
               border: Border(
-                top: BorderSide(color: Colors.grey.withOpacity(0.12)),
+                top: BorderSide(color: Colors.grey.withValues(alpha: 0.12)),
               ),
             ),
             child: Row(
@@ -595,7 +594,7 @@ class BalanceSheetScreen extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -677,9 +676,9 @@ class BalanceSheetScreen extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.05),
+          color: color.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
         ),
         child: Column(
           children: [
@@ -712,7 +711,7 @@ class BalanceSheetScreen extends StatelessWidget {
               margin: const EdgeInsets.symmetric(vertical: 8),
               child: Row(
                 children: [
-                  Expanded(child: Divider(color: Colors.grey.withOpacity(0.3))),
+                  Expanded(child: Divider(color: Colors.grey.withValues(alpha: 0.3))),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: Text(
@@ -724,7 +723,7 @@ class BalanceSheetScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Expanded(child: Divider(color: Colors.grey.withOpacity(0.3))),
+                  Expanded(child: Divider(color: Colors.grey.withValues(alpha: 0.3))),
                 ],
               ),
             ),
@@ -760,7 +759,7 @@ class BalanceSheetScreen extends StatelessWidget {
               kSuccess,
             ),
 
-            Divider(color: Colors.grey.withOpacity(0.2), height: 16),
+            Divider(color: Colors.grey.withValues(alpha: 0.2), height: 16),
 
             // L + E Total
             _buildEquationRow(
@@ -777,7 +776,7 @@ class BalanceSheetScreen extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -855,7 +854,7 @@ class BalanceSheetScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.event_busy_outlined, size: 56, color: kPrimary.withOpacity(0.7)),
+            Icon(Icons.event_busy_outlined, size: 56, color: kPrimary.withValues(alpha: 0.7)),
             const SizedBox(height: 16),
             Text(
               isFuture

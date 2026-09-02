@@ -101,7 +101,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
                 border: Border.all(color: kBorder),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
+                    color: Colors.black.withValues(alpha: 0.04),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -141,7 +141,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
                       border: Border.all(color: kBorder),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
+                          color: Colors.black.withValues(alpha: 0.04),
                           blurRadius: 16,
                           offset: const Offset(0, 6),
                         ),
@@ -183,7 +183,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.1),
+                  color: kPrimary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Iconify(Mdi.arrow_left, color: kPrimary, size: 24),
@@ -273,7 +273,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
             Iconify(
               Mdi.magnify_close,
               size: 64,
-              color: kSubText.withOpacity(0.5),
+              color: kSubText.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(
@@ -312,7 +312,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
           _currencyController.currencyCode.value == currency.code;
 
       return Material(
-        color: isSelected ? kPrimary.withOpacity(0.05) : Colors.transparent,
+        color: isSelected ? kPrimary.withValues(alpha: 0.05) : Colors.transparent,
         child: InkWell(
           onTap: () => _onCurrencySelected(currency),
           child: Padding(
@@ -375,7 +375,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: kPrimary.withOpacity(0.4),
+                            color: kPrimary.withValues(alpha: 0.4),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),

@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart';
 
-import 'notification_Service.dart';
+import 'notification_service.dart';
 
 /// Clears notification stream + tray on logout.
 class AuthLogoutService {
@@ -9,7 +9,7 @@ class AuthLogoutService {
     try {
       await NotificationService.instance.logout();
     } catch (e) {
-      print('⚠️ [AuthLogoutService] clearPushSession: $e');
+      debugPrint('Error: $e');
     }
   }
 }

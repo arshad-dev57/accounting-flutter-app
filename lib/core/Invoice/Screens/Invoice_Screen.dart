@@ -115,7 +115,7 @@ class InvoicesScreen extends StatelessWidget {
                   onSelected: (_) =>
                       controller.changeFilter(isSelected ? 'All' : f),
                   backgroundColor: kBg,
-                  selectedColor: kPrimary.withOpacity(0.2),
+                  selectedColor: kPrimary.withValues(alpha: 0.2),
                   labelStyle: TextStyle(
                     color: isSelected ? kPrimary : kSubText,
                     fontWeight: isSelected
@@ -197,7 +197,7 @@ class InvoicesScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 5,
             offset: const Offset(0, 2),
           ),
@@ -252,7 +252,7 @@ class InvoicesScreen extends StatelessWidget {
               Icon(
                 Icons.receipt_outlined,
                 size: 64,
-                color: kSubText.withOpacity(0.5),
+                color: kSubText.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               Text(
@@ -310,7 +310,7 @@ class InvoicesScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 5,
             offset: const Offset(0, 2),
           ),
@@ -332,7 +332,7 @@ class InvoicesScreen extends StatelessWidget {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
+                        color: statusColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(Icons.receipt, size: 20, color: statusColor),
@@ -363,7 +363,7 @@ class InvoicesScreen extends StatelessWidget {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: statusColor.withOpacity(0.1),
+                              color: statusColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -425,7 +425,7 @@ class InvoicesScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 10),
-                Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
+                Divider(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
                 const SizedBox(height: 10),
                 Row(
                   children: [
@@ -439,7 +439,7 @@ class InvoicesScreen extends StatelessWidget {
                           style: TextStyle(fontSize: 11, color: kText),
                         ),
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                          side: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(6),
@@ -549,7 +549,7 @@ class InvoicesScreen extends StatelessWidget {
                   color: Colors.black45,
                 ),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.35),
+                fillColor: Colors.white.withValues(alpha: 0.35),
                 contentPadding: const EdgeInsets.symmetric(
                   vertical: 0,
                   horizontal: 12,
@@ -578,7 +578,7 @@ class InvoicesScreen extends StatelessWidget {
               style: TextStyle(fontSize: 13, color: Colors.black87),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white.withOpacity(0.4),
+              backgroundColor: Colors.white.withValues(alpha: 0.4),
               elevation: 0,
               minimumSize: const Size(0, 34),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -602,7 +602,7 @@ class InvoicesScreen extends StatelessWidget {
               style: TextStyle(fontSize: 13, color: Colors.black87),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white.withOpacity(0.4),
+              backgroundColor: Colors.white.withValues(alpha: 0.4),
               elevation: 0,
               minimumSize: const Size(0, 34),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -623,7 +623,7 @@ class InvoicesScreen extends StatelessWidget {
               style: TextStyle(fontSize: 13, color: Colors.black87),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white.withOpacity(0.4),
+              backgroundColor: Colors.white.withValues(alpha: 0.4),
               elevation: 0,
               minimumSize: const Size(0, 34),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -694,7 +694,7 @@ class InvoicesScreen extends StatelessWidget {
               width: 34,
               height: 34,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, size: 16, color: color),
@@ -730,7 +730,7 @@ class InvoicesScreen extends StatelessWidget {
   }
 
   Widget _buildWebKpiDivider() =>
-      Container(width: 1, height: 36, color: Colors.grey.withOpacity(0.15));
+      Container(width: 1, height: 36, color: Colors.grey.withValues(alpha: 0.15));
 
   Widget _buildWebToolbar(InvoiceController controller, BuildContext context) {
     final filters = ['All', 'Unpaid', 'Paid', 'Overdue', 'Partial'];
@@ -740,8 +740,8 @@ class InvoicesScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kBg,
         border: Border(
-          bottom: BorderSide(color: Colors.grey.withOpacity(0.15)),
-          top: BorderSide(color: Colors.grey.withOpacity(0.1)),
+          bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.15)),
+          top: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
         ),
       ),
       child: Obx(
@@ -760,11 +760,11 @@ class InvoicesScreen extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? kPrimary.withOpacity(0.1)
+                        ? kPrimary.withValues(alpha: 0.1)
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(4),
                     border: isSelected
-                        ? Border.all(color: kPrimary.withOpacity(0.3))
+                        ? Border.all(color: kPrimary.withValues(alpha: 0.3))
                         : null,
                   ),
                   child: Text(
@@ -803,7 +803,7 @@ class InvoicesScreen extends StatelessWidget {
               Icon(
                 Icons.receipt_outlined,
                 size: 48,
-                color: kSubText.withOpacity(0.4),
+                color: kSubText.withValues(alpha: 0.4),
               ),
               const SizedBox(height: 12),
               Text(
@@ -875,12 +875,12 @@ class InvoicesScreen extends StatelessWidget {
               ],
             ),
           ),
-          Container(height: 1, color: Colors.grey.withOpacity(0.15)),
+          Container(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
           Expanded(
             child: ListView.separated(
               itemCount: invoices.length,
               separatorBuilder: (_, __) =>
-                  Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
+                  Divider(height: 1, color: Colors.grey.withValues(alpha: 0.1)),
               itemBuilder: (context, index) =>
                   _buildWebTableRow(invoices[index], controller, context),
             ),
@@ -915,7 +915,7 @@ class InvoicesScreen extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: () => _showInvoiceDetails(invoice, controller, context),
-        hoverColor: kPrimary.withOpacity(0.03),
+        hoverColor: kPrimary.withValues(alpha: 0.03),
         child: Container(
           height: 52,
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -926,7 +926,7 @@ class InvoicesScreen extends StatelessWidget {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
+                  color: statusColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Icon(Icons.receipt, size: 14, color: statusColor),
@@ -1021,7 +1021,7 @@ class InvoicesScreen extends StatelessWidget {
                             vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: kDanger.withOpacity(0.08),
+                            color: kDanger.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -1053,7 +1053,7 @@ class InvoicesScreen extends StatelessWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(3),
                     ),
                     child: Text(
@@ -1119,8 +1119,8 @@ class InvoicesScreen extends StatelessWidget {
       height: 52,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
-        color: kPrimary.withOpacity(0.04),
-        border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.15))),
+        color: kPrimary.withValues(alpha: 0.04),
+        border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.15))),
       ),
       child: Row(
         children: [
@@ -1180,7 +1180,7 @@ class InvoicesScreen extends StatelessWidget {
                     vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color: kDanger.withOpacity(0.08),
+                    color: kDanger.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -1247,7 +1247,7 @@ class InvoicesScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 24),
         decoration: BoxDecoration(
           color: kCardBg,
-          border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.15))),
+          border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.15))),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1266,7 +1266,7 @@ class InvoicesScreen extends StatelessWidget {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.1),
+                    color: kPrimary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -1305,7 +1305,7 @@ class InvoicesScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             border: Border.all(
-              color: enabled ? kPrimary : Colors.grey.withOpacity(0.3),
+              color: enabled ? kPrimary : Colors.grey.withValues(alpha: 0.3),
             ),
             borderRadius: BorderRadius.circular(6),
           ),
@@ -1369,7 +1369,7 @@ class InvoicesScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(7),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(
@@ -1410,7 +1410,7 @@ class InvoicesScreen extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(5),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(7),
                         ),
                         child: const Icon(
@@ -1440,7 +1440,7 @@ class InvoicesScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: kCardBg,
                   border: Border(
-                    top: BorderSide(color: Colors.grey.withOpacity(0.12)),
+                    top: BorderSide(color: Colors.grey.withValues(alpha: 0.12)),
                   ),
                   borderRadius: const BorderRadius.vertical(
                     bottom: Radius.circular(16),
@@ -1487,7 +1487,6 @@ class InvoicesScreen extends StatelessWidget {
   /// Professional invoice exactly matching the image: logo top-right, From/For,
   /// invoice meta table, dark-header items table, subtotal/tax/total, balance due, notes.
   Widget _buildProfessionalInvoiceView(Invoice invoice, bool isWeb) {
-    final statusColor = _statusColor(invoice.status, invoice.isOverdue);
     final double subtotal = invoice.subtotal;
     final double tax = invoice.taxTotal;
     final double discount = invoice.discount;
@@ -1884,7 +1883,7 @@ class InvoicesScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: balanceDue > 0
                           ? const Color(0xFFF5F5F5)
-                          : kSuccess.withOpacity(0.06),
+                          : kSuccess.withValues(alpha: 0.06),
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(color: Colors.grey.shade200),
                     ),
@@ -2013,11 +2012,10 @@ class InvoicesScreen extends StatelessWidget {
   }
 
   Widget _statusBadgeWhite(String status, bool isOverdue) {
-    final color = _statusColor(status, isOverdue);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white38),
       ),
@@ -2051,7 +2049,6 @@ class InvoicesScreen extends StatelessWidget {
     DateTime issueDate = DateTime.now();
     DateTime dueDate = DateTime.now().add(const Duration(days: 30));
     String notes = '';
-    double discount = 0;
 
     final items = <Map<String, dynamic>>[
       {'description': '', 'quantity': 1, 'unitPrice': 0.0, 'taxRate': 0.0},
@@ -2108,7 +2105,7 @@ class InvoicesScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(7),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Icon(
@@ -2145,7 +2142,7 @@ class InvoicesScreen extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.all(5),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(7),
                             ),
                             child: const Icon(
@@ -2258,7 +2255,7 @@ class InvoicesScreen extends StatelessWidget {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: kPrimary.withOpacity(0.1),
+                                  color: kPrimary.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
@@ -2412,7 +2409,7 @@ class InvoicesScreen extends StatelessWidget {
                                         size: 16,
                                         color: items.length > 1
                                             ? kDanger
-                                            : kSubText.withOpacity(0.3),
+                                            : kSubText.withValues(alpha: 0.3),
                                       ),
                                     ),
                                   ),
@@ -2436,7 +2433,7 @@ class InvoicesScreen extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(vertical: 10),
                               decoration: BoxDecoration(
                                 border: Border.all(
-                                  color: kPrimary.withOpacity(0.4),
+                                  color: kPrimary.withValues(alpha: 0.4),
                                   style: BorderStyle.solid,
                                 ),
                                 borderRadius: BorderRadius.circular(8),
@@ -2734,7 +2731,7 @@ class InvoicesScreen extends StatelessWidget {
                     Navigator.pop(ctx);
                     controller.changeFilter(v ? 'Unpaid' : 'All');
                   },
-                  activeColor: kPrimary,
+                  activeThumbColor: kPrimary,
                 ),
               ),
             ),
@@ -2748,7 +2745,7 @@ class InvoicesScreen extends StatelessWidget {
                     Navigator.pop(ctx);
                     controller.changeFilter(v ? 'Overdue' : 'All');
                   },
-                  activeColor: kDanger,
+                  activeThumbColor: kDanger,
                 ),
               ),
             ),
@@ -2766,7 +2763,7 @@ class InvoicesScreen extends StatelessWidget {
                     Navigator.pop(ctx);
                     controller.changeFilter(v ? 'Paid' : 'All');
                   },
-                  activeColor: kSuccess,
+                  activeThumbColor: kSuccess,
                 ),
               ),
             ),

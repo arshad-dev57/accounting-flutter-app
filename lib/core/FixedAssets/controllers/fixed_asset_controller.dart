@@ -7,7 +7,6 @@ import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'dart:io';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
-import 'package:BisonsTechs_app/config/apiconfig.dart';
 import 'package:BisonsTechs_app/core/FixedAssets/models/fixed_asset_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -171,7 +170,7 @@ class FixedAssetController extends GetxController {
             serverSupportsPagination.value = false;
           }
 
-          _updateSummaryForFiltered(assets.value);
+          _updateSummaryForFiltered(assets);
           assets.refresh();
         } else {
           _showError('Failed to load fixed assets');
@@ -180,7 +179,6 @@ class FixedAssetController extends GetxController {
         _showError('Failed to load fixed assets: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error loading fixed assets: $e');
       _showError('Error loading fixed assets');
     } finally {
       isLoading.value = false;
@@ -208,7 +206,6 @@ class FixedAssetController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error loading vendors: $e');
     }
   }
 
@@ -227,7 +224,6 @@ class FixedAssetController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error loading bank accounts: $e');
     }
   }
 
@@ -248,7 +244,6 @@ class FixedAssetController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error loading summary: $e');
     }
   }
 
@@ -371,7 +366,6 @@ class FixedAssetController extends GetxController {
         _showError(response.data['message'] ?? 'Failed to add asset');
       }
     } catch (e) {
-      print('Error creating fixed asset: $e');
       _showError('Error creating fixed asset');
     } finally {
       isProcessing.value = false;
@@ -441,7 +435,6 @@ class FixedAssetController extends GetxController {
         _showError(response.data['message'] ?? 'Failed to update asset');
       }
     } catch (e) {
-      print('Error updating fixed asset: $e');
       _showError('Error updating fixed asset');
     } finally {
       isProcessing.value = false;
@@ -529,7 +522,6 @@ class FixedAssetController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error depreciating asset: $e');
       _showError('Error depreciating asset');
     } finally {
       isProcessing.value = false;
@@ -616,7 +608,6 @@ class FixedAssetController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error running monthly depreciation: $e');
       _showError('Error running monthly depreciation');
     } finally {
       isProcessing.value = false;
@@ -717,7 +708,6 @@ class FixedAssetController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error disposing asset: $e');
       _showError('Error disposing asset');
     } finally {
       isProcessing.value = false;
@@ -791,7 +781,6 @@ class FixedAssetController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error deleting fixed asset: $e');
       _showError('Error deleting fixed asset');
     } finally {
       isProcessing.value = false;
@@ -913,7 +902,7 @@ class FixedAssetController extends GetxController {
             ),
             Text(
               subtitle,
-              style: TextStyle(fontSize: 10, color: color.withOpacity(0.7)),
+              style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.7)),
             ),
           ],
         ),
@@ -1510,7 +1499,7 @@ class FixedAssetController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+         ,
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),
@@ -1659,7 +1648,7 @@ class FixedAssetController extends GetxController {
               ],
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }
@@ -2591,7 +2580,7 @@ class FixedAssetController extends GetxController {
                             decoration: BoxDecoration(
                               color: getAssetCategoryColor(
                                 asset.category,
-                              ).withOpacity(0.12),
+                              ).withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Icon(
@@ -2629,11 +2618,11 @@ class FixedAssetController extends GetxController {
                                       ),
                                       decoration: BoxDecoration(
                                         color: asset.status == 'Active'
-                                            ? kSuccess.withOpacity(0.08)
+                                            ? kSuccess.withValues(alpha: 0.08)
                                             : asset.status ==
                                                   'Fully Depreciated'
-                                            ? kWarning.withOpacity(0.08)
-                                            : kDanger.withOpacity(0.08),
+                                            ? kWarning.withValues(alpha: 0.08)
+                                            : kDanger.withValues(alpha: 0.08),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
@@ -2693,7 +2682,7 @@ class FixedAssetController extends GetxController {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
                       const SizedBox(height: 16),
 
                       // Details
@@ -2744,7 +2733,7 @@ class FixedAssetController extends GetxController {
                             : 'N/A',
                       ),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
                       const SizedBox(height: 16),
 
                       // Footer Buttons
@@ -2919,7 +2908,7 @@ class FixedAssetController extends GetxController {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.06),
+          color: color.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
@@ -2941,7 +2930,7 @@ class FixedAssetController extends GetxController {
               label,
               style: TextStyle(
                 fontSize: 9,
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withValues(alpha: 0.5),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -3074,7 +3063,7 @@ class FixedAssetController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+     ,
       ],
       onChanged: (v) => onChanged(v),
     );

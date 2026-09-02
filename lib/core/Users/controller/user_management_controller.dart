@@ -663,7 +663,7 @@ class UserManagementController extends GetxController {
         roles.value = data.map((item) => Role.fromJson(item)).toList();
       }
     } catch (e) {
-      print('Error loading roles: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -715,7 +715,6 @@ class UserManagementController extends GetxController {
           : 'Failed to create user';
       return false;
     } catch (e) {
-      print('Error creating user: $e');
       lastInviteEmailSent.value = false;
       errorMessage.value = 'Failed to create user';
       return false;
@@ -745,18 +744,18 @@ class UserManagementController extends GetxController {
         '/api/admin/users/$id',
         requiresAuth: true,
         body: {
-          if (firstName != null) 'firstName': firstName,
-          if (lastName != null) 'lastName': lastName,
-          if (email != null) 'email': email,
-          if (phone != null) 'phone': phone,
-          if (country != null) 'country': country,
-          if (role != null) 'role': role,
-          if (roleId != null) 'roleId': roleId,
-          if (managerId != null) 'managerId': managerId,
-          if (isActive != null) 'isActive': isActive,
-          if (permissions != null)
-            'permissions': permissions.map((p) => p.toJson()).toList(),
-          if (locationIds != null) 'locationIds': locationIds,
+        if (firstName != null) 'firstName': firstName,
+if (lastName != null) 'lastName': lastName,
+if (email != null) 'email': email,
+if (phone != null) 'phone': phone,
+if (country != null) 'country': country,
+if (role != null) 'role': role,
+if (roleId != null) 'roleId': roleId,
+if (managerId != null) 'managerId': managerId,
+if (isActive != null) 'isActive': isActive,
+if (permissions != null)
+  'permissions': permissions.map((p) => p.toJson()).toList(),
+if (locationIds != null) 'locationIds': locationIds,
         },
       );
 
@@ -770,7 +769,6 @@ class UserManagementController extends GetxController {
           : 'Failed to update user';
       return false;
     } catch (e) {
-      print('Error updating user: $e');
       errorMessage.value = 'Failed to update user';
       return false;
     } finally {
@@ -793,7 +791,6 @@ class UserManagementController extends GetxController {
       }
       return false;
     } catch (e) {
-      print('Error deleting user: $e');
       return false;
     } finally {
       isLoading.value = false;
@@ -819,7 +816,6 @@ class UserManagementController extends GetxController {
       }
       return false;
     } catch (e) {
-      print('Error updating permissions: $e');
       return false;
     } finally {
       isLoading.value = false;
@@ -865,10 +861,7 @@ class UserManagementController extends GetxController {
     roleFilter.value = role;
   }
 
-  void refresh() {
-    loadUsers();
-    loadRoles();
-  }
+
 
   // Initialize module permissions for a user
   void initializeModulePermissions(User user) {

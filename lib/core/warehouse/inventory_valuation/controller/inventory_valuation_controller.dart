@@ -41,7 +41,6 @@ class InventoryValuationController extends GetxController {
       queryParams['sortBy'] = sortBy.value;
       queryParams['sortOrder'] = sortOrder.value;
 
-      print('Fetching valuation data with params: $queryParams');
 
       final response = await _apiClient.get(
         '/api/warehouse/inventory/valuation',
@@ -49,24 +48,19 @@ class InventoryValuationController extends GetxController {
         requiresAuth: true,
       );
 
-      print('Valuation response success: ${response.success}');
-      print('Valuation response data: ${response.data}');
 
       if (response.success && response.data != null) {
         final data = response.data['data'];
 
         if (data != null) {
           final itemsList = data['items'] as List? ?? [];
-          print('Items count: ${itemsList.length}');
 
           items.value = itemsList
               .map((item) => InventoryValuationModel.fromJson(item))
               .toList();
 
-          print('Parsed items count: ${items.value.length}');
           if (data['summary'] != null) {
             summary.value = ValuationSummary.fromJson(data['summary']);
-            print('Summary parsed successfully');
           }
           final breakdownList = data['categoryBreakdown'] as List? ?? [];
           categoryBreakdown.value = breakdownList
@@ -74,18 +68,16 @@ class InventoryValuationController extends GetxController {
               .toList();
 
           // Extract categories for filter
-          final categoryNames = items.value
+          final categoryNames = items
               .map((item) => item.category)
               .toSet()
               .toList();
           categories.value = categoryNames;
         }
       } else {
-        print('Valuation API failed: ${response.message}');
       }
     } catch (e) {
-      print('Error fetching valuation data: $e');
-      print('Stack trace: ${StackTrace.current}');
+      debugPrint('Error: $e');
     } finally {
       isLoading.value = false;
     }

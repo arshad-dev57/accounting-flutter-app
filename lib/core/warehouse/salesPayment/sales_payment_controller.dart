@@ -87,7 +87,6 @@ class SalesPaymentController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    print('🟢 [SalesPaymentController] onInit called');
     selectedPaymentDate.value = DateTime.now();
     paymentDateController.text = DateFormat(
       'dd MMM yyyy',
@@ -98,7 +97,6 @@ class SalesPaymentController extends GetxController {
 
   @override
   void onClose() {
-    print('🟢 [SalesPaymentController] onClose called - disposing controllers');
     customerSearchController.dispose();
     amountController.dispose();
     referenceController.dispose();
@@ -128,11 +126,6 @@ class SalesPaymentController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   Future<void> fetchPayments({bool resetPage = false}) async {
-    print('🔵 [SalesPaymentController] fetchPayments called');
-    print(
-      '🔵 [SalesPaymentController] Current Page: ${currentPage.value}, Limit: ${pageLimit.value}',
-    );
-    print('🔵 [SalesPaymentController] Reset Page: $resetPage');
 
     if (resetPage) currentPage.value = 1;
     try {
@@ -143,41 +136,26 @@ class SalesPaymentController extends GetxController {
       };
       if (searchFilter.value.isNotEmpty) {
         params['search'] = searchFilter.value;
-        print(
-          '🔵 [SalesPaymentController] Search filter: ${searchFilter.value}',
-        );
       }
       if (fromDate.value != null) {
         params['fromDate'] = fromDate.value!.toIso8601String().split('T').first;
-        print('🔵 [SalesPaymentController] From date: ${params['fromDate']}');
       }
       if (toDate.value != null) {
         params['toDate'] = toDate.value!.toIso8601String().split('T').first;
-        print('🔵 [SalesPaymentController] To date: ${params['toDate']}');
       }
 
       final query = params.entries
           .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
           .join('&');
-      print(
-        '🔵 [SalesPaymentController] API Request: GET /api/sales/payments?$query',
-      );
 
       final response = await _api.get(
         '/api/sales/payments?$query',
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [SalesPaymentController] Response Status: ${response.statusCode}',
-      );
-      print(
-        '🔵 [SalesPaymentController] Response Success: ${response.success}',
-      );
 
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
-        print('🔵 [SalesPaymentController] Data length: ${list.length}');
 
         payments.value = list
             .map(
@@ -191,7 +169,6 @@ class SalesPaymentController extends GetxController {
           stats.value = PaymentStats.fromJson(
             Map<String, dynamic>.from(response.data['stats']),
           );
-          print('🔵 [SalesPaymentController] Stats: ${stats.value}');
         }
 
         final pagination = response.data['pagination'] as Map<String, dynamic>?;
@@ -204,38 +181,20 @@ class SalesPaymentController extends GetxController {
           hasPrev.value = pagination['hasPrev'] == true;
           hasMore.value = pagination['hasNext'] == true;
 
-          print(
-            '✅ [SalesPaymentController] Payments fetched successfully: ${payments.length} payments',
-          );
-          print(
-            '✅ [SalesPaymentController] Total records: ${totalRecords.value}, Total pages: ${totalPages.value}',
-          );
         }
       } else {
-        print('❌ [SalesPaymentController] Failed to fetch payments');
-        print('❌ [SalesPaymentController] Response data: ${response.data}');
-        Get.snackbar('Error', response.message ?? 'Failed to load payments');
+        Get.snackbar('Error', response.message);
       }
     } catch (e) {
-      print('❌ [SalesPaymentController] fetchPayments error: $e');
-      print('❌ [SalesPaymentController] Stack trace: ${StackTrace.current}');
       Get.snackbar('Error', e.toString());
     } finally {
       isLoading.value = false;
-      print(
-        '🔵 [SalesPaymentController] fetchPayments completed, isLoading: ${isLoading.value}',
-      );
     }
   }
 
   // ─── LOCAL FILTERS ──────────────────────────────────────────
 
   void applyLocalFilters() {
-    print('🟣 [SalesPaymentController] applyLocalFilters called');
-    print(
-      '🟣 [SalesPaymentController] Selected filter: ${selectedFilter.value}',
-    );
-    print('🟣 [SalesPaymentController] Search filter: ${searchFilter.value}');
 
     final list = payments.toList();
     final filtered = list.where((item) {
@@ -256,26 +215,20 @@ class SalesPaymentController extends GetxController {
       return true;
     }).toList();
 
-    print(
-      '🟣 [SalesPaymentController] Filtered payments: ${filtered.length} out of ${list.length}',
-    );
     filteredPayments.value = filtered;
   }
 
   void filterPayments(String filter) {
-    print('🟣 [SalesPaymentController] filterPayments called with: $filter');
     selectedFilter.value = filter;
     applyLocalFilters();
   }
 
   void searchPayments(String query) {
-    print('🟣 [SalesPaymentController] searchPayments called with: $query');
     searchFilter.value = query;
     applyLocalFilters();
   }
 
   void clearSearch() {
-    print('🟣 [SalesPaymentController] clearSearch called');
     searchFilter.value = '';
     applyLocalFilters();
     fetchPayments(resetPage: true);
@@ -284,20 +237,14 @@ class SalesPaymentController extends GetxController {
   // ─── LOAD MORE ────────────────────────────────────────────
 
   Future<void> fetchMorePayments() async {
-    print('🟡 [SalesPaymentController] fetchMorePayments called');
-    print(
-      '🟡 [SalesPaymentController] hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}',
-    );
 
     if (!hasMore.value || isLoadingMore.value) {
-      print('🟡 [SalesPaymentController] Skipping load more');
       return;
     }
 
     try {
       isLoadingMore.value = true;
       currentPage.value += 1;
-      print('🟡 [SalesPaymentController] Loading page: ${currentPage.value}');
 
       final params = <String, String>{
         'page': currentPage.value.toString(),
@@ -308,9 +255,6 @@ class SalesPaymentController extends GetxController {
       final query = params.entries
           .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
           .join('&');
-      print(
-        '🟡 [SalesPaymentController] API Request: GET /api/sales/payments?$query',
-      );
 
       final response = await _api.get(
         '/api/sales/payments?$query',
@@ -325,9 +269,6 @@ class SalesPaymentController extends GetxController {
             )
             .toList();
 
-        print(
-          '🟡 [SalesPaymentController] Loaded ${newPayments.length} more payments',
-        );
         payments.addAll(newPayments);
         applyLocalFilters();
 
@@ -337,52 +278,36 @@ class SalesPaymentController extends GetxController {
           totalRecords.value = (pagination['total'] as num?)?.toInt() ?? 0;
           totalPages.value = (pagination['pages'] as num?)?.toInt() ?? 1;
         }
-        print(
-          '🟡 [SalesPaymentController] Total payments now: ${payments.length}, hasMore: ${hasMore.value}',
-        );
       } else {
-        print('❌ [SalesPaymentController] Failed to load more payments');
       }
     } catch (e) {
-      print('❌ [SalesPaymentController] fetchMorePayments error: $e');
+      debugPrint('Error: $e');
     } finally {
       isLoadingMore.value = false;
-      print('🟡 [SalesPaymentController] fetchMorePayments completed');
     }
   }
 
   // ─── REFRESH ──────────────────────────────────────────────────
 
   Future<void> refreshPayments() {
-    print('🟢 [SalesPaymentController] refreshPayments called');
     return fetchPayments(resetPage: true);
   }
 
   void applyFilters() {
-    print('🟣 [SalesPaymentController] applyFilters called');
     fetchPayments(resetPage: true);
   }
 
   void openCreateForm() {
-    print('🟢 [SalesPaymentController] openCreateForm called');
     _resetCreateForm();
     showCreateForm.value = true;
-    print(
-      '🟢 [SalesPaymentController] showCreateForm: ${showCreateForm.value}',
-    );
   }
 
   void closeCreateForm() {
-    print('🟢 [SalesPaymentController] closeCreateForm called');
     showCreateForm.value = false;
     _resetCreateForm();
-    print(
-      '🟢 [SalesPaymentController] showCreateForm: ${showCreateForm.value}',
-    );
   }
 
   void _resetCreateForm() {
-    print('🟢 [SalesPaymentController] _resetCreateForm called');
     selectedCustomer.value = null;
     customerSearchResults.clear();
     customerSearchController.clear();
@@ -397,16 +322,13 @@ class SalesPaymentController extends GetxController {
     paymentDateController.text = DateFormat(
       'dd MMM yyyy',
     ).format(selectedPaymentDate.value!);
-    print('✅ [SalesPaymentController] Create form reset complete');
   }
 
   // ─── CUSTOMER SEARCH ──────────────────────────────────────
 
   Future<void> searchCustomers(String query) async {
-    print('🔵 [SalesPaymentController] searchCustomers called with: "$query"');
 
     if (query.trim().length < 2) {
-      print('🔵 [SalesPaymentController] Query too short, clearing results');
       customerSearchResults.clear();
       return;
     }
@@ -414,9 +336,6 @@ class SalesPaymentController extends GetxController {
     try {
       isSearchingCustomers.value = true;
       final encoded = Uri.encodeComponent(query.trim());
-      print(
-        '🔵 [SalesPaymentController] API Request: GET /api/warehouse/customers?search=$encoded&limit=10',
-      );
 
       final response = await _api.get(
         '/api/warehouse/customers?search=$encoded&limit=10',
@@ -428,25 +347,17 @@ class SalesPaymentController extends GetxController {
         customerSearchResults.value = list
             .map((e) => Map<String, dynamic>.from(e))
             .toList();
-        print(
-          '🔵 [SalesPaymentController] Found ${customerSearchResults.length} customers for query: $query',
-        );
       } else {
-        print('❌ [SalesPaymentController] No customers found');
         customerSearchResults.clear();
       }
     } catch (e) {
-      print('❌ [SalesPaymentController] searchCustomers error: $e');
       customerSearchResults.clear();
     } finally {
       isSearchingCustomers.value = false;
-      print('🔵 [SalesPaymentController] searchCustomers completed');
     }
   }
 
   void selectCustomer(Map<String, dynamic> customer) {
-    print('🔵 [SalesPaymentController] selectCustomer called');
-    print('🔵 [SalesPaymentController] Selected customer: ${customer['name']}');
 
     selectedCustomer.value = customer;
     customerSearchResults.clear();
@@ -459,15 +370,9 @@ class SalesPaymentController extends GetxController {
   // ─── CUSTOMER INVOICES ──────────────────────────────────────
 
   Future<void> fetchCustomerInvoices(String customerId) async {
-    print(
-      '🔵 [SalesPaymentController] fetchCustomerInvoices called for customer: $customerId',
-    );
 
     try {
       isLoadingInvoices.value = true;
-      print(
-        '🔵 [SalesPaymentController] API Request: GET /api/sales/payments/customer/$customerId/invoices',
-      );
 
       final response = await _api.get(
         '/api/sales/payments/customer/$customerId/invoices',
@@ -493,26 +398,19 @@ class SalesPaymentController extends GetxController {
         // Update amount
         amountController.text = selectedTotalAmount.toStringAsFixed(2);
 
-        print(
-          '🔵 [SalesPaymentController] Found ${availableInvoices.length} invoices for customer',
-        );
       } else {
-        print('❌ [SalesPaymentController] No invoices found');
         availableInvoices.clear();
         selectedInvoices.clear();
       }
     } catch (e) {
-      print('❌ [SalesPaymentController] fetchCustomerInvoices error: $e');
       availableInvoices.clear();
       selectedInvoices.clear();
     } finally {
       isLoadingInvoices.value = false;
-      print('🔵 [SalesPaymentController] fetchCustomerInvoices completed');
     }
   }
 
   void toggleInvoiceSelection(InvoiceForPayment invoice) {
-    print('🔵 [SalesPaymentController] toggleInvoiceSelection called');
 
     final index = selectedInvoices.indexWhere((inv) => inv.id == invoice.id);
     if (index != -1) {
@@ -526,13 +424,9 @@ class SalesPaymentController extends GetxController {
     // Update amount
     amountController.text = selectedTotalAmount.toStringAsFixed(2);
 
-    print(
-      '🔵 [SalesPaymentController] Selected invoices: ${selectedInvoices.length}',
-    );
   }
 
   void updateInvoiceAmount(InvoiceForPayment invoice, double amount) {
-    print('🔵 [SalesPaymentController] updateInvoiceAmount called');
 
     if (amount > invoice.outstanding) {
       amount = invoice.outstanding;
@@ -550,7 +444,6 @@ class SalesPaymentController extends GetxController {
   // ─── BANK ACCOUNTS ──────────────────────────────────────────
 
   Future<void> fetchBankAccounts() async {
-    print('🔵 [SalesPaymentController] fetchBankAccounts called');
 
     try {
       final response = await _api.get('/api/bank-accounts', requiresAuth: true);
@@ -559,12 +452,9 @@ class SalesPaymentController extends GetxController {
         bankAccounts.value = List<Map<String, dynamic>>.from(
           response.data['data'],
         );
-        print(
-          '🔵 [SalesPaymentController] Found ${bankAccounts.length} bank accounts',
-        );
       }
     } catch (e) {
-      print('❌ [SalesPaymentController] fetchBankAccounts error: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -589,24 +479,20 @@ class SalesPaymentController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   Future<bool> receivePayment() async {
-    print('🔵 [SalesPaymentController] receivePayment called');
 
     final customer = selectedCustomer.value;
     if (customer == null) {
-      print('❌ [SalesPaymentController] No customer selected');
       Get.snackbar('Validation', 'Please select a customer');
       return false;
     }
 
     if (selectedInvoices.isEmpty) {
-      print('❌ [SalesPaymentController] No invoices selected');
       Get.snackbar('Validation', 'Please select at least one invoice');
       return false;
     }
 
     final amount = double.tryParse(amountController.text.trim());
     if (amount == null || amount <= 0) {
-      print('❌ [SalesPaymentController] Invalid amount');
       Get.snackbar('Validation', 'Enter a valid payment amount');
       return false;
     }
@@ -621,7 +507,6 @@ class SalesPaymentController extends GetxController {
 
     final paymentDate = selectedPaymentDate.value;
     if (paymentDate == null) {
-      print('❌ [SalesPaymentController] No payment date selected');
       Get.snackbar('Validation', 'Please select a payment date');
       return false;
     }
@@ -656,10 +541,6 @@ class SalesPaymentController extends GetxController {
         payload['bankAccountName'] = bank['accountName'] ?? '';
       }
 
-      print('🔵 [SalesPaymentController] Submitting payment payload');
-      print(
-        '🔵 [SalesPaymentController] Customer: ${customer['name']}, Amount: $amount, Invoices: ${invoicePayments.length}',
-      );
 
       final response = await _api.post(
         '/api/sales/payments/receive',
@@ -667,28 +548,17 @@ class SalesPaymentController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [SalesPaymentController] Response Status: ${response.statusCode}',
-      );
-      print(
-        '🔵 [SalesPaymentController] Response Success: ${response.success}',
-      );
 
       if (response.success) {
-        print('✅ [SalesPaymentController] Payment received successfully!');
         Get.snackbar('Success', 'Payment received successfully');
         closeCreateForm();
         await fetchPayments(resetPage: true);
         return true;
       }
 
-      print(
-        '❌ [SalesPaymentController] Failed to receive payment: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to receive payment');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [SalesPaymentController] receivePayment error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -701,15 +571,10 @@ class SalesPaymentController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   void selectPayment(SalesPaymentModel payment) {
-    print(
-      '🔵 [SalesPaymentController] selectPayment called for: ${payment.paymentNumber}',
-    );
     selectedPayment.value = payment;
   }
 
   Future<bool> cancelPayment(String id, {String? reason}) async {
-    print('🟣 [SalesPaymentController] cancelPayment called for ID: $id');
-    print('🟣 [SalesPaymentController] Reason: $reason');
 
     try {
       isSubmitting.value = true;
@@ -719,27 +584,16 @@ class SalesPaymentController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🟣 [SalesPaymentController] Response Status: ${response.statusCode}',
-      );
-      print(
-        '🟣 [SalesPaymentController] Response Success: ${response.success}',
-      );
 
       if (response.success) {
-        print('✅ [SalesPaymentController] Payment cancelled successfully');
         Get.snackbar('Success', 'Payment cancelled successfully');
         await fetchPayments();
         return true;
       }
 
-      print(
-        '❌ [SalesPaymentController] Failed to cancel payment: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to cancel payment');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [SalesPaymentController] cancelPayment error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -748,7 +602,6 @@ class SalesPaymentController extends GetxController {
   }
 
   Future<bool> deletePayment(String id) async {
-    print('🔵 [SalesPaymentController] deletePayment called for ID: $id');
 
     try {
       isSubmitting.value = true;
@@ -757,27 +610,16 @@ class SalesPaymentController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [SalesPaymentController] Response Status: ${response.statusCode}',
-      );
-      print(
-        '🔵 [SalesPaymentController] Response Success: ${response.success}',
-      );
 
       if (response.success) {
-        print('✅ [SalesPaymentController] Payment deleted successfully');
         Get.snackbar('Success', 'Payment deleted successfully');
         await fetchPayments(resetPage: true);
         return true;
       }
 
-      print(
-        '❌ [SalesPaymentController] Failed to delete payment: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to delete payment');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [SalesPaymentController] deletePayment error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {

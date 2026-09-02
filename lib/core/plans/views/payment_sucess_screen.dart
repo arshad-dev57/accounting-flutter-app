@@ -1,6 +1,4 @@
 import 'package:BisonsTechs_app/core/dashboard/Screens/dashbaord_screen.dart';
-import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
-import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

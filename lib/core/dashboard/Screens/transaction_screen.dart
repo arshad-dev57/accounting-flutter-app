@@ -162,7 +162,7 @@ class TransactionsScreen extends StatelessWidget {
                       height: 6.h,
                       padding: EdgeInsets.symmetric(horizontal: 4.w),
                       decoration: BoxDecoration(
-                        color: kPrimary.withOpacity(0.1),
+                        color: kPrimary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -264,7 +264,7 @@ class TransactionsScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -346,7 +346,7 @@ class TransactionsScreen extends StatelessWidget {
             Icon(
               Icons.receipt_outlined,
               size: 15.w,
-              color: kSubText.withOpacity(0.5),
+              color: kSubText.withValues(alpha: 0.5),
             ),
             SizedBox(height: 2.h),
             Text(
@@ -470,7 +470,7 @@ class TransactionsScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -492,7 +492,7 @@ class TransactionsScreen extends StatelessWidget {
                       width: 14.w,
                       height: 14.w,
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.1),
+                        color: color.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Icon(icon, size: 7.w, color: color),
@@ -542,8 +542,8 @@ class TransactionsScreen extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: isIncome
-                                ? kSuccess.withOpacity(0.1)
-                                : kDanger.withOpacity(0.1),
+                                ? kSuccess.withValues(alpha: 0.1)
+                                : kDanger.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
@@ -764,9 +764,9 @@ class TransactionsScreen extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(3.w),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.05),
+          color: color.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
@@ -894,8 +894,9 @@ class TransactionsScreen extends StatelessWidget {
                                   firstDate: DateTime(2020),
                                   lastDate: DateTime.now(),
                                 );
-                                if (picked != null)
-                                  setState(() => date = picked);
+                               if (picked != null) {
+  setState(() => date = picked);
+}
                               },
                               child: Container(
                                 padding: EdgeInsets.symmetric(
@@ -953,7 +954,7 @@ class TransactionsScreen extends StatelessWidget {
                                   border: Border.all(color: kBorder),
                                 ),
                                 child: DropdownButtonFormField<String>(
-                                  value: category,
+                                  initialValue: category,
                                   decoration: InputDecoration(
                                     labelText: 'Category *',
                                     border: InputBorder.none,
@@ -995,7 +996,7 @@ class TransactionsScreen extends StatelessWidget {
                                 border: Border.all(color: kBorder),
                               ),
                               child: DropdownButtonFormField<String>(
-                                value: paymentMethod,
+                                initialValue: paymentMethod,
                                 decoration: InputDecoration(
                                   labelText: 'Payment Method *',
                                   border: InputBorder.none,
@@ -1140,7 +1141,6 @@ class TransactionsScreen extends StatelessWidget {
     final icon = controller.getIconForTransaction(transaction);
     final color = controller.getColorForTransaction(transaction);
     final title = controller.getTransactionTitle(transaction);
-    final subtitle = controller.getTransactionSubtitle(transaction);
     final amount = (transaction['amount'] as num).toDouble();
 
     Get.bottomSheet(
@@ -1161,7 +1161,7 @@ class TransactionsScreen extends StatelessWidget {
                   width: 14.w,
                   height: 14.w,
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Icon(icon, size: 7.w, color: color),
@@ -1194,7 +1194,7 @@ class TransactionsScreen extends StatelessWidget {
                     vertical: 0.3.h,
                   ),
                   decoration: BoxDecoration(
-                    color: amountColor.withOpacity(0.1),
+                    color: amountColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(

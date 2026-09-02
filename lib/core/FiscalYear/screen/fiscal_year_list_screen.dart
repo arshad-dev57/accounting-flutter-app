@@ -197,8 +197,8 @@ class _FiscalYearListBodyState extends State<_FiscalYearListBody> {
                           ),
                           decoration: BoxDecoration(
                             color: fiscalYear.isOpen
-                                ? kSuccess.withOpacity(0.1)
-                                : kDanger.withOpacity(0.1),
+                                ? kSuccess.withValues(alpha: 0.1)
+                                : kDanger.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(

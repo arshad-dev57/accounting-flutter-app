@@ -1,14 +1,12 @@
 // lib/core/transactions/controller/transaction_controller.dart - FIXED
 
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
-import 'dart:convert';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
-import 'package:sizer/sizer.dart';
 
 class TransactionController extends GetxController {
   // Observable variables
@@ -103,7 +101,6 @@ class TransactionController extends GetxController {
   }
 
   void _resetAndReload() {
-    print("🔄 Resetting and reloading...");
     currentPage.value = 1;
     transactions.clear();
     hasMore.value = true;
@@ -129,7 +126,6 @@ class TransactionController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error loading categories: $e');
       // Fallback categories
       incomeCategories.value = [
         'Sales',
@@ -198,12 +194,6 @@ class TransactionController extends GetxController {
         params['type'] = selectedType.value.toLowerCase();
       }
 
-      print("🔍 ========== LOAD TRANSACTIONS DEBUG ==========");
-      print("📅 SELECTED PERIOD: ${selectedPeriod.value}");
-      print("📅 SELECTED DATE RANGE: ${selectedDateRange.value}");
-      print("📅 SEARCH QUERY: ${searchQuery.value}");
-      print("📅 SELECTED TYPE: ${selectedType.value}");
-      print("==========================================");
 
       if (selectedDateRange.value != null) {
         params['startDate'] = DateFormat(
@@ -255,14 +245,12 @@ class TransactionController extends GetxController {
         params['search'] = searchQuery.value;
       }
 
-      print("📤 FINAL PARAMS SENT TO API: $params");
 
       final response = await _api.get(
         '/api/transactions',
         queryParameters: params,
       );
 
-      print("📡 Response Status Code: ${response.statusCode}");
 
       if (response.success) {
         final data = response.data;
@@ -284,23 +272,15 @@ class TransactionController extends GetxController {
         totalPayable.value = _safeDouble(summary['totalPayable']);
         netCashFlow.value = _safeDouble(summary['netCashFlow']);
 
-        print("✅ Transactions loaded: ${transactions.length} records");
-        print("✅ Total pages: $totalPages");
-        print(
-          "✅ Summary: Income=${totalIncome.value}, Expense=${totalExpense.value}",
-        );
       } else {
         hasError.value = true;
         errorMessage.value = 'Failed to load transactions';
-        print("❌ Failed to load transactions: ${response.statusCode}");
       }
     } catch (e) {
       hasError.value = true;
       errorMessage.value = 'error: $e';
-      print('🔥 Error loading transactions: $e');
     } finally {
       isLoading.value = false;
-      print("🔍 ========== LOAD TRANSACTIONS END ==========\n");
     }
   }
 
@@ -311,7 +291,6 @@ class TransactionController extends GetxController {
       isLoadingMore.value = true;
       currentPage.value++;
 
-      print("🔄 Loading more transactions - Page: ${currentPage.value}");
 
       Map<String, dynamic> params = {
         'page': currentPage.value.toString(),
@@ -385,12 +364,8 @@ class TransactionController extends GetxController {
         );
         totalPages.value = _safeInt(data['pages']);
         hasMore.value = currentPage.value < totalPages.value;
-        print(
-          "✅ Loaded ${dataList.length} more transactions. Total: ${transactions.length}",
-        );
       }
     } catch (e) {
-      print('Error loading more transactions: $e');
     } finally {
       isLoadingMore.value = false;
     }
@@ -473,11 +448,9 @@ class TransactionController extends GetxController {
   }
 
   void changePeriod(String period) {
-    print("🔄 Changing period to: $period");
     selectedPeriod.value = period;
     if (period != 'Custom Range') {
       selectedDateRange.value = null;
-      print("🔄 Date range cleared");
     }
     _resetAndReload();
   }
@@ -605,7 +578,6 @@ class TransactionController extends GetxController {
   }
 
   String getTransactionSubtitle(Map<String, dynamic> transaction) {
-    final source = transaction['source'] ?? '';
     final category = transaction['category'] ?? '';
     final customerName = transaction['customerName'] ?? '';
     final vendorName = transaction['vendorName'] ?? '';
@@ -637,7 +609,5 @@ class TransactionController extends GetxController {
     AppSnackbar.info('Export', 'Exporting transactions to Excel...');
   }
 
-  void _showError(String message) {
-    AppSnackbar.error(kDanger, 'Error', message);
-  }
+ 
 }

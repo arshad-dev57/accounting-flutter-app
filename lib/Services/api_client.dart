@@ -43,10 +43,6 @@ class ApiClient extends GetxService {
     return token.trim().replaceAll('"', '').replaceAll(RegExp(r'\s'), '');
   }
 
-  @override
-  void onInit() {
-    super.onInit();
-  }
 
   Future<void> _loadToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -207,7 +203,7 @@ class ApiClient extends GetxService {
     );
 
     if (response.statusCode == 401 && retryCount == 0) {
-      final message = response.message?.toLowerCase() ?? '';
+      final message = response.message.toLowerCase();
       final isTokenExpired =
           message.contains('expired') ||
           message.contains('invalid token') ||
@@ -314,6 +310,22 @@ class ApiClient extends GetxService {
         uri = uri.replace(queryParameters: stringParams);
       }
 
+      dynamic requestBody = body;
+      if (['POST', 'PUT', 'PATCH'].contains(method.toUpperCase()) &&
+          shouldAttachLocationId(endpoint) &&
+          requestBody is Map) {
+        final map = Map<String, dynamic>.from(requestBody);
+        if (!map.containsKey('locationId') ||
+            map['locationId'] == null ||
+            map['locationId'].toString().isEmpty) {
+          final locId = currentLocationId();
+          if (locId != null && locId.isNotEmpty) {
+            map['locationId'] = locId;
+            requestBody = map;
+          }
+        }
+      }
+
       http.Response response;
       switch (method.toUpperCase()) {
         case 'GET':
@@ -323,21 +335,21 @@ class ApiClient extends GetxService {
           response = await http.post(
             uri,
             headers: headers,
-            body: body != null ? json.encode(body) : null,
+            body: requestBody != null ? json.encode(requestBody) : null,
           );
           break;
         case 'PUT':
           response = await http.put(
             uri,
             headers: headers,
-            body: body != null ? json.encode(body) : null,
+            body: requestBody != null ? json.encode(requestBody) : null,
           );
           break;
         case 'PATCH':
           response = await http.patch(
             uri,
             headers: headers,
-            body: body != null ? json.encode(body) : null,
+            body: requestBody != null ? json.encode(requestBody) : null,
           );
           break;
         case 'DELETE':

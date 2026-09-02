@@ -165,7 +165,7 @@ class GoodsReceivingController extends GetxController {
       } else {
         Get.snackbar(
           'Error',
-          response.message ?? 'Failed to load goods receivings',
+          response.message,
         );
       }
     } catch (e) {
@@ -340,7 +340,7 @@ class GoodsReceivingController extends GetxController {
   void selectOrderForReceiving(PurchaseOrderForReceiving order) {
     selectedOrder.value = order;
     orderSearchResults.clear();
-    orderSearchController.text = order.orderNumber ?? '';
+    orderSearchController.text = order.orderNumber;
 
     // Create line drafts from order items
     lineDrafts.value = order.remainingItems.map((item) {
@@ -482,7 +482,7 @@ class GoodsReceivingController extends GetxController {
 
       Get.snackbar(
         'Error',
-        response.message ?? 'Failed to create goods receiving',
+        response.message,
       );
       return false;
     } catch (e) {
@@ -522,7 +522,7 @@ class GoodsReceivingController extends GetxController {
 
       Get.snackbar(
         'Error',
-        response.message ?? 'Failed to confirm goods receiving',
+        response.message,
       );
       return false;
     } catch (e) {
@@ -550,7 +550,7 @@ class GoodsReceivingController extends GetxController {
 
       Get.snackbar(
         'Error',
-        response.message ?? 'Failed to delete goods receiving',
+        response.message,
       );
       return false;
     } catch (e) {

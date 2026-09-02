@@ -209,7 +209,6 @@ class AuthController extends GetxController {
     try {
       await _fiscalYearController.fetchFiscalYears();
       if (_fiscalYearController.fiscalYears.isNotEmpty) {
-        print('✅ Fiscal year already created during registration');
         return;
       }
 
@@ -227,10 +226,8 @@ class AuthController extends GetxController {
       );
 
       if (success) {
-        print('✅ Initial fiscal year created successfully');
       }
     } catch (e) {
-      print('❌ Failed to create initial fiscal year: $e');
     }
   }
 
@@ -279,7 +276,6 @@ class AuthController extends GetxController {
   }
 
   Future<bool> register() async {
-    print("🚀 Register function started at step: ${currentStep.value}");
 
     if (currentStep.value == 0) {
       if (firstNameController.text.trim().isEmpty) {
@@ -360,15 +356,7 @@ class AuthController extends GetxController {
 
       try {
         // ─── BUILD BUSINESS DETAILS ──────────────────────────────
-        final businessDetails = {
-          'logo': logoController.text.trim(),
-          'fiscalYear': selectedFiscalYear.value,
-          'taxRegistrationNumber': taxRegistrationController.text.trim(),
-          'signature': signatureController.text.trim(),
-          'industry': industryController.text.trim(),
-          'businessType': selectedBusinessType.value,
-        };
-
+      
         // ─── API REQUEST ──────────────────────────────────────────
         final dates = _calculateFiscalYearDates(selectedFiscalYear.value);
         final currentYear = DateTime.now().year;
@@ -417,7 +405,6 @@ class AuthController extends GetxController {
         final data = response.data;
 
         if (response.success) {
-          print("✅ Registration successful");
 
           await _saveAuthData(
             data['token']?.toString() ?? '',
@@ -463,7 +450,6 @@ class AuthController extends GetxController {
           return false;
         }
       } catch (e) {
-        print('❌ Registration error: $e');
         AppSnackbar.error(kDanger, 'Error', 'error. Please try again.');
         return false;
       } finally {
@@ -519,7 +505,6 @@ class AuthController extends GetxController {
         return false;
       }
     } catch (e) {
-      print('Login error: $e');
       AppSnackbar.error(kDanger, 'Error', 'error. Please try again.');
       return false;
     } finally {
@@ -662,7 +647,6 @@ class AuthController extends GetxController {
         await _clearAuthData();
       }
     } catch (e) {
-      print('Get user error: $e');
     }
   }
 

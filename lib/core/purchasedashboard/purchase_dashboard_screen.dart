@@ -424,7 +424,7 @@ class _PurchaseDashboardBody extends GetView<PurchaseController> {
           border: Border.all(color: _kHeroBorder),
           boxShadow: [
             BoxShadow(
-              color: kPrimary.withOpacity(0.10),
+              color: kPrimary.withValues(alpha: 0.10),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -1041,7 +1041,7 @@ class _PurchaseDashboardBody extends GetView<PurchaseController> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [color.withOpacity(0.15), color.withOpacity(0.0)],
+            colors: [color.withValues(alpha: 0.15), color.withValues(alpha: 0.0)],
           ),
         ),
       );

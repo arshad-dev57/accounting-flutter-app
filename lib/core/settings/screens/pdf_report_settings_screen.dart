@@ -72,7 +72,7 @@ class _Header extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.1),
+                  color: kPrimary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Iconify(Mdi.arrow_left, color: kPrimary, size: 22),
@@ -141,7 +141,7 @@ class _SaveBar extends StatelessWidget {
         border: Border(top: BorderSide(color: kBorder)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, -4),
           ),
@@ -345,7 +345,7 @@ class _SectionCard extends StatelessWidget {
           border: Border.all(color: kBorder),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -359,7 +359,7 @@ class _SectionCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.1),
+                    color: kPrimary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Iconify(icon, size: 18, color: kPrimary),
@@ -420,9 +420,9 @@ class _BrandingCard extends StatelessWidget {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: kSuccess.withOpacity(0.08),
+                      color: kSuccess.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: kSuccess.withOpacity(0.25)),
+                      border: Border.all(color: kSuccess.withValues(alpha: 0.25)),
                     ),
                     child: Row(
                       children: [
@@ -558,7 +558,7 @@ class _MediaBox extends StatelessWidget {
                           child: Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.55),
+                              color: Colors.black.withValues(alpha: 0.55),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -622,9 +622,9 @@ class _MediaBox extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: kPrimary.withOpacity(0.08),
+          color: kPrimary.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: kPrimary.withOpacity(0.2)),
+          border: Border.all(color: kPrimary.withValues(alpha: 0.2)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -788,7 +788,7 @@ class _DisplayTogglesCard extends StatelessWidget {
             ),
             Switch.adaptive(
               value: value.value,
-              activeColor: kPrimary,
+              activeThumbColor: kPrimary,
               onChanged: (v) => value.value = v,
             ),
           ],
@@ -831,7 +831,7 @@ class _AccentCard extends StatelessWidget {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: color.withOpacity(0.35),
+                      color: color.withValues(alpha: 0.35),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),
@@ -879,7 +879,7 @@ class _PreviewCard extends StatelessWidget {
                 padding: EdgeInsets.all(layout == 'minimal' ? 8 : 12),
                 decoration: BoxDecoration(
                   color: layout == 'modern'
-                      ? accent.withOpacity(0.08)
+                      ? accent.withValues(alpha: 0.08)
                       : Colors.white,
                   border: layout == 'classic'
                       ? Border(bottom: BorderSide(color: accent, width: 2.5))
@@ -992,7 +992,7 @@ class _PreviewCard extends StatelessWidget {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: accent.withOpacity(0.12),
+                    color: accent.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(Icons.business, color: accent, size: 22),
@@ -1067,14 +1067,14 @@ class _PreviewCard extends StatelessWidget {
       return Image.network(
         path,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) =>
+        errorBuilder: (context, error, stackTrace) =>
             Icon(Icons.broken_image_outlined, color: kSubText, size: 18),
       );
     }
     return Image.file(
       File(path),
       fit: BoxFit.contain,
-      errorBuilder: (_, __, ___) =>
+      errorBuilder: (context, error, stackTrace) =>
           Icon(Icons.broken_image_outlined, color: kSubText, size: 18),
     );
   }

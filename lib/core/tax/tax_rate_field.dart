@@ -58,7 +58,7 @@ class TaxRateField extends StatelessWidget {
 
       final dropdown = DropdownButtonFormField<String>(
         key: ValueKey('tax-rate-${rates.length}-$currentValue'),
-        value: items.any((i) => i.value == currentValue) ? currentValue : '0',
+        initialValue: items.any((i) => i.value == currentValue) ? currentValue : '0',
         isExpanded: true,
         decoration: _dec(dense ? 'Tax' : label),
         items: items,
@@ -136,7 +136,7 @@ class TaxCodeField extends StatelessWidget {
       final labels = <String>['N/A', ...c.rates.map(c.rateLabel)];
       if (value.isNotEmpty && !labels.contains(value)) labels.add(value);
       return DropdownButtonFormField<String>(
-        value: labels.contains(value) ? value : 'N/A',
+        initialValue: labels.contains(value) ? value : 'N/A',
         isExpanded: true,
         decoration: const InputDecoration(labelText: 'Tax Code', border: OutlineInputBorder()),
         items: labels.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),

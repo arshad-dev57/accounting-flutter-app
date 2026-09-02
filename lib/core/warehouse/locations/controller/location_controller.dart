@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const String kSelectedLocationStorageKey = 'selected_location_id';
 const String kCachedLocationsStorageKey = 'cached_locations';
+const String kAllLocationsId = 'all';
 
 class LocationController extends GetxController {
   var locations = <WarehouseLocation>[].obs;
@@ -200,6 +201,12 @@ class LocationController extends GetxController {
         prefs.getString(kSelectedLocationStorageKey) ?? storedSelectedId.value;
     WarehouseLocation? chosen;
 
+    if (storedId == kAllLocationsId) {
+      selectedLocation.value = null;
+      storedSelectedId.value = kAllLocationsId;
+      return;
+    }
+
     if (storedId != null && storedId.isNotEmpty) {
       chosen = list.firstWhereOrNull((l) => l.id == storedId);
     }
@@ -370,10 +377,21 @@ class LocationController extends GetxController {
   }
 
   Future<void> selectLocation(WarehouseLocation? location) async {
-    if (selectedLocation.value?.id == location?.id) return;
+    if (selectedLocation.value?.id == location?.id &&
+        !isAllLocationsSelected) return;
     selectedLocation.value = location;
     await _persistSelectedId(location?.id);
   }
+
+  Future<void> selectAllLocations() async {
+    if (isAllLocationsSelected) return;
+    selectedLocation.value = null;
+    await _persistSelectedId(kAllLocationsId);
+  }
+
+  bool get isAllLocationsSelected =>
+      storedSelectedId.value == kAllLocationsId ||
+      selectedLocationId == kAllLocationsId;
 
   String? get selectedLocationId {
     final live = selectedLocation.value?.id;

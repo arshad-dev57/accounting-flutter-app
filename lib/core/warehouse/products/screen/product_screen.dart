@@ -13,7 +13,6 @@ import 'package:BisonsTechs_app/core/warehousesettings/warehouse_settings_screen
 import 'package:country_picker_pro/country_picker_pro.dart';
 import 'package:currency_picker/currency_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
@@ -198,7 +197,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(9),
                     ),
                     child: const Icon(
@@ -226,7 +225,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                             '${controller.totalProducts.value} items in inventory',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -264,13 +263,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(9),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 17,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -286,7 +285,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
+                      color: Colors.black.withValues(alpha: 0.06),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -372,12 +371,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? Colors.white
-                                : Colors.white.withOpacity(0.18),
+                                : Colors.white.withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color: isSelected
                                   ? Colors.white
-                                  : Colors.white.withOpacity(0.4),
+                                  : Colors.white.withValues(alpha: 0.4),
                             ),
                           ),
                           child: Text(
@@ -417,7 +416,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -448,7 +447,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(size > 50 ? 14 : 12),
       ),
       clipBehavior: Clip.antiAlias,
@@ -457,7 +456,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
           : Image.network(
               url,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Icon(Icons.inventory_2, color: color, size: size * 0.5),
+              errorBuilder: (context, error, stackTrace) => Icon(Icons.inventory_2, color: color, size: size * 0.5),
             ),
     );
   }
@@ -527,7 +526,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                         vertical: 2,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: kPrimary.withOpacity(0.08),
+                                        color: kPrimary.withValues(alpha: 0.08),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
@@ -562,7 +561,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
                             itemCount: _productImages(product).length,
-                            separatorBuilder: (_, __) => const SizedBox(width: 8),
+                            separatorBuilder: (context, index) => const SizedBox(width: 8),
                             itemBuilder: (_, i) {
                               final url = _productImages(product)[i];
                               return ClipRRect(
@@ -572,7 +571,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                   width: 88,
                                   height: 88,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Container(
+                                  errorBuilder: (context, error, stackTrace) => Container(
                                     width: 88,
                                     height: 88,
                                     color: Colors.grey.shade200,
@@ -614,7 +613,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
                       const SizedBox(height: 16),
                       _detailRow(
                         'Brand',
@@ -756,9 +755,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.06),
+          color: color.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.15)),
+          border: Border.all(color: color.withValues(alpha: 0.15)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -805,7 +804,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: badgeColor.withOpacity(0.1),
+                      color: badgeColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -1228,17 +1227,17 @@ class _AddProductPageState extends State<_AddProductPage> {
     String? suffix,
   }) => InputDecoration(
     hintText: hint,
-    hintStyle: TextStyle(color: kSubText.withOpacity(0.5), fontSize: 13),
+    hintStyle: TextStyle(color: kSubText.withValues(alpha: 0.5), fontSize: 13),
     prefixText: prefix,
     prefixIcon: icon != null ? Icon(icon, size: 16, color: kSubText) : null,
     suffixText: suffix,
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: BorderSide(color: Colors.grey.withOpacity(0.3)),
+      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: BorderSide(color: Colors.grey.withOpacity(0.3)),
+      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
@@ -1306,7 +1305,7 @@ class _AddProductPageState extends State<_AddProductPage> {
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: kPrimary.withOpacity(0.1),
+            color: kPrimary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(6),
           ),
           child: Icon(icon, size: 14, color: kPrimary),
@@ -1352,7 +1351,7 @@ class _AddProductPageState extends State<_AddProductPage> {
           decoration: BoxDecoration(
             color: enabled ? kCardBg : kBgLight,
             border: Border.all(
-              color: errorText != null ? kDanger : Colors.grey.withOpacity(0.3),
+              color: errorText != null ? kDanger : Colors.grey.withValues(alpha: 0.3),
             ),
             borderRadius: BorderRadius.circular(8),
           ),
@@ -1362,7 +1361,7 @@ class _AddProductPageState extends State<_AddProductPage> {
               hint: Text(
                 hint,
                 style: TextStyle(
-                  color: kSubText.withOpacity(0.5),
+                  color: kSubText.withValues(alpha: 0.5),
                   fontSize: 13,
                 ),
               ),
@@ -1444,9 +1443,9 @@ class _AddProductPageState extends State<_AddProductPage> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: kPrimary.withOpacity(0.1),
+                color: kPrimary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: kPrimary.withOpacity(0.35)),
+                border: Border.all(color: kPrimary.withValues(alpha: 0.35)),
               ),
               child: Icon(Icons.add, size: 18, color: kPrimary),
             ),
@@ -1547,7 +1546,7 @@ class _AddProductPageState extends State<_AddProductPage> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
           color: kCardBg,
-          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -1556,7 +1555,7 @@ class _AddProductPageState extends State<_AddProductPage> {
               Text(flagEmoji, style: const TextStyle(fontSize: 20)),
               const SizedBox(width: 10),
             ] else ...[
-              Icon(Icons.attach_money, color: kSubText.withOpacity(0.5), size: 20),
+              Icon(Icons.attach_money, color: kSubText.withValues(alpha: 0.5), size: 20),
               const SizedBox(width: 10),
             ],
             Expanded(
@@ -1578,7 +1577,7 @@ class _AddProductPageState extends State<_AddProductPage> {
                             _currencyName,
                             style: TextStyle(
                               fontSize: 11,
-                              color: kSubText.withOpacity(0.8),
+                              color: kSubText.withValues(alpha: 0.8),
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -1588,13 +1587,13 @@ class _AddProductPageState extends State<_AddProductPage> {
                       'Select currency',
                       style: TextStyle(
                         fontSize: 13,
-                        color: kSubText.withOpacity(0.5),
+                        color: kSubText.withValues(alpha: 0.5),
                       ),
                     ),
             ),
             Icon(
               Icons.keyboard_arrow_down,
-              color: kSubText.withOpacity(0.5),
+              color: kSubText.withValues(alpha: 0.5),
               size: 20,
             ),
           ],
@@ -1631,12 +1630,12 @@ class _AddProductPageState extends State<_AddProductPage> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
           color: kCardBg,
-          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           children: [
-            Icon(Icons.public, color: kSubText.withOpacity(0.5), size: 18),
+            Icon(Icons.public, color: kSubText.withValues(alpha: 0.5), size: 18),
             const SizedBox(width: 10),
             if (hasSelection && _countryFlagEmoji.isNotEmpty) ...[
               Text(_countryFlagEmoji, style: const TextStyle(fontSize: 18)),
@@ -1649,7 +1648,7 @@ class _AddProductPageState extends State<_AddProductPage> {
                   fontSize: 13,
                   color: hasSelection
                       ? Colors.black
-                      : kSubText.withOpacity(0.5),
+                      : kSubText.withValues(alpha: 0.5),
                   fontWeight:
                       hasSelection ? FontWeight.w600 : FontWeight.w400,
                 ),
@@ -1658,7 +1657,7 @@ class _AddProductPageState extends State<_AddProductPage> {
             ),
             Icon(
               Icons.keyboard_arrow_down,
-              color: kSubText.withOpacity(0.5),
+              color: kSubText.withValues(alpha: 0.5),
               size: 20,
             ),
           ],
@@ -1678,7 +1677,7 @@ class _AddProductPageState extends State<_AddProductPage> {
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: kCardBg,
-        border: Border.all(color: Colors.grey.withOpacity(0.3)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(8),
       ),
       child: DropdownButtonHideUnderline(
@@ -1686,7 +1685,7 @@ class _AddProductPageState extends State<_AddProductPage> {
           value: valid,
           hint: Text(
             hint,
-            style: TextStyle(color: kSubText.withOpacity(0.5), fontSize: 13),
+            style: TextStyle(color: kSubText.withValues(alpha: 0.5), fontSize: 13),
           ),
           isExpanded: true,
           dropdownColor: kCardBg,
@@ -1719,12 +1718,12 @@ class _AddProductPageState extends State<_AddProductPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: value ? kPrimary.withOpacity(0.1) : kCardBg,
+          color: value ? kPrimary.withValues(alpha: 0.1) : kCardBg,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: value
-                ? kPrimary.withOpacity(0.4)
-                : Colors.grey.withOpacity(0.3),
+                ? kPrimary.withValues(alpha: 0.4)
+                : Colors.grey.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
@@ -1744,7 +1743,7 @@ class _AddProductPageState extends State<_AddProductPage> {
             Switch(
               value: value,
               onChanged: (v) => setState(() => onChanged(v)),
-              activeColor: kPrimary,
+              activeThumbColor: kPrimary,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           ],
@@ -1902,20 +1901,19 @@ class _AddProductPageState extends State<_AddProductPage> {
   }
 
   Widget _barcodeFormatOption(String format, String description) {
-    return ListTile(
-      title: Text(format),
-      subtitle: Text(description),
-      trailing: Radio<String>(
-        value: format,
-        groupValue: _selectedBarcodeFormat,
-        onChanged: (value) {
-          setState(() => _selectedBarcodeFormat = value);
-          Navigator.pop(context);
-          _generateBarcode();
-        },
-      ),
-    );
-  }
+  return ListTile(
+    title: Text(format),
+    subtitle: Text(description),
+    trailing: Radio<String>(
+      value: format,
+    ),
+    onTap: () {
+      setState(() => _selectedBarcodeFormat = format);
+      Navigator.pop(context);
+      _generateBarcode();
+    },
+  );
+}
 
   void _generateBarcode() {
     // Validate required fields
@@ -2021,24 +2019,6 @@ class _AddProductPageState extends State<_AddProductPage> {
     return data + _eanChecksum(data);
   }
 
-  bool _validateBarcodeData(String data, String format) {
-    switch (format) {
-      case 'EAN-13':
-        return data.length == 13 && RegExp(r'^[0-9]+$').hasMatch(data);
-      case 'EAN-8':
-        return data.length == 8 && RegExp(r'^[0-9]+$').hasMatch(data);
-      case 'UPC-A':
-        return data.length == 12 && RegExp(r'^[0-9]+$').hasMatch(data);
-      case 'Code-39':
-        return RegExp(
-          r'^[A-Z0-9\-\.\ \$\/\+\%]+$',
-        ).hasMatch(data.toUpperCase());
-      case 'Code-128':
-      default:
-        return data.isNotEmpty;
-    }
-  }
-
   Widget _buildBarcodeWidget() {
     final data = _generatedBarcodeData ?? '';
     if (data.isEmpty) return const SizedBox.shrink();
@@ -2115,7 +2095,7 @@ class _AddProductPageState extends State<_AddProductPage> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
         decoration: BoxDecoration(
           color: kCardBg,
-          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -2127,7 +2107,7 @@ class _AddProductPageState extends State<_AddProductPage> {
                   : label,
               style: TextStyle(
                 fontSize: 13,
-                color: value != null ? kText : kSubText.withOpacity(0.5),
+                color: value != null ? kText : kSubText.withValues(alpha: 0.5),
               ),
             ),
             Row(
@@ -2210,9 +2190,9 @@ class _AddProductPageState extends State<_AddProductPage> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.1),
+                  color: kPrimary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: kPrimary.withOpacity(0.35)),
+                  border: Border.all(color: kPrimary.withValues(alpha: 0.35)),
                 ),
                 child: Icon(Icons.refresh_rounded, size: 18, color: kPrimary),
               ),
@@ -2229,7 +2209,7 @@ class _AddProductPageState extends State<_AddProductPage> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
             decoration: BoxDecoration(
               color: kCardBg,
-              border: Border.all(color: Colors.grey.withOpacity(0.3)),
+              border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -2247,7 +2227,7 @@ class _AddProductPageState extends State<_AddProductPage> {
                         fontSize: 13,
                         color: _generatedBarcodeData != null
                             ? kPrimary
-                            : kSubText.withOpacity(0.6),
+                            : kSubText.withValues(alpha: 0.6),
                         fontWeight: _generatedBarcodeData != null
                             ? FontWeight.w600
                             : FontWeight.normal,
@@ -2268,9 +2248,9 @@ class _AddProductPageState extends State<_AddProductPage> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: kPrimary.withOpacity(0.05),
+              color: kPrimary.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: kPrimary.withOpacity(0.2)),
+              border: Border.all(color: kPrimary.withValues(alpha: 0.2)),
             ),
             child: Column(
               children: [
@@ -3063,7 +3043,7 @@ class _AddProductPageState extends State<_AddProductPage> {
         const SizedBox(height: 4),
         Text(
           'Select multiple images. First image is main. You can add more in batches.',
-          style: TextStyle(fontSize: 11, color: kSubText.withOpacity(0.7)),
+          style: TextStyle(fontSize: 11, color: kSubText.withValues(alpha: 0.7)),
         ),
         const SizedBox(height: 12),
         Wrap(
@@ -3076,7 +3056,7 @@ class _AddProductPageState extends State<_AddProductPage> {
                 child: Image.network(
                   e.value,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
+                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),
                 ),
                 isMain: isMain,
                 onRemove: () => setState(() => _existingImages.remove(e.value)),
@@ -3101,17 +3081,17 @@ class _AddProductPageState extends State<_AddProductPage> {
                     color: kCardBg,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Colors.grey.withOpacity(0.4),
+                      color: Colors.grey.withValues(alpha: 0.4),
                       style: BorderStyle.solid,
                     ),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.add_photo_alternate_outlined, color: kSubText.withOpacity(0.75), size: 26),
+                      Icon(Icons.add_photo_alternate_outlined, color: kSubText.withValues(alpha: 0.75), size: 26),
                       const SizedBox(height: 4),
                       Text('Add images', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: kSubText)),
-                      Text('$remaining left', style: TextStyle(fontSize: 9, color: kSubText.withOpacity(0.7))),
+                      Text('$remaining left', style: TextStyle(fontSize: 9, color: kSubText.withValues(alpha: 0.7))),
                     ],
                   ),
                 ),
@@ -3128,7 +3108,7 @@ class _AddProductPageState extends State<_AddProductPage> {
               label: const Text('Choose multiple images'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: kPrimary,
-                side: BorderSide(color: kPrimary.withOpacity(0.5)),
+                side: BorderSide(color: kPrimary.withValues(alpha: 0.5)),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
@@ -3152,7 +3132,7 @@ class _AddProductPageState extends State<_AddProductPage> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isMain ? kPrimary.withOpacity(0.55) : Colors.grey.withOpacity(0.3),
+              color: isMain ? kPrimary.withValues(alpha: 0.55) : Colors.grey.withValues(alpha: 0.3),
               width: isMain ? 2 : 1,
             ),
           ),
@@ -3459,7 +3439,7 @@ class _AddProductPageState extends State<_AddProductPage> {
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -3526,7 +3506,7 @@ class _AddProductPageState extends State<_AddProductPage> {
                           vertical: 7,
                         ),
                         decoration: BoxDecoration(
-                          color: active ? kPrimary : kPrimary.withOpacity(0.07),
+                          color: active ? kPrimary : kPrimary.withValues(alpha: 0.07),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -3556,7 +3536,7 @@ class _AddProductPageState extends State<_AddProductPage> {
               ),
             ),
           ),
-          Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
+          Divider(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
@@ -3569,7 +3549,7 @@ class _AddProductPageState extends State<_AddProductPage> {
               color: kCardBg,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
+                  color: Colors.black.withValues(alpha: 0.06),
                   blurRadius: 10,
                   offset: const Offset(0, -2),
                 ),
@@ -3594,7 +3574,7 @@ class _AddProductPageState extends State<_AddProductPage> {
                       ),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                        side: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -3731,13 +3711,13 @@ class _MobileProductsListState extends State<_MobileProductsList> {
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.08),
+                  color: kPrimary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Icon(
                   Icons.inventory_2_outlined,
                   size: 36,
-                  color: kPrimary.withOpacity(0.5),
+                  color: kPrimary.withValues(alpha: 0.5),
                 ),
               ),
               const SizedBox(height: 16),
@@ -3808,10 +3788,10 @@ class _MobileProductsListState extends State<_MobileProductsList> {
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
+                        color: Colors.black.withValues(alpha: 0.03),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -3879,7 +3859,7 @@ class _MobileProductsListState extends State<_MobileProductsList> {
                               children: [
                                 _badge(
                                   widget.controller.getStockStatus(stock),
-                                  stockColor.withOpacity(0.12),
+                                  stockColor.withValues(alpha: 0.12),
                                   stockColor,
                                 ),
                                 const SizedBox(width: 6),
@@ -3960,7 +3940,7 @@ class _MobileProductsListState extends State<_MobileProductsList> {
         child: Center(
           child: Text(
             'All products loaded',
-            style: TextStyle(fontSize: 12, color: kSubText.withOpacity(0.7)),
+            style: TextStyle(fontSize: 12, color: kSubText.withValues(alpha: 0.7)),
           ),
         ),
       );
@@ -3992,7 +3972,7 @@ class _ProductThumb extends StatelessWidget {
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: stockColor.withOpacity(0.1),
+        color: stockColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       clipBehavior: Clip.antiAlias,
@@ -4001,7 +3981,7 @@ class _ProductThumb extends StatelessWidget {
           : Image.network(
               url,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) =>
+              errorBuilder: (context, error, stackTrace) =>
                   Icon(Icons.inventory_2_rounded, color: stockColor, size: 22),
             ),
     );

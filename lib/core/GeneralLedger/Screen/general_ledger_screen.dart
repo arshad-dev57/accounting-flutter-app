@@ -249,7 +249,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.08),
+                  color: kPrimary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -369,7 +369,7 @@ class GeneralLedgerScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: kCardBg,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: kBorder.withOpacity(0.7)),
+          border: Border.all(color: kBorder.withValues(alpha: 0.7)),
         ),
         child: Row(
           children: [
@@ -377,7 +377,7 @@ class GeneralLedgerScreen extends StatelessWidget {
               width: 28,
               height: 28,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
+                color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, size: 14, color: color),
@@ -445,7 +445,7 @@ class GeneralLedgerScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: kCardBg,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: kBorder.withOpacity(0.7)),
+          border: Border.all(color: kBorder.withValues(alpha: 0.7)),
         ),
         child: Row(
           children: [
@@ -453,7 +453,7 @@ class GeneralLedgerScreen extends StatelessWidget {
               width: 28,
               height: 28,
               decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.12),
+                color: statusColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(statusIcon, size: 14, color: statusColor),
@@ -513,7 +513,7 @@ class GeneralLedgerScreen extends StatelessWidget {
               Icon(
                 Icons.account_balance,
                 size: 64,
-                color: kSubText.withOpacity(0.5),
+                color: kSubText.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               Text(
@@ -564,7 +564,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: _getAccountTypeColor(
                       _getAccountType(entry.accountName),
-                    ).withOpacity(0.1),
+                    ).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -610,7 +610,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: kPrimary.withOpacity(0.1),
+                        color: kPrimary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -642,7 +642,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: kSuccess.withOpacity(0.1),
+                          color: kSuccess.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Column(
@@ -672,7 +672,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: kDanger.withOpacity(0.1),
+                          color: kDanger.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Column(
@@ -703,7 +703,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.1),
+                    color: kPrimary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -769,7 +769,7 @@ class GeneralLedgerScreen extends StatelessWidget {
             width: 240,
             height: 34,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(6),
             ),
             child: DropdownButtonHideUnderline(
@@ -825,10 +825,10 @@ class GeneralLedgerScreen extends StatelessWidget {
                 prefixIcon: Icon(
                   Icons.search,
                   size: 16,
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                 ),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.15),
+                fillColor: Colors.white.withValues(alpha: 0.15),
                 contentPadding: const EdgeInsets.symmetric(
                   vertical: 0,
                   horizontal: 12,
@@ -859,9 +859,9 @@ class GeneralLedgerScreen extends StatelessWidget {
         height: 34,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: Colors.white.withOpacity(0.4)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
         ),
         child: Row(
           children: [
@@ -1000,7 +1000,7 @@ class GeneralLedgerScreen extends StatelessWidget {
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, size: 14, color: color),
@@ -1062,7 +1062,7 @@ class GeneralLedgerScreen extends StatelessWidget {
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.1),
+                color: statusColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(statusIcon, size: 16, color: statusColor),
@@ -1095,7 +1095,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                     subtitle,
                     style: TextStyle(
                       fontSize: 10,
-                      color: statusColor.withOpacity(0.7),
+                      color: statusColor.withValues(alpha: 0.7),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -1109,7 +1109,7 @@ class GeneralLedgerScreen extends StatelessWidget {
   }
 
   Widget _buildWebKpiDivider() =>
-      Container(width: 1, height: 36, color: Colors.grey.withOpacity(0.15));
+      Container(width: 1, height: 36, color: Colors.grey.withValues(alpha: 0.15));
 
   Widget _buildWebToolbar(
     GeneralLedgerController controller,
@@ -1130,8 +1130,8 @@ class GeneralLedgerScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kBg,
         border: Border(
-          bottom: BorderSide(color: Colors.grey.withOpacity(0.15)),
-          top: BorderSide(color: Colors.grey.withOpacity(0.1)),
+          bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.15)),
+          top: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
         ),
       ),
       child: LayoutBuilder(
@@ -1218,10 +1218,10 @@ class GeneralLedgerScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? kPrimary.withOpacity(0.1) : Colors.transparent,
+          color: isSelected ? kPrimary.withValues(alpha: 0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
           border: isSelected
-              ? Border.all(color: kPrimary.withOpacity(0.3))
+              ? Border.all(color: kPrimary.withValues(alpha: 0.3))
               : null,
         ),
         child: Text(
@@ -1242,7 +1242,7 @@ class GeneralLedgerScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kBg,
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: Colors.grey.withOpacity(0.3)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -1254,7 +1254,7 @@ class GeneralLedgerScreen extends StatelessWidget {
               onTap: () => controller.toggleDebitFilter(),
             ),
           ),
-          Container(width: 1, height: 20, color: Colors.grey.withOpacity(0.3)),
+          Container(width: 1, height: 20, color: Colors.grey.withValues(alpha: 0.3)),
           Obx(
             () => _toggleButton(
               label: 'Credit',
@@ -1280,7 +1280,7 @@ class GeneralLedgerScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: isActive ? color.withOpacity(0.1) : Colors.transparent,
+          color: isActive ? color.withValues(alpha: 0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
         ),
         child: Text(
@@ -1306,7 +1306,7 @@ class GeneralLedgerScreen extends StatelessWidget {
         height: 30,
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
           borderRadius: BorderRadius.circular(4),
         ),
         child: Row(
@@ -1332,7 +1332,7 @@ class GeneralLedgerScreen extends StatelessWidget {
         height: 30,
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
           borderRadius: BorderRadius.circular(4),
         ),
         child: Row(
@@ -1362,7 +1362,7 @@ class GeneralLedgerScreen extends StatelessWidget {
               Icon(
                 Icons.account_balance,
                 size: 48,
-                color: kSubText.withOpacity(0.4),
+                color: kSubText.withValues(alpha: 0.4),
               ),
               const SizedBox(height: 12),
               Text(
@@ -1402,7 +1402,7 @@ class GeneralLedgerScreen extends StatelessWidget {
               ],
             ),
           ),
-          Container(height: 1, color: Colors.grey.withOpacity(0.15)),
+          Container(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
           Expanded(
             child: NotificationListener<ScrollNotification>(
               onNotification: (scrollInfo) {
@@ -1420,7 +1420,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                 itemCount: entries.length +
                     (controller.isLoadingMore.value ? 1 : 0),
                 separatorBuilder: (_, __) =>
-                    Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
+                    Divider(height: 1, color: Colors.grey.withValues(alpha: 0.1)),
                 itemBuilder: (context, index) {
                   if (index >= entries.length) {
                     return Padding(
@@ -1467,7 +1467,7 @@ class GeneralLedgerScreen extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        hoverColor: kPrimary.withOpacity(0.03),
+        hoverColor: kPrimary.withValues(alpha: 0.03),
         child: Container(
           height: 52,
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -1488,7 +1488,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.08),
+                    color: kPrimary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -1509,7 +1509,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                       width: 26,
                       height: 26,
                       decoration: BoxDecoration(
-                        color: accountColor.withOpacity(0.1),
+                        color: accountColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Icon(accountIcon, size: 14, color: accountColor),
@@ -1592,8 +1592,8 @@ class GeneralLedgerScreen extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: balancePositive
-                        ? kSuccess.withOpacity(0.08)
-                        : kDanger.withOpacity(0.08),
+                        ? kSuccess.withValues(alpha: 0.08)
+                        : kDanger.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -1625,7 +1625,7 @@ class GeneralLedgerScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 24),
         decoration: BoxDecoration(
           color: kCardBg,
-          border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.15))),
+          border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.15))),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1656,7 +1656,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                         border: Border.all(
                           color: controller.hasPrevPage.value
                               ? kPrimary
-                              : Colors.grey.withOpacity(0.3),
+                              : Colors.grey.withValues(alpha: 0.3),
                         ),
                         borderRadius: BorderRadius.circular(6),
                       ),
@@ -1691,7 +1691,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.1),
+                    color: kPrimary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -1722,7 +1722,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                         border: Border.all(
                           color: controller.hasNextPage.value
                               ? kPrimary
-                              : Colors.grey.withOpacity(0.3),
+                              : Colors.grey.withValues(alpha: 0.3),
                         ),
                         borderRadius: BorderRadius.circular(6),
                       ),
@@ -1852,7 +1852,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                         padding: EdgeInsets.symmetric(
                           vertical: isWeb ? 10 : 12,
                         ),
-                        side: BorderSide(color: Colors.grey.withOpacity(0.4)),
+                        side: BorderSide(color: Colors.grey.withValues(alpha: 0.4)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(6),
                         ),
@@ -2020,7 +2020,7 @@ class GeneralLedgerScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
@@ -2044,7 +2044,7 @@ class GeneralLedgerScreen extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               subtitle,
-              style: TextStyle(fontSize: 11, color: color.withOpacity(0.7)),
+              style: TextStyle(fontSize: 11, color: color.withValues(alpha: 0.7)),
             ),
           ],
         ),

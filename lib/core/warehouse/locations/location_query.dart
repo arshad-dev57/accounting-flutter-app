@@ -1,4 +1,5 @@
-import 'package:BisonsTechs_app/core/warehouse/locations/controller/location_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/controller/location_controller.dart'
+    show LocationController, kAllLocationsId;
 import 'package:get/get.dart';
 
 LocationController? ensureLocationController() {
@@ -12,40 +13,79 @@ String? currentLocationId() {
   try {
     if (!Get.isRegistered<LocationController>()) return null;
     final id = Get.find<LocationController>().selectedLocationId;
-    if (id == null || id.isEmpty || id == 'all') return null;
+    if (id == null || id.isEmpty || id == kAllLocationsId) return null;
     return id;
   } catch (_) {
     return null;
   }
 }
 
+bool isAllLocationsSelected() {
+  try {
+    if (!Get.isRegistered<LocationController>()) return false;
+    return Get.find<LocationController>().isAllLocationsSelected;
+  } catch (_) {
+    return false;
+  }
+}
+
+/// API paths that accept locationId (mirrors web + fiscal-year whitelist).
+const List<String> kLocationQueryPaths = [
+  '/api/warehouse',
+  '/api/sales',
+  '/api/sales-invoices',
+  '/api/purchase',
+  '/api/purchases',
+  '/api/pos',
+  '/api/goods',
+  '/api/accounting',
+  '/api/dashboard',
+  '/api/expenses',
+  '/api/income',
+  '/api/journal-entries',
+  '/api/balance-sheet',
+  '/api/reports/',
+  '/api/trial-balance',
+  '/api/general-ledger',
+  '/api/accounts-receivable',
+  '/api/accounts-payable',
+  '/api/aged-receivables',
+  '/api/payments-made',
+  '/api/payments-received',
+  '/api/credit-notes',
+  '/api/bills',
+  '/api/deliveries',
+  '/api/quotations',
+  '/api/orders/',
+  '/api/product/search',
+  '/api/transactions',
+  '/api/fixed-assets',
+  '/api/loans',
+  '/api/purchaseinvoice',
+];
+
+const List<String> kLocationQueryExcludedPaths = [
+  '/warehouse/locations',
+  '/admin/users',
+  '/users/',
+  '/api/profile',
+  '/api/chart-of-accounts',
+  '/api/bank-accounts',
+];
+
 bool shouldAttachLocationId(String endpoint) {
   final path = endpoint.split('?').first;
-  if (path.contains('/warehouse/locations')) return false;
-  if (path.contains('/admin/users')) return false;
-  if (path.contains('/users/')) return false;
-  return path.contains('/api/warehouse') ||
-      path.contains('/api/sales') ||
-      path.contains('/api/purchase') ||
-      path.contains('/api/pos') ||
-      path.contains('/api/goods') ||
-      path.contains('/api/accounting') ||
-      path.contains('/api/expenses') ||
-      path.contains('/api/income') ||
-      path.contains('/api/journal-entries');
+  for (final excluded in kLocationQueryExcludedPaths) {
+    if (path.contains(excluded)) return false;
+  }
+  return kLocationQueryPaths.any((p) => path.contains(p));
 }
 
 Worker? listenLocationChanges(void Function() reload) {
   if (!Get.isRegistered<LocationController>()) return null;
-  String? lastId = currentLocationId();
   return ever(
-    Get.find<LocationController>().selectedLocation,
-    (loc) {
-      final id = loc?.id;
-      if (id == lastId) return;
-      lastId = id;
-      reload();
-    },
+    Get.find<LocationController>().storedSelectedId,
+    (_) => reload(),
   );
 }
 
@@ -54,4 +94,12 @@ Future<void> hydrateLocationsAfterAuth(dynamic user) async {
   final c = ensureLocationController();
   if (c == null) return;
   await c.hydrateFromUser(Map<String, dynamic>.from(user));
+}
+
+/// Accounting module routes — admin may pick "All locations" (web parity).
+bool routeAllowsAllLocations(String route) {
+  if (route.isEmpty || route == '/') return false;
+  return route.startsWith('/accounting') ||
+      route == '/dashboard' ||
+      route.startsWith('/pos');
 }

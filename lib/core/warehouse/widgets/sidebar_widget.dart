@@ -37,7 +37,7 @@ class WarehouseSidebar extends StatelessWidget {
                       icon: Icons.arrow_back_rounded,
                       size: 18,
                       bgColor: Colors.grey[100]!,
-                      hoverColor: kPrimary.withOpacity(0.1),
+                      hoverColor: kPrimary.withValues(alpha: 0.1),
                       iconColor: Colors.black87,
                       hoverIconColor: kPrimary,
                     ),
@@ -165,7 +165,7 @@ class WarehouseSidebar extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.1),
+                          color: Colors.green.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
@@ -241,7 +241,7 @@ class WarehouseSidebar extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
+                  color: Colors.red.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -337,7 +337,6 @@ class WarehouseSidebar extends StatelessWidget {
       Get.offAll(() => const LoginScreen());
       AppSnackbar.success(kSuccess, 'Success', 'Logged out successfully');
     } catch (e) {
-      print('Logout error: $e');
       Get.offAll(() => const LoginScreen());
     }
   }
@@ -450,9 +449,9 @@ class _HoverableMenuItemState extends State<_HoverableMenuItem> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: isSelected
-                ? kPrimary.withOpacity(0.06)
+                ? kPrimary.withValues(alpha: 0.06)
                 : _isHovered
-                ? kPrimary.withOpacity(0.05)
+                ? kPrimary.withValues(alpha: 0.05)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
           ),

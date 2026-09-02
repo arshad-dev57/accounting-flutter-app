@@ -5,6 +5,7 @@ import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'package:BisonsTechs_app/core/warehouse/sales/model/sales_dashboard_model.dart';
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SalesController extends GetxController {
@@ -73,7 +74,7 @@ class SalesController extends GetxController {
         }
       }
     } catch (e) {
-      print('❌ [SalesController] Error loading business logo: $e');
+      debugPrint('Error: $e');
     }
   }
 

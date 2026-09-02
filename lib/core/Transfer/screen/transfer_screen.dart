@@ -13,8 +13,6 @@ class TransferScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(TransferController());
-    final isWeb = ResponsiveUtils.isWeb(context);
-    final isTablet = ResponsiveUtils.isTablet(context);
 
     return Scaffold(
       backgroundColor: kBg,
@@ -65,7 +63,6 @@ class TransferScreen extends StatelessWidget {
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
     final isMobile = ResponsiveUtils.isMobile(context);
 
     return AppBar(
@@ -94,7 +91,6 @@ class TransferScreen extends StatelessWidget {
   Widget _buildHeader(BuildContext context) {
     final isWeb = ResponsiveUtils.isWeb(context);
     final isTablet = ResponsiveUtils.isTablet(context);
-    final isMobile = ResponsiveUtils.isMobile(context);
 
     return Container(
       padding: EdgeInsets.all(
@@ -115,7 +111,7 @@ class TransferScreen extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -135,7 +131,7 @@ class TransferScreen extends StatelessWidget {
                 ? 45
                 : 40,
             decoration: BoxDecoration(
-              color: kPrimary.withOpacity(0.1),
+              color: kPrimary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(
                 isWeb
                     ? 12
@@ -199,7 +195,6 @@ class TransferScreen extends StatelessWidget {
   ) {
     final isWeb = ResponsiveUtils.isWeb(context);
     final isTablet = ResponsiveUtils.isTablet(context);
-    final isMobile = ResponsiveUtils.isMobile(context);
 
     return Container(
       padding: EdgeInsets.all(
@@ -220,7 +215,7 @@ class TransferScreen extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -266,7 +261,7 @@ class TransferScreen extends StatelessWidget {
           ),
           Obx(
             () => DropdownButtonFormField<String>(
-              value: controller.fromAccountId.value.isEmpty
+              initialValue: controller.fromAccountId.value.isEmpty
                   ? null
                   : controller.fromAccountId.value,
               decoration: InputDecoration(
@@ -365,7 +360,6 @@ class TransferScreen extends StatelessWidget {
   ) {
     final isWeb = ResponsiveUtils.isWeb(context);
     final isTablet = ResponsiveUtils.isTablet(context);
-    final isMobile = ResponsiveUtils.isMobile(context);
 
     return Container(
       padding: EdgeInsets.all(
@@ -386,7 +380,7 @@ class TransferScreen extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -432,7 +426,7 @@ class TransferScreen extends StatelessWidget {
           ),
           Obx(
             () => DropdownButtonFormField<String>(
-              value: controller.toAccountId.value.isEmpty
+              initialValue: controller.toAccountId.value.isEmpty
                   ? null
                   : controller.toAccountId.value,
               decoration: InputDecoration(
@@ -608,7 +602,7 @@ class TransferScreen extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -632,7 +626,6 @@ class TransferScreen extends StatelessWidget {
   ) {
     final isWeb = ResponsiveUtils.isWeb(context);
     final isTablet = ResponsiveUtils.isTablet(context);
-    final isMobile = ResponsiveUtils.isMobile(context);
 
     return Container(
       padding: EdgeInsets.all(
@@ -653,7 +646,7 @@ class TransferScreen extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -760,7 +753,6 @@ class TransferScreen extends StatelessWidget {
   Widget _buildDateField(TransferController controller, BuildContext context) {
     final isWeb = ResponsiveUtils.isWeb(context);
     final isTablet = ResponsiveUtils.isTablet(context);
-    final isMobile = ResponsiveUtils.isMobile(context);
 
     return Container(
       padding: EdgeInsets.all(
@@ -781,7 +773,7 @@ class TransferScreen extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -882,7 +874,7 @@ class TransferScreen extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -971,7 +963,7 @@ class TransferScreen extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -1119,7 +1111,7 @@ class TransferScreen extends StatelessWidget {
                 : 10,
           ),
           decoration: BoxDecoration(
-            color: kWarning.withOpacity(0.1),
+            color: kWarning.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(
               isWeb
                   ? 12

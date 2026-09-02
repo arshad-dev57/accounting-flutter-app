@@ -362,7 +362,7 @@ class _AccessManagementScreenState extends State<AccessManagementScreen> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: kPrimary.withOpacity(0.1),
+              color: kPrimary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
@@ -563,7 +563,7 @@ class _PermissionToggle extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: value ? color.withOpacity(0.1) : Colors.grey[100],
+            color: value ? color.withValues(alpha: 0.1) : Colors.grey[100],
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: value ? color : Colors.grey[300]!),
           ),
