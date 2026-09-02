@@ -10,11 +10,63 @@ import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class PurchaseOrderScreen extends StatelessWidget {
-  const PurchaseOrderScreen({super.key});
+  final bool embedded;
+
+  const PurchaseOrderScreen({super.key, this.embedded = false});
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(PurchaseOrderController());
+
+    final body = Obx(() {
+      if (controller.showCreateWizard.value) {
+        return _CreateOrderWizard(
+          controller: controller,
+          onCancel: controller.closeCreateWizard,
+        );
+      }
+
+      return Column(
+        children: [
+          _buildTopHeader(controller),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
+              child: _OrderListView(
+                controller: controller,
+                onCreate: controller.openCreateWizard,
+                onView: (item) => _showDetail(context, controller, item),
+              ),
+            ),
+          ),
+        ],
+      );
+    });
+
+    if (embedded) {
+      return ColoredBox(
+        color: kBgLight,
+        child: Stack(
+          children: [
+            body,
+            Obx(
+              () => controller.showCreateWizard.value
+                  ? const SizedBox.shrink()
+                  : Positioned(
+                      right: 16,
+                      bottom: 16,
+                      child: FloatingActionButton(
+                        onPressed: controller.openCreateWizard,
+                        backgroundColor: kPrimary,
+                        elevation: 2,
+                        child: const Icon(Icons.add, color: Colors.white, size: 24),
+                      ),
+                    ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: kBgLight,
@@ -59,30 +111,7 @@ class PurchaseOrderScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Obx(() {
-        if (controller.showCreateWizard.value) {
-          return _CreateOrderWizard(
-            controller: controller,
-            onCancel: controller.closeCreateWizard,
-          );
-        }
-
-        return Column(
-          children: [
-            _buildTopHeader(controller),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-                child: _OrderListView(
-                  controller: controller,
-                  onCreate: controller.openCreateWizard,
-                  onView: (item) => _showDetail(context, controller, item),
-                ),
-              ),
-            ),
-          ],
-        );
-      }),
+      body: body,
       floatingActionButton: Obx(
         () => controller.showCreateWizard.value
             ? const SizedBox.shrink()

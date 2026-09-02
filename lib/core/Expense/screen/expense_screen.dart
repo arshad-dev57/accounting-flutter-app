@@ -14,16 +14,69 @@ import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class ExpenseScreen extends StatelessWidget {
-  const ExpenseScreen({super.key});
+  final bool embedded;
+
+  const ExpenseScreen({super.key, this.embedded = false});
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(ExpenseController());
 
+    if (embedded) {
+      return _buildEmbeddedMobileLayout(context, controller);
+    }
+
     if (ResponsiveUtils.isMobile(context)) {
       return _buildMobileLayout(context, controller);
     }
     return _buildWebLayout(context, controller);
+  }
+
+  Widget _buildEmbeddedMobileLayout(
+    BuildContext context,
+    ExpenseController controller,
+  ) {
+    return ColoredBox(
+      color: kBgLight,
+      child: Stack(
+        children: [
+          Column(
+            children: [
+              Expanded(
+                child: Obx(() {
+                  if (controller.isLoading.value) {
+                    return Center(
+                      child: LoadingAnimationWidget.discreteCircle(
+                        color: kPrimary,
+                        size: 40,
+                      ),
+                    );
+                  }
+                  return Column(
+                    children: [
+                      _buildMobileSummaryCards(controller),
+                      Expanded(
+                        child: _buildMobileExpenseList(controller, context),
+                      ),
+                    ],
+                  );
+                }),
+              ),
+            ],
+          ),
+          Positioned(
+            right: 16,
+            bottom: 16,
+            child: FloatingActionButton(
+              onPressed: () => _showAddExpenseDialog(controller, context),
+              backgroundColor: kPrimary,
+              elevation: 0,
+              child: const Icon(Icons.add, color: Colors.white, size: 24),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // ─────────────────────────────────────────

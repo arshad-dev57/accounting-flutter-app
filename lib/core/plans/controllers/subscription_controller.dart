@@ -1,4 +1,5 @@
 import 'package:BisonsTechs_app/Services/subscription_service.dart';
+import 'package:BisonsTechs_app/core/plans/utils/subscription_pricing.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
@@ -147,7 +148,7 @@ class SubscriptionController extends GetxController {
     }
   }
 
-  // ─── Start 30-day free trial ─────────────────────────────────────
+  // ─── Start 14-day free trial ─────────────────────────────────────
   Future<bool> startTrial() async {
     try {
       isLoading.value = true;
@@ -160,7 +161,7 @@ class SubscriptionController extends GetxController {
         hasActiveSubscription.value = true;
         subscriptionPlan.value = 'trial';
         subscriptionStatus.value = 'active';
-        trialDaysRemaining.value = data['trialDaysRemaining'] ?? 30;
+        trialDaysRemaining.value = data['trialDaysRemaining'] ?? trialDays;
         subscriptionDaysRemaining.value = 0;
         isTrialActive.value = true;
 
@@ -173,7 +174,7 @@ class SubscriptionController extends GetxController {
         AppSnackbar.success(
           kSuccess,
           '🎉 Trial Started!',
-          '30-day free trial activated. Enjoy all premium features!',
+          '$trialDays-day free trial activated. Enjoy all premium features!',
         );
 
         return true;
@@ -197,16 +198,31 @@ class SubscriptionController extends GetxController {
     }
   }
 
-  // ─── Subscribe to monthly or yearly plan (direct, no Stripe) ────
-  Future<bool> subscribe(String plan, double amount) async {
+  // ─── Subscribe or upgrade (direct, no Stripe) ───────────────────
+  Future<bool> subscribe(
+    String plan,
+    double amount, {
+    String productTier = tierErpPos,
+    int licensedUsers = 1,
+    int licensedBranches = 1,
+    bool isUpgrade = false,
+  }) async {
     try {
       isLoading.value = true;
       justSubscribed.value = true;
 
-      final response = await _subscriptionService.subscribeDirect(
-        plan: plan,
-        amount: amount,
-      );
+      final response = isUpgrade
+          ? await _subscriptionService.upgradeSubscription(
+              licensedUsers: licensedUsers,
+              licensedBranches: licensedBranches,
+            )
+          : await _subscriptionService.subscribeDirect(
+              plan: plan,
+              amount: amount,
+              productTier: productTier,
+              licensedUsers: licensedUsers,
+              licensedBranches: licensedBranches,
+            );
 
       if (response['success'] == true) {
         final data = response['data'] as Map<String, dynamic>? ?? {};
@@ -230,8 +246,10 @@ class SubscriptionController extends GetxController {
 
         AppSnackbar.success(
           kSuccess,
-          '✅ Subscribed!',
-          'Your ${plan == 'monthly' ? 'Monthly' : 'Yearly'} plan is now active!',
+          isUpgrade ? '✅ Updated!' : '✅ Subscribed!',
+          isUpgrade
+              ? 'Your subscription was updated successfully.'
+              : 'Your ${plan == 'monthly' ? 'Monthly' : 'Yearly'} plan is now active!',
         );
 
         isLoading.value = false;
@@ -301,12 +319,50 @@ class SubscriptionController extends GetxController {
     }
   }
 
+  Future<bool> upgradeSubscription({
+    required int licensedUsers,
+    required int licensedBranches,
+  }) async {
+    try {
+      isLoading.value = true;
+      final response = await _subscriptionService.upgradeSubscription(
+        licensedUsers: licensedUsers,
+        licensedBranches: licensedBranches,
+      );
+      if (response['success'] == true) return true;
+      AppSnackbar.error(
+        kDanger,
+        'Upgrade Failed',
+        response['message'] ?? 'Failed to upgrade subscription',
+      );
+      return false;
+    } catch (e) {
+      AppSnackbar.error(kDanger, 'Error', 'Something went wrong.');
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<SubscriptionCapacity?> fetchCapacity() async {
+    try {
+      final response = await _subscriptionService.fetchCapacity();
+      if (response['success'] != true || response['data'] == null) return null;
+      final data = response['data'];
+      if (data is! Map<String, dynamic>) return null;
+      return SubscriptionCapacity.fromJson(data);
+    } catch (_) {
+      return null;
+    }
+  }
+
   // ─── Computed helpers ────────────────────────────────────────────
 
   String getTrialStatusText() {
     if (isTrialActive.value) {
-      if (trialDaysRemaining.value == 30)
-        return '🎉 30-Day Free Trial Started!';
+      if (trialDaysRemaining.value == trialDays) {
+        return '🎉 $trialDays-Day Free Trial Started!';
+      }
       if (trialDaysRemaining.value <= 3) {
         return '⚠️ Trial ends in ${trialDaysRemaining.value} day(s)!';
       }
@@ -324,7 +380,8 @@ class SubscriptionController extends GetxController {
   double getTrialProgress() {
     if (!isTrialActive.value) return 1.0;
     if (trialDaysRemaining.value <= 0) return 1.0;
-    return ((30 - trialDaysRemaining.value) / 30).clamp(0.0, 1.0);
+    return ((trialDays - trialDaysRemaining.value) / trialDays)
+        .clamp(0.0, 1.0);
   }
 
   bool get hasAccess => hasActiveSubscription.value;

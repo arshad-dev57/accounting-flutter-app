@@ -2,6 +2,7 @@
 
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
@@ -46,6 +47,7 @@ class JournalEntryController extends GetxController {
   final ApiClient _api = Get.find<ApiClient>();
 
   Worker? _fyWorker;
+  Worker? _locWorker;
 
   @override
   void onInit() {
@@ -57,11 +59,13 @@ class JournalEntryController extends GetxController {
       fetchJournalEntries();
     });
     _fyWorker = listenFiscalYearChanges(fetchJournalEntries);
+    _locWorker = listenLocationChanges(_resetAndReload);
   }
 
   @override
   void onClose() {
     _fyWorker?.dispose();
+    _locWorker?.dispose();
     scrollController.dispose();
     super.onClose();
   }
@@ -243,6 +247,11 @@ class JournalEntryController extends GetxController {
       'reference': reference,
       'lines': lines,
     };
+
+    final locationId = currentLocationId();
+    if (locationId != null && locationId.isNotEmpty) {
+      body['locationId'] = locationId;
+    }
 
     // ✅ API call — no isLoading wrapper here
     final response = await _api.post('/api/journal-entries', body: body);

@@ -192,7 +192,6 @@ class EquityController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error loading equity accounts: $e');
       _showError('Error loading equity accounts');
     } finally {
       isLoading.value = false;
@@ -222,9 +221,7 @@ class EquityController extends GetxController {
               .toList();
         }
       }
-    } catch (e) {
-      print('Error loading transactions: $e');
-    }
+    } catch (e) {}
   }
 
   // ─── LOAD SUMMARY ──────────────────────────────────────────────────
@@ -247,24 +244,22 @@ class EquityController extends GetxController {
           totalReserves.value = (data['totalReserves'] ?? 0).toDouble();
           totalDrawings.value = (data['totalDrawings'] ?? 0).toDouble();
           totalEquity.value = (data['totalEquity'] ?? 0).toDouble();
-          ownerCapital.value = (data['ownerCapital'] ?? data['totalCapital'] ?? 0)
-              .toDouble();
-          periodEarnings.value = (data['periodEarnings'] ??
-                  data['currentYearEarnings'] ??
-                  0)
-              .toDouble();
+          ownerCapital.value =
+              (data['ownerCapital'] ?? data['totalCapital'] ?? 0).toDouble();
+          periodEarnings.value =
+              (data['periodEarnings'] ?? data['currentYearEarnings'] ?? 0)
+                  .toDouble();
           equityNow.value = (data['equityNow'] ?? data['totalEquity'] ?? 0)
               .toDouble();
-          changeOnCapital.value = (data['changeOnCapital'] ??
-                  (equityNow.value - ownerCapital.value))
-              .toDouble();
+          changeOnCapital.value =
+              (data['changeOnCapital'] ??
+                      (equityNow.value - ownerCapital.value))
+                  .toDouble();
           isCapitalIncrease.value =
               data['isIncrease'] ?? (periodEarnings.value >= 0);
         }
       }
-    } catch (e) {
-      print('Error loading summary: $e');
-    }
+    } catch (e) {}
   }
 
   void _updateSummaryForFiltered(List<EquityAccount> filteredAccounts) {
@@ -310,8 +305,9 @@ class EquityController extends GetxController {
       if (response.success) {
         final data = response.data['data'];
         if (data is List) {
-          bankAccounts.value =
-              data.map((e) => Map<String, dynamic>.from(e)).toList();
+          bankAccounts.value = data
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList();
         }
       }
     } catch (_) {}
@@ -412,7 +408,6 @@ class EquityController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error adding capital: $e');
       _showError('Error adding capital');
     } finally {
       isProcessing.value = false;
@@ -512,7 +507,6 @@ class EquityController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error recording drawings: $e');
       _showError('Error recording drawings');
     } finally {
       isProcessing.value = false;
@@ -605,7 +599,6 @@ class EquityController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error transferring to retained earnings: $e');
       _showError('Error transferring');
     } finally {
       isProcessing.value = false;
@@ -784,9 +777,7 @@ class EquityController extends GetxController {
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(24),
-          header: (ctx) => branding.buildHeader(
-            reportTitle: 'Equity Report',
-          ),
+          header: (ctx) => branding.buildHeader(reportTitle: 'Equity Report'),
           footer: (ctx) => branding.buildFooter(ctx),
           build: (ctx) => [
             _pdfSummarySection(branding.accent),
@@ -814,8 +805,6 @@ class EquityController extends GetxController {
       AppSnackbar.error(Colors.red, 'Error', 'Failed to export PDF: $e');
     }
   }
-
-
 
   pw.Widget _pdfSummarySection(PdfColor accent) {
     return pw.Container(
@@ -1714,9 +1703,8 @@ class EquityController extends GetxController {
                                 paymentMethod = v!;
                                 if (v == 'Cash') selectedBankAccountId = null;
                               }),
-                              onBankChanged: (v) => setState(
-                                () => selectedBankAccountId = v,
-                              ),
+                              onBankChanged: (v) =>
+                                  setState(() => selectedBankAccountId = v),
                             ),
                             const SizedBox(height: 16),
 
@@ -1984,9 +1972,8 @@ class EquityController extends GetxController {
                                 paymentMethod = v!;
                                 if (v == 'Cash') selectedBankAccountId = null;
                               }),
-                              onBankChanged: (v) => setState(
-                                () => selectedBankAccountId = v,
-                              ),
+                              onBankChanged: (v) =>
+                                  setState(() => selectedBankAccountId = v),
                             ),
                             const SizedBox(height: 16),
 
@@ -2250,9 +2237,8 @@ class EquityController extends GetxController {
                                     selectedBankAccountId = null;
                                   }
                                 }),
-                                onBankChanged: (v) => setState(
-                                  () => selectedBankAccountId = v,
-                                ),
+                                onBankChanged: (v) =>
+                                    setState(() => selectedBankAccountId = v),
                               ),
                             ],
                             const SizedBox(height: 16),

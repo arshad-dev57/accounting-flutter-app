@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:BisonsTechs_app/Services/auth_logout_service.dart';
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
@@ -34,6 +35,9 @@ import 'package:BisonsTechs_app/core/chartofaccounts/screens/chart_of_account_sc
 import 'package:BisonsTechs_app/core/settings/screens/currency_screen.dart';
 import 'package:BisonsTechs_app/core/settings/screens/pdf_report_settings_screen.dart';
 import 'package:BisonsTechs_app/core/dashboard/controllers/dashboard_controller.dart';
+import 'package:BisonsTechs_app/core/dashboard/utils/accounting_route_navigator.dart';
+import 'package:BisonsTechs_app/core/dashboard/widgets/accounting_settings_tab.dart';
+import 'package:BisonsTechs_app/widgets/dashboard_mobile_chrome.dart';
 import 'package:BisonsTechs_app/widgets/reload_when_visible.dart';
 import 'package:BisonsTechs_app/core/AccountPayable/controller/account_payable_controller.dart';
 import 'package:BisonsTechs_app/core/AccountRecievables/controllers/account_recievables_controller.dart';
@@ -48,6 +52,7 @@ import 'package:BisonsTechs_app/core/Income/controller/income_controller.dart';
 import 'package:BisonsTechs_app/core/PaymentMade/controller/paymentmade_controller.dart';
 import 'package:BisonsTechs_app/core/TrailBalance/controller/trail_balance_controller.dart';
 import 'package:BisonsTechs_app/core/accountingReports/accounting_report_controller.dart';
+import 'package:BisonsTechs_app/core/accountingReports/accounting_report_screen.dart';
 import 'package:BisonsTechs_app/core/balancesheet/controller/balance_sheet_controller.dart';
 import 'package:BisonsTechs_app/core/cashflowstatement/controller/cashflow_controller.dart';
 import 'package:BisonsTechs_app/core/chartofaccounts/controller/chart_of_account_controller.dart';
@@ -108,62 +113,51 @@ const _kAppBarBg = Color(0xFFF7F9FC);
 // ─── TOP-LEVEL STATELESS WIDGETS ─────────────────────────────────────────────
 // Drawer ko top-level StatelessWidget banaya — har build pe recreate nahi hoga
 
-class _AppBarLogo extends StatelessWidget {
-  final DashboardController controller;
-  final bool isMobile;
-  const _AppBarLogo({required this.controller, required this.isMobile});
-
-  @override
-  Widget build(BuildContext context) {
-    // Sirf logo value observe karo — baaki sab constant hai
-    return Obx(() {
-      final logo = controller.businessLogo.value;
-      if (logo.isEmpty) {
-        return Image.asset(
-          'assets/logo.png',
-          height: isMobile ? 32 : 36,
-          fit: BoxFit.contain,
-        );
-      }
-      return Row(
-        children: [
-          _LogoAvatar(logo: logo, size: 30),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              isMobile ? 'Bisons' : 'BisonsTechs',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: _kTextPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.3,
-              ),
-            ),
-          ),
-        ],
-      );
-    });
-  }
-}
-
-// Logo widget — reusable, no rebuild triggers
 class _LogoAvatar extends StatelessWidget {
   final String logo;
   final double size;
-  const _LogoAvatar({required this.logo, required this.size});
+  final String companyName;
+  final bool onPrimaryBackground;
+
+  const _LogoAvatar({
+    required this.logo,
+    required this.size,
+    this.companyName = '',
+    this.onPrimaryBackground = false,
+  });
+
+  String get _initial {
+    final trimmed = companyName.trim();
+    if (trimmed.isEmpty) return 'C';
+    return trimmed[0].toUpperCase();
+  }
+
+  Widget _placeholder() {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: onPrimaryBackground
+            ? Colors.white.withOpacity(0.18)
+            : const Color(0xFFE6EEF5),
+        borderRadius: BorderRadius.circular(size * 0.27),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        _initial,
+        style: TextStyle(
+          color: onPrimaryBackground ? Colors.white : kPrimary,
+          fontSize: size * 0.42,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (logo.isEmpty) {
-      return Image.asset(
-        'assets/logo.png',
-        width: size * 2.8,
-        height: size,
-        fit: BoxFit.contain,
-      );
-    }
+    if (logo.isEmpty) return _placeholder();
+
     return Container(
       width: size,
       height: size,
@@ -180,12 +174,7 @@ class _LogoAvatar extends StatelessWidget {
                 height: size,
                 cacheWidth: (size * 2).toInt(),
                 cacheHeight: (size * 2).toInt(),
-                errorBuilder: (_, __, ___) => Image.asset(
-                  'assets/logo.png',
-                  width: size,
-                  height: size,
-                  fit: BoxFit.contain,
-                ),
+                errorBuilder: (_, __, ___) => _placeholder(),
               )
             : Image.file(
                 File(logo),
@@ -194,12 +183,7 @@ class _LogoAvatar extends StatelessWidget {
                 height: size,
                 cacheWidth: (size * 2).toInt(),
                 cacheHeight: (size * 2).toInt(),
-                errorBuilder: (_, __, ___) => Image.asset(
-                  'assets/logo.png',
-                  width: size,
-                  height: size,
-                  fit: BoxFit.contain,
-                ),
+                errorBuilder: (_, __, ___) => _placeholder(),
               ),
       ),
     );
@@ -313,75 +297,61 @@ class _AppDrawer extends StatelessWidget {
                     ('Aged Receivables', Mdi.account_clock, 'aged_receivables'),
                   ],
                 ),
-                SizedBox(height: 4),
-                _SectionLabel('SETTINGS'),
-                _NavSection(
-                  title: 'Settings',
-                  icon: Mdi.cog,
-                  module: 'accounting',
-                  permissions: ['currency'],
-                  items: [
-                    ('Fiscal Years', Mdi.calendar_range, 'fiscal_years'),
-                    ('Currency', Mdi.currency_usd, 'currency'),
-                    ('PDF Reports', Mdi.file_pdf_box, 'pdf_report'),
-                  ],
-                ),
-                _NavSection(
-                  title: 'My Account',
-                  icon: Mdi.account,
-                  items: [
-                    ('My Profile', Mdi.account_circle_outline, '__profile'),
-                    ('Change Password', Mdi.lock_reset, '__changepassword'),
-                  ],
-                ),
-                SizedBox(height: 4),
-                _SectionLabel('SUPPORT'),
-                _SubscriptionNavSection(),
-                _NavSection(
-                  title: 'Help & Support',
-                  icon: Mdi.help_circle,
-                  items: [
-                    ('User Guide', Mdi.book_information_variant, '__userguide'),
-                    ('Contact Support', Mdi.headset, '__contact'),
-                    ('Report an Issue', Mdi.bug_outline, '__reportissue'),
-                  ],
-                ),
-                _NavSection(
-                  title: 'Feedback',
-                  icon: Mdi.feedback,
-                  items: [('Feedback', Mdi.feedback, 'feedback')],
-                ),
-                _NavSection(
-                  title: 'About',
-                  icon: Mdi.information,
-                  items: [
-                    ('About App', Mdi.information_outline, 'about_app'),
-                    ('Terms of Service', Mdi.file_sign, 'terms'),
-                    ('Privacy Policy', Mdi.shield_lock_outline, 'privacy'),
-                  ],
-                ),
               ],
             ),
           ),
-          _DrawerFooter(onLogout: onLogout),
+          if (!ResponsiveUtils.isMobile(context))
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 16),
+              child: Material(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.pop(context);
+                    Get.to(
+                      () => AccountingSettingsTab(
+                        onLogout: onLogout,
+                        embedded: false,
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        Iconify(Mdi.cog, size: 18, color: kPrimary),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text(
+                            'Settings',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 18,
+                          color: Colors.grey.shade400,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
-    );
-  }
-}
-
-class _SubscriptionNavSection extends StatelessWidget {
-  const _SubscriptionNavSection();
-
-  @override
-  Widget build(BuildContext context) {
-    if (!PermissionService.to.isAdmin) return const SizedBox.shrink();
-    return const _NavSection(
-      title: 'Subscription',
-      icon: Mdi.crown,
-      items: [
-        ('Subscription Plans', Mdi.crown, 'subscription'),
-      ],
     );
   }
 }
@@ -410,89 +380,226 @@ class _DashboardScreenState extends State<DashboardScreen>
   Widget build(BuildContext context) => const _AccountingDashboardView();
 }
 
-class _AccountingDashboardView extends GetView<DashboardController> {
+class _AccountingDashboardView extends StatefulWidget {
   const _AccountingDashboardView();
+
+  @override
+  State<_AccountingDashboardView> createState() =>
+      _AccountingDashboardViewState();
+}
+
+class _AccountingDashboardViewState extends State<_AccountingDashboardView> {
+  int _tabIndex = 0;
+
+  DashboardController get controller => Get.find<DashboardController>();
+
+  static const _tabLabels = [
+    'Dashboard',
+    'Income',
+    'Expense',
+    'Reports',
+    'Settings',
+  ];
+
+  void _selectTab(int index) {
+    if (_tabIndex == index) return;
+    setState(() => _tabIndex = index);
+  }
+
+  List<DashboardBreadcrumbSegment> _breadcrumbSegments(BuildContext context) {
+    final segments = <DashboardBreadcrumbSegment>[
+      DashboardBreadcrumbSegment(
+        label: 'Home',
+        onTap: () => _navigateToDashboardSelection(context),
+      ),
+      const DashboardBreadcrumbSegment(label: 'Accounting'),
+    ];
+    if (_tabIndex > 0) {
+      segments.add(DashboardBreadcrumbSegment(label: _tabLabels[_tabIndex]));
+    }
+    return segments;
+  }
 
   @override
   Widget build(BuildContext context) {
     final isMobile = ResponsiveUtils.isMobile(context);
     final isTablet = MediaQuery.of(context).size.width >= 600;
+    final bottomReserve =
+        isMobile ? DashboardGlassBottomNav.reservedHeight(context) : 100.0;
 
     return Scaffold(
       backgroundColor: _kPageBg,
-      appBar: _buildAppBar(isMobile),
-      // Drawer ab top-level const widget — animation ke waqt rebuild nahi hoga
+      extendBody: isMobile,
+      appBar: _buildAppBar(context, isMobile),
       drawer: _AppDrawer(
         onBack: () => _navigateToDashboardSelection(context),
         onLogout: _showLogoutDialog,
       ),
-      body: Stack(
-        children: [
-          Obx(() {
-            if (controller.isLoading.value && !controller.hasLoadedOnce.value) {
-              return _buildShimmer();
-            }
-            return RefreshIndicator(
-              color: kPrimary,
-              backgroundColor: _kCardBg,
-              onRefresh: () async {
-                await controller.loadDashboardData();
-              },
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const _HeroCard(),
-                    const SizedBox(height: 14),
-                    const _PeriodChips(),
-                    const SizedBox(height: 16),
-                    _KpiGrid(isTablet: isTablet),
-                    const SizedBox(height: 16),
-                    const _CapitalCard(),
-                    const SizedBox(height: 16),
-                    const _FinancialOverview(),
-                    const SizedBox(height: 16),
-                    const _RevenueTrendCard(),
-                    const SizedBox(height: 16),
-                    const _ExpenseCategoriesCard(),
-                    const SizedBox(height: 16),
-                    const _RecentTransactions(),
-                  ],
+      body: SizedBox.expand(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (isMobile)
+              _buildMobileTab(isTablet: isTablet, bottomReserve: bottomReserve)
+            else
+              _buildDashboardTab(isTablet: isTablet, bottomReserve: bottomReserve),
+            Obx(() {
+              if (!controller.isRefreshing.value || _tabIndex != 0) {
+                return const SizedBox.shrink();
+              }
+              return const Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: LinearProgressIndicator(
+                  minHeight: 2,
+                  color: kPrimary,
+                  backgroundColor: Color(0xFFE6EEF5),
                 ),
+              );
+            }),
+            if (isMobile)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: DashboardGlassBottomNav(
+                items: [
+                  DashboardBottomNavItem(
+                    label: 'Dashboard',
+                    iconAsset: 'assets/icons/dashboard.svg',
+                    fallbackIcon: Icons.dashboard_outlined,
+                    selected: _tabIndex == 0,
+                    onTap: () => _selectTab(0),
+                  ),
+                  DashboardBottomNavItem(
+                    label: 'Income',
+                    iconAsset: 'assets/icons/income.svg',
+                    fallbackIcon: Icons.trending_up_rounded,
+                    selected: _tabIndex == 1,
+                    onTap: () => _selectTab(1),
+                  ),
+                  DashboardBottomNavItem(
+                    label: 'Expense',
+                    iconAsset: 'assets/icons/expense.svg',
+                    fallbackIcon: Icons.trending_down_rounded,
+                    selected: _tabIndex == 2,
+                    onTap: () => _selectTab(2),
+                  ),
+                  DashboardBottomNavItem(
+                    label: 'Reports',
+                    iconAsset: 'assets/icons/reports.svg',
+                    fallbackIcon: Icons.assessment_outlined,
+                    selected: _tabIndex == 3,
+                    onTap: () => _selectTab(3),
+                  ),
+                  DashboardBottomNavItem(
+                    label: 'Settings',
+                    iconAsset: 'assets/icons/settings.svg',
+                    fallbackIcon: Icons.settings_outlined,
+                    selected: _tabIndex == 4,
+                    onTap: () => _selectTab(4),
+                  ),
+                ],
               ),
-            );
-          }),
-          // Refresh indicator — sirf ye rebuild hoga jab isRefreshing change ho
-          Obx(() {
-            if (!controller.isRefreshing.value) return const SizedBox.shrink();
-            return const Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: LinearProgressIndicator(
-                minHeight: 2,
-                color: kPrimary,
-                backgroundColor: Color(0xFFE6EEF5),
-              ),
-            );
-          }),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  PreferredSizeWidget _buildAppBar(bool isMobile) {
+  Widget _buildMobileTab({
+    required bool isTablet,
+    required double bottomReserve,
+  }) {
+    final pad = EdgeInsets.only(bottom: bottomReserve);
+    switch (_tabIndex) {
+      case 1:
+        return Padding(
+          padding: pad,
+          child: const IncomeScreen(embedded: true),
+        );
+      case 2:
+        return Padding(
+          padding: pad,
+          child: const ExpenseScreen(embedded: true),
+        );
+      case 3:
+        return Padding(
+          padding: pad,
+          child: const AccountingReportScreen(embedded: true),
+        );
+      case 4:
+        return Padding(
+          padding: pad,
+          child: AccountingSettingsTab(
+            onLogout: _showLogoutDialog,
+            embedded: true,
+          ),
+        );
+      default:
+        return _buildDashboardTab(isTablet: isTablet, bottomReserve: bottomReserve);
+    }
+  }
+
+  Widget _buildDashboardTab({
+    required bool isTablet,
+    required double bottomReserve,
+  }) {
+    return Obx(() {
+      if (controller.isLoading.value && !controller.hasLoadedOnce.value) {
+        return _buildShimmer(bottomReserve: bottomReserve);
+      }
+      return RefreshIndicator(
+        color: kPrimary,
+        backgroundColor: _kCardBg,
+        onRefresh: () async {
+          await controller.loadDashboardData();
+        },
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(16, 16, 16, bottomReserve),
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _HeroCard(),
+              const SizedBox(height: 14),
+              const _PeriodChips(),
+              const SizedBox(height: 16),
+              _KpiGrid(isTablet: isTablet),
+              const SizedBox(height: 16),
+              const _CapitalCard(),
+              const SizedBox(height: 16),
+              const _FinancialOverview(),
+              const SizedBox(height: 16),
+              const _RevenueTrendCard(),
+              const SizedBox(height: 16),
+              const _ExpenseCategoriesCard(),
+              const SizedBox(height: 16),
+              const _RecentTransactions(),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  PreferredSizeWidget _buildAppBar(BuildContext context, bool isMobile) {
     return AppBar(
       backgroundColor: _kAppBarBg,
       elevation: 0,
       scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(0.5),
-        child: Container(height: 0.5, color: _kCardBorder),
-      ),
+      bottom: isMobile
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(44),
+              child: DashboardBreadcrumbBar(segments: _breadcrumbSegments(context)),
+            )
+          : PreferredSize(
+              preferredSize: const Size.fromHeight(0.5),
+              child: Container(height: 0.5, color: _kCardBorder),
+            ),
       leading: isMobile
           ? Builder(
               builder: (ctx) => IconButton(
@@ -502,8 +609,7 @@ class _AccountingDashboardView extends GetView<DashboardController> {
             )
           : null,
       titleSpacing: isMobile ? 0 : NavigationToolbar.kMiddleSpacing,
-      // AppBar title: Obx sirf logo observe karta hai — text constant hai
-      title: _AppBarLogo(controller: controller, isMobile: isMobile),
+      title: const SizedBox.shrink(),
       actions: [
         LocationSwitcher(compact: true, showManageLink: !isMobile),
         FiscalYearSelect(compact: true, showManageLink: !isMobile),
@@ -519,13 +625,13 @@ class _AccountingDashboardView extends GetView<DashboardController> {
     );
   }
 
-  Widget _buildShimmer() {
+  Widget _buildShimmer({required double bottomReserve}) {
     return Shimmer.fromColors(
       baseColor: const Color(0xFFEEEFF4),
       highlightColor: const Color(0xFFF8F9FC),
       period: const Duration(milliseconds: 1200),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+        padding: EdgeInsets.fromLTRB(16, 16, 16, bottomReserve),
         physics: const NeverScrollableScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -589,9 +695,11 @@ class _AccountingDashboardView extends GetView<DashboardController> {
           TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
+              await AuthLogoutService.clearPushSession();
               final permissionService = PermissionService.to;
               await permissionService.clearUserData();
-              SharedPreferences.getInstance().then((p) => p.clear());
+              final p = await SharedPreferences.getInstance();
+              await p.clear();
               Get.offAll(() => const LoginScreen());
             },
             style: ElevatedButton.styleFrom(backgroundColor: _kRed),
@@ -653,8 +761,6 @@ class _HeroCard extends GetView<DashboardController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final logo = controller.businessLogo.value;
-      final hasLogo = logo.isNotEmpty;
       return Container(
         decoration: BoxDecoration(
           gradient: const LinearGradient(
@@ -676,25 +782,21 @@ class _HeroCard extends GetView<DashboardController> {
           borderRadius: BorderRadius.circular(17),
           child: Stack(
             children: [
-              if (hasLogo)
-                Positioned.fill(
-                  child: IgnorePointer(
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Center(
                     child: Opacity(
-                      opacity: 0.07,
-                      child: logo.startsWith('http')
-                          ? Image.network(
-                              logo,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                            )
-                          : Image.file(
-                              File(logo),
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                            ),
+                      opacity: 0.10,
+                      child: Image.asset(
+                        'assets/app_icon.png',
+                        width: 120,
+                        height: 120,
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                 ),
+              ),
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -738,20 +840,31 @@ class _HeroCard extends GetView<DashboardController> {
                                 style: TextStyle(
                                   fontSize: 26,
                                   fontWeight: FontWeight.w800,
-                                  color: controller.netProfit.value >= 0 ? _kTextPrimary : _kRed,
+                                  color: controller.netProfit.value >= 0
+                                      ? _kTextPrimary
+                                      : _kRed,
                                   letterSpacing: -0.5,
                                 ),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 '${controller.totalRevenueFormatted.value} − ${controller.totalExpensesFormatted.value}',
-                                style: const TextStyle(fontSize: 11, color: _kTextSub, fontWeight: FontWeight.w500),
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: _kTextSub,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                               const SizedBox(height: 6),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: controller.netProfit.value >= 0 ? _kGreenBg : _kRedBg,
+                                  color: controller.netProfit.value >= 0
+                                      ? _kGreenBg
+                                      : _kRedBg,
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Row(
@@ -762,7 +875,9 @@ class _HeroCard extends GetView<DashboardController> {
                                           ? Icons.arrow_upward_rounded
                                           : Icons.arrow_downward_rounded,
                                       size: 10,
-                                      color: controller.netProfit.value >= 0 ? _kGreen : _kRed,
+                                      color: controller.netProfit.value >= 0
+                                          ? _kGreen
+                                          : _kRed,
                                     ),
                                     const SizedBox(width: 3),
                                     Text(
@@ -772,7 +887,9 @@ class _HeroCard extends GetView<DashboardController> {
                                       style: TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w600,
-                                        color: controller.netProfit.value >= 0 ? _kGreen : _kRed,
+                                        color: controller.netProfit.value >= 0
+                                            ? _kGreen
+                                            : _kRed,
                                       ),
                                     ),
                                   ],
@@ -790,7 +907,11 @@ class _HeroCard extends GetView<DashboardController> {
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(color: _kHeroBorder),
                             ),
-                            child: const Icon(Icons.refresh_rounded, size: 16, color: _kTextSub),
+                            child: const Icon(
+                              Icons.refresh_rounded,
+                              size: 16,
+                              color: _kTextSub,
+                            ),
                           ),
                         ),
                       ],
@@ -1794,7 +1915,13 @@ class _DrawerHeader extends StatelessWidget {
               // Logo: Obx sirf logo observe karta hai
               Obx(() {
                 final logo = controller.businessLogo.value;
-                return _LogoAvatar(logo: logo, size: 40);
+                final name = controller.companyName.value;
+                return _LogoAvatar(
+                  logo: logo,
+                  size: 40,
+                  companyName: name,
+                  onPrimaryBackground: true,
+                );
               }),
               const SizedBox(width: 10),
               Expanded(
@@ -1993,228 +2120,6 @@ class _NavItem extends StatelessWidget {
 
   void _navigate(BuildContext context, String routeKey, String label) {
     Navigator.pop(context);
-    if (routeKey.startsWith('__')) {
-      switch (routeKey) {
-        case '__profile':
-          Get.to(() => const ProfileScreen());
-          break;
-        case '__changepassword':
-          Get.to(() => const ChangePasswordScreen());
-          break;
-        case '__userguide':
-          Get.to(() => const UserGuideScreen());
-          break;
-        case '__contact':
-          Get.to(() => const ContactSupportScreen());
-          break;
-        case '__reportissue':
-          Get.to(() => const ReportIssueScreen());
-          break;
-        default:
-          Get.snackbar('Coming soon', '$label coming soon');
-      }
-    } else {
-      switch (routeKey) {
-        case 'tax_compliance':
-          if (Get.isRegistered<TaxController>()) Get.find<TaxController>().loadAll();
-          Get.to(() => const TaxComplianceScreen());
-          break;
-        case 'chart_of_accounts':
-          openFresh<ChartOfAccountController>(const ChartOfAccountsScreen());
-          break;
-        case 'journal_entries':
-          openFresh<JournalEntryController>(const JournalEntriesScreen());
-          break;
-        case 'general_ledger':
-          openFresh<GeneralLedgerController>(const GeneralLedgerScreen());
-          break;
-        case 'trial_balance':
-          openFresh<TrialBalanceController>(const TrialBalanceScreen());
-          break;
-        case 'bank_accounts':
-          openFresh<BankAccountController>(const BankAccountsScreen());
-          break;
-        case 'income':
-          openFresh<IncomeController>(const IncomeScreen());
-          break;
-        case 'expense':
-          openFresh<ExpenseController>(const ExpenseScreen());
-          break;
-        case 'accounts_receivable':
-          openFresh<AccountsReceivableController>(const AccountsReceivableScreen());
-          break;
-        case 'accounts_payable':
-          openFresh<AccountsPayableController>(const AccountsPayableScreen());
-          break;
-        case 'customers':
-          openFresh<WarehouseCustomerController>(const WarehouseCustomerScreen());
-          break;
-        case 'bills':
-          openFresh<BillController>(const BillsScreen());
-          break;
-        case 'payments_received':
-          openFresh<PaymentReceivedController>(const PaymentsReceivedScreen());
-          break;
-        case 'payments_made':
-          openFresh<PaymentMadeController>(const PaymentsMadeScreen());
-          break;
-        case 'credit_notes':
-          openFresh<CreditNoteController>(const CreditNotesScreen());
-          break;
-        case 'fixed_assets':
-          openFresh<FixedAssetController>(const FixedAssetsScreen());
-          break;
-        case 'loans':
-          openFresh<LoanController>(const LoansBorrowingsScreen());
-          break;
-        case 'capital_equity':
-          openFresh<EquityController>(const CapitalEquityScreen());
-          break;
-        case 'accounting_reports':
-          if (Get.isRegistered<AccountingReportController>()) {
-            Get.delete<AccountingReportController>(force: true);
-          }
-          Get.toNamed('/accounting/reports');
-          break;
-        case 'profit_loss':
-          openFresh<PLController>(const ProfitLossStatementScreen());
-          break;
-        case 'balance_sheet':
-          openFresh<BalanceSheetController>(const BalanceSheetScreen());
-          break;
-        case 'cash_flow':
-          openFresh<CashFlowController>(const CashFlowStatementScreen());
-          break;
-        case 'aged_receivables':
-          Get.to(() => const AgedReceivablesScreen());
-          break;
-        case 'warehouse_invoices':
-          openFresh<WarehouseInvoiceController>(const WarehouseInvoiceScreen());
-          break;
-        case 'currency':
-          Get.to(() => const CurrencyScreen());
-          break;
-        case 'fiscal_years':
-          Get.to(() => const FiscalYearListScreen());
-          break;
-        case 'pdf_report':
-          openFresh<PdfReportSettingsController>(const PdfReportSettingsScreen());
-          break;
-        case 'subscription':
-          Get.to(() => const SelectPlanScreen());
-          break;
-        case 'feedback':
-          Get.to(() => const FeedbackScreen());
-          break;
-        case 'about_app':
-          Get.to(() => const AboutAppScreen());
-          break;
-        case 'terms':
-          Get.to(() => const TermsOfServiceScreen());
-          break;
-        case 'privacy':
-          Get.to(() => const PrivacyPolicyScreen());
-          break;
-        default:
-          Get.snackbar('Coming soon', '$label coming soon');
-      }
-    }
-  }
-}
-
-// ─── DRAWER FOOTER ────────────────────────────────────────────────────────────
-class _DrawerFooter extends StatelessWidget {
-  final VoidCallback onLogout;
-  const _DrawerFooter({required this.onLogout});
-
-  @override
-  Widget build(BuildContext context) {
-    final controller = Get.find<DashboardController>();
-    final subscriptionController = Get.find<SubscriptionController>();
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade100)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.grey.shade100),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 32, height: 32,
-                  decoration: BoxDecoration(color: kPrimary, borderRadius: BorderRadius.circular(8)),
-                  child: const Icon(Icons.person_rounded, color: Colors.white, size: 17),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Obx(() => Text(
-                        controller.companyName.value.isEmpty ? 'Company' : controller.companyName.value,
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Colors.black87),
-                        overflow: TextOverflow.ellipsis,
-                      )),
-                      if (PermissionService.to.isAdmin)
-                        Obx(() => Text(
-                          subscriptionController.hasActiveSubscription.value
-                              ? 'Premium Account'
-                              : subscriptionController.isTrialActive.value
-                              ? 'Trial Account'
-                              : 'Free Account',
-                          style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
-                        )),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                  decoration: BoxDecoration(color: _kGreenBg, borderRadius: BorderRadius.circular(20)),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(width: 5, height: 5, decoration: const BoxDecoration(color: _kGreen, shape: BoxShape.circle)),
-                      const SizedBox(width: 4),
-                      const Text('Active', style: TextStyle(fontSize: 9, color: _kGreen, fontWeight: FontWeight.w700)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          InkWell(
-            onTap: onLogout,
-            borderRadius: BorderRadius.circular(10),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-              decoration: BoxDecoration(
-                color: _kRedBg,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: _kRed.withOpacity(0.15)),
-              ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.logout_rounded, color: _kRed, size: 16),
-                  SizedBox(width: 8),
-                  Text('Sign out', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _kRed)),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    navigateAccountingRoute(routeKey, label);
   }
 }

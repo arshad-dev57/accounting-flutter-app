@@ -100,9 +100,7 @@ void main() {
   for (final entity in libDir.listSync(recursive: true)) {
     if (entity is! File || !entity.path.endsWith('.dart')) continue;
     if (processFile(entity)) {
-      print(entity.path);
       count++;
     }
   }
-  print('Updated $count files');
 }

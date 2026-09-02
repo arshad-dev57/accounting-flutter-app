@@ -14,6 +14,7 @@ import 'package:intl/intl.dart';
 import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
@@ -212,7 +213,6 @@ class ExpenseController extends GetxController {
   // ==================== LOAD EXPENSE ACCOUNTS ====================
   Future<void> loadExpenseAccounts() async {
     try {
-      print('🔄 [loadExpenseAccounts] Loading expense accounts...');
       final response = await _api.get('/api/expenses/accounts');
 
       if (response.success) {
@@ -232,22 +232,16 @@ class ExpenseController extends GetxController {
         expenseAccounts.value = accounts
             .map((e) => Map<String, dynamic>.from(e))
             .toList();
-        print(
-          '✅ [loadExpenseAccounts] Loaded ${expenseAccounts.length} expense accounts',
-        );
       } else {
-        print('❌ [loadExpenseAccounts] Failed: ${response.message}');
         await _loadExpenseAccountsFallback1();
       }
     } catch (e) {
-      print('❌ [loadExpenseAccounts] Error: $e');
       await _loadExpenseAccountsFallback1();
     }
   }
 
   Future<void> _loadExpenseAccountsFallback1() async {
     try {
-      print('🔄 [_loadExpenseAccountsFallback1] Trying fallback...');
       final response = await _api.get(
         '/api/chart-of-accounts?type=Expense&isActive=true',
       );
@@ -272,23 +266,16 @@ class ExpenseController extends GetxController {
             'name': map['name'] ?? '',
           };
         }).toList();
-
-        print(
-          '✅ [_loadExpenseAccountsFallback1] Loaded ${expenseAccounts.length} expense accounts',
-        );
       } else {
-        print('❌ [_loadExpenseAccountsFallback1] Failed');
         await _loadExpenseAccountsFallback2();
       }
     } catch (e) {
-      print('❌ [_loadExpenseAccountsFallback1] Error: $e');
       await _loadExpenseAccountsFallback2();
     }
   }
 
   Future<void> _loadExpenseAccountsFallback2() async {
     try {
-      print('🔄 [_loadExpenseAccountsFallback2] Using default accounts...');
       final defaultAccounts = [
         {'id': '1', 'code': '5100', 'name': 'Rent Expense'},
         {'id': '2', 'code': '5200', 'name': 'Salaries Expense'},
@@ -302,65 +289,58 @@ class ExpenseController extends GetxController {
         {'id': '10', 'code': '6000', 'name': 'Other Expense'},
       ];
       expenseAccounts.value = defaultAccounts;
-      print(
-        '✅ [_loadExpenseAccountsFallback2] Using ${expenseAccounts.length} default expense accounts',
-      );
     } catch (e) {
-      print('❌ [_loadExpenseAccountsFallback2] Error: $e');
+      // Error loading default accounts
     }
   }
 
   // ==================== LOAD VENDORS ====================
   Future<void> loadVendors() async {
     try {
-      print('🔄 [loadVendors] Loading vendors...');
       final response = await _api.get('/api/accounts-payable/vendors');
       if (response.success) {
         final responseData = response.data;
         vendors.value = List<Map<String, dynamic>>.from(
           responseData['data'] ?? [],
         );
-        print('✅ [loadVendors] Loaded ${vendors.length} vendors');
-      } else {
-        print('❌ [loadVendors] Failed: ${response.message}');
       }
     } catch (e) {
-      print('❌ [loadVendors] Error: $e');
+      // Error loading vendors
     }
   }
 
   // ==================== LOAD BANK ACCOUNTS ====================
   Future<void> loadBankAccounts() async {
     try {
-      print('🔄 [loadBankAccounts] Loading bank accounts...');
       final response = await _api.get('/api/bank-accounts');
 
       if (response.success) {
         final responseData = response.data;
         List<dynamic> accounts = [];
-        if (responseData['data'] != null) {
-          accounts = responseData['data'] as List;
+
+        if (responseData != null) {
+          if (responseData is List) {
+            accounts = responseData;
+          } else if (responseData['data'] != null) {
+            if (responseData['data'] is List) {
+              accounts = responseData['data'];
+            }
+          }
         }
 
         bankAccounts.value = accounts
             .map((e) => Map<String, dynamic>.from(e))
             .toList();
-        print(
-          '✅ [loadBankAccounts] Loaded ${bankAccounts.length} bank accounts',
-        );
       } else {
-        print('❌ [loadBankAccounts] Failed: ${response.message}');
         await _loadBankAccountsFallback();
       }
     } catch (e) {
-      print('❌ [loadBankAccounts] Error: $e');
       await _loadBankAccountsFallback();
     }
   }
 
   Future<void> _loadBankAccountsFallback() async {
     try {
-      print('🔄 [_loadBankAccountsFallback] Trying fallback...');
       final response = await _api.get('/api/bank-accounts/all');
       if (response.success) {
         final responseData = response.data;
@@ -371,12 +351,9 @@ class ExpenseController extends GetxController {
         bankAccounts.value = accounts
             .map((e) => Map<String, dynamic>.from(e))
             .toList();
-        print(
-          '✅ [_loadBankAccountsFallback] Loaded ${bankAccounts.length} bank accounts',
-        );
       }
     } catch (e) {
-      print('❌ [_loadBankAccountsFallback] Error: $e');
+      // Error loading bank accounts fallback
     }
   }
 
@@ -402,31 +379,17 @@ class ExpenseController extends GetxController {
       }
       putFiscalYearId(params);
 
-      print('🔍 [loadExpenses] Loading expenses with params: $params');
       final response = await _api.get('/api/expenses', queryParameters: params);
-
-      print('🔍 [loadExpenses] Response success: ${response.success}');
-      print('🔍 [loadExpenses] Response data: ${response.data}');
 
       if (response.success) {
         final responseData = response.data;
-        print('🔍 [loadExpenses] responseData: $responseData');
-        print(
-          '🔍 [loadExpenses] responseData["data"] type: ${responseData['data'].runtimeType}',
-        );
 
         if (responseData['data'] is List) {
           List<dynamic> expensesData = responseData['data'];
-          print(
-            '🔍 [loadExpenses] expensesData length: ${expensesData.length}',
-          );
-          print('🔍 [loadExpenses] expensesData: $expensesData');
 
           final newExpenses = expensesData
               .map((json) => Expense.fromJson(json))
               .toList();
-
-          print('🔍 [loadExpenses] newExpenses length: ${newExpenses.length}');
 
           if (currentPage.value == 1) {
             allExpenses.assignAll(newExpenses);
@@ -440,23 +403,17 @@ class ExpenseController extends GetxController {
             expenses.assignAll(newExpenses);
           }
 
-          print('🔍 [loadExpenses] expenses.length: ${expenses.length}');
-          print('🔍 [loadExpenses] allExpenses.length: ${allExpenses.length}');
-          print('🔍 [loadExpenses] searchQuery.value: "${searchQuery.value}"');
           totalPages.value = responseData['pages'] ?? 1;
           hasMore.value = currentPage.value < totalPages.value;
         } else {
-          print('⚠️ [loadExpenses] responseData["data"] is not a List');
           expenses.clear();
           totalPages.value = 1;
           hasMore.value = false;
         }
       } else {
-        print('❌ [loadExpenses] Response failed: ${response.message}');
         _showError('Failed to load expenses');
       }
     } catch (e) {
-      print('❌ [loadExpenses] Error: $e');
       _showError('Error loading expenses');
     } finally {
       isLoading.value = false;
@@ -505,7 +462,6 @@ class ExpenseController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error loading more expenses: $e');
     } finally {
       isLoadingMore.value = false;
     }
@@ -543,7 +499,7 @@ class ExpenseController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error loading summary: $e');
+      // Error loading summary
     }
   }
 
@@ -607,12 +563,8 @@ class ExpenseController extends GetxController {
     try {
       isSaving.value = true;
 
-      print('🔍 [Flutter] Creating expense with bankAccountId: $bankAccountId');
-      print('🔍 [Flutter] bankAccountId type: ${bankAccountId.runtimeType}');
-      print('🔍 [Flutter] bankAccountId is null: ${bankAccountId == null}');
-      print(
-        '🔍 [Flutter] bankAccountId isEmpty: ${bankAccountId?.isEmpty ?? true}',
-      );
+    
+    
 
       final Map<String, dynamic> expenseData = {
         'date': DateFormat('yyyy-MM-dd').format(date),
@@ -628,7 +580,11 @@ class ExpenseController extends GetxController {
         'bankAccountId': bankAccountId,
       };
 
-      print('📦 [Flutter] Sending expense data: $expenseData');
+      final locationId = currentLocationId();
+      if (locationId != null && locationId.isNotEmpty) {
+        expenseData['locationId'] = locationId;
+      }
+
 
       final response = await _api.post('/api/expenses', body: expenseData);
 
@@ -655,7 +611,6 @@ class ExpenseController extends GetxController {
     } catch (e) {
       // ✅ Close loading dialog on error
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error creating expense: $e');
       _showError('Error creating expense');
     } finally {
       isSaving.value = false;
@@ -753,7 +708,6 @@ class ExpenseController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error updating expense: $e');
       _showError('Error updating expense');
     } finally {
       isSaving.value = false;
@@ -825,7 +779,6 @@ class ExpenseController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error deleting expense: $e');
       _showError('Error deleting expense');
     } finally {
       isDeleting.value = false;
@@ -893,7 +846,6 @@ class ExpenseController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error posting expense: $e');
       _showError('Error posting expense');
     } finally {
       isPosting.value = false;
@@ -1040,9 +992,7 @@ class ExpenseController extends GetxController {
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(24),
-          header: (ctx) => branding.buildHeader(
-            reportTitle: 'Expense Report',
-          ),
+          header: (ctx) => branding.buildHeader(reportTitle: 'Expense Report'),
           footer: (ctx) => branding.buildFooter(ctx),
           build: (ctx) => [
             _pdfSummarySection(branding.accent),
@@ -1143,7 +1093,6 @@ class ExpenseController extends GetxController {
 
   // ==================== PDF HELPER METHODS ====================
 
-
   pw.Widget _pdfSummarySection(PdfColor accent) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(12),
@@ -1167,11 +1116,7 @@ class ExpenseController extends GetxController {
             formatAmount(totalTax.value),
             PdfColors.orange700,
           ),
-          _pdfSummaryItem(
-            'Total Records',
-            totalCount.value.toString(),
-            accent,
-          ),
+          _pdfSummaryItem('Total Records', totalCount.value.toString(), accent),
           _pdfSummaryItem(
             'This Month',
             formatAmount(thisMonthTotal.value),

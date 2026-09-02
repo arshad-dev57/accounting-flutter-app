@@ -427,7 +427,9 @@ class DashboardController extends GetxController {
     final revenueSources = totalRevenueData['sources'] ?? {};
     if (revenueSources is Map) {
       revenueIncomeModule.value = _asDouble(revenueSources['incomeModule']);
-      revenueInvoiceTotal.value = _asDouble(revenueSources['salesModule']);
+      revenueInvoiceTotal.value = _asDouble(
+        revenueSources['salesInvoiced'] ?? revenueSources['salesModule'],
+      );
       revenueCreditNotes.value = _asDouble(revenueSources['creditNotes']);
     } else {
       final breakdown = dataObj['breakdown'] ?? {};

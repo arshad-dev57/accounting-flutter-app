@@ -14,6 +14,7 @@ import 'package:intl/intl.dart';
 import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
@@ -442,6 +443,11 @@ class IncomeController extends GetxController {
 
       if (hasValidBankAccount) {
         incomeData['bankAccountId'] = bankAccountId;
+      }
+
+      final locationId = currentLocationId();
+      if (locationId != null && locationId.isNotEmpty) {
+        incomeData['locationId'] = locationId;
       }
 
       print("📤 Creating income: ${json.encode(incomeData)}");

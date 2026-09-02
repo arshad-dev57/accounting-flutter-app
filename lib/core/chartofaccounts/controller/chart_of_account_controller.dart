@@ -91,12 +91,9 @@ class ChartOfAccountController extends GetxController {
 
         if (hasIncorrectCashAccounts.value) {
           final count = data['data']?['issues']?['incorrectCashAccounts'] ?? 0;
-          print('⚠️ $count cash/bank account(s) have incorrect type');
         }
       }
-    } catch (e) {
-      print('Error fetching account type stats: $e');
-    }
+    } catch (e) {}
   }
 
   // ─── Fix cash accounts ──────────────────────────────────────────
@@ -170,12 +167,6 @@ class ChartOfAccountController extends GetxController {
       if (searchQuery.value.isNotEmpty) {
         queryParams['search'] = searchQuery.value;
       }
-
-      // 🔥 ADD: Debug logging
-      print(
-        '📊 Fetching accounts - Filter: ${selectedFilter.value}, Page: ${currentPage.value}, Limit: ${queryParams['limit']}',
-      );
-      print('📊 Query params: $queryParams');
 
       final response = await _api.get(
         '/api/chart-of-accounts',

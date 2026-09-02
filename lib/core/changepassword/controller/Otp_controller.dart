@@ -128,7 +128,6 @@ class OTPController extends GetxController {
         );
       }
     } catch (e) {
-      print('Verify OTP Error: $e');
       AppSnackbar.success(Colors.red, 'Error', 'error. Please try again.');
     } finally {
       isLoading.value = false;
@@ -145,7 +144,6 @@ class OTPController extends GetxController {
   Future<void> clearResetToken() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('reset_token');
-    print('Reset token cleared from SharedPreferences');
   }
 
   void _startTimer() {

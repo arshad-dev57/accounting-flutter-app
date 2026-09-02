@@ -7,12 +7,118 @@ import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class SalesReportScreen extends StatelessWidget {
-  const SalesReportScreen({super.key});
+  final bool embedded;
+
+  const SalesReportScreen({super.key, this.embedded = false});
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(SalesReportController());
     final isMobile = ResponsiveUtils.isMobile(context);
+
+    final reportBody = Column(
+      children: [
+        _FiltersBar(controller: controller, isMobile: isMobile),
+        Expanded(
+          child: Obx(() {
+            if (controller.isLoading.value && controller.rows.isEmpty) {
+              return Center(
+                child: LoadingAnimationWidget.discreteCircle(
+                  color: kPrimary,
+                  size: 40,
+                ),
+              );
+            }
+            if (controller.error.value.isNotEmpty && controller.rows.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(controller.error.value, textAlign: TextAlign.center),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: controller.loadReport,
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+            return RefreshIndicator(
+              onRefresh: controller.loadReport,
+              child: ListView(
+                padding: EdgeInsets.all(isMobile ? 12 : 20),
+                children: [
+                  _SummaryCards(controller: controller, isMobile: isMobile),
+                  const SizedBox(height: 12),
+                  _ChannelBreakdown(controller: controller),
+                  const SizedBox(height: 12),
+                  _RowsTable(controller: controller, isMobile: isMobile),
+                  const SizedBox(height: 12),
+                  _Pagination(controller: controller),
+                ],
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+
+    if (embedded) {
+      return ColoredBox(
+        color: kBg,
+        child: Column(
+          children: [
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Sales Reports',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: kText,
+                      ),
+                    ),
+                  ),
+                  Obx(
+                    () => IconButton(
+                      icon: controller.isExporting.value
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: kPrimary,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.picture_as_pdf_outlined,
+                              color: kPrimary,
+                            ),
+                      onPressed: controller.isExporting.value
+                          ? null
+                          : () => controller.exportToPdf(),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh, color: kPrimary),
+                    onPressed: () => controller.loadReport(),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(child: reportBody),
+          ],
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: kBg,
@@ -58,56 +164,7 @@ class SalesReportScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          _FiltersBar(controller: controller, isMobile: isMobile),
-          Expanded(
-            child: Obx(() {
-              if (controller.isLoading.value && controller.rows.isEmpty) {
-                return Center(
-                  child: LoadingAnimationWidget.discreteCircle(
-                    color: kPrimary,
-                    size: 40,
-                  ),
-                );
-              }
-              if (controller.error.value.isNotEmpty && controller.rows.isEmpty) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(controller.error.value, textAlign: TextAlign.center),
-                        const SizedBox(height: 12),
-                        ElevatedButton(
-                          onPressed: controller.loadReport,
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
-              return RefreshIndicator(
-                onRefresh: controller.loadReport,
-                child: ListView(
-                  padding: EdgeInsets.all(isMobile ? 12 : 20),
-                  children: [
-                    _SummaryCards(controller: controller, isMobile: isMobile),
-                    const SizedBox(height: 12),
-                    _ChannelBreakdown(controller: controller),
-                    const SizedBox(height: 12),
-                    _RowsTable(controller: controller, isMobile: isMobile),
-                    const SizedBox(height: 12),
-                    _Pagination(controller: controller),
-                  ],
-                ),
-              );
-            }),
-          ),
-        ],
-      ),
+      body: reportBody,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => controller.exportToPdf(),
         backgroundColor: kPrimary,

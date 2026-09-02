@@ -3,6 +3,7 @@
 import 'dart:io';
 import 'dart:convert';
 
+import 'package:BisonsTechs_app/Services/auth_logout_service.dart';
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
@@ -13,7 +14,6 @@ import 'package:BisonsTechs_app/core/About/termsofservice_screen.dart';
 import 'package:BisonsTechs_app/core/contactsupport/contact_support_screen.dart';
 import 'package:BisonsTechs_app/core/Feedback/feedback_screen.dart';
 import 'package:BisonsTechs_app/core/ReportIsuue/Report_issue_screen.dart';
-import 'package:BisonsTechs_app/core/Sales/screens/sales_dashbaord_screen.dart';
 import 'package:BisonsTechs_app/core/UserGuide/screen/user_guide_screen.dart';
 import 'package:BisonsTechs_app/core/Users/screen/user_list_screen.dart';
 import 'package:BisonsTechs_app/core/changepassword/screen/change_password_screen.dart';
@@ -22,7 +22,6 @@ import 'package:BisonsTechs_app/core/companyprofile/screen/company_profile_scree
 import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
 import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
-import 'package:BisonsTechs_app/core/purchasedashboard/purchase_dashboard_screen.dart';
 import 'package:BisonsTechs_app/core/settings/screens/currency_screen.dart';
 import 'package:BisonsTechs_app/core/settings/screens/pdf_report_settings_screen.dart';
 import 'package:BisonsTechs_app/core/support/screens/support_tickets_screen.dart';
@@ -30,6 +29,8 @@ import 'package:BisonsTechs_app/core/tax/tax_screen.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -1044,7 +1045,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
               children: [
                 if (perms.canAccessModule('accounting'))
                   _SidebarItemWidget(
-                    icon: Icons.account_balance_outlined,
+                    iconAsset: 'assets/icons/accounting.svg',
                     label: 'Accounting',
                     index: 2,
                     selectedIndex: _selectedIndex,
@@ -1054,7 +1055,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                   ),
                 if (perms.canAccessModule('warehouse'))
                   _SidebarItemWidget(
-                    icon: Icons.warehouse_outlined,
+                    iconAsset: 'assets/icons/inventory.svg',
                     label: 'Warehouse',
                     index: 1,
                     selectedIndex: _selectedIndex,
@@ -1064,7 +1065,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                   ),
                 if (perms.canAccessModule('sales'))
                   _SidebarItemWidget(
-                    icon: Icons.point_of_sale_outlined,
+                    iconAsset: 'assets/icons/sales.svg',
                     label: 'Sales',
                     index: 3,
                     selectedIndex: _selectedIndex,
@@ -1074,7 +1075,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                   ),
                 if (perms.canAccessModule('purchases'))
                   _SidebarItemWidget(
-                    icon: Icons.shopping_cart_outlined,
+                    iconAsset: '',
                     label: 'Purchase',
                     index: 4,
                     selectedIndex: _selectedIndex,
@@ -1084,7 +1085,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                   ),
                 if (perms.canAccessModule('users'))
                   _SidebarItemWidget(
-                    icon: Icons.people_outline,
+                    iconAsset: 'assets/icons/users.svg',
                     label: 'Users',
                     index: 6,
                     selectedIndex: _selectedIndex,
@@ -1096,7 +1097,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
             );
           }),
           _SidebarItemWidget(
-            icon: Icons.percent,
+            iconAsset: 'assets/icons/tax.svg',
             label: 'Tax Compliance',
             index: 5,
             selectedIndex: _selectedIndex,
@@ -1298,7 +1299,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
           _HomeProduct(
             title: 'Sales',
             subtitle: 'Orders, invoices & collections',
-            icon: Icons.point_of_sale_outlined,
+            iconAsset: 'assets/icons/sales.svg',
             color: const Color(0xFF22A869),
             onTap: _navigateToSales,
           ),
@@ -1506,25 +1507,27 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
 
   void _navigateToWarehouse() => Get.offAllNamed('/warehouse/dashboard');
   void _navigateToAccounting() => Get.offAllNamed('/accounting/dashboard');
-  void _navigateToSales() => Get.to(() => const SalesDashboardScreen());
-  void _navigateToPurchase() => Get.to(() => const PurchaseDashboardScreen());
+  void _navigateToSales() => Get.offAllNamed('/warehouse/sales');
+  void _navigateToPurchase() => Get.offAllNamed('/purchase/dashboard');
   void _navigateToUsers() => Get.to(() => const UserListScreen());
 }
 
 class _HomeProduct {
   final String title;
   final String subtitle;
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final Color color;
   final VoidCallback onTap;
 
   const _HomeProduct({
     required this.title,
     required this.subtitle,
-    required this.icon,
+    this.icon,
+    this.iconAsset,
     required this.color,
     required this.onTap,
-  });
+  }) : assert(icon != null || iconAsset != null);
 }
 
 class _ProductCard extends StatelessWidget {
@@ -1556,7 +1559,12 @@ class _ProductCard extends StatelessWidget {
                   color: product.color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(product.icon, color: product.color, size: 24),
+                child: _ModuleIcon(
+                  icon: product.icon,
+                  iconAsset: product.iconAsset,
+                  color: product.color,
+                  size: 24,
+                ),
               ),
               const Spacer(),
               Text(
@@ -2197,7 +2205,8 @@ class _TicketFormWidgetState extends State<_TicketFormWidget> {
 }
 
 class _SidebarItemWidget extends StatefulWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? iconAsset;
   final String label;
   final int index;
   final int selectedIndex;
@@ -2206,14 +2215,15 @@ class _SidebarItemWidget extends StatefulWidget {
   final VoidCallback onTap;
 
   const _SidebarItemWidget({
-    required this.icon,
+    this.icon,
+    this.iconAsset,
     required this.label,
     required this.index,
     required this.selectedIndex,
     required this.collapsed,
     required this.showArrow,
     required this.onTap,
-  });
+  }) : assert(icon != null || iconAsset != null);
 
   @override
   State<_SidebarItemWidget> createState() => _SidebarItemWidgetState();
@@ -2225,6 +2235,12 @@ class _SidebarItemWidgetState extends State<_SidebarItemWidget> {
   @override
   Widget build(BuildContext context) {
     final bool isActive = widget.selectedIndex == widget.index;
+    final iconColor = isActive
+        ? kPrimary
+        : _isHovered
+        ? kPrimary
+        : (widget.collapsed ? Colors.grey[500]! : Colors.grey[600]!);
+    final iconSize = widget.collapsed ? 22.0 : 20.0;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -2254,15 +2270,12 @@ class _SidebarItemWidgetState extends State<_SidebarItemWidget> {
               ? Center(
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 150),
-                    child: Icon(
-                      widget.icon,
-                      key: ValueKey(widget.icon),
-                      size: 22,
-                      color: isActive
-                          ? kPrimary
-                          : _isHovered
-                          ? kPrimary
-                          : Colors.grey[500],
+                    child: _ModuleIcon(
+                      key: ValueKey(widget.iconAsset ?? widget.icon),
+                      icon: widget.icon,
+                      iconAsset: widget.iconAsset,
+                      color: iconColor,
+                      size: iconSize,
                     ),
                   ),
                 )
@@ -2270,15 +2283,12 @@ class _SidebarItemWidgetState extends State<_SidebarItemWidget> {
                   children: [
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 150),
-                      child: Icon(
-                        widget.icon,
-                        key: ValueKey(widget.icon),
-                        size: 20,
-                        color: isActive
-                            ? kPrimary
-                            : _isHovered
-                            ? kPrimary
-                            : Colors.grey[600],
+                      child: _ModuleIcon(
+                        key: ValueKey(widget.iconAsset ?? widget.icon),
+                        icon: widget.icon,
+                        iconAsset: widget.iconAsset,
+                        color: iconColor,
+                        size: iconSize,
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -2318,6 +2328,104 @@ class _SidebarItemWidgetState extends State<_SidebarItemWidget> {
                   ],
                 ),
         ),
+      ),
+    );
+  }
+}
+
+class _ModuleIcon extends StatelessWidget {
+  final IconData? icon;
+  final String? iconAsset;
+  final Color color;
+  final double size;
+
+  const _ModuleIcon({
+    super.key,
+    this.icon,
+    this.iconAsset,
+    required this.color,
+    required this.size,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (iconAsset != null) {
+      return FutureBuilder<ByteData>(
+        future: DefaultAssetBundle.of(context).load(iconAsset!),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return SvgPicture.asset(
+              iconAsset!,
+              width: size,
+              height: size,
+              colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+            );
+          }
+          return Icon(icon ?? Icons.circle_outlined, color: color, size: size);
+        },
+      );
+    }
+    return Icon(icon, color: color, size: size);
+  }
+}
+
+class _CompanyAvatar extends StatelessWidget {
+  final String logo;
+  final String companyName;
+  final double size;
+
+  const _CompanyAvatar({
+    required this.logo,
+    required this.companyName,
+    required this.size,
+  });
+
+  String get _initial {
+    final trimmed = companyName.trim();
+    if (trimmed.isEmpty) return 'C';
+    return trimmed[0].toUpperCase();
+  }
+
+  Widget _placeholder() {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        _initial,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: size * 0.42,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (logo.isEmpty) return _placeholder();
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: logo.startsWith('http')
+            ? Image.network(
+                logo,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => _placeholder(),
+              )
+            : Image.file(
+                File(logo),
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => _placeholder(),
+              ),
       ),
     );
   }
@@ -2384,51 +2492,12 @@ class _DrawerHeaderState extends State<_DrawerHeader> {
           // Company avatar + name
           Row(
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(10),
+              Obx(
+                () => _CompanyAvatar(
+                  logo: _businessLogo,
+                  companyName: profileCtrl.organizationName.value,
+                  size: 40,
                 ),
-                child: _businessLogo.isNotEmpty
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: _businessLogo.startsWith('http')
-                            ? Image.network(
-                                _businessLogo,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Padding(
-                                    padding: const EdgeInsets.all(4),
-                                    child: Image.asset(
-                                      'assets/logo.png',
-                                      fit: BoxFit.contain,
-                                    ),
-                                  );
-                                },
-                              )
-                            : Image.file(
-                                File(_businessLogo),
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Padding(
-                                    padding: const EdgeInsets.all(4),
-                                    child: Image.asset(
-                                      'assets/logo.png',
-                                      fit: BoxFit.contain,
-                                    ),
-                                  );
-                                },
-                              ),
-                      )
-                    : Padding(
-                        padding: const EdgeInsets.all(4),
-                        child: Image.asset(
-                          'assets/logo.png',
-                          fit: BoxFit.contain,
-                        ),
-                      ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -2659,10 +2728,10 @@ class _NavSectionState extends State<_NavSection> {
         Get.offAllNamed('/accounting/dashboard');
         break;
       case '__sales':
-        Get.to(() => const SalesDashboardScreen());
+        Get.offAllNamed('/warehouse/sales');
         break;
       case '__purchase':
-        Get.to(() => const PurchaseDashboardScreen());
+        Get.offAllNamed('/purchase/dashboard');
         break;
       case '__tax':
         Get.to(() => const TaxComplianceScreen());
@@ -2850,6 +2919,7 @@ class _DrawerFooter extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
+                        await AuthLogoutService.clearPushSession();
                         final prefs = await SharedPreferences.getInstance();
                         await prefs.clear();
                         Get.offAll(() => const LoginScreen());

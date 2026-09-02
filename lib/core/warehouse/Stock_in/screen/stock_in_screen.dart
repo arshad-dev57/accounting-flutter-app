@@ -10,39 +10,47 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 class StockScreen extends StatelessWidget {
-  const StockScreen({super.key});
+  final bool embedded;
+
+  const StockScreen({super.key, this.embedded = false});
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(StockController());
 
-    return Scaffold(
-      backgroundColor: kBgLight,
-      body: Column(
-        children: [
-          _buildTopHeader(controller),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
-              child: Column(
-                children: [
-                  const SizedBox(height: 16),
-                  _buildActionButtons(context, controller),
-                  const SizedBox(height: 16),
-                  StockHistoryList(
-                    controller: controller,
-                    onView: (m) => _showDetail(context, controller, m),
-                  ),
-                ],
-              ),
+    final body = Column(
+      children: [
+        _buildTopHeader(controller, embedded: embedded),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+            child: Column(
+              children: [
+                const SizedBox(height: 16),
+                _buildActionButtons(context, controller),
+                const SizedBox(height: 16),
+                StockHistoryList(
+                  controller: controller,
+                  onView: (m) => _showDetail(context, controller, m),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
+    );
+
+    if (embedded) {
+      return ColoredBox(color: kBgLight, child: body);
+    }
+
+    return Scaffold(
+      backgroundColor: kBgLight,
+      body: body,
     );
   }
 
-  Widget _buildTopHeader(StockController controller) {
+  Widget _buildTopHeader(StockController controller, {bool embedded = false}) {
     return Container(
       color: kPrimary,
       child: SafeArea(
@@ -54,10 +62,11 @@ class StockScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
               child: Row(
                 children: [
-                  IconButton(
-                    onPressed: () => Get.back(),
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  ),
+                  if (!embedded)
+                    IconButton(
+                      onPressed: () => Get.back(),
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    ),
                   Container(
                     width: 34,
                     height: 34,

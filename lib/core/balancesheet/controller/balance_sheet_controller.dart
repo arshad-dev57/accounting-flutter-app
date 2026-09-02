@@ -122,7 +122,8 @@ class BalanceSheetController extends GetxController {
   // ─── LOAD BALANCE SHEET FROM API ──────────────────────────────
   Future<void> loadBalanceSheet() async {
     try {
-      final hasData = assetsData.isNotEmpty ||
+      final hasData =
+          assetsData.isNotEmpty ||
           liabilitiesData.isNotEmpty ||
           equityData.isNotEmpty;
       if (hasData) {
@@ -276,7 +277,8 @@ class BalanceSheetController extends GetxController {
             isBalanced.value = diff < 0.01;
           }
 
-          isEmptyReport.value = data['empty'] == true ||
+          isEmptyReport.value =
+              data['empty'] == true ||
               (totalAssets.value.abs() < 0.01 &&
                   totalLiabilities.value.abs() < 0.01 &&
                   equity.value.abs() < 0.01);
@@ -541,9 +543,8 @@ class BalanceSheetController extends GetxController {
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(24),
-          header: (ctx) => branding.buildHeader(
-            reportTitle: 'Balance Sheet Report',
-          ),
+          header: (ctx) =>
+              branding.buildHeader(reportTitle: 'Balance Sheet Report'),
           footer: (ctx) => branding.buildFooter(ctx),
           build: (ctx) => [
             _pdfSummarySection(branding.accent),
@@ -573,8 +574,6 @@ class BalanceSheetController extends GetxController {
       AppSnackbar.error(kDanger, 'Error', 'Failed to export PDF: $e');
     }
   }
-
-
 
   pw.Widget _pdfSummarySection(PdfColor accent) {
     return pw.Container(
@@ -610,11 +609,7 @@ class BalanceSheetController extends GetxController {
                 _formatAmount(totalLiabilities.value),
                 PdfColors.red700,
               ),
-              _pdfSummaryItem(
-                'Equity',
-                _formatAmount(equity.value),
-                accent,
-              ),
+              _pdfSummaryItem('Equity', _formatAmount(equity.value), accent),
             ],
           ),
         ],
@@ -1324,7 +1319,6 @@ class BalanceSheetController extends GetxController {
     );
   }
 
-  // ─── PRINT BALANCE SHEET ──────────────────────────────────────────
   void printBalanceSheet() {
     AppSnackbar.success(
       kPrimary,

@@ -72,12 +72,10 @@ class _ProfileDropdownState extends State<ProfileDropdown>
             setState(() {
               _businessLogo = logo;
             });
-            print('✅ [ProfileDropdown] Business logo loaded: $logo');
           }
         }
       }
     } catch (e) {
-      print('❌ [ProfileDropdown] Error loading business logo: $e');
     }
   }
 

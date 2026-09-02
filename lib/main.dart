@@ -10,6 +10,8 @@ import 'package:BisonsTechs_app/core/Sales/screens/sales_credits_screen.dart';
 import 'package:BisonsTechs_app/core/Sales/screens/sales_dashbaord_screen.dart';
 import 'package:BisonsTechs_app/core/Sales/screens/sales_report_screen.dart';
 import 'package:BisonsTechs_app/core/accountingReports/accounting_report_screen.dart';
+import 'package:BisonsTechs_app/core/purchasedashboard/purchase_controller.dart';
+import 'package:BisonsTechs_app/core/purchasedashboard/purchase_dashboard_screen.dart';
 import 'package:BisonsTechs_app/core/purchasedashboard/purchase_report_screen.dart';
 import 'package:BisonsTechs_app/core/Splash/screen/splash_screen.dart';
 import 'package:BisonsTechs_app/core/dashboard/Screens/dashbaord_screen.dart';
@@ -61,6 +63,8 @@ import 'package:BisonsTechs_app/core/Users/screen/user_form_screen.dart';
 import 'package:BisonsTechs_app/core/Users/screen/access_management_screen.dart';
 import 'package:BisonsTechs_app/core/Users/screen/enhanced_access_management_screen.dart';
 
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
@@ -73,6 +77,8 @@ import 'package:BisonsTechs_app/Services/notification_Service.dart';
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/locations/controller/location_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_reload_binder.dart';
+import 'package:BisonsTechs_app/core/warehouse/widgets/location_scope_bar.dart';
 import 'package:BisonsTechs_app/core/warehouse/locations/screen/locations_screen.dart';
 import 'package:BisonsTechs_app/core/tax/tax_screen.dart';
 
@@ -90,6 +96,8 @@ void main() {
   Get.put(CurrencyController(), permanent: true);
   Get.put(FiscalYearController(), permanent: true);
   Get.put(LocationController(), permanent: true);
+  Get.put(LocationScopeController(), permanent: true);
+  Get.put(LocationReloadBinder(), permanent: true);
   Get.put(PermissionService(), permanent: true);
 
   runApp(const MyApp());
@@ -104,10 +112,19 @@ class MyApp extends StatelessWidget {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         await NotificationService.instance.init();
         final prefs = await SharedPreferences.getInstance();
-        final userId = prefs.getString('auth_user_id');
+        String? userId = prefs.getString('auth_user_id');
+        if (userId == null || userId.isEmpty) {
+          final raw = prefs.getString('user_data');
+          if (raw != null && raw.isNotEmpty) {
+            try {
+              final user = json.decode(raw) as Map<String, dynamic>;
+              userId = user['_id']?.toString() ?? user['id']?.toString();
+            } catch (_) {}
+          }
+        }
         if (userId != null && userId.isNotEmpty) {
-          await NotificationService.instance.login(userId);
-          await NotificationService.instance.verifyDeviceRegistration();
+          final token = prefs.getString('auth_token');
+          await NotificationService.instance.login(userId, token: token);
         }
       });
     }
@@ -123,10 +140,19 @@ class MyApp extends StatelessWidget {
           themeMode: Get.find<ThemeController>().isDarkMode.value
               ? ThemeMode.dark
               : ThemeMode.light,
+          routingCallback: (routing) {
+            if (Get.isRegistered<LocationScopeController>()) {
+              Get.find<LocationScopeController>().setRoute(
+                routing?.current ?? '',
+              );
+            }
+          },
           builder: (context, child) {
             return DefaultTextStyle.merge(
               style: AppFonts.style,
-              child: child ?? const SizedBox.shrink(),
+              child: LocationScopeHost(
+                child: child ?? const SizedBox.shrink(),
+              ),
             );
           },
           initialRoute: '/',
@@ -151,6 +177,13 @@ class MyApp extends StatelessWidget {
               page: () => const DashboardScreen(),
               binding: BindingsBuilder(() {
                 Get.lazyPut(() => DashboardController(), fenix: true);
+              }),
+            ),
+            GetPage(
+              name: '/purchase/dashboard',
+              page: () => const PurchaseDashboardScreen(),
+              binding: BindingsBuilder(() {
+                Get.lazyPut(() => PurchaseController(), fenix: true);
               }),
             ),
             GetPage(

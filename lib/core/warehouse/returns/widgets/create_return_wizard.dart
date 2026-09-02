@@ -155,7 +155,7 @@ class CreateReturnWizard extends StatelessWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: DropdownButtonFormField<String>(
-                            value: line.condition.value,
+                            value: line.condition.value?.toString(),
                             decoration: const InputDecoration(
                               labelText: 'Condition',
                               isDense: true,
@@ -213,7 +213,7 @@ class CreateReturnWizard extends StatelessWidget {
       ),
       const SizedBox(height: 12),
       DropdownButtonFormField<String>(
-        value: controller.returnMethod.value,
+        value: controller.returnMethod.value?.toString(),
         decoration: const InputDecoration(
           labelText: 'Refund Method',
           border: OutlineInputBorder(),

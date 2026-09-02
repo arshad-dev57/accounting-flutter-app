@@ -12,34 +12,64 @@ import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class SalesOrdersScreen extends StatelessWidget {
-  const SalesOrdersScreen({super.key});
+  final bool embedded;
+
+  const SalesOrdersScreen({super.key, this.embedded = false});
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(SalesOrderController());
 
+    final body = Obx(() {
+      if (controller.showCreateForm.value) {
+        return CreateOrderForm(
+          controller: controller,
+          onCancel: controller.closeCreateForm,
+        );
+      }
+
+      return Column(
+        children: [
+          _buildTopHeader(controller, embedded: embedded),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: _buildBody(controller, context),
+            ),
+          ),
+        ],
+      );
+    });
+
+    if (embedded) {
+      return ColoredBox(
+        color: kBgLight,
+        child: Stack(
+          children: [
+            body,
+            Obx(() {
+              if (controller.showCreateForm.value) {
+                return const SizedBox.shrink();
+              }
+              return Positioned(
+                right: 16,
+                bottom: 16,
+                child: FloatingActionButton(
+                  onPressed: controller.openCreateForm,
+                  backgroundColor: kPrimary,
+                  elevation: 2,
+                  child: const Icon(Icons.add, color: Colors.white, size: 24),
+                ),
+              );
+            }),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: kBgLight,
-      body: Obx(() {
-        if (controller.showCreateForm.value) {
-          return CreateOrderForm(
-            controller: controller,
-            onCancel: controller.closeCreateForm,
-          );
-        }
-
-        return Column(
-          children: [
-            _buildTopHeader(controller),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                child: _buildBody(controller, context),
-              ),
-            ),
-          ],
-        );
-      }),
+      body: body,
       floatingActionButton: FloatingActionButton(
         onPressed: controller.openCreateForm,
         backgroundColor: kPrimary,
@@ -51,7 +81,7 @@ class SalesOrdersScreen extends StatelessWidget {
 
   // ─── TOP HEADER ──────────────────────────────────────────────
 
-  Widget _buildTopHeader(SalesOrderController controller) {
+  Widget _buildTopHeader(SalesOrderController controller, {bool embedded = false}) {
     return Container(
       color: kPrimary,
       child: SafeArea(
@@ -59,19 +89,19 @@ class SalesOrdersScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Title row ──
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
               child: Row(
                 children: [
-                  GestureDetector(
-                    onTap: () => Get.back(),
-                    child: const Icon(
-                      Icons.arrow_back,
-                      color: Colors.white,
+                  if (!embedded)
+                    GestureDetector(
+                      onTap: () => Get.back(),
+                      child: const Icon(
+                        Icons.arrow_back,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
+                  if (!embedded) const SizedBox(width: 10),
                   Container(
                     width: 34,
                     height: 34,

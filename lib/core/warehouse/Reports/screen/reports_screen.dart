@@ -8,11 +8,50 @@ import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class ReportsScreen extends StatelessWidget {
-  const ReportsScreen({super.key});
+  final bool embedded;
+
+  const ReportsScreen({super.key, this.embedded = false});
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(ReportsController());
+
+    final content = Obx(() {
+      if (controller.isLoading.value) {
+        return Center(
+          child: LoadingAnimationWidget.discreteCircle(
+            color: kPrimary,
+            size: 40,
+          ),
+        );
+      }
+      return _buildContent(context, controller);
+    });
+
+    if (embedded) {
+      return ColoredBox(
+        color: kBg,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: double.infinity,
+              color: Colors.white,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: Text(
+                'Warehouse Reports',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: kText,
+                ),
+              ),
+            ),
+            Expanded(child: content),
+          ],
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: kBg,
@@ -29,17 +68,7 @@ class ReportsScreen extends StatelessWidget {
         backgroundColor: kPrimary,
         elevation: 0,
       ),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return Center(
-            child: LoadingAnimationWidget.discreteCircle(
-              color: kPrimary,
-              size: 40,
-            ),
-          );
-        }
-        return _buildContent(context, controller);
-      }),
+      body: content,
     );
   }
 

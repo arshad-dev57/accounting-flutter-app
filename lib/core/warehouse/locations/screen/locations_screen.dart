@@ -2,6 +2,7 @@
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Services/permission_service.dart';
+import 'package:BisonsTechs_app/core/plans/services/subscription_limit_helper.dart';
 import 'package:BisonsTechs_app/core/warehouse/locations/controller/location_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/locations/model/location_model.dart';
 import 'package:flutter/material.dart';
@@ -103,7 +104,7 @@ class _LocationsBodyState extends State<_LocationsBody> {
                               ? () => controller.ensureLocationsLoaded(
                                     force: true,
                                   )
-                              : () => _showLocationDialog(controller),
+                              : () => _openCreateLocation(context, controller),
                           icon: Icon(
                             controller.error.value.isNotEmpty
                                 ? Icons.refresh
@@ -142,7 +143,7 @@ class _LocationsBodyState extends State<_LocationsBody> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showLocationDialog(controller),
+        onPressed: () => _openCreateLocation(context, controller),
         backgroundColor: kPrimary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -393,6 +394,14 @@ class _LocationsBodyState extends State<_LocationsBody> {
         ],
       ),
     );
+  }
+
+  Future<void> _openCreateLocation(
+    BuildContext context,
+    LocationController controller,
+  ) async {
+    final ok = await SubscriptionLimitHelper.guardAddBranch(context);
+    if (ok) _showLocationDialog(controller);
   }
 
   void _showLocationDialog(

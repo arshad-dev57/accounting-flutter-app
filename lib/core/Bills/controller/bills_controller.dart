@@ -114,8 +114,6 @@ class BillController extends GetxController {
           };
         }).toList();
 
-        print('✅ Loaded ${suppliers.length} suppliers');
-
         if (selectedSupplierId.value.isNotEmpty) {
           bool supplierExists = suppliers.value.any(
             (s) => s['_id'] == selectedSupplierId.value,
@@ -125,9 +123,7 @@ class BillController extends GetxController {
           }
         }
       }
-    } catch (e) {
-      print('❌ Error fetching suppliers: $e');
-    }
+    } catch (e) {}
   }
 
   // ─── Fetch Bank Accounts ──────────────────────────────────────────
@@ -140,9 +136,7 @@ class BillController extends GetxController {
           response.data['data'],
         );
       }
-    } catch (e) {
-      print('Error fetching bank accounts: $e');
-    }
+    } catch (e) {}
   }
 
   // ─── Fetch Bills with Pagination ──────────────────────────────────
@@ -240,7 +234,6 @@ class BillController extends GetxController {
         bills.refresh();
       }
     } catch (e) {
-      print('❌ Error fetching bills: $e');
     } finally {
       isLoading.value = false;
       isLoadingMore.value = false;
@@ -709,9 +702,7 @@ class BillController extends GetxController {
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(24),
-          header: (ctx) => branding.buildHeader(
-            reportTitle: 'Bills Report',
-          ),
+          header: (ctx) => branding.buildHeader(reportTitle: 'Bills Report'),
           footer: (ctx) => branding.buildFooter(ctx),
           build: (ctx) => [
             _pdfSummarySection(branding.accent),
@@ -762,8 +753,6 @@ class BillController extends GetxController {
     }
   }
 
-
-
   pw.Widget _pdfSummarySection(PdfColor accent) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(12),
@@ -777,11 +766,7 @@ class BillController extends GetxController {
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
         children: [
-          _pdfSummaryItem(
-            'Total Bills',
-            bills.length.toString(),
-            accent,
-          ),
+          _pdfSummaryItem('Total Bills', bills.length.toString(), accent),
           _pdfSummaryItem(
             'Total Amount',
             _formatAmount(totalAmount.value),

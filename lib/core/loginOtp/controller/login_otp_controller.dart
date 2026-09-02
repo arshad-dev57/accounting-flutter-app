@@ -163,12 +163,10 @@ class LoginOtpController extends GetxController {
               print(
                 '🔔 [LoginOtpController] Calling NotificationService.login()...',
               );
-              await NotificationService.instance.login(userId);
-
-              print(
-                '🔔 [LoginOtpController] Calling verifyDeviceRegistration()...',
+              await NotificationService.instance.login(
+                userId,
+                token: data['token']?.toString(),
               );
-              await NotificationService.instance.verifyDeviceRegistration();
 
               print(
                 '✅ [LoginOtpController] Notification service setup completed',
@@ -267,6 +265,11 @@ class LoginOtpController extends GetxController {
       if (data['user'] != null) {
         final user = data['user'];
         await prefs.setString('user_data', json.encode(user));
+
+        final userId = user['_id']?.toString() ?? user['id']?.toString() ?? '';
+        if (userId.isNotEmpty) {
+          await prefs.setString('auth_user_id', userId);
+        }
 
         // ✅ Save user data in format expected by PermissionService
         final permissionService = Get.find<PermissionService>();

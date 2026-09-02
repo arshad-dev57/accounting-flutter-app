@@ -7,9 +7,7 @@ import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:universal_html/html.dart' as html;
 import 'package:get/get.dart';
-import 'dart:convert';
 import 'dart:io';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -81,9 +79,7 @@ class AccountsReceivableController extends GetxController {
           bankAccounts.value = List<Map<String, dynamic>>.from(data['data']);
         }
       }
-    } catch (e) {
-      print('Error fetching bank accounts: $e');
-    }
+    } catch (e) {}
   }
 
   // ─── Fetch Summary ────────────────────────────────────────────────
@@ -101,9 +97,7 @@ class AccountsReceivableController extends GetxController {
           activeCustomers.value = data['data']['activeCustomers'] ?? 0;
         }
       }
-    } catch (e) {
-      print('Error fetching summary: $e');
-    }
+    } catch (e) {}
   }
 
   // ─── Fetch Customers ──────────────────────────────────────────────
@@ -125,7 +119,9 @@ class AccountsReceivableController extends GetxController {
         final data = response.data;
         if (data['success'] ?? true) {
           customers.value = (data['data'] as List)
-              .map((e) => Customer.fromJson(Map<String, dynamic>.from(e as Map)))
+              .map(
+                (e) => Customer.fromJson(Map<String, dynamic>.from(e as Map)),
+              )
               .toList();
           _applyLocalSearch();
           await fetchSummary();
@@ -225,15 +221,11 @@ class AccountsReceivableController extends GetxController {
         'notes': notes,
       };
 
-      print('📤 Recording payment: ${json.encode(body)}');
-
       // ✅ FIX: Correct endpoint
       final response = await _apiClient.post(
         '/api/accounts-receivable/payments', // ✅ Fixed endpoint
         body: body,
       );
-
-      print('📥 Payment response: ${response.statusCode}');
 
       if (response.success &&
           (response.statusCode == 201 || response.statusCode == 200)) {
@@ -251,7 +243,6 @@ class AccountsReceivableController extends GetxController {
         AppSnackbar.error(Colors.red, 'Error', errorMsg);
       }
     } catch (e) {
-      print('❌ Error recording payment: $e');
       AppSnackbar.error(Colors.red, 'Error', 'Failed to record payment: $e');
     } finally {
       isLoading(false);
@@ -266,7 +257,6 @@ class AccountsReceivableController extends GetxController {
 
   // ─── View Invoices ───────────────────────────────────────────────
   void viewInvoices(Customer customer) {
-    // TODO: Navigate to invoices list for this customer
     AppSnackbar.success(
       Colors.blue,
       'Invoices',
@@ -277,7 +267,6 @@ class AccountsReceivableController extends GetxController {
 
   // ─── ✅ FIXED: Show Record Payment Dialog ─────────────────────────
   void showRecordPayment(Customer customer) {
-    // TODO: Show payment dialog with invoice selection
     AppSnackbar.success(
       Colors.green,
       'Record Payment',
@@ -369,9 +358,8 @@ class AccountsReceivableController extends GetxController {
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(24),
-          header: (ctx) => branding.buildHeader(
-            reportTitle: 'Accounts Receivable Report',
-          ),
+          header: (ctx) =>
+              branding.buildHeader(reportTitle: 'Accounts Receivable Report'),
           footer: (ctx) => branding.buildFooter(ctx),
           build: (ctx) => [
             _pdfSummarySection(branding.accent),
@@ -387,13 +375,6 @@ class AccountsReceivableController extends GetxController {
           'accounts_receivable_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
 
       if (kIsWeb) {
-        final blob = html.Blob([bytes], 'application/pdf');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
-
         if (Get.isDialogOpen ?? false) Get.back();
 
         AppSnackbar.success(
@@ -575,77 +556,69 @@ class AccountsReceivableController extends GetxController {
             ],
           ),
         ),
-        ...dataToExport
-            .map(
-              (customer) => pw.Container(
-                padding: const pw.EdgeInsets.symmetric(vertical: 6),
-                decoration: const pw.BoxDecoration(
-                  border: pw.Border(
-                    bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.5),
+        ...dataToExport.map(
+          (customer) => pw.Container(
+            padding: const pw.EdgeInsets.symmetric(vertical: 6),
+            decoration: const pw.BoxDecoration(
+              border: pw.Border(
+                bottom: pw.BorderSide(color: PdfColors.grey200, width: 0.5),
+              ),
+            ),
+            child: pw.Row(
+              children: [
+                pw.Expanded(
+                  flex: 3,
+                  child: pw.Text(
+                    customer.name,
+                    style: const pw.TextStyle(fontSize: 9),
                   ),
                 ),
-                child: pw.Row(
-                  children: [
-                    pw.Expanded(
-                      flex: 3,
-                      child: pw.Text(
-                        customer.name,
-                        style: const pw.TextStyle(fontSize: 9),
-                      ),
-                    ),
-                    pw.Expanded(
-                      flex: 2,
-                      child: pw.Text(
-                        customer.phone,
-                        style: const pw.TextStyle(fontSize: 9),
-                      ),
-                    ),
-                    pw.Expanded(
-                      flex: 2,
-                      child: pw.Text(
-                        customer.totalInvoices.toString(),
-                        textAlign: pw.TextAlign.right,
-                        style: const pw.TextStyle(fontSize: 9),
-                      ),
-                    ),
-                    pw.Expanded(
-                      flex: 2,
-                      child: pw.Text(
-                        _formatAmount(customer.totalAmount),
-                        textAlign: pw.TextAlign.right,
-                        style: pw.TextStyle(
-                          fontSize: 9,
-                          color: PdfColors.indigo700,
-                        ),
-                      ),
-                    ),
-                    pw.Expanded(
-                      flex: 2,
-                      child: pw.Text(
-                        _formatAmount(customer.paidAmount),
-                        textAlign: pw.TextAlign.right,
-                        style: pw.TextStyle(
-                          fontSize: 9,
-                          color: PdfColors.green700,
-                        ),
-                      ),
-                    ),
-                    pw.Expanded(
-                      flex: 2,
-                      child: pw.Text(
-                        _formatAmount(customer.outstandingAmount),
-                        textAlign: pw.TextAlign.right,
-                        style: pw.TextStyle(
-                          fontSize: 9,
-                          color: PdfColors.red700,
-                        ),
-                      ),
-                    ),
-                  ],
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Text(
+                    customer.phone,
+                    style: const pw.TextStyle(fontSize: 9),
+                  ),
                 ),
-              ),
-            )
-            .toList(),
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Text(
+                    customer.totalInvoices.toString(),
+                    textAlign: pw.TextAlign.right,
+                    style: const pw.TextStyle(fontSize: 9),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Text(
+                    _formatAmount(customer.totalAmount),
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(
+                      fontSize: 9,
+                      color: PdfColors.indigo700,
+                    ),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Text(
+                    _formatAmount(customer.paidAmount),
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(fontSize: 9, color: PdfColors.green700),
+                  ),
+                ),
+                pw.Expanded(
+                  flex: 2,
+                  child: pw.Text(
+                    _formatAmount(customer.outstandingAmount),
+                    textAlign: pw.TextAlign.right,
+                    style: pw.TextStyle(fontSize: 9, color: PdfColors.red700),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),
@@ -1030,15 +1003,6 @@ class AccountsReceivableController extends GetxController {
           'accounts_receivable_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
 
       if (kIsWeb) {
-        final blob = html.Blob([
-          bytes,
-        ], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
-
         if (Get.isDialogOpen ?? false) Get.back();
 
         AppSnackbar.success(
@@ -1200,14 +1164,12 @@ class Customer {
   factory Customer.fromJson(Map<String, dynamic> json) {
     final invoices = json['invoices'] != null
         ? (json['invoices'] as List)
-            .map((e) => Invoice.fromJson(Map<String, dynamic>.from(e as Map)))
-            .toList()
+              .map((e) => Invoice.fromJson(Map<String, dynamic>.from(e as Map)))
+              .toList()
         : <Invoice>[];
 
     // Prefer API outstanding; fall back to sum of invoice lines
-    double outstanding = _d(
-      json['outstandingAmount'] ?? json['outstanding'],
-    );
+    double outstanding = _d(json['outstandingAmount'] ?? json['outstanding']);
     if (outstanding == 0 && invoices.isNotEmpty) {
       outstanding = invoices.fold<double>(
         0,
@@ -1220,7 +1182,9 @@ class Customer {
       name: json['name']?.toString() ?? '',
       email: json['email']?.toString() ?? '',
       phone: json['phone']?.toString() ?? '',
-      totalInvoices: _i(json['invoiceCount'] ?? json['totalInvoices'] ?? invoices.length),
+      totalInvoices: _i(
+        json['invoiceCount'] ?? json['totalInvoices'] ?? invoices.length,
+      ),
       totalAmount: _d(json['totalAmount']),
       paidAmount: _d(json['paidAmount']),
       outstandingAmount: outstanding,
@@ -1257,18 +1221,22 @@ class Invoice {
 
   factory Invoice.fromJson(Map<String, dynamic> json) {
     return Invoice(
-      id: json['invoiceNumber']?.toString() ??
+      id:
+          json['invoiceNumber']?.toString() ??
           json['id']?.toString() ??
           json['_id']?.toString() ??
           '',
-      date: DateTime.tryParse(json['date']?.toString() ?? '') ??
+      date:
+          DateTime.tryParse(json['date']?.toString() ?? '') ??
           DateTime.tryParse(json['invoiceDate']?.toString() ?? '') ??
           DateTime.now(),
-      dueDate: DateTime.tryParse(json['dueDate']?.toString() ?? '') ??
+      dueDate:
+          DateTime.tryParse(json['dueDate']?.toString() ?? '') ??
           DateTime.now(),
       amount: _d(json['totalAmount'] ?? json['amount'] ?? json['grandTotal']),
       paidAmount: _d(json['paidAmount']),
-      status: json['status']?.toString() ??
+      status:
+          json['status']?.toString() ??
           json['paymentStatus']?.toString() ??
           'Unpaid',
     );

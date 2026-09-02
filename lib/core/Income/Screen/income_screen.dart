@@ -11,11 +11,74 @@ import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class IncomeScreen extends StatelessWidget {
-  const IncomeScreen({super.key});
+  final bool embedded;
+
+  const IncomeScreen({super.key, this.embedded = false});
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(IncomeController());
+
+    if (embedded) {
+      return ColoredBox(
+        color: kBgLight,
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                Expanded(
+                  child: Obx(() {
+                    if (controller.isLoading.value &&
+                        controller.incomes.isEmpty) {
+                      return Center(
+                        child: LoadingAnimationWidget.discreteCircle(
+                          color: kPrimary,
+                          size: 40,
+                        ),
+                      );
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                      child: Column(
+                        children: [
+                          _buildSummaryCards(controller),
+                          const SizedBox(height: 8),
+                          Expanded(
+                            child: _buildListView(controller, context),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ),
+            Positioned(
+              right: 16,
+              bottom: 16,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: kPrimary.withOpacity(0.4),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: FloatingActionButton(
+                  onPressed: () => _showAddIncomeDialog(controller, context),
+                  backgroundColor: kPrimary,
+                  elevation: 0,
+                  child: const Icon(Icons.add, color: Colors.white, size: 24),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: kBgLight,

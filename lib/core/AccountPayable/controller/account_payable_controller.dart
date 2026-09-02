@@ -6,7 +6,6 @@ import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:universal_html/html.dart' as html;
 import 'package:get/get.dart';
 import 'dart:io';
 import 'package:intl/intl.dart';
@@ -117,12 +116,9 @@ class AccountsPayableController extends GetxController {
           suppliers.value = (data['data'] as List)
               .map((e) => Supplier.fromJson(e))
               .toList();
-          print('✅ Loaded ${suppliers.length} suppliers');
         }
       }
-    } catch (e) {
-      print('❌ Error fetching suppliers: $e');
-    }
+    } catch (e) {}
   }
 
   // ─── Fetch Summary ───────────────────────────────────────────────
@@ -140,9 +136,7 @@ class AccountsPayableController extends GetxController {
           activeSuppliers.value = data['data']['activeSuppliers'] ?? 0;
         }
       }
-    } catch (e) {
-      print('Error fetching summary: $e');
-    }
+    } catch (e) {}
   }
 
   // ─── Fetch Bills with Pagination ─────────────────────────────────
@@ -244,7 +238,6 @@ class AccountsPayableController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error fetching bills: $e');
     } finally {
       isLoading.value = false;
       isLoadingMore.value = false;
@@ -754,9 +747,8 @@ class AccountsPayableController extends GetxController {
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(24),
-          header: (ctx) => branding.buildHeader(
-            reportTitle: 'Accounts Payable Report',
-          ),
+          header: (ctx) =>
+              branding.buildHeader(reportTitle: 'Accounts Payable Report'),
           footer: (ctx) => branding.buildFooter(ctx),
           build: (ctx) => [
             _pdfSummarySection(branding.accent),
@@ -774,13 +766,6 @@ class AccountsPayableController extends GetxController {
           'accounts_payable_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
 
       if (kIsWeb) {
-        final blob = html.Blob([bytes], 'application/pdf');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
-
         if (Get.isDialogOpen ?? false) Get.back();
 
         AppSnackbar.success(
@@ -808,8 +793,6 @@ class AccountsPayableController extends GetxController {
       AppSnackbar.error(kDanger, 'Error', 'Failed to export PDF: $e');
     }
   }
-
-
 
   pw.Widget _pdfSummarySection(PdfColor accent) {
     return pw.Container(
@@ -1688,15 +1671,6 @@ class AccountsPayableController extends GetxController {
           'accounts_payable_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
 
       if (kIsWeb) {
-        final blob = html.Blob([
-          bytes,
-        ], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
-
         if (Get.isDialogOpen ?? false) Get.back();
 
         AppSnackbar.success(
@@ -1873,7 +1847,8 @@ class Bill {
       return 0.0;
     }
 
-    dynamic vendorData = json['vendor'] ?? json['vendorId'] ?? json['supplierId'] ?? {};
+    dynamic vendorData =
+        json['vendor'] ?? json['vendorId'] ?? json['supplierId'] ?? {};
     String supplierId = json['supplierId']?.toString() ?? '';
     String supplierName = json['vendorName'] ?? json['supplierName'] ?? '';
 
