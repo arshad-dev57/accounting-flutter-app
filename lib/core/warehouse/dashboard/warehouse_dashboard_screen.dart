@@ -1,5 +1,6 @@
-import 'dart:io';
 import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/widgets/dashboard_hero_watermark.dart';
+import 'package:BisonsTechs_app/widgets/dashboard_mobile_chrome.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/widgets/fiscal_year_select.dart';
 import 'package:BisonsTechs_app/core/warehouse/widgets/location_switcher.dart';
 import 'package:BisonsTechs_app/core/Notifications/screens/notification_screen.dart';
@@ -70,7 +71,8 @@ class _WarehouseDashboardView extends StatefulWidget {
   const _WarehouseDashboardView();
 
   @override
-  State<_WarehouseDashboardView> createState() => _WarehouseDashboardViewState();
+  State<_WarehouseDashboardView> createState() =>
+      _WarehouseDashboardViewState();
 }
 
 class _WarehouseDashboardViewState extends State<_WarehouseDashboardView> {
@@ -129,8 +131,9 @@ class _WarehouseDashboardBody extends GetView<WarehouseDashboardController> {
     Get.put(WarehouseDashboardController());
     final isMobile = ResponsiveUtils.isMobile(context);
     final isTablet = MediaQuery.of(context).size.width >= 600;
-    final bottomReserve =
-        isMobile ? DashboardGlassBottomNav.reservedHeight(context) : 100.0;
+    final bottomReserve = isMobile
+        ? DashboardGlassBottomNav.reservedHeight(context)
+        : 100.0;
 
     return Scaffold(
       backgroundColor: _kPageBg,
@@ -144,52 +147,55 @@ class _WarehouseDashboardBody extends GetView<WarehouseDashboardController> {
             if (isMobile)
               _buildMobileTab(isTablet: isTablet, bottomReserve: bottomReserve)
             else
-              _buildDashboardTab(isTablet: isTablet, bottomReserve: bottomReserve),
+              _buildDashboardTab(
+                isTablet: isTablet,
+                bottomReserve: bottomReserve,
+              ),
             if (isMobile)
               Positioned(
                 left: 0,
                 right: 0,
                 bottom: 0,
                 child: DashboardGlassBottomNav(
-                items: [
-                  DashboardBottomNavItem(
-                    label: 'Dashboard',
-                    iconAsset: 'assets/icons/dashboard.svg',
-                    fallbackIcon: Icons.dashboard_outlined,
-                    selected: tabIndex == 0,
-                    onTap: () => onSelectTab(0),
-                  ),
-                  DashboardBottomNavItem(
-                    label: 'Stock',
-                    iconAsset: 'assets/icons/purchase.svg',
-                    fallbackIcon: Icons.inventory_2_outlined,
-                    selected: tabIndex == 1,
-                    onTap: () => onSelectTab(1),
-                  ),
-                  DashboardBottomNavItem(
-                    label: 'More',
-                    iconAsset: 'assets/icons/accounting.svg',
-                    fallbackIcon: Icons.grid_view_rounded,
-                    selected: tabIndex == 2,
-                    onTap: () => onSelectTab(2),
-                  ),
-                  DashboardBottomNavItem(
-                    label: 'Reports',
-                    iconAsset: 'assets/icons/reports.svg',
-                    fallbackIcon: Icons.assessment_outlined,
-                    selected: tabIndex == 3,
-                    onTap: () => onSelectTab(3),
-                  ),
-                  DashboardBottomNavItem(
-                    label: 'Settings',
-                    iconAsset: 'assets/icons/settings.svg',
-                    fallbackIcon: Icons.settings_outlined,
-                    selected: tabIndex == 4,
-                    onTap: () => onSelectTab(4),
-                  ),
-                ],
+                  items: [
+                    DashboardBottomNavItem(
+                      label: 'Dashboard',
+                      iconAsset: 'assets/icons/dashboard.svg',
+                      fallbackIcon: Icons.dashboard_outlined,
+                      selected: tabIndex == 0,
+                      onTap: () => onSelectTab(0),
+                    ),
+                    DashboardBottomNavItem(
+                      label: 'Stock',
+                      iconAsset: 'assets/icons/purchase.svg',
+                      fallbackIcon: Icons.inventory_2_outlined,
+                      selected: tabIndex == 1,
+                      onTap: () => onSelectTab(1),
+                    ),
+                    DashboardBottomNavItem(
+                      label: 'More',
+                      iconAsset: 'assets/icons/accounting.svg',
+                      fallbackIcon: Icons.grid_view_rounded,
+                      selected: tabIndex == 2,
+                      onTap: () => onSelectTab(2),
+                    ),
+                    DashboardBottomNavItem(
+                      label: 'Reports',
+                      iconAsset: 'assets/icons/reports.svg',
+                      fallbackIcon: Icons.assessment_outlined,
+                      selected: tabIndex == 3,
+                      onTap: () => onSelectTab(3),
+                    ),
+                    DashboardBottomNavItem(
+                      label: 'Settings',
+                      iconAsset: 'assets/icons/settings.svg',
+                      fallbackIcon: Icons.settings_outlined,
+                      selected: tabIndex == 4,
+                      onTap: () => onSelectTab(4),
+                    ),
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -203,10 +209,7 @@ class _WarehouseDashboardBody extends GetView<WarehouseDashboardController> {
     final pad = EdgeInsets.only(bottom: bottomReserve);
     switch (tabIndex) {
       case 1:
-        return Padding(
-          padding: pad,
-          child: const StockScreen(embedded: true),
-        );
+        return Padding(padding: pad, child: const StockScreen(embedded: true));
       case 2:
         return Padding(
           padding: pad,
@@ -250,7 +253,10 @@ class _WarehouseDashboardBody extends GetView<WarehouseDashboardController> {
           ),
         );
       default:
-        return _buildDashboardTab(isTablet: isTablet, bottomReserve: bottomReserve);
+        return _buildDashboardTab(
+          isTablet: isTablet,
+          bottomReserve: bottomReserve,
+        );
     }
   }
 
@@ -320,10 +326,7 @@ class _WarehouseDashboardBody extends GetView<WarehouseDashboardController> {
       title: const SizedBox.shrink(),
       actions: [
         LocationSwitcher(compact: true, showManageLink: !isMobile),
-        FiscalYearSelect(
-          compact: true,
-          showManageLink: !isMobile,
-        ),
+        FiscalYearSelect(compact: true, showManageLink: !isMobile),
         IconButton(
           icon: const Icon(
             Icons.notifications_none_rounded,
@@ -378,7 +381,7 @@ class _WarehouseDashboardBody extends GetView<WarehouseDashboardController> {
                 mainAxisSpacing: 10,
                 childAspectRatio: 1.55,
               ),
-              itemBuilder: (_, __) => _shimmerBox(radius: 14),
+              itemBuilder: (_, _) => _shimmerBox(radius: 14),
             ),
             const SizedBox(height: 16),
             _shimmerBox(height: 200, radius: 16),
@@ -417,7 +420,7 @@ class _WarehouseDashboardBody extends GetView<WarehouseDashboardController> {
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           itemCount: WarehouseDashboardController.periodLabels.length + 1,
-          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          separatorBuilder: (_, _) => const SizedBox(width: 8),
           itemBuilder: (_, i) {
             if (i < WarehouseDashboardController.periodLabels.length) {
               final period = WarehouseDashboardController.periodLabels[i];
@@ -854,7 +857,7 @@ class _WarehouseDashboardBody extends GetView<WarehouseDashboardController> {
       isStrokeCapRound: true,
       dotData: FlDotData(
         show: true,
-        getDotPainter: (_, __, ___, ____) =>
+        getDotPainter: (_, _, _, _) =>
             FlDotCirclePainter(radius: 3, color: color, strokeWidth: 0),
       ),
       belowBarData: BarAreaData(
@@ -1127,7 +1130,9 @@ class _WarehouseDashboardBody extends GetView<WarehouseDashboardController> {
           Container(
             padding: const EdgeInsets.all(5),
             decoration: BoxDecoration(
-              color: isAlert ? item.color.withValues(alpha: 0.12) : _kCardBorder,
+              color: isAlert
+                  ? item.color.withValues(alpha: 0.12)
+                  : _kCardBorder,
               borderRadius: BorderRadius.circular(7),
             ),
             child: Icon(
@@ -1151,7 +1156,9 @@ class _WarehouseDashboardBody extends GetView<WarehouseDashboardController> {
             width: 28,
             height: 28,
             decoration: BoxDecoration(
-              color: isAlert ? item.color.withValues(alpha: 0.15) : _kCardBorder,
+              color: isAlert
+                  ? item.color.withValues(alpha: 0.15)
+                  : _kCardBorder,
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -1306,9 +1313,6 @@ class _HeroCardWrapper extends GetView<WarehouseDashboardController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final logo = controller.businessLogo.value;
-      final hasLogo = logo.isNotEmpty;
-
       return Container(
         decoration: BoxDecoration(
           gradient: const LinearGradient(
@@ -1330,33 +1334,7 @@ class _HeroCardWrapper extends GetView<WarehouseDashboardController> {
           borderRadius: BorderRadius.circular(17),
           child: Stack(
             children: [
-              if (hasLogo)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: Opacity(
-                      opacity: 0.07,
-                      child: logo.startsWith('http')
-                          ? Image.network(
-                              logo,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                              alignment: Alignment.center,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const SizedBox.shrink(),
-                            )
-                          : Image.file(
-                              File(logo),
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                              alignment: Alignment.center,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const SizedBox.shrink(),
-                            ),
-                    ),
-                  ),
-                ),
+              const DashboardHeroWatermark(),
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -1447,7 +1425,8 @@ class _HeroCardWrapper extends GetView<WarehouseDashboardController> {
                                       style: TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.w600,
-                                        color: controller.lowStockCount.value > 0
+                                        color:
+                                            controller.lowStockCount.value > 0
                                             ? _kOrange
                                             : _kGreen,
                                       ),
@@ -1593,7 +1572,7 @@ class _SectionCard extends StatelessWidget {
                   color: _kTextPrimary,
                 ),
               ),
-              if (trailing != null) trailing!,
+              ?trailing,
             ],
           ),
           const SizedBox(height: 14),

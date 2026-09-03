@@ -277,7 +277,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _items.length,
-              separatorBuilder: (_, __) => Divider(color: kBorder),
+              separatorBuilder: (_, _) => Divider(color: kBorder),
               itemBuilder: (context, index) {
                 return _buildItemTile(_items[index], index);
               },

@@ -2,17 +2,21 @@ import 'package:BisonsTechs_app/Services/auth_logout_service.dart';
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
-import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
 import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
 import 'package:BisonsTechs_app/core/plans/views/pricing_section.dart';
+import 'package:BisonsTechs_app/core/plans/views/pos_active_screen.dart';
 import 'package:BisonsTechs_app/core/plans/utils/subscription_pricing.dart';
-import 'package:BisonsTechs_app/core/support/controllers/support_ticket_controller.dart';
-import 'package:BisonsTechs_app/core/support/screens/support_tickets_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+const String _plansContactEmail = 'support@bisonstechs.com';
+const String _plansContactPhone = '+92 325 3411482';
+const String _plansContactPhoneTel = '+923253411482';
 
 class SelectPlanScreen extends StatefulWidget {
   const SelectPlanScreen({super.key});
@@ -24,6 +28,7 @@ class SelectPlanScreen extends StatefulWidget {
 class _SelectPlanScreenState extends State<SelectPlanScreen> {
   late final SubscriptionController _subCtrl;
   bool _isProcessing = false;
+  String? _pendingProductTier;
 
   @override
   void initState() {
@@ -34,7 +39,11 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
     _subCtrl.checkSubscriptionStatus();
   }
 
-  Future<void> _withLoading(String message, Future<bool> Function() action) async {
+  Future<void> _withLoading(
+    String message,
+    Future<bool> Function() action, {
+    String? productTier,
+  }) async {
     if (_isProcessing) return;
     setState(() => _isProcessing = true);
 
@@ -70,7 +79,12 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
     if (Get.isDialogOpen ?? false) Get.back();
 
     if (ok && mounted) {
-      Get.offAllNamed('/dashboard');
+      final tier = productTier ?? _pendingProductTier ?? _subCtrl.productTier.value;
+      if (tier == tierPos) {
+        Get.off(() => const PosActiveScreen());
+      } else {
+        Get.offAllNamed('/dashboard');
+      }
     }
 
     if (mounted) setState(() => _isProcessing = false);
@@ -88,6 +102,7 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
     required int licensedBranches,
     required bool isUpgrade,
   }) async {
+    _pendingProductTier = productTier;
     await _withLoading(
       isUpgrade ? 'Updating your subscription...' : 'Activating your subscription...',
       () => _subCtrl.subscribe(
@@ -98,6 +113,7 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
         licensedBranches: licensedBranches,
         isUpgrade: isUpgrade,
       ),
+      productTier: productTier,
     );
   }
 
@@ -181,9 +197,7 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
             }
             if (_subCtrl.hasAccess) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (Get.currentRoute != '/dashboard') {
-                  Get.offAllNamed('/dashboard');
-                }
+                _subCtrl.goToAppHome();
               });
               return const Center(child: CircularProgressIndicator(color: kPrimary));
             }
@@ -193,6 +207,8 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
           return Column(
             children: [
               _TopBar(
+                showHome: _subCtrl.hasAccess,
+                isPosOnly: _subCtrl.isPosOnly,
                 onCancel: (_subCtrl.hasAccess && !_subCtrl.onTrial) ? _cancel : null,
               ),
               Expanded(
@@ -213,7 +229,14 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
                             _ActiveBanner(
                               isTrial: _subCtrl.onTrial,
                               plan: _subCtrl.subscriptionPlan.value,
-                              onContinue: () => Get.offAllNamed('/dashboard'),
+                              isPos: _subCtrl.hasPosSubscription,
+                              onContinue: () {
+                                if (_subCtrl.hasPosSubscription) {
+                                  Get.to(() => const PosActiveScreen());
+                                } else {
+                                  Get.offAllNamed('/dashboard');
+                                }
+                              },
                               onCancel: _subCtrl.onTrial ? null : _cancel,
                             ),
                             const SizedBox(height: 20),
@@ -232,7 +255,14 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
                             processing: _isProcessing,
                             isTrial: _subCtrl.onTrial,
                             isPaid: _subCtrl.hasAccess && !_subCtrl.onTrial,
-                            onComplete: () => Get.offAllNamed('/dashboard'),
+                            trialEligible: _subCtrl.trialEligible.value,
+                            onComplete: () {
+                              if (_subCtrl.isPosOnly) {
+                                Get.offAll(() => const PosActiveScreen());
+                              } else {
+                                Get.offAllNamed('/dashboard');
+                              }
+                            },
                             onStartTrial: _startTrial,
                             onSubscribe: _subscribePlan,
                           ),
@@ -254,34 +284,7 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
                           const SizedBox(height: 20),
                           const _CompareTable(),
                           const SizedBox(height: 28),
-                          Center(
-                            child: Text.rich(
-                              TextSpan(
-                                style: const TextStyle(fontSize: 12, color: Color(0xFFA3A3A3)),
-                                children: [
-                                  const TextSpan(text: 'Need help choosing? '),
-                                  WidgetSpan(
-                                    alignment: PlaceholderAlignment.baseline,
-                                    baseline: TextBaseline.alphabetic,
-                                    child: GestureDetector(
-                                      onTap: () => Get.to(
-                                        () => const SupportTicketsScreen(),
-                                      ),
-                                      child: const Text(
-                                        'Open a support ticket',
-                                        style: TextStyle(
-                                          color: kPrimary,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const TextSpan(text: ' or request a Custom plan above.'),
-                                ],
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
+                          const _CustomPlanContactFooter(),
                         ]),
                       ),
                     ),
@@ -302,7 +305,13 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
 
 class _TopBar extends StatelessWidget {
   final VoidCallback? onCancel;
-  const _TopBar({this.onCancel});
+  final bool showHome;
+  final bool isPosOnly;
+  const _TopBar({
+    this.onCancel,
+    this.showHome = false,
+    this.isPosOnly = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -341,16 +350,22 @@ class _TopBar extends StatelessWidget {
             ],
           ),
           const Spacer(),
-          TextButton(
-            onPressed: () {
-              if (Navigator.canPop(context)) {
-                Get.back();
-              } else {
-                Get.offAllNamed('/dashboard');
-              }
-            },
-            child: const Text('Dashboard', style: TextStyle(color: kPrimary)),
-          ),
+          if (showHome)
+            TextButton(
+              onPressed: () {
+                if (isPosOnly) {
+                  Get.offAll(() => const PosActiveScreen());
+                } else if (Navigator.canPop(context)) {
+                  Get.back();
+                } else {
+                  Get.offAllNamed('/dashboard');
+                }
+              },
+              child: Text(
+                isPosOnly ? 'POS' : 'Dashboard',
+                style: const TextStyle(color: kPrimary),
+              ),
+            ),
           if (onCancel != null)
             TextButton(
               onPressed: onCancel,
@@ -441,12 +456,14 @@ class _HeroHeader extends StatelessWidget {
 class _ActiveBanner extends StatelessWidget {
   final bool isTrial;
   final String plan;
+  final bool isPos;
   final VoidCallback onContinue;
   final VoidCallback? onCancel;
 
   const _ActiveBanner({
     required this.isTrial,
     required this.plan,
+    this.isPos = false,
     required this.onContinue,
     this.onCancel,
   });
@@ -464,7 +481,11 @@ class _ActiveBanner extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              isTrial ? 'You are on a Free Trial' : 'Current plan: $plan',
+              isTrial
+                  ? 'You are on a Free Trial'
+                  : isPos
+                  ? 'POS subscription active'
+                  : 'Current plan: $plan',
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -479,7 +500,10 @@ class _ActiveBanner extends StatelessWidget {
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
-            child: const Text('Continue to ERP', style: TextStyle(fontSize: 12)),
+            child: Text(
+              isPos ? 'POS details' : 'Continue to ERP',
+              style: const TextStyle(fontSize: 12),
+            ),
           ),
           if (onCancel != null)
             TextButton(
@@ -779,206 +803,86 @@ class _CompareTable extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// CUSTOM PLAN SHEET
+// CUSTOM PLAN CONTACT FOOTER
 // ═══════════════════════════════════════════════════════════════════
 
-class _CustomPlanSheet extends StatefulWidget {
-  const _CustomPlanSheet();
+class _CustomPlanContactFooter extends StatelessWidget {
+  const _CustomPlanContactFooter();
 
-  @override
-  State<_CustomPlanSheet> createState() => _CustomPlanSheetState();
-}
-
-class _CustomPlanSheetState extends State<_CustomPlanSheet> {
-  final _titleCtrl = TextEditingController();
-  final _companyCtrl = TextEditingController();
-  final _featuresCtrl = TextEditingController();
-  bool _submitting = false;
-
-  @override
-  void dispose() {
-    _titleCtrl.dispose();
-    _companyCtrl.dispose();
-    _featuresCtrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submit() async {
-    if (_titleCtrl.text.trim().isEmpty || _featuresCtrl.text.trim().isEmpty) {
-      AppSnackbar.error(kDanger, 'Required', 'Please describe the features you want');
-      return;
-    }
-    setState(() => _submitting = true);
-
-    final support = Get.isRegistered<SupportTicketController>()
-        ? Get.find<SupportTicketController>()
-        : Get.put(SupportTicketController());
-
-    final description = [
-      'Custom plan / feature request from Subscription page.',
-      if (_companyCtrl.text.trim().isNotEmpty)
-        'Company / context: ${_companyCtrl.text.trim()}',
-      '',
-      'Requested features / requirements:',
-      _featuresCtrl.text.trim(),
-    ].join('\n');
-
-    final ok = await support.createTicket(
-      title: _titleCtrl.text.trim(),
-      description: description,
-      category: 'Feature Request',
-      priority: 'Medium',
-    );
-
-    if (mounted) setState(() => _submitting = false);
-    if (ok && mounted) {
-      Get.back();
-      AppSnackbar.success(
-        kSuccess,
-        'Request sent',
-        'Our team will contact you to discuss features and pricing.',
-      );
+  Future<void> _launch(Uri uri) async {
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final bottom = MediaQuery.viewInsetsOf(context).bottom;
-    return Padding(
-      padding: EdgeInsets.fromLTRB(20, 16, 20, 20 + bottom),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE5E5E5),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Custom plan',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF0A0A0A),
-              ),
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'Tell us what new features or workflows you need. Our team will discuss scope and pricing with you.',
-              style: TextStyle(fontSize: 13, color: Color(0xFF737373), height: 1.4),
-            ),
-            const SizedBox(height: 18),
-            _field('Request title', _titleCtrl,
-                hint: 'e.g. Multi-branch inventory + custom payroll reports'),
-            const SizedBox(height: 12),
-            _field('Company / context (optional)', _companyCtrl,
-                hint: 'Business name, industry, team size'),
-            const SizedBox(height: 12),
-            _field(
-              'Features you want',
-              _featuresCtrl,
-              hint: 'List the modules, reports, integrations or workflows you need…',
-              maxLines: 5,
-            ),
-            const SizedBox(height: 18),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Get.back(),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: const BorderSide(color: Color(0xFFD4D4D4)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text('Cancel'),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _submitting ? null : _submit,
-                    style: ElevatedButton.styleFrom(
-                      elevation: 0,
-                      backgroundColor: kPrimary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: _submitting
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text(
-                            'Send to team',
-                            style: TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _field(
-    String label,
-    TextEditingController ctrl, {
-    String? hint,
-    int maxLines = 1,
-  }) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label.toUpperCase(),
-          style: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.8,
-            color: Color(0xFF737373),
+        const Text(
+          'Need a custom plan?',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF525252),
           ),
         ),
         const SizedBox(height: 6),
-        TextField(
-          controller: ctrl,
-          maxLines: maxLines,
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: const TextStyle(fontSize: 13, color: Color(0xFFA3A3A3)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
+        const Text(
+          'Contact BisonsTechs directly — we\'ll discuss features and pricing.',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 12, color: Color(0xFFA3A3A3), height: 1.4),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 16,
+          runSpacing: 8,
+          children: [
+            GestureDetector(
+              onTap: () => _launch(Uri.parse('mailto:$_plansContactEmail')),
+              onLongPress: () {
+                Clipboard.setData(const ClipboardData(text: _plansContactEmail));
+              },
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.email_outlined, size: 16, color: kPrimary),
+                  SizedBox(width: 6),
+                  Text(
+                    _plansContactEmail,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: kPrimary,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE5E5E5)),
+            GestureDetector(
+              onTap: () => _launch(Uri.parse('tel:$_plansContactPhoneTel')),
+              onLongPress: () {
+                Clipboard.setData(const ClipboardData(text: _plansContactPhone));
+              },
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.phone_outlined, size: 16, color: kPrimary),
+                  SizedBox(width: 6),
+                  Text(
+                    _plansContactPhone,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: kPrimary,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: kPrimary),
-            ),
-          ),
+          ],
         ),
       ],
     );

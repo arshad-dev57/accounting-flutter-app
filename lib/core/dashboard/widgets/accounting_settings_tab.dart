@@ -65,6 +65,16 @@ class AccountingSettingsTab extends StatelessWidget {
             title: 'SUBSCRIPTION',
             items: const [
               _SettingsItem(
+                label: 'Billing & Invoices',
+                icon: Mdi.receipt_text_outline,
+                routeKey: 'billing',
+              ),
+              _SettingsItem(
+                label: 'POS Desktop App',
+                icon: Mdi.desktop_classic,
+                routeKey: 'pos_desktop',
+              ),
+              _SettingsItem(
                 label: 'Subscription Plans',
                 icon: Mdi.crown,
                 routeKey: 'subscription',

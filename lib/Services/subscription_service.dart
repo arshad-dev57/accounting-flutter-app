@@ -275,4 +275,21 @@ class SubscriptionService {
       return {'success': false, 'message': e.toString()};
     }
   }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 9️⃣ COMPANY BILLING (admin)
+  // GET /api/subscription/billing
+  // ═══════════════════════════════════════════════════════════════════
+  Future<Map<String, dynamic>> fetchCompanyBilling() async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/subscription/billing'),
+        headers: headers,
+      );
+      return json.decode(response.body) as Map<String, dynamic>;
+    } catch (e) {
+      return {'success': false, 'message': e.toString()};
+    }
+  }
 }

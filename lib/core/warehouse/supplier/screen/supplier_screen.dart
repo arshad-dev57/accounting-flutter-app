@@ -360,7 +360,10 @@ class SuppliersScreen extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
+                      Divider(
+                        height: 1,
+                        color: Colors.grey.withValues(alpha: 0.12),
+                      ),
                       const SizedBox(height: 16),
                       _detailRow(
                         'Contact Person',
@@ -613,7 +616,9 @@ class SuppliersScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
                       color: kCardBg,
-                      border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: Colors.grey.withValues(alpha: 0.3),
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: DropdownButtonHideUnderline(
@@ -676,11 +681,12 @@ class SuppliersScreen extends StatelessWidget {
                           'phone': phoneCtrl.text.trim(),
                           'gstNumber': gstCtrl.text.trim(),
                           'address': addressCtrl.text.trim(),
-                          if (selectedPaymentTerms != null)
-                            'paymentTerms': selectedPaymentTerms,
+                          'paymentTerms': selectedPaymentTerms,
                         });
                         if (success) {
-                          Navigator.pop(context);
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                          }
                           Get.snackbar(
                             'Success',
                             'Supplier created successfully',
@@ -857,7 +863,9 @@ class SuppliersScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
                       color: kCardBg,
-                      border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: Colors.grey.withValues(alpha: 0.3),
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: DropdownButtonHideUnderline(
@@ -905,7 +913,9 @@ class SuppliersScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
                       color: kCardBg,
-                      border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: Colors.grey.withValues(alpha: 0.3),
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: DropdownButtonHideUnderline(
@@ -965,12 +975,14 @@ class SuppliersScreen extends StatelessWidget {
                             'gstNumber': gstCtrl.text.trim(),
                             'address': addressCtrl.text.trim(),
                             'status': selectedStatus,
-                            if (selectedPaymentTerms != null)
-                              'paymentTerms': selectedPaymentTerms,
+                            'paymentTerms': ?selectedPaymentTerms,
                           },
                         );
                         if (success) {
-                          Navigator.pop(context);
+                          await Future.delayed(Duration.zero);
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                          }
                           Get.snackbar(
                             'Success',
                             'Supplier updated successfully',
@@ -1039,31 +1051,30 @@ class SuppliersScreen extends StatelessWidget {
     ),
   );
 
-  InputDecoration _inputDec({String hint = '', IconData? icon}) =>
-      InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(color: kSubText.withValues(alpha: 0.5), fontSize: 13),
-        prefixIcon: icon != null ? Icon(icon, size: 16, color: kSubText) : null,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: kPrimary, width: 2),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 12,
-        ),
-        isDense: true,
-        filled: true,
-        fillColor: kCardBg,
-      );
+  InputDecoration _inputDec({
+    String hint = '',
+    IconData? icon,
+  }) => InputDecoration(
+    hintText: hint,
+    hintStyle: TextStyle(color: kSubText.withValues(alpha: 0.5), fontSize: 13),
+    prefixIcon: icon != null ? Icon(icon, size: 16, color: kSubText) : null,
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: const BorderSide(color: kPrimary, width: 2),
+    ),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    isDense: true,
+    filled: true,
+    fillColor: kCardBg,
+  );
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1259,7 +1270,9 @@ class _MobileSuppliersListState extends State<_MobileSuppliersList> {
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+                      border: Border.all(
+                        color: Colors.grey.withValues(alpha: 0.1),
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.03),
@@ -1396,7 +1409,10 @@ class _MobileSuppliersListState extends State<_MobileSuppliersList> {
         child: Center(
           child: Text(
             'All suppliers loaded',
-            style: TextStyle(fontSize: 12, color: kSubText.withValues(alpha: 0.7)),
+            style: TextStyle(
+              fontSize: 12,
+              color: kSubText.withValues(alpha: 0.7),
+            ),
           ),
         ),
       );

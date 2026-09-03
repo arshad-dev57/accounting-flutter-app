@@ -74,7 +74,6 @@ class PaymentMadeController extends GetxController {
 
   final ApiClient _api = Get.find<ApiClient>();
 
-  @override
   Worker? _fyWorker;
 
   @override

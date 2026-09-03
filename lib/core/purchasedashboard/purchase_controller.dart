@@ -6,6 +6,7 @@ import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'package:BisonsTechs_app/core/purchasedashboard/purchase_dashboard_model.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -88,6 +89,7 @@ class PurchaseController extends GetxController {
         }
       }
     } catch (e) {
+      // Optional business logo; ignore fetch errors.
     }
   }
 
@@ -205,6 +207,7 @@ class PurchaseController extends GetxController {
         dashboard.value = PurchaseDashboardModel.fromMetrics(data);
       }
     } catch (e) {
+      debugPrint('Error fetching metrics: $e');
     }
   }
 
@@ -224,6 +227,7 @@ class PurchaseController extends GetxController {
             .toList();
       }
     } catch (e) {
+      debugPrint('Error fetching spend trend: $e');
     }
   }
 
@@ -243,6 +247,7 @@ class PurchaseController extends GetxController {
             .toList();
       }
     } catch (e) {
+      debugPrint('Error fetching order status: $e');
     }
   }
 
@@ -260,6 +265,7 @@ class PurchaseController extends GetxController {
             .toList();
       }
     } catch (e) {
+      debugPrint('Error fetching top suppliers: $e');
     }
   }
 
@@ -278,6 +284,7 @@ class PurchaseController extends GetxController {
             .toList();
       }
     } catch (e) {
+      debugPrint('Error fetching activities: $e');
     }
   }
 

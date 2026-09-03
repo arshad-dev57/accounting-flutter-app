@@ -244,10 +244,10 @@ class FiscalYearController extends GetxController {
       final response = await _api.put(
         '/api/fiscal-year/$id',
         body: {
-          if (name != null) 'name': name,
+          'name': ?name,
           if (startDate != null) 'startDate': fiscalDateOnly(startDate),
           if (endDate != null) 'endDate': fiscalDateOnly(endDate),
-          if (periodType != null) 'periodType': periodType,
+          'periodType': ?periodType,
         },
       );
 

@@ -1072,7 +1072,7 @@ class BankAccountsScreen extends StatelessWidget {
           Expanded(
             child: ListView.separated(
               itemCount: accounts.length,
-              separatorBuilder: (_, __) =>
+              separatorBuilder: (_, _) =>
                   Divider(height: 1, color: Colors.grey.withValues(alpha: 0.1)),
               itemBuilder: (context, index) {
                 return _buildWebTableRow(accounts[index], controller, context);
@@ -1710,39 +1710,43 @@ class BankAccountsScreen extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 6),
-                              RadioListTile<String>(
-                                dense: true,
-                                contentPadding: EdgeInsets.zero,
-                                value: 'source_account',
-                                groupValue: offsetType.toString(),
-                                activeColor: kPrimary,
-                                title: const Text(
-                                  'Existing cash / another account',
-                                  style: TextStyle(fontSize: 13),
-                                ),
-                                subtitle: const Text(
-                                  'Dr Bank / Cr source account — does not increase equity',
-                                  style: TextStyle(fontSize: 11),
-                                ),
-                                onChanged: (v) =>
-                                    setState(() => offsetType = v?.toString() ?? ''),
-                              ),
-                              RadioListTile<String>(
-                                dense: true,
-                                contentPadding: EdgeInsets.zero,
-                                value: 'owner_capital',
+                              RadioGroup<String>(
                                 groupValue: offsetType,
-                                activeColor: kPrimary,
-                                title: const Text(
-                                  'Owner capital / new investment',
-                                  style: TextStyle(fontSize: 13),
+                                onChanged: (v) => setState(
+                                  () => offsetType = v ?? 'source_account',
                                 ),
-                                subtitle: const Text(
-                                  'Dr Bank / Cr Capital — only when it is new owner money',
-                                  style: TextStyle(fontSize: 11),
+                                child: Column(
+                                  children: [
+                                    RadioListTile<String>(
+                                      dense: true,
+                                      contentPadding: EdgeInsets.zero,
+                                      value: 'source_account',
+                                      activeColor: kPrimary,
+                                      title: const Text(
+                                        'Existing cash / another account',
+                                        style: TextStyle(fontSize: 13),
+                                      ),
+                                      subtitle: const Text(
+                                        'Dr Bank / Cr source account — does not increase equity',
+                                        style: TextStyle(fontSize: 11),
+                                      ),
+                                    ),
+                                    RadioListTile<String>(
+                                      dense: true,
+                                      contentPadding: EdgeInsets.zero,
+                                      value: 'owner_capital',
+                                      activeColor: kPrimary,
+                                      title: const Text(
+                                        'Owner capital / new investment',
+                                        style: TextStyle(fontSize: 13),
+                                      ),
+                                      subtitle: const Text(
+                                        'Dr Bank / Cr Capital — only when it is new owner money',
+                                        style: TextStyle(fontSize: 11),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                onChanged: (v) =>
-                                    setState(() => offsetType = v!),
                               ),
                               if (offsetType == 'source_account') ...[
                                 const SizedBox(height: 8),
@@ -1761,7 +1765,7 @@ class BankAccountsScreen extends StatelessWidget {
                                   )
                                 else
                                   DropdownButtonFormField<String>(
-                                    value: sourceAccounts.any(
+                                    initialValue: sourceAccounts.any(
                                           (a) =>
                                               a['id']?.toString() ==
                                               sourceAccountId,
@@ -1871,6 +1875,7 @@ class BankAccountsScreen extends StatelessWidget {
                                       }
                                       final success = await controller
                                           .createBankAccount(payload);
+                                      if (!context.mounted) return;
                                       if (success) {
                                         Navigator.pop(context);
                                       } else {
@@ -2215,7 +2220,7 @@ class BankAccountsScreen extends StatelessWidget {
     bool enabled = true,
   }) {
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -2297,7 +2302,7 @@ class BankAccountsScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 12),
                             DropdownButtonFormField<String>(
-                              value: sourceAccountId,
+                              initialValue: sourceAccountId,
                               isExpanded: true,
                               decoration: const InputDecoration(
                                 labelText: 'Source Account *',

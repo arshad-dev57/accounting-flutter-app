@@ -43,7 +43,7 @@ class InventoryValuationModel {
 
   factory InventoryValuationModel.fromJson(Map<String, dynamic> json) {
     // Helper function to safely parse double
-    double _parseDouble(dynamic value) {
+    double parseDouble(dynamic value) {
       if (value == null) return 0.0;
       if (value is double) return value;
       if (value is int) return value.toDouble();
@@ -71,12 +71,12 @@ class InventoryValuationModel {
       category: json['category']?.toString() ?? 'Uncategorized',
       categoryId: json['categoryId']?.toString(),
       qty: parseInt(json['qty']),
-      unitCost: _parseDouble(json['unitCost']),
-      sellingPrice: _parseDouble(json['sellingPrice']),
-      totalCostValue: _parseDouble(json['totalCostValue']),
-      sellingValue: _parseDouble(json['sellingValue']),
-      potentialProfit: _parseDouble(json['potentialProfit']),
-      profitMargin: _parseDouble(json['profitMargin']),
+      unitCost: parseDouble(json['unitCost']),
+      sellingPrice: parseDouble(json['sellingPrice']),
+      totalCostValue: parseDouble(json['totalCostValue']),
+      sellingValue: parseDouble(json['sellingValue']),
+      potentialProfit: parseDouble(json['potentialProfit']),
+      profitMargin: parseDouble(json['profitMargin']),
       minStock: parseInt(json['minStock']),
       maxStock: parseInt(json['maxStock']),
       status: json['status']?.toString() ?? 'OK',

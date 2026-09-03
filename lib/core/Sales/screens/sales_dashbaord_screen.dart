@@ -1,7 +1,7 @@
-import 'dart:io';
-
+import 'package:BisonsTechs_app/widgets/dashboard_hero_watermark.dart';
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/widgets/dashboard_mobile_chrome.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/widgets/fiscal_year_select.dart';
@@ -13,7 +13,6 @@ import 'package:BisonsTechs_app/core/warehouse/sales/model/sales_dashboard_model
 import 'package:BisonsTechs_app/core/Sales/screens/sales_report_screen.dart';
 import 'package:BisonsTechs_app/core/warehouse/order/screen/Sales_order_screen.dart';
 import 'package:BisonsTechs_app/core/warehouse/salesInvoice/sales_invoice_screen.dart';
-import 'package:BisonsTechs_app/widgets/dashboard_mobile_chrome.dart';
 import 'package:BisonsTechs_app/widgets/module_logout_dialog.dart';
 import 'package:BisonsTechs_app/widgets/module_settings_tab.dart';
 import 'package:BisonsTechs_app/widgets/sales_drawer.dart';
@@ -411,8 +410,6 @@ class _SalesDashboardBody extends GetView<SalesController> {
     return Obx(() {
       final data = controller.dashboard.value;
       final fmt = Get.find<CurrencyController>().formatAmount;
-      final logo = controller.businessLogo.value;
-      final hasLogo = logo.isNotEmpty;
 
       final todayOrders = data?.orders.todayCount ?? 0;
       final todayRevenue = data?.orders.todayRevenue ?? 0.0;
@@ -440,33 +437,7 @@ class _SalesDashboardBody extends GetView<SalesController> {
           borderRadius: BorderRadius.circular(17),
           child: Stack(
             children: [
-              if (hasLogo)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: Opacity(
-                      opacity: 0.07,
-                      child: logo.startsWith('http')
-                          ? Image.network(
-                              logo,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                              alignment: Alignment.center,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const SizedBox.shrink(),
-                            )
-                          : Image.file(
-                              File(logo),
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                              alignment: Alignment.center,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const SizedBox.shrink(),
-                            ),
-                    ),
-                  ),
-                ),
+              const DashboardHeroWatermark(),
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -1275,8 +1246,9 @@ for (final p in posTrend) {
                           showTitles: true,
                           getTitlesWidget: (v, _) {
                             final i = v.toInt();
-                            if (i < 0 || i >= items.length)
+                            if (i < 0 || i >= items.length) {
                               return const SizedBox.shrink();
+                            }
                             final s = items[i].status;
                             return Padding(
                               padding: const EdgeInsets.only(top: 6),
@@ -1677,15 +1649,14 @@ for (final p in posTrend) {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          if (activity.amount != null)
-                            Text(
-                              fmt(activity.amount),
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: _kTextPrimary,
-                              ),
+                          Text(
+                            fmt(activity.amount),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: _kTextPrimary,
                             ),
+                          ),
                           const SizedBox(height: 4),
                           Container(
                             padding: const EdgeInsets.symmetric(

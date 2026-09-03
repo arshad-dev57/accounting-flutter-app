@@ -1252,6 +1252,7 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                                         'taxCode': taxCode,
                                       });
 
+                                      if (!context.mounted) return;
                                       Navigator.pop(context);
                                     }
                                   },
@@ -1633,6 +1634,7 @@ class _ChartOfAccountsScreenState extends State<ChartOfAccountsScreen> {
                                             'taxCode': taxCode,
                                           });
 
+                                      if (!context.mounted) return;
                                       Navigator.pop(context);
                                     }
                                   },

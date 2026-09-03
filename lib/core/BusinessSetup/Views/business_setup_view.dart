@@ -290,7 +290,7 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
               border: Border.all(color: Colors.grey[300]!),
             ),
             child: DropdownButtonFormField<String>(
-              value: _countryController.text.isEmpty
+              initialValue: _countryController.text.isEmpty
                   ? null
                   : _countryController.text,
               hint: Text('Select your business country'),
@@ -434,7 +434,7 @@ class _BusinessSetupScreenState extends State<BusinessSetupScreen> {
               border: Border.all(color: Colors.grey[300]!),
             ),
             child: DropdownButtonFormField<String>(
-              value: _financialYearController.text.isEmpty
+              initialValue: _financialYearController.text.isEmpty
                   ? null
                   : _financialYearController.text,
               hint: Text('Select financial year end'),

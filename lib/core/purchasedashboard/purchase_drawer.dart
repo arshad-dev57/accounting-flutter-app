@@ -272,6 +272,7 @@ class _PurchaseDrawerHeaderState extends State<_PurchaseDrawerHeader> {
         }
       }
     } catch (e) {
+      // Optional drawer profile; ignore fetch errors.
     }
   }
 

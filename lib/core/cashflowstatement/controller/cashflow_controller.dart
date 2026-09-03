@@ -642,7 +642,7 @@ class CashFlowController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+            ,
         pw.Divider(),
         pw.Container(
           padding: const pw.EdgeInsets.symmetric(vertical: 4),

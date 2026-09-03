@@ -163,7 +163,7 @@ class LoginController extends GetxController {
               ? Get.find<FiscalYearController>()
               : Get.put(FiscalYearController(), permanent: true);
           await fy.ensureFiscalYearsLoaded(force: true);
-          Get.offAllNamed('/dashboard');
+          subscriptionController.goToAppHome();
         } else {
           Get.offAll(() => const SelectPlanScreen());
         }

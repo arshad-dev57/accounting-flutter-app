@@ -22,6 +22,7 @@ import 'package:BisonsTechs_app/core/companyprofile/screen/company_profile_scree
 import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
 import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
+import 'package:BisonsTechs_app/core/plans/views/pos_active_screen.dart';
 import 'package:BisonsTechs_app/core/settings/screens/currency_screen.dart';
 import 'package:BisonsTechs_app/core/settings/screens/pdf_report_settings_screen.dart';
 import 'package:BisonsTechs_app/core/support/screens/support_tickets_screen.dart';
@@ -247,6 +248,16 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
     PermissionService.to.loadUserData();
     // Load FY here so Accounting dashboard does not wait on first open.
     ensureFiscalYearController()?.ensureFiscalYearsLoaded();
+
+    // POS-only plans cannot use ERP hub — send them to the POS page.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (!Get.isRegistered<SubscriptionController>()) return;
+      final sub = Get.find<SubscriptionController>();
+      if (sub.isPosOnly) {
+        Get.offAll(() => const PosActiveScreen());
+      }
+    });
   }
   
   Future<void> _loadBusinessLogo() async {
@@ -1037,9 +1048,25 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
             final perms = PermissionService.to;
             perms.user.value;
             perms.loading.value;
+            final sub = Get.isRegistered<SubscriptionController>()
+                ? Get.find<SubscriptionController>()
+                : null;
+            final erp = sub?.hasErpSubscription ?? true;
+            final posOnly = sub?.isPosOnly ?? false;
+
             return Column(
               children: [
-                if (perms.canAccessModule('accounting'))
+                if (posOnly)
+                  _SidebarItemWidget(
+                    icon: Icons.point_of_sale_outlined,
+                    label: 'POS Desktop',
+                    index: 10,
+                    selectedIndex: _selectedIndex,
+                    collapsed: collapsed,
+                    showArrow: true,
+                    onTap: () => Get.to(() => const PosActiveScreen()),
+                  ),
+                if (erp && perms.canAccessModule('accounting'))
                   _SidebarItemWidget(
                     iconAsset: 'assets/icons/accounting.svg',
                     label: 'Accounting',
@@ -1049,7 +1076,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                     showArrow: true,
                     onTap: _navigateToAccounting,
                   ),
-                if (perms.canAccessModule('warehouse'))
+                if (erp && perms.canAccessModule('warehouse'))
                   _SidebarItemWidget(
                     iconAsset: 'assets/icons/inventory.svg',
                     label: 'Warehouse',
@@ -1059,7 +1086,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                     showArrow: true,
                     onTap: _navigateToWarehouse,
                   ),
-                if (perms.canAccessModule('sales'))
+                if (erp && perms.canAccessModule('sales'))
                   _SidebarItemWidget(
                     iconAsset: 'assets/icons/sales.svg',
                     label: 'Sales',
@@ -1069,7 +1096,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                     showArrow: true,
                     onTap: _navigateToSales,
                   ),
-                if (perms.canAccessModule('purchases'))
+                if (erp && perms.canAccessModule('purchases'))
                   _SidebarItemWidget(
                     iconAsset: '',
                     label: 'Purchase',
@@ -1079,7 +1106,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                     showArrow: true,
                     onTap: _navigateToPurchase,
                   ),
-                if (perms.canAccessModule('users'))
+                if (erp && perms.canAccessModule('users'))
                   _SidebarItemWidget(
                     iconAsset: 'assets/icons/users.svg',
                     label: 'Users',
@@ -1092,15 +1119,21 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
               ],
             );
           }),
-          _SidebarItemWidget(
-            iconAsset: 'assets/icons/tax.svg',
-            label: 'Tax Compliance',
-            index: 5,
-            selectedIndex: _selectedIndex,
-            collapsed: collapsed,
-            showArrow: true,
-            onTap: () => Get.to(() => const TaxComplianceScreen()),
-          ),
+          Obx(() {
+            final sub = Get.isRegistered<SubscriptionController>()
+                ? Get.find<SubscriptionController>()
+                : null;
+            if (sub?.isPosOnly == true) return const SizedBox.shrink();
+            return _SidebarItemWidget(
+              iconAsset: 'assets/icons/tax.svg',
+              label: 'Tax Compliance',
+              index: 5,
+              selectedIndex: _selectedIndex,
+              collapsed: collapsed,
+              showArrow: true,
+              onTap: () => Get.to(() => const TaxComplianceScreen()),
+            );
+          }),
           const Spacer(),
           if (!collapsed)
             Padding(
@@ -1273,9 +1306,22 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
       final perms = PermissionService.to;
       perms.user.value;
       perms.loading.value;
+      final sub = Get.isRegistered<SubscriptionController>()
+          ? Get.find<SubscriptionController>()
+          : null;
+      final erp = sub?.hasErpSubscription ?? true;
+      final posOnly = sub?.isPosOnly ?? false;
 
       final products = <_HomeProduct>[
-        if (perms.canAccessModule('accounting'))
+        if (posOnly)
+          _HomeProduct(
+            title: 'POS Desktop',
+            subtitle: 'Download & manage your POS license',
+            icon: Icons.point_of_sale_outlined,
+            color: kPrimary,
+            onTap: () => Get.to(() => const PosActiveScreen()),
+          ),
+        if (erp && perms.canAccessModule('accounting'))
           _HomeProduct(
             title: 'Accounting',
             subtitle: 'Books, invoices, reports & ledgers',
@@ -1283,7 +1329,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
             color: kPrimary,
             onTap: _navigateToAccounting,
           ),
-        if (perms.canAccessModule('warehouse'))
+        if (erp && perms.canAccessModule('warehouse'))
           _HomeProduct(
             title: 'Warehouse',
             subtitle: 'Stock, products & inventory',
@@ -1291,7 +1337,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
             color: const Color(0xFF0891B2),
             onTap: _navigateToWarehouse,
           ),
-        if (perms.canAccessModule('sales'))
+        if (erp && perms.canAccessModule('sales'))
           _HomeProduct(
             title: 'Sales',
             subtitle: 'Orders, invoices & collections',
@@ -1299,7 +1345,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
             color: const Color(0xFF22A869),
             onTap: _navigateToSales,
           ),
-        if (perms.canAccessModule('purchases'))
+        if (erp && perms.canAccessModule('purchases'))
           _HomeProduct(
             title: 'Purchase',
             subtitle: 'Bills, vendors & payments',
@@ -1307,7 +1353,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
             color: const Color(0xFFF59E0B),
             onTap: _navigateToPurchase,
           ),
-        if (perms.canAccessModule('users'))
+        if (erp && perms.canAccessModule('users'))
           _HomeProduct(
             title: 'Users',
             subtitle: 'Team access & permissions',

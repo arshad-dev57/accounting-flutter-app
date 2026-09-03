@@ -50,7 +50,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                           ),
                           const SizedBox(height: 16),
                           ElevatedButton(
-                            onPressed: () => _controller.refresh(),
+                            onPressed: () => _controller.loadNotifications(),
                             child: const Text('Retry'),
                           ),
                         ],
@@ -238,7 +238,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       }
 
       return RefreshIndicator(
-        onRefresh: () async => _controller.refresh(),
+        onRefresh: () async => _controller.loadNotifications(),
         child: ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: _controller.notifications.length,
@@ -324,7 +324,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
+                    border: Border.all(
+                      color: color.withValues(alpha: 0.2),
+                      width: 1,
+                    ),
                   ),
                   child: Icon(icon, size: 22, color: color),
                 ),

@@ -54,7 +54,9 @@ class CreateOrderForm extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: kDanger.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: kDanger.withValues(alpha: 0.2)),
+                        border: Border.all(
+                          color: kDanger.withValues(alpha: 0.2),
+                        ),
                       ),
                       child: Text(
                         c.formError.value,
@@ -192,8 +194,9 @@ class CreateOrderForm extends StatelessWidget {
                             const Duration(days: 365),
                           ),
                         );
-                        if (picked != null)
+                        if (picked != null) {
                           c.expectedDeliveryDate.value = picked;
+                        }
                       },
                     ),
                   ]),
@@ -506,7 +509,9 @@ class CreateOrderForm extends StatelessWidget {
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(6),
-                      side: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
+                      side: BorderSide(
+                        color: Colors.grey.withValues(alpha: 0.1),
+                      ),
                     ),
                     child: ListTile(
                       title: Text(
@@ -613,7 +618,9 @@ class CreateOrderForm extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: kCardBg,
-        border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.15))),
+        border: Border(
+          top: BorderSide(color: Colors.grey.withValues(alpha: 0.15)),
+        ),
       ),
       child: Row(
         children: [
@@ -723,16 +730,24 @@ class CreateOrderForm extends StatelessWidget {
                     context: context,
                     isScrollControlled: true,
                     shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(16),
+                      ),
                     ),
-                    builder: (_) => CustomerPickerSheet(onSelect: c.applyCustomer),
+                    builder: (_) =>
+                        CustomerPickerSheet(onSelect: c.applyCustomer),
                   );
                 },
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: Colors.grey.withValues(alpha: 0.3),
+                    ),
                     borderRadius: BorderRadius.circular(8),
                     color: kBg,
                   ),
@@ -901,8 +916,9 @@ class CreateOrderForm extends StatelessWidget {
                         color: hasSelection
                             ? const Color(0xFF2D3748)
                             : Colors.grey.shade400,
-                        fontWeight:
-                            hasSelection ? FontWeight.w600 : FontWeight.w400,
+                        fontWeight: hasSelection
+                            ? FontWeight.w600
+                            : FontWeight.w400,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),

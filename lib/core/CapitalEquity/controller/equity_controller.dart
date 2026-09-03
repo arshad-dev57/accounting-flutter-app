@@ -221,7 +221,9 @@ class EquityController extends GetxController {
               .toList();
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      // Optional equity summary; ignore fetch errors.
+    }
   }
 
   // ─── LOAD SUMMARY ──────────────────────────────────────────────────
@@ -259,7 +261,9 @@ class EquityController extends GetxController {
               data['isIncrease'] ?? (periodEarnings.value >= 0);
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      // Optional equity summary; ignore fetch errors.
+    }
   }
 
   void _updateSummaryForFiltered(List<EquityAccount> filteredAccounts) {

@@ -154,8 +154,9 @@ class WarehouseInvoiceModel {
 
   String get displayStatus {
     if (netOutstanding < 0) return 'Credit Balance';
-    if (netOutstanding == 0 && (paidAmount > 0 || creditIssued > 0))
+    if (netOutstanding == 0 && (paidAmount > 0 || creditIssued > 0)) {
       return 'Paid';
+    }
     return paymentStatus;
   }
 
@@ -442,8 +443,9 @@ class WarehouseInvoiceController extends GetxController {
         'invoiceType': invoiceTypeFilter.value,
       };
       if (statusFilter.value != 'all') params['status'] = statusFilter.value;
-      if (paymentFilter.value != 'all')
+      if (paymentFilter.value != 'all') {
         params['paymentStatus'] = paymentFilter.value;
+      }
       if (searchFilter.value.isNotEmpty) params['search'] = searchFilter.value;
 
 

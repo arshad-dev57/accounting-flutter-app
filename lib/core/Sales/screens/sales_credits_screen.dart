@@ -637,7 +637,7 @@ class _CreateCreditForm extends StatelessWidget {
                       const SizedBox(height: 14),
                       _section('3. Credit Details', [
                         DropdownButtonFormField<String>(
-                          value: controller.reasonType.value,
+                          initialValue: controller.reasonType.value,
                           decoration: const InputDecoration(
                             labelText: 'Reason type *',
                             border: OutlineInputBorder(

@@ -89,6 +89,7 @@ class JournalEntryController extends GetxController {
     fetchJournalEntries();
   }
 
+  @override
   void refresh() => _resetAndReload();
 
   double _toDouble(dynamic value) {

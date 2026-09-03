@@ -935,8 +935,9 @@ class IncomeScreen extends StatelessWidget {
                             const SizedBox(height: 16),
 
                             Obx(() {
-                              if (controller.customers.isEmpty)
+                              if (controller.customers.isEmpty) {
                                 return const SizedBox.shrink();
+                              }
                               final hasMatch =
                                   selectedCustomerId == null ||
                                   controller.customers.any(
@@ -1096,8 +1097,9 @@ class IncomeScreen extends StatelessWidget {
                               onPressed: controller.isSaving.value
                                   ? null
                                   : () async {
-                                      if (!formKey.currentState!.validate())
+                                      if (!formKey.currentState!.validate()) {
                                         return;
+                                      }
 
                                       if (selectedIncomeAccountId == null ||
                                           selectedIncomeAccountId!.isEmpty) {
@@ -1461,7 +1463,7 @@ class IncomeScreen extends StatelessWidget {
                                 ),
                               ),
                             )
-                            .toList(),
+                           ,
                         const SizedBox(height: 16),
                         Divider(
                           height: 1,
@@ -1787,7 +1789,7 @@ class IncomeScreen extends StatelessWidget {
               ],
             ),
           );
-        }).toList(),
+        }),
         TextButton.icon(
           onPressed: () => setState(() {
             items.add({'description': '', 'quantity': 1, 'unitPrice': 0.0});
@@ -1872,7 +1874,7 @@ class IncomeScreen extends StatelessWidget {
     void Function(String?) onChanged,
   ) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       isExpanded: true,
       decoration: InputDecoration(
         labelText: 'Payment Method',
@@ -1908,7 +1910,7 @@ class IncomeScreen extends StatelessWidget {
     List<Map<String, dynamic>> bankAccounts,
   ) {
     return DropdownButtonFormField<String>(
-      value: selectedId,
+      initialValue: selectedId,
       isExpanded: true,
       decoration: InputDecoration(
         labelText: 'Bank Account',
@@ -2000,7 +2002,7 @@ class IncomeScreen extends StatelessWidget {
     required void Function(T?) onChanged,
   }) {
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       isExpanded: true,
       decoration: InputDecoration(
         labelText: label,
@@ -2026,7 +2028,7 @@ class IncomeScreen extends StatelessWidget {
     List<Map<String, dynamic>> incomeAccounts,
   ) {
     return DropdownButtonFormField<String>(
-      value: selectedId,
+      initialValue: selectedId,
       isExpanded: true,
       decoration: InputDecoration(
         labelText: 'Income Account *',
@@ -2094,7 +2096,7 @@ class IncomeScreen extends StatelessWidget {
     List<Map<String, dynamic>> customers,
   ) {
     return DropdownButtonFormField<String>(
-      value: selectedId,
+      initialValue: selectedId,
       isExpanded: true,
       decoration: InputDecoration(
         labelText: 'Customer',

@@ -206,6 +206,7 @@ class FixedAssetController extends GetxController {
         }
       }
     } catch (e) {
+      // Optional vendors list; ignore fetch errors.
     }
   }
 
@@ -224,6 +225,7 @@ class FixedAssetController extends GetxController {
         }
       }
     } catch (e) {
+      // Optional vendors list; ignore fetch errors.
     }
   }
 
@@ -244,6 +246,7 @@ class FixedAssetController extends GetxController {
         }
       }
     } catch (e) {
+      // Optional vendors list; ignore fetch errors.
     }
   }
 
@@ -3010,7 +3013,7 @@ class FixedAssetController extends GetxController {
     required void Function(String?) onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -3035,7 +3038,7 @@ class FixedAssetController extends GetxController {
     List<Map<String, dynamic>> suppliers,
   ) {
     return DropdownButtonFormField<String>(
-      value: selectedId,
+      initialValue: selectedId,
       decoration: InputDecoration(
         labelText: 'Supplier (Optional)',
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -3092,7 +3095,7 @@ class FixedAssetController extends GetxController {
         selectedId != null && validIds.contains(selectedId) ? selectedId : null;
 
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: 'Bank Account *',
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),

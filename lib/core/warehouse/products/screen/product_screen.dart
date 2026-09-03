@@ -440,7 +440,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
     return images.isEmpty ? null : images.first;
   }
 
-  Widget _productAvatar(Map<String, dynamic> product, {double size = 48, Color? fallbackColor}) {
+  Widget _productAvatar(
+    Map<String, dynamic> product, {
+    double size = 48,
+    Color? fallbackColor,
+  }) {
     final url = _productMainImage(product);
     final color = fallbackColor ?? kPrimary;
     return Container(
@@ -456,7 +460,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
           : Image.network(
               url,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Icon(Icons.inventory_2, color: color, size: size * 0.5),
+              errorBuilder: (context, error, stackTrace) =>
+                  Icon(Icons.inventory_2, color: color, size: size * 0.5),
             ),
     );
   }
@@ -561,7 +566,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
                             itemCount: _productImages(product).length,
-                            separatorBuilder: (context, index) => const SizedBox(width: 8),
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(width: 8),
                             itemBuilder: (_, i) {
                               final url = _productImages(product)[i];
                               return ClipRRect(
@@ -571,12 +577,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                   width: 88,
                                   height: 88,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) => Container(
-                                    width: 88,
-                                    height: 88,
-                                    color: Colors.grey.shade200,
-                                    child: const Icon(Icons.broken_image),
-                                  ),
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Container(
+                                        width: 88,
+                                        height: 88,
+                                        color: Colors.grey.shade200,
+                                        child: const Icon(Icons.broken_image),
+                                      ),
                                 ),
                               );
                             },
@@ -613,7 +620,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
+                      Divider(
+                        height: 1,
+                        color: Colors.grey.withValues(alpha: 0.12),
+                      ),
                       const SizedBox(height: 16),
                       _detailRow(
                         'Brand',
@@ -981,8 +991,11 @@ class _AddProductPageState extends State<_AddProductPage> {
     // Load existing Cloudinary images when editing
     final imgs = p?['images'];
     if (imgs is List) {
-      _existingImages.addAll(imgs.map((e) => e.toString()).where((e) => e.isNotEmpty));
-    } else if (p?['mainImage'] != null && p!['mainImage'].toString().isNotEmpty) {
+      _existingImages.addAll(
+        imgs.map((e) => e.toString()).where((e) => e.isNotEmpty),
+      );
+    } else if (p?['mainImage'] != null &&
+        p!['mainImage'].toString().isNotEmpty) {
       _existingImages.add(p['mainImage'].toString());
     }
 
@@ -1022,10 +1035,12 @@ class _AddProductPageState extends State<_AddProductPage> {
     _selectedTaxType = p?['taxType'];
 
     _selectedCategoryId =
-        (p?['categoryId'] ?? (p?['category'] is Map ? p!['category']['id'] : null))
+        (p?['categoryId'] ??
+                (p?['category'] is Map ? p!['category']['id'] : null))
             ?.toString();
     _selectedSupplierId =
-        (p?['supplierId'] ?? (p?['supplier'] is Map ? p!['supplier']['id'] : null))
+        (p?['supplierId'] ??
+                (p?['supplier'] is Map ? p!['supplier']['id'] : null))
             ?.toString();
     if (_selectedCategoryId != null && _selectedCategoryId!.isEmpty) {
       _selectedCategoryId = null;
@@ -1083,10 +1098,12 @@ class _AddProductPageState extends State<_AddProductPage> {
     _defaultBatchQtyCtrl = TextEditingController(
       text: safeToString(p?['defaultQuantityPerBatch']),
     );
-    if (p?['expiryDate'] != null)
+    if (p?['expiryDate'] != null) {
       _expiryDate = DateTime.tryParse(p!['expiryDate']);
-    if (p?['manufacturingDate'] != null)
+    }
+    if (p?['manufacturingDate'] != null) {
       _manufacturingDate = DateTime.tryParse(p!['manufacturingDate']);
+    }
 
     _hsCodeCtrl = TextEditingController(text: safeToString(p?['hsCode']));
     _stackingLimitCtrl = TextEditingController(
@@ -1124,7 +1141,8 @@ class _AddProductPageState extends State<_AddProductPage> {
       // New product: also pull symbol from global currency for correct display
       _currencySymbol = globalCurrency.currencySymbol.value;
     }
-    if (p?['currencyName'] != null && p!['currencyName'].toString().isNotEmpty) {
+    if (p?['currencyName'] != null &&
+        p!['currencyName'].toString().isNotEmpty) {
       _currencyName = p['currencyName'].toString();
     }
     _notesCtrl = TextEditingController(text: safeToString(p?['notes']));
@@ -1351,7 +1369,9 @@ class _AddProductPageState extends State<_AddProductPage> {
           decoration: BoxDecoration(
             color: enabled ? kCardBg : kBgLight,
             border: Border.all(
-              color: errorText != null ? kDanger : Colors.grey.withValues(alpha: 0.3),
+              color: errorText != null
+                  ? kDanger
+                  : Colors.grey.withValues(alpha: 0.3),
             ),
             borderRadius: BorderRadius.circular(8),
           ),
@@ -1555,7 +1575,11 @@ class _AddProductPageState extends State<_AddProductPage> {
               Text(flagEmoji, style: const TextStyle(fontSize: 20)),
               const SizedBox(width: 10),
             ] else ...[
-              Icon(Icons.attach_money, color: kSubText.withValues(alpha: 0.5), size: 20),
+              Icon(
+                Icons.attach_money,
+                color: kSubText.withValues(alpha: 0.5),
+                size: 20,
+              ),
               const SizedBox(width: 10),
             ],
             Expanded(
@@ -1635,7 +1659,11 @@ class _AddProductPageState extends State<_AddProductPage> {
         ),
         child: Row(
           children: [
-            Icon(Icons.public, color: kSubText.withValues(alpha: 0.5), size: 18),
+            Icon(
+              Icons.public,
+              color: kSubText.withValues(alpha: 0.5),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             if (hasSelection && _countryFlagEmoji.isNotEmpty) ...[
               Text(_countryFlagEmoji, style: const TextStyle(fontSize: 18)),
@@ -1649,8 +1677,7 @@ class _AddProductPageState extends State<_AddProductPage> {
                   color: hasSelection
                       ? Colors.black
                       : kSubText.withValues(alpha: 0.5),
-                  fontWeight:
-                      hasSelection ? FontWeight.w600 : FontWeight.w400,
+                  fontWeight: hasSelection ? FontWeight.w600 : FontWeight.w400,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -1685,7 +1712,10 @@ class _AddProductPageState extends State<_AddProductPage> {
           value: valid,
           hint: Text(
             hint,
-            style: TextStyle(color: kSubText.withValues(alpha: 0.5), fontSize: 13),
+            style: TextStyle(
+              color: kSubText.withValues(alpha: 0.5),
+              fontSize: 13,
+            ),
           ),
           isExpanded: true,
           dropdownColor: kCardBg,
@@ -1835,11 +1865,11 @@ class _AddProductPageState extends State<_AddProductPage> {
             duration: const Duration(seconds: 3),
           );
           // Navigate back
+          if (!mounted) return;
           Navigator.pop(context);
           return;
         }
 
-        // Barcode doesn't exist, populate form with scanned data
         setState(() {
           if (result['name'] != null) {
             _nameCtrl.text = result['name'].toString();
@@ -1901,19 +1931,17 @@ class _AddProductPageState extends State<_AddProductPage> {
   }
 
   Widget _barcodeFormatOption(String format, String description) {
-  return ListTile(
-    title: Text(format),
-    subtitle: Text(description),
-    trailing: Radio<String>(
-      value: format,
-    ),
-    onTap: () {
-      setState(() => _selectedBarcodeFormat = format);
-      Navigator.pop(context);
-      _generateBarcode();
-    },
-  );
-}
+    return ListTile(
+      title: Text(format),
+      subtitle: Text(description),
+      trailing: Radio<String>(value: format),
+      onTap: () {
+        setState(() => _selectedBarcodeFormat = format);
+        Navigator.pop(context);
+        _generateBarcode();
+      },
+    );
+  }
 
   void _generateBarcode() {
     // Validate required fields
@@ -2384,10 +2412,7 @@ class _AddProductPageState extends State<_AddProductPage> {
             style: const TextStyle(fontSize: 13, color: Colors.black),
           ),
         ),
-        _field(
-          label: 'Currency',
-          child: _currencyPickerField(),
-        ),
+        _field(label: 'Currency', child: _currencyPickerField()),
         _sectionHeader('Tax', Icons.receipt_long_outlined),
         _field(
           label: 'Tax class',
@@ -2917,10 +2942,7 @@ class _AddProductPageState extends State<_AddProductPage> {
           style: const TextStyle(fontSize: 13, color: Colors.black),
         ),
       ),
-      _field(
-        label: 'Country of Origin',
-        child: _countryPickerField(),
-      ),
+      _field(label: 'Country of Origin', child: _countryPickerField()),
       _dropdownWithAdd<String>(
         label: 'Shipping Class',
         hint: 'Select Shipping Class',
@@ -3031,19 +3053,30 @@ class _AddProductPageState extends State<_AddProductPage> {
           children: [
             Text(
               'Product Images',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: kSubText),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: kSubText,
+              ),
             ),
             const Spacer(),
             Text(
               '$total / 5',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: kSubText),
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: kSubText,
+              ),
             ),
           ],
         ),
         const SizedBox(height: 4),
         Text(
           'Select multiple images. First image is main. You can add more in batches.',
-          style: TextStyle(fontSize: 11, color: kSubText.withValues(alpha: 0.7)),
+          style: TextStyle(
+            fontSize: 11,
+            color: kSubText.withValues(alpha: 0.7),
+          ),
         ),
         const SizedBox(height: 12),
         Wrap(
@@ -3056,7 +3089,8 @@ class _AddProductPageState extends State<_AddProductPage> {
                 child: Image.network(
                   e.value,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),
+                  errorBuilder: (context, error, stackTrace) =>
+                      const Icon(Icons.broken_image),
                 ),
                 isMain: isMain,
                 onRemove: () => setState(() => _existingImages.remove(e.value)),
@@ -3088,10 +3122,27 @@ class _AddProductPageState extends State<_AddProductPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.add_photo_alternate_outlined, color: kSubText.withValues(alpha: 0.75), size: 26),
+                      Icon(
+                        Icons.add_photo_alternate_outlined,
+                        color: kSubText.withValues(alpha: 0.75),
+                        size: 26,
+                      ),
                       const SizedBox(height: 4),
-                      Text('Add images', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: kSubText)),
-                      Text('$remaining left', style: TextStyle(fontSize: 9, color: kSubText.withValues(alpha: 0.7))),
+                      Text(
+                        'Add images',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: kSubText,
+                        ),
+                      ),
+                      Text(
+                        '$remaining left',
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: kSubText.withValues(alpha: 0.7),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -3110,7 +3161,9 @@ class _AddProductPageState extends State<_AddProductPage> {
                 foregroundColor: kPrimary,
                 side: BorderSide(color: kPrimary.withValues(alpha: 0.5)),
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
             ),
           ),
@@ -3132,7 +3185,9 @@ class _AddProductPageState extends State<_AddProductPage> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isMain ? kPrimary.withValues(alpha: 0.55) : Colors.grey.withValues(alpha: 0.3),
+              color: isMain
+                  ? kPrimary.withValues(alpha: 0.55)
+                  : Colors.grey.withValues(alpha: 0.3),
               width: isMain ? 2 : 1,
             ),
           ),
@@ -3151,7 +3206,11 @@ class _AddProductPageState extends State<_AddProductPage> {
               ),
               child: const Text(
                 'Main',
-                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.white),
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
@@ -3162,7 +3221,10 @@ class _AddProductPageState extends State<_AddProductPage> {
             onTap: onRemove,
             child: Container(
               padding: const EdgeInsets.all(3),
-              decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
               child: const Icon(Icons.close, size: 12, color: Colors.white),
             ),
           ),
@@ -3235,7 +3297,10 @@ class _AddProductPageState extends State<_AddProductPage> {
     final remaining = 5 - (_existingImages.length + _newImagePaths.length);
     if (remaining <= 0) return;
     final picker = ImagePicker();
-    final file = await picker.pickImage(source: ImageSource.camera, imageQuality: 85);
+    final file = await picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 85,
+    );
     if (file == null) return;
     setState(() {
       _newImagePaths.add(file.path);
@@ -3286,7 +3351,8 @@ class _AddProductPageState extends State<_AddProductPage> {
       'name': _nameCtrl.text.trim(),
       'sku': _skuCtrl.text.trim(),
       if (barcode.isNotEmpty) 'barcodeNumber': barcode,
-      if (_descCtrl.text.trim().isNotEmpty) 'description': _descCtrl.text.trim(),
+      if (_descCtrl.text.trim().isNotEmpty)
+        'description': _descCtrl.text.trim(),
       if (_tagsCtrl.text.trim().isNotEmpty) 'tags': _tagsCtrl.text.trim(),
       'categoryId': _selectedCategoryId,
       'costPrice': parseNum(_costCtrl.text) ?? 0,
@@ -3294,7 +3360,8 @@ class _AddProductPageState extends State<_AddProductPage> {
       if (parseNum(_landingCostCtrl.text) != null)
         'landingCost': parseNum(_landingCostCtrl.text),
       'currencyCode': _currency,
-      if (parseNum(_taxRateCtrl.text) != null) 'taxRate': parseNum(_taxRateCtrl.text),
+      if (parseNum(_taxRateCtrl.text) != null)
+        'taxRate': parseNum(_taxRateCtrl.text),
       if (parseIntVal(_stockCtrl.text) != null)
         'currentStock': parseIntVal(_stockCtrl.text),
       if (parseIntVal(_minStockCtrl.text) != null)
@@ -3305,22 +3372,30 @@ class _AddProductPageState extends State<_AddProductPage> {
         'reorderPoint': parseIntVal(_reorderPointCtrl.text),
       if (parseIntVal(_leadTimeCtrl.text) != null)
         'leadTimeDays': parseIntVal(_leadTimeCtrl.text),
-      if (_brandCtrl.text.trim().isNotEmpty) 'brandName': _brandCtrl.text.trim(),
-      if (_modelCtrl.text.trim().isNotEmpty) 'modelNumber': _modelCtrl.text.trim(),
+      if (_brandCtrl.text.trim().isNotEmpty)
+        'brandName': _brandCtrl.text.trim(),
+      if (_modelCtrl.text.trim().isNotEmpty)
+        'modelNumber': _modelCtrl.text.trim(),
       if (_supplierSkuCtrl.text.trim().isNotEmpty)
         'supplierSku': _supplierSkuCtrl.text.trim(),
-      if (_palletCtrl.text.trim().isNotEmpty) 'palletNumber': _palletCtrl.text.trim(),
-      if (_shelfCtrl.text.trim().isNotEmpty) 'shelfNumber': _shelfCtrl.text.trim(),
+      if (_palletCtrl.text.trim().isNotEmpty)
+        'palletNumber': _palletCtrl.text.trim(),
+      if (_shelfCtrl.text.trim().isNotEmpty)
+        'shelfNumber': _shelfCtrl.text.trim(),
       if (parseNum(_tempMinCtrl.text) != null)
         'temperatureMin': parseNum(_tempMinCtrl.text),
       if (parseNum(_tempMaxCtrl.text) != null)
         'temperatureMax': parseNum(_tempMaxCtrl.text),
-      if (parseNum(_weightCtrl.text) != null) 'weight': parseNum(_weightCtrl.text),
-      if (parseNum(_lengthCtrl.text) != null) 'length': parseNum(_lengthCtrl.text),
+      if (parseNum(_weightCtrl.text) != null)
+        'weight': parseNum(_weightCtrl.text),
+      if (parseNum(_lengthCtrl.text) != null)
+        'length': parseNum(_lengthCtrl.text),
       if (parseNum(_widthCtrl.text) != null) 'width': parseNum(_widthCtrl.text),
-      if (parseNum(_heightCtrl.text) != null) 'height': parseNum(_heightCtrl.text),
+      if (parseNum(_heightCtrl.text) != null)
+        'height': parseNum(_heightCtrl.text),
       if (_colorCtrl.text.trim().isNotEmpty) 'color': _colorCtrl.text.trim(),
-      if (_materialCtrl.text.trim().isNotEmpty) 'material': _materialCtrl.text.trim(),
+      if (_materialCtrl.text.trim().isNotEmpty)
+        'material': _materialCtrl.text.trim(),
       if (_finishCtrl.text.trim().isNotEmpty) 'finish': _finishCtrl.text.trim(),
       'hasExpiry': _hasExpiry,
       'isBatchManaged': _isBatchManaged,
@@ -3342,7 +3417,8 @@ class _AddProductPageState extends State<_AddProductPage> {
       if (parseIntVal(_stackingLimitCtrl.text) != null)
         'stackingLimit': parseIntVal(_stackingLimitCtrl.text),
       'dangerousGoods': _dangerousGoods,
-      if (_unNumberCtrl.text.trim().isNotEmpty) 'unNumber': _unNumberCtrl.text.trim(),
+      if (_unNumberCtrl.text.trim().isNotEmpty)
+        'unNumber': _unNumberCtrl.text.trim(),
       if (_handlingCtrl.text.trim().isNotEmpty)
         'handlingInstructions': _handlingCtrl.text.trim(),
       if (parseIntVal(_warrantyPeriodCtrl.text) != null)
@@ -3352,7 +3428,8 @@ class _AddProductPageState extends State<_AddProductPage> {
       if (parseIntVal(_returnDaysCtrl.text) != null)
         'returnDays': parseIntVal(_returnDaysCtrl.text),
       if (_notesCtrl.text.trim().isNotEmpty) 'notes': _notesCtrl.text.trim(),
-      if (_selectedBarcodeFormat != null) 'barcodeFormat': _selectedBarcodeFormat,
+      if (_selectedBarcodeFormat != null)
+        'barcodeFormat': _selectedBarcodeFormat,
       if (_selectedProductType != null) 'productType': _selectedProductType,
       if (_selectedTaxType != null) 'taxType': _selectedTaxType,
       if (_selectedStockUnit != null) 'stockUnitName': _selectedStockUnit,
@@ -3360,14 +3437,17 @@ class _AddProductPageState extends State<_AddProductPage> {
         'supplierId': _selectedSupplierId,
       if (_selectedSubCategoryId != null && _selectedSubCategoryId!.isNotEmpty)
         'subCategoryId': _selectedSubCategoryId,
-      if (_selectedRackLocation != null) 'rackLocationName': _selectedRackLocation,
+      if (_selectedRackLocation != null)
+        'rackLocationName': _selectedRackLocation,
       if (_selectedZone != null) 'zoneName': _selectedZone,
       if (_selectedStorageCondition != null)
         'storageConditionName': _selectedStorageCondition,
       if (_selectedWeightUnit != null) 'weightUnitName': _selectedWeightUnit,
-      if (_selectedDimensionUnit != null) 'dimensionUnit': _selectedDimensionUnit,
+      if (_selectedDimensionUnit != null)
+        'dimensionUnit': _selectedDimensionUnit,
       if (_selectedSize != null) 'size': _selectedSize,
-      if (_selectedShippingClass != null) 'shippingClass': _selectedShippingClass,
+      if (_selectedShippingClass != null)
+        'shippingClass': _selectedShippingClass,
       if (_expiryDate != null) 'expiryDate': _expiryDate!.toIso8601String(),
       if (_manufacturingDate != null)
         'manufacturingDate': _manufacturingDate!.toIso8601String(),
@@ -3375,10 +3455,9 @@ class _AddProductPageState extends State<_AddProductPage> {
 
     bool success;
     if (_isEditing) {
-      final productId = (widget.editingProduct!['id'] ??
-              widget.editingProduct!['_id'] ??
-              '')
-          .toString();
+      final productId =
+          (widget.editingProduct!['id'] ?? widget.editingProduct!['_id'] ?? '')
+              .toString();
       success = await _c.updateProduct(
         productId,
         payload,
@@ -3506,7 +3585,9 @@ class _AddProductPageState extends State<_AddProductPage> {
                           vertical: 7,
                         ),
                         decoration: BoxDecoration(
-                          color: active ? kPrimary : kPrimary.withValues(alpha: 0.07),
+                          color: active
+                              ? kPrimary
+                              : kPrimary.withValues(alpha: 0.07),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -3574,7 +3655,9 @@ class _AddProductPageState extends State<_AddProductPage> {
                       ),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        side: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+                        side: BorderSide(
+                          color: Colors.grey.withValues(alpha: 0.3),
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -3788,7 +3871,9 @@ class _MobileProductsListState extends State<_MobileProductsList> {
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+                    border: Border.all(
+                      color: Colors.grey.withValues(alpha: 0.1),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.03),
@@ -3940,7 +4025,10 @@ class _MobileProductsListState extends State<_MobileProductsList> {
         child: Center(
           child: Text(
             'All products loaded',
-            style: TextStyle(fontSize: 12, color: kSubText.withValues(alpha: 0.7)),
+            style: TextStyle(
+              fontSize: 12,
+              color: kSubText.withValues(alpha: 0.7),
+            ),
           ),
         ),
       );

@@ -304,8 +304,9 @@ class PurchaseInvoiceController extends GetxController {
       };
       if (searchFilter.value.isNotEmpty) params['search'] = searchFilter.value;
       if (statusFilter.value != 'all') params['status'] = statusFilter.value;
-      if (paymentFilter.value != 'all')
+      if (paymentFilter.value != 'all') {
         params['paymentStatus'] = paymentFilter.value;
+      }
 
       final query = params.entries
           .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
@@ -337,6 +338,7 @@ class PurchaseInvoiceController extends GetxController {
       } else {
       }
     } catch (e) {
+      debugPrint('Error fetching more invoices: $e');
     } finally {
       isLoadingMore.value = false;
     }

@@ -343,7 +343,7 @@ class GeneralLedgerScreen extends StatelessWidget {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: cards.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (_, i) => cards[i],
           ),
         ),
@@ -590,7 +590,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        '${entry.accountCode}',
+                        '$entry.accountCode',
                         style: TextStyle(fontSize: 10, color: kSubText),
                       ),
                     ],
@@ -802,7 +802,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       );
-                    }).toList(),
+                    }),
                   ],
                   onChanged: (value) {
                     if (value != null) controller.changeAccount(value);
@@ -1419,7 +1419,7 @@ class GeneralLedgerScreen extends StatelessWidget {
               child: ListView.separated(
                 itemCount: entries.length +
                     (controller.isLoadingMore.value ? 1 : 0),
-                separatorBuilder: (_, __) =>
+                separatorBuilder: (_, _) =>
                     Divider(height: 1, color: Colors.grey.withValues(alpha: 0.1)),
                 itemBuilder: (context, index) {
                   if (index >= entries.length) {
@@ -1807,7 +1807,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                   ),
                   value: controller.showOnlyDebit.value,
                   onChanged: (val) => controller.toggleDebitFilter(),
-                  activeColor: kSuccess,
+                  activeThumbColor: kSuccess,
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
@@ -1824,7 +1824,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                   ),
                   value: controller.showOnlyCredit.value,
                   onChanged: (val) => controller.toggleCreditFilter(),
-                  activeColor: kDanger,
+                  activeThumbColor: kDanger,
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
@@ -2484,16 +2484,20 @@ class GeneralLedgerScreen extends StatelessWidget {
   String _getAccountType(String accountName) {
     if (accountName.contains('Cash') ||
         accountName.contains('Bank') ||
-        accountName.contains('Receivable'))
+        accountName.contains('Receivable')) {
       return 'Assets';
-    if (accountName.contains('Payable') || accountName.contains('Loan'))
+    }
+    if (accountName.contains('Payable') || accountName.contains('Loan')) {
       return 'Liabilities';
-    if (accountName.contains('Revenue') || accountName.contains('Sales'))
+    }
+    if (accountName.contains('Revenue') || accountName.contains('Sales')) {
       return 'Income';
+    }
     if (accountName.contains('Expense') ||
         accountName.contains('Rent') ||
-        accountName.contains('Salary'))
+        accountName.contains('Salary')) {
       return 'Expenses';
+    }
     return 'Assets';
   }
 

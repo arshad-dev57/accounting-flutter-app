@@ -97,7 +97,7 @@ class BankReconciliationScreen extends StatelessWidget {
               width: 80.w,
               child: Obx(
                 () => DropdownButtonFormField<String>(
-                  value: controller.selectedAccountId.value.isEmpty
+                  initialValue: controller.selectedAccountId.value.isEmpty
                       ? null
                       : controller.selectedAccountId.value,
                   decoration: InputDecoration(

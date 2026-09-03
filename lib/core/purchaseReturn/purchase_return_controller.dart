@@ -271,6 +271,7 @@ class PurchaseReturnController extends GetxController {
         }
       }
     } catch (e) {
+      debugPrint('Error fetching more returns: $e');
     } finally {
       isLoadingMore.value = false;
     }
@@ -366,6 +367,7 @@ class PurchaseReturnController extends GetxController {
             .toList();
       }
     } catch (e) {
+      debugPrint('Error fetching supplier invoices: $e');
     } finally {
       isLoadingInvoices.value = false;
     }
@@ -411,6 +413,7 @@ class PurchaseReturnController extends GetxController {
 
       }
     } catch (e) {
+      debugPrint('Error fetching invoice products: $e');
     } finally {
       isLoadingProducts.value = false;
     }

@@ -1,4 +1,3 @@
-// lib/core/warehouse/order/screen/sales_order_screen.dart
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/warehouse/order/controller/sales_order_controller.dart';

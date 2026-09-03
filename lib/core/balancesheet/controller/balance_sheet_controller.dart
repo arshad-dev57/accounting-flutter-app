@@ -679,7 +679,7 @@ class BalanceSheetController extends GetxController {
                 false,
               ),
             )
-            .toList(),
+           ,
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.symmetric(vertical: 4),
@@ -751,7 +751,7 @@ class BalanceSheetController extends GetxController {
                 true,
               ),
             )
-            .toList(),
+            ,
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.symmetric(vertical: 4),
@@ -890,7 +890,7 @@ class BalanceSheetController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+            ,
         pw.Padding(
           padding: const pw.EdgeInsets.only(left: 16, top: 4, bottom: 8),
           child: pw.Row(

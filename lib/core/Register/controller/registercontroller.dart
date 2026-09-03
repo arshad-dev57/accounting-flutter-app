@@ -228,6 +228,7 @@ class AuthController extends GetxController {
       if (success) {
       }
     } catch (e) {
+      debugPrint('Error creating initial fiscal year: $e');
     }
   }
 
@@ -435,7 +436,7 @@ class AuthController extends GetxController {
           );
 
           if (subscriptionController.hasAccess) {
-            Get.offAllNamed('/dashboard');
+            subscriptionController.goToAppHome();
           } else {
             Get.offAll(() => const SelectPlanScreen());
           }
@@ -494,7 +495,7 @@ class AuthController extends GetxController {
         AppSnackbar.success(kSuccess, 'Success', 'Login successful!');
 
         if (subscriptionController.hasAccess) {
-          Get.offAllNamed('/dashboard');
+          subscriptionController.goToAppHome();
         } else {
           Get.offAll(() => const SelectPlanScreen());
         }
@@ -647,6 +648,7 @@ class AuthController extends GetxController {
         await _clearAuthData();
       }
     } catch (e) {
+      debugPrint('Error getting current user: $e');
     }
   }
 

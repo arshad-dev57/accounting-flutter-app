@@ -79,7 +79,9 @@ class AccountsReceivableController extends GetxController {
           bankAccounts.value = List<Map<String, dynamic>>.from(data['data']);
         }
       }
-    } catch (error) {}
+    } catch (error) {
+      debugPrint('Error: $error');
+    }
   }
 
   // ─── Fetch Summary ────────────────────────────────────────────────
@@ -97,7 +99,9 @@ class AccountsReceivableController extends GetxController {
           activeCustomers.value = data['data']['activeCustomers'] ?? 0;
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      // Optional summary metrics; ignore fetch errors.
+    }
   }
 
   // ─── Fetch Customers ──────────────────────────────────────────────

@@ -365,7 +365,6 @@ class TransactionController extends GetxController {
         totalPages.value = _safeInt(data['pages']);
         hasMore.value = currentPage.value < totalPages.value;
       }
-    } catch (e) {
     } finally {
       isLoadingMore.value = false;
     }

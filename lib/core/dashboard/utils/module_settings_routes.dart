@@ -10,6 +10,8 @@ import 'package:BisonsTechs_app/core/changepassword/screen/change_password_scree
 import 'package:BisonsTechs_app/core/companyprofile/screen/company_profile_screen.dart';
 import 'package:BisonsTechs_app/core/contactsupport/contact_support_screen.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
+import 'package:BisonsTechs_app/core/plans/views/billing_screen.dart';
+import 'package:BisonsTechs_app/core/plans/views/pos_active_screen.dart';
 import 'package:BisonsTechs_app/core/settings/controller/pdf_report_settings_controller.dart';
 import 'package:BisonsTechs_app/core/settings/screens/currency_screen.dart';
 import 'package:BisonsTechs_app/core/settings/screens/pdf_report_settings_screen.dart';
@@ -94,6 +96,16 @@ void navigateModuleSettingsRoute(String routeKey, String label) {
     case 'subscription':
       if (PermissionService.to.isAdmin) {
         Get.to(() => const SelectPlanScreen());
+      }
+      break;
+    case 'billing':
+      if (PermissionService.to.isAdmin) {
+        Get.to(() => const BillingScreen());
+      }
+      break;
+    case 'pos_desktop':
+      if (PermissionService.to.isAdmin) {
+        Get.to(() => const PosActiveScreen());
       }
       break;
     case 'feedback':

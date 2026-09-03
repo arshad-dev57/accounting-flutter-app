@@ -1176,7 +1176,7 @@ class PaymentsMadeScreen extends StatelessWidget {
                             if (paymentMethod == 'Bank Transfer') ...[
                               Obx(
                                 () => DropdownButtonFormField<String>(
-                                  value: selectedBankAccountId.isEmpty
+                                  initialValue: selectedBankAccountId.isEmpty
                                       ? null
                                       : selectedBankAccountId,
                                   decoration: InputDecoration(

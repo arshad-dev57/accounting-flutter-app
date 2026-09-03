@@ -310,8 +310,8 @@ class LocationController extends GetxController {
         body: {
           if (name != null) 'name': name.trim(),
           if (code != null) 'code': code.trim(),
-          if (type != null) 'type': type,
-          if (isDefault != null) 'isDefault': isDefault,
+          'type': ?type,
+          'isDefault': ?isDefault,
           if (address != null) 'address': address.trim(),
           if (phone != null) 'phone': phone.trim(),
           if (notes != null) 'notes': notes.trim(),
@@ -378,7 +378,9 @@ class LocationController extends GetxController {
 
   Future<void> selectLocation(WarehouseLocation? location) async {
     if (selectedLocation.value?.id == location?.id &&
-        !isAllLocationsSelected) return;
+        !isAllLocationsSelected) {
+      return;
+    }
     selectedLocation.value = location;
     await _persistSelectedId(location?.id);
   }

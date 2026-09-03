@@ -1,6 +1,6 @@
-import 'dart:io';
-
 import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/widgets/dashboard_hero_watermark.dart';
+import 'package:BisonsTechs_app/widgets/dashboard_mobile_chrome.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/widgets/fiscal_year_select.dart';
 import 'package:BisonsTechs_app/core/warehouse/widgets/location_switcher.dart';
@@ -357,7 +357,7 @@ class _PurchaseDashboardBody extends GetView<PurchaseController> {
                 scrollDirection: Axis.horizontal,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: 4,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
                 itemBuilder: (_, i) => _shimmerBox(
                   height: 34,
                   width: 72 + (i * 4).toDouble(),
@@ -376,7 +376,7 @@ class _PurchaseDashboardBody extends GetView<PurchaseController> {
                 mainAxisSpacing: 10,
                 childAspectRatio: 1.55,
               ),
-              itemBuilder: (_, __) => _shimmerBox(radius: 14),
+              itemBuilder: (_, _) => _shimmerBox(radius: 14),
             ),
             const SizedBox(height: 16),
             _shimmerBox(height: 200, radius: 16),
@@ -405,8 +405,6 @@ class _PurchaseDashboardBody extends GetView<PurchaseController> {
     return Obx(() {
       final data = controller.dashboard.value;
       final fmt = Get.find<CurrencyController>().formatAmount;
-      final logo = controller.businessLogo.value;
-      final hasLogo = logo.isNotEmpty;
 
       final totalSpend = data?.invoices.totalSpend ?? 0.0;
       final outstanding = data?.invoices.outstanding ?? 0.0;
@@ -434,33 +432,7 @@ class _PurchaseDashboardBody extends GetView<PurchaseController> {
           borderRadius: BorderRadius.circular(17),
           child: Stack(
             children: [
-              if (hasLogo)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: Opacity(
-                      opacity: 0.07,
-                      child: logo.startsWith('http')
-                          ? Image.network(
-                              logo,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                              alignment: Alignment.center,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const SizedBox.shrink(),
-                            )
-                          : Image.file(
-                              File(logo),
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                              alignment: Alignment.center,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const SizedBox.shrink(),
-                            ),
-                    ),
-                  ),
-                ),
+              const DashboardHeroWatermark(),
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -661,7 +633,7 @@ class _PurchaseDashboardBody extends GetView<PurchaseController> {
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           itemCount: PurchaseController.timePeriodLabels.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          separatorBuilder: (_, _) => const SizedBox(width: 8),
           itemBuilder: (_, i) {
             final period = PurchaseController.timePeriodLabels[i];
             final isActive = period == selected;
@@ -1033,7 +1005,7 @@ class _PurchaseDashboardBody extends GetView<PurchaseController> {
         isStrokeCapRound: true,
         dotData: FlDotData(
           show: true,
-          getDotPainter: (_, __, ___, ____) =>
+          getDotPainter: (_, _, _, _) =>
               FlDotCirclePainter(radius: 3, color: color, strokeWidth: 0),
         ),
         belowBarData: BarAreaData(
@@ -1594,7 +1566,7 @@ class _SectionCard extends StatelessWidget {
                   color: _kTextPrimary,
                 ),
               ),
-              if (trailing != null) trailing!,
+              ?trailing,
             ],
           ),
           const SizedBox(height: 14),

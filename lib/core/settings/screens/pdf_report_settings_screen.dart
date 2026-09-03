@@ -595,7 +595,7 @@ class _MediaBox extends StatelessWidget {
       return Image.network(
         path,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) =>
+        errorBuilder: (_, _, _) =>
             Icon(Icons.broken_image_outlined, color: kSubText),
       );
     }
@@ -603,14 +603,14 @@ class _MediaBox extends StatelessWidget {
       return Image.network(
         path,
         fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) =>
+        errorBuilder: (_, _, _) =>
             Icon(Icons.broken_image_outlined, color: kSubText),
       );
     }
     return Image.file(
       File(path),
       fit: BoxFit.contain,
-      errorBuilder: (_, __, ___) =>
+      errorBuilder: (_, _, _) =>
           Icon(Icons.broken_image_outlined, color: kSubText),
     );
   }

@@ -759,7 +759,7 @@ class PaymentsReceivedScreen extends StatelessWidget {
                               children: [
                                 Expanded(
                                   child: DropdownButtonFormField<String>(
-                                    value: selectedCustomerId.isEmpty
+                                    initialValue: selectedCustomerId.isEmpty
                                         ? null
                                         : selectedCustomerId,
                                     decoration: InputDecoration(
@@ -914,7 +914,7 @@ class PaymentsReceivedScreen extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   DropdownButtonFormField<String>(
-                                    value: selectedInvoiceId.isEmpty
+                                    initialValue: selectedInvoiceId.isEmpty
                                         ? null
                                         : selectedInvoiceId,
                                     isExpanded: true,
@@ -1056,7 +1056,7 @@ class PaymentsReceivedScreen extends StatelessWidget {
                             // Payment Method
                             
                             DropdownButtonFormField<String>(
-                              value: paymentMethod,
+                              initialValue: paymentMethod,
                               decoration: InputDecoration(
                                 labelText: 'Payment Method *',
                                 border: OutlineInputBorder(
@@ -1129,7 +1129,7 @@ class PaymentsReceivedScreen extends StatelessWidget {
                             if (paymentMethod == 'Bank Transfer') ...[
                               Obx(
                                 () => DropdownButtonFormField<String>(
-                                  value: selectedBankAccountId.isEmpty
+                                  initialValue: selectedBankAccountId.isEmpty
                                       ? null
                                       : selectedBankAccountId,
                                   isExpanded: true,
@@ -1303,8 +1303,9 @@ class PaymentsReceivedScreen extends StatelessWidget {
                               onPressed: controller.isRecording.value
                                   ? null
                                   : () async {
-                                      if (!formKey.currentState!.validate())
+                                      if (!formKey.currentState!.validate()) {
                                         return;
+                                      }
 
                                       if (selectedInvoiceId.isEmpty) {
                                         AppSnackbar.error(

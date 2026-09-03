@@ -214,10 +214,12 @@ class WarehouseDashboardController extends GetxController {
   Map<String, dynamic> get _periodQueryParams {
     final params = <String, dynamic>{'period': selectedPeriod.value};
     if (selectedPeriod.value == 'custom') {
-      if (customStartDate.value != null)
+      if (customStartDate.value != null) {
         params['startDate'] = customStartDate.value!.toIso8601String();
-      if (customEndDate.value != null)
+      }
+      if (customEndDate.value != null) {
         params['endDate'] = customEndDate.value!.toIso8601String();
+      }
     }
     putFiscalYearId(params);
     return params;
@@ -319,6 +321,7 @@ class WarehouseDashboardController extends GetxController {
       } else {
       }
     } catch (e) {
+      debugPrint('Error fetching metrics: $e');
     }
   }
 

@@ -126,6 +126,7 @@ class IncomeController extends GetxController {
         }
       }
     } catch (e) {
+      debugPrint('Error loading income accounts: $e');
     }
   }
 
@@ -288,6 +289,7 @@ class IncomeController extends GetxController {
         }
       }
     } catch (e) {
+      debugPrint('Error loading customers: $e');
     }
   }
 
@@ -304,6 +306,7 @@ class IncomeController extends GetxController {
         }
       }
     } catch (e) {
+      debugPrint('Error loading bank accounts: $e');
     }
   }
 
@@ -341,6 +344,7 @@ class IncomeController extends GetxController {
         }
       }
     } catch (e) {
+      debugPrint('Error loading summary: $e');
     }
   }
 
@@ -1403,7 +1407,7 @@ class IncomeController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+          ,
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),

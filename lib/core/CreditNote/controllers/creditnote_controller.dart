@@ -58,7 +58,6 @@ class CreditNoteController extends GetxController {
   final TextEditingController searchController = TextEditingController();
   final ScrollController scrollController = ScrollController();
 
-  @override
   Worker? fyWorker;
     
   @override

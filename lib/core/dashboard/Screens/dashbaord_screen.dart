@@ -15,6 +15,7 @@ import 'package:BisonsTechs_app/core/Notifications/screens/notification_screen.d
 import 'package:BisonsTechs_app/core/dashboard/controllers/dashboard_controller.dart';
 import 'package:BisonsTechs_app/core/dashboard/utils/accounting_route_navigator.dart';
 import 'package:BisonsTechs_app/core/dashboard/widgets/accounting_settings_tab.dart';
+import 'package:BisonsTechs_app/widgets/dashboard_hero_watermark.dart';
 import 'package:BisonsTechs_app/widgets/dashboard_mobile_chrome.dart';
 import 'package:BisonsTechs_app/widgets/reload_when_visible.dart';
 
@@ -59,8 +60,6 @@ const _kHeroIcon = Color(0xFFC5D8E8);
 const _kChipBg = Color(0xFFF0F2F8);
 const _kAppBarBg = Color(0xFFF7F9FC);
 
-// ─── TOP-LEVEL STATELESS WIDGETS ─────────────────────────────────────────────
-// Drawer ko top-level StatelessWidget banaya — har build pe recreate nahi hoga
 
 class _LogoAvatar extends StatelessWidget {
   final String logo;
@@ -607,7 +606,7 @@ class _AccountingDashboardViewState extends State<_AccountingDashboardView> {
                 mainAxisSpacing: 10,
                 childAspectRatio: 1.55,
               ),
-              itemBuilder: (_, __) => _shimmerBox(radius: 14),
+              itemBuilder: (_, _) => _shimmerBox(radius: 14),
             ),
             const SizedBox(height: 16),
             _shimmerBox(height: 200, radius: 16),
@@ -691,7 +690,7 @@ class _SectionCard extends StatelessWidget {
                   color: _kTextPrimary,
                 ),
               ),
-              if (trailing != null) trailing!,
+              ?trailing,
             ],
           ),
           const SizedBox(height: 14),
@@ -731,21 +730,7 @@ class _HeroCard extends GetView<DashboardController> {
           borderRadius: BorderRadius.circular(17),
           child: Stack(
             children: [
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: Center(
-                    child: Opacity(
-                      opacity: 0.10,
-                      child: Image.asset(
-                        'assets/app_icon.png',
-                        width: 120,
-                        height: 120,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              const DashboardHeroWatermark(),
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -932,7 +917,6 @@ class _HeroCard extends GetView<DashboardController> {
   Widget _heroDivider() => Container(width: 0.5, height: 44, color: _kCardBorder);
 }
 
-// ─── PERIOD CHIPS ─────────────────────────────────────────────────────────────
 class _PeriodChips extends GetView<DashboardController> {
   const _PeriodChips();
 

@@ -186,7 +186,9 @@ class BankAccountController extends GetxController {
           ),
         );
       }
-    } catch (e) {}
+    } catch (e) {
+      // Optional source accounts; ignore fetch errors.
+    }
   }
 
   Future<void> updateBankAccount(
@@ -319,7 +321,6 @@ class BankAccountController extends GetxController {
           }
         }
       }
-    } catch (e) {
     } finally {
       isLoading(false);
     }

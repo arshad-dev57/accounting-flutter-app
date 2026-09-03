@@ -577,7 +577,7 @@ class PurchasePaymentCreateForm extends StatelessWidget {
 
             // Payment Method
             DropdownButtonFormField<String>(
-              value: controller.paymentMethod.value,
+              initialValue: controller.paymentMethod.value,
               isExpanded: true,
               decoration: const InputDecoration(
                 labelText: 'Payment Method *',
@@ -615,7 +615,7 @@ class PurchasePaymentCreateForm extends StatelessWidget {
             // Bank Account (required for non-cash methods)
             if (controller.paymentMethod.value != 'Cash') ...[
               DropdownButtonFormField<Map<String, dynamic>>(
-                value: controller.selectedBankAccount.value,
+                initialValue: controller.selectedBankAccount.value,
                 isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Select Bank Account *',
@@ -885,7 +885,7 @@ class PurchasePaymentCreateForm extends StatelessWidget {
                       Text(
                         invoice.isDraft
                             ? 'Not payable'
-                            : '${invoice.paymentStatus.isNotEmpty ? invoice.paymentStatus : invoice.invoiceStatus}',
+                            : invoice.paymentStatus.isNotEmpty ? invoice.paymentStatus : invoice.invoiceStatus,
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,

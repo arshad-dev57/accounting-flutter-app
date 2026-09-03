@@ -1104,8 +1104,10 @@ void _showAddCategoryDialog(
                       'description': descCtrl.text.trim(),
                     });
                     if (ok) {
-                      Navigator.pop(context);
-                      _snackSuccess('Category created successfully');
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        _snackSuccess('Category created successfully');
+                      }
                     } else {
                       _snackError('Failed to create category');
                     }
@@ -1270,8 +1272,10 @@ void _showAddSubCategoryDialog(
                         'parentId': selectedParentId,
                       });
                       if (ok) {
-                        Navigator.pop(context);
-                        _snackSuccess('Sub-category created successfully');
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          _snackSuccess('Sub-category created successfully');
+                        }
                       } else {
                         _snackError('Failed to create sub-category');
                       }
@@ -1732,8 +1736,10 @@ void _showEditCategoryDialog(
                           'description': descCtrl.text.trim(),
                         });
                     if (ok) {
-                      Navigator.pop(context);
-                      _snackSuccess('Category updated successfully');
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        _snackSuccess('Category updated successfully');
+                      }
                     } else {
                       _snackError('Failed to update category');
                     }

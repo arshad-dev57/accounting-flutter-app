@@ -911,8 +911,9 @@ class AccountsPayableScreen extends StatelessWidget {
                               onPressed: controller.isSaving.value
                                   ? null
                                   : () async {
-                                      if (!formKey.currentState!.validate())
+                                      if (!formKey.currentState!.validate()) {
                                         return;
+                                      }
 
                                       if (supplierId.isEmpty) {
                                         AppSnackbar.error(
@@ -1506,13 +1507,16 @@ class AccountsPayableScreen extends StatelessWidget {
                               onChanged: (v) =>
                                   amount = double.tryParse(v) ?? 0,
                               validator: (v) {
-                                if (v == null || v.isEmpty)
+                                if (v == null || v.isEmpty) {
                                   return 'Amount required';
+                                }
                                 final val = double.tryParse(v);
-                                if (val == null || val <= 0)
+                                if (val == null || val <= 0) {
                                   return 'Invalid amount';
-                                if (val > bill.outstanding)
+                                }
+                                if (val > bill.outstanding) {
                                   return 'Exceeds outstanding';
+                                }
                                 return null;
                               },
                               keyboardType: TextInputType.number,
@@ -1847,7 +1851,7 @@ class AccountsPayableScreen extends StatelessWidget {
     required void Function(String?) onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -1887,7 +1891,7 @@ class AccountsPayableScreen extends StatelessWidget {
       children: [
         Expanded(
           child: DropdownButtonFormField<String>(
-            value: validSelectedId,
+            initialValue: validSelectedId,
             decoration: InputDecoration(
               labelText: 'Supplier *',
               border: OutlineInputBorder(
@@ -1952,7 +1956,7 @@ class AccountsPayableScreen extends StatelessWidget {
     List<Map<String, dynamic>> bankAccounts,
   ) {
     return DropdownButtonFormField<String>(
-      value: selectedId,
+      initialValue: selectedId,
       decoration: InputDecoration(
         labelText: 'Bank Account *',
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -2171,7 +2175,7 @@ class AccountsPayableScreen extends StatelessWidget {
               ],
             ),
           );
-        }).toList(),
+        }),
         TextButton.icon(
           onPressed: () => setState(() {
             items.add({'description': '', 'quantity': 1, 'unitPrice': 0.0});

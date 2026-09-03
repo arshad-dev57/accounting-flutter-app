@@ -2,13 +2,20 @@ import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/plans/services/subscription_limit_helper.dart';
 import 'package:BisonsTechs_app/core/plans/utils/subscription_pricing.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+const String _customPlanEmail = 'support@bisonstechs.com';
+const String _customPlanPhone = '+92 325 3411482';
+const String _customPlanPhoneTel = '+923253411482';
 
 /// Web-like pricing UI: POS vs ERP+POS, user/branch counters, live quote.
 class PricingSection extends StatefulWidget {
   final bool processing;
   final bool isTrial;
   final bool isPaid;
+  final bool trialEligible;
   final VoidCallback onComplete;
   final Future<void> Function() onStartTrial;
   final Future<void> Function({
@@ -25,6 +32,7 @@ class PricingSection extends StatefulWidget {
     required this.processing,
     required this.isTrial,
     required this.isPaid,
+    this.trialEligible = false,
     required this.onComplete,
     required this.onStartTrial,
     required this.onSubscribe,
@@ -189,7 +197,7 @@ class _PricingSectionState extends State<PricingSection> {
           ],
           const SizedBox(height: 20),
         ],
-        if (!widget.isTrial && !widget.isPaid) ...[
+        if (!widget.isTrial && !widget.isPaid && widget.trialEligible) ...[
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -287,7 +295,7 @@ class _PricingSectionState extends State<PricingSection> {
         OutlinedButton(
           onPressed: widget.processing
               ? null
-              : () => _showCustomRequest(context),
+              : () => _showCustomContact(context),
           child: const Text('Need custom features? Contact us'),
         ),
       ],
@@ -692,11 +700,77 @@ class _PricingSectionState extends State<PricingSection> {
     );
   }
 
-  void _showCustomRequest(BuildContext context) {
-    // Parent screen has _CustomPlanSheet — trigger via snackbar hint
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Use Support tickets below for custom plan requests.'),
+  Future<void> _launchUri(Uri uri) async {
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  void _showCustomContact(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Custom plan'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'For a custom plan, contact BisonsTechs directly:',
+              style: TextStyle(fontSize: 14, height: 1.4),
+            ),
+            const SizedBox(height: 16),
+            InkWell(
+              onTap: () => _launchUri(Uri.parse('mailto:$_customPlanEmail')),
+              onLongPress: () {
+                Clipboard.setData(const ClipboardData(text: _customPlanEmail));
+              },
+              child: Row(
+                children: [
+                  const Icon(Icons.email_outlined, size: 20, color: kPrimary),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _customPlanEmail,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: kPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            InkWell(
+              onTap: () => _launchUri(Uri.parse('tel:$_customPlanPhoneTel')),
+              onLongPress: () {
+                Clipboard.setData(const ClipboardData(text: _customPlanPhone));
+              },
+              child: Row(
+                children: [
+                  const Icon(Icons.phone_outlined, size: 20, color: kPrimary),
+                  const SizedBox(width: 10),
+                  Text(
+                    _customPlanPhone,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: kPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Close'),
+          ),
+        ],
       ),
     );
   }

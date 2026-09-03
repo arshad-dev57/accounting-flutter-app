@@ -73,7 +73,6 @@ class PaymentReceivedController extends GetxController {
     return CurrencyUtils.format(amount);
   }
 
-  @override
   Worker? _fyWorker;
 
   @override

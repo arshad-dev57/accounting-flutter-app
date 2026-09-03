@@ -296,7 +296,9 @@ class ProductsController extends GetxController {
     data.forEach((key, value) {
       if (value == null) return;
       if (value is String && value.trim().isEmpty) return;
-      fields[key] = value is bool || value is num ? value.toString() : value.toString();
+      fields[key] = value is bool || value is num
+          ? value.toString()
+          : value.toString();
     });
     return fields;
   }
@@ -656,15 +658,16 @@ class ProductsController extends GetxController {
   }
 
   // ─── Share Scanned Data ──────────────────────────────────────
-void shareScannedData() {
-  SharePlus.instance.share(
-    ShareParams(
-      text: 'Scanned QR Code Data:\n${scannedData.value}\n\n'
-          'Time: ${DateTime.now()}\n'
-          'BisonsTechs App',
-    ),
-  );
-}
+  void shareScannedData() {
+    SharePlus.instance.share(
+      ShareParams(
+        text:
+            'Scanned QR Code Data:\n${scannedData.value}\n\n'
+            'Time: ${DateTime.now()}\n'
+            'BisonsTechs App',
+      ),
+    );
+  }
 
   // ─── Generate QR Code ────────────────────────────────────────
   Future<void> generateQRCode() async {
@@ -782,9 +785,12 @@ void shareScannedData() {
       final file = File('${tempDir.path}/qr_code.png');
       await file.writeAsBytes(pngBytes);
 
-      await Share.shareXFiles([
-        XFile(file.path),
-      ], text: 'QR Code Data: ${qrData.value}');
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          text: 'QR Code Data: ${qrData.value}',
+        ),
+      );
     } catch (e) {
       Get.snackbar(
         'Error',

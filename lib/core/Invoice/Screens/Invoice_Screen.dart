@@ -879,7 +879,7 @@ class InvoicesScreen extends StatelessWidget {
           Expanded(
             child: ListView.separated(
               itemCount: invoices.length,
-              separatorBuilder: (_, __) =>
+              separatorBuilder: (_, _) =>
                   Divider(height: 1, color: Colors.grey.withValues(alpha: 0.1)),
               itemBuilder: (context, index) =>
                   _buildWebTableRow(invoices[index], controller, context),

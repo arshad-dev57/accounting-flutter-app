@@ -43,7 +43,6 @@ class ApiClient extends GetxService {
     return token.trim().replaceAll('"', '').replaceAll(RegExp(r'\s'), '');
   }
 
-
   Future<void> _loadToken() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
@@ -277,7 +276,7 @@ class ApiClient extends GetxService {
       // Keep any query already on the endpoint (e.g. /api/sales/invoices?page=1)
       var params = <String, dynamic>{
         ...uri.queryParameters,
-        if (queryParameters != null) ...queryParameters,
+        ...?queryParameters,
       };
 
       // Attach selected fiscal year on whitelisted GETs (mirrors Next.js interceptor)
@@ -532,7 +531,8 @@ class ApiClient extends GetxService {
     String endpoint, {
     required Map<String, String> fields,
     Map<String, String>? filePaths, // key: fieldName, value: filePath
-    Map<String, List<String>>? multiFilePaths, // multiple files same field (e.g. images)
+    Map<String, List<String>>?
+    multiFilePaths, // multiple files same field (e.g. images)
     bool requiresAuth = true,
   }) async {
     return _executeMultipartRequest(

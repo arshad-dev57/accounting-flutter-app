@@ -48,6 +48,8 @@ import 'package:BisonsTechs_app/core/loanBorrowing/screen/_loan_borrowing_screen
 import 'package:BisonsTechs_app/core/paymentRecieved/controller/payment_recieved_controller.dart';
 import 'package:BisonsTechs_app/core/paymentRecieved/Screens/payment_recieved_screen.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
+import 'package:BisonsTechs_app/core/plans/views/billing_screen.dart';
+import 'package:BisonsTechs_app/core/plans/views/pos_active_screen.dart';
 import 'package:BisonsTechs_app/core/profitlossStatement/controllers/profit_and_loss_controller.dart';
 import 'package:BisonsTechs_app/core/profitlossStatement/screens/profit_loss_statement_screen.dart';
 import 'package:BisonsTechs_app/core/settings/controller/pdf_report_settings_controller.dart';
@@ -175,6 +177,16 @@ void navigateAccountingRoute(String routeKey, String label) {
     case 'subscription':
       if (PermissionService.to.isAdmin) {
         Get.to(() => const SelectPlanScreen());
+      }
+      break;
+    case 'billing':
+      if (PermissionService.to.isAdmin) {
+        Get.to(() => const BillingScreen());
+      }
+      break;
+    case 'pos_desktop':
+      if (PermissionService.to.isAdmin) {
+        Get.to(() => const PosActiveScreen());
       }
       break;
     case 'feedback':

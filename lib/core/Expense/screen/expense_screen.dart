@@ -277,10 +277,11 @@ class ExpenseScreen extends StatelessWidget {
                             return DropdownMenuItem(value: f, child: Text(f));
                           }).toList(),
                           onChanged: (v) {
-                            if (v != null)
+                            if (v != null) {
                               controller.applyTypeFilter(
                                 v == 'All Types' ? 'All' : v,
                               );
+                            }
                           },
                         ),
                       ),
@@ -788,8 +789,9 @@ class ExpenseScreen extends StatelessWidget {
                     );
                   }).toList(),
                   onChanged: (v) {
-                    if (v != null)
+                    if (v != null) {
                       controller.applyTypeFilter(v == 'All Types' ? 'All' : v);
+                    }
                   },
                 ),
               ),
@@ -1950,8 +1952,9 @@ class ExpenseScreen extends StatelessWidget {
                               onPressed: controller.isSaving.value
                                   ? null
                                   : () async {
-                                      if (!formKey.currentState!.validate())
+                                      if (!formKey.currentState!.validate()) {
                                         return;
+                                      }
 
                                       var typeToSave = expenseType;
                                       if (expenseType == 'Other') {
@@ -2516,7 +2519,7 @@ class ExpenseScreen extends StatelessWidget {
                                 ),
                               ),
                             )
-                            .toList(),
+                            ,
                       ],
                     ],
                   ),
@@ -2633,6 +2636,7 @@ class ExpenseScreen extends StatelessWidget {
         PopupMenuItem(
           onTap: () {
             Future.microtask(() {
+              if (!context.mounted) return;
               if (expense.status == 'Cancelled') {
                 AppSnackbar.error(
                   kWarning,

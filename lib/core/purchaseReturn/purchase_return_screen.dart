@@ -285,10 +285,14 @@ class PurchaseReturnScreen extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
-            color: selected ? Colors.white : Colors.white.withValues(alpha: 0.18),
+            color: selected
+                ? Colors.white
+                : Colors.white.withValues(alpha: 0.18),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: selected ? Colors.white : Colors.white.withValues(alpha: 0.4),
+              color: selected
+                  ? Colors.white
+                  : Colors.white.withValues(alpha: 0.4),
             ),
           ),
           child: Text(
@@ -538,7 +542,25 @@ class _CreateReturnForm extends StatelessWidget {
                 ),
               )
             else
-              ...controller.availableInvoices.map(_invoiceTile),
+              Obx(
+                () => RadioGroup<String>(
+                  groupValue: controller.selectedInvoice.value?.id,
+                  onChanged: (id) {
+                    if (id == null) return;
+                    for (final invoice in controller.availableInvoices) {
+                      if (invoice.id == id) {
+                        controller.selectInvoice(invoice);
+                        break;
+                      }
+                    }
+                  },
+                  child: Column(
+                    children: controller.availableInvoices
+                        .map(_invoiceTile)
+                        .toList(),
+                  ),
+                ),
+              ),
           ]),
           const SizedBox(height: 16),
         ],
@@ -765,14 +787,8 @@ class _CreateReturnForm extends StatelessWidget {
           width: isSelected ? 2 : 1,
         ),
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        leading: Radio(
-          value: invoice.id,
-          groupValue: controller.selectedInvoice.value?.id,
-          onChanged: (_) => controller.selectInvoice(invoice),
-          activeColor: kPrimary,
-        ),
+      child: RadioListTile<String>(
+        value: invoice.id,
         title: Text(
           invoice.invoiceNumber,
           style: TextStyle(
@@ -796,6 +812,10 @@ class _CreateReturnForm extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
+            Text(
+              '${invoice.items.length} items',
+              style: TextStyle(fontSize: 11, color: kSubText),
+            ),
             if (invoice.isFullyPaid)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -814,10 +834,8 @@ class _CreateReturnForm extends StatelessWidget {
               ),
           ],
         ),
-        trailing: Text(
-          '${invoice.items.length} items',
-          style: TextStyle(fontSize: 11, color: kSubText),
-        ),
+        activeColor: kPrimary,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       ),
     );
   }
@@ -1313,7 +1331,9 @@ class _ReturnDetailSheetState extends State<_ReturnDetailSheet> {
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.06)),
+                  bottom: BorderSide(
+                    color: Colors.grey.withValues(alpha: 0.06),
+                  ),
                 ),
               ),
               child: Column(
@@ -1851,7 +1871,9 @@ class _ReturnListView extends StatelessWidget {
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+                    border: Border.all(
+                      color: Colors.grey.withValues(alpha: 0.1),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.03),

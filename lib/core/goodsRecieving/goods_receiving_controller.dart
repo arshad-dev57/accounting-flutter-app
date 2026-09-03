@@ -261,6 +261,7 @@ class GoodsReceivingController extends GetxController {
         }
       } else {}
     } catch (e) {
+      debugPrint('Error loading more GRNs: $e');
     } finally {
       isLoadingMore.value = false;
     }

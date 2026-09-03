@@ -2076,14 +2076,17 @@ class LoanController extends GetxController {
                               onChanged: (v) =>
                                   amount = double.tryParse(v) ?? 0,
                               validator: (v) {
-                                if (v == null || v.isEmpty)
+                                if (v == null || v.isEmpty) {
                                   return 'Amount required';
+                                }
                                 final val = double.tryParse(v);
                                 if (val == null) return 'Invalid amount';
-                                if (val <= 0)
+                                if (val <= 0) {
                                   return 'Amount must be greater than 0';
-                                if (val > loan.outstandingBalance)
+                                }
+                                if (val > loan.outstandingBalance) {
                                   return 'Amount exceeds outstanding balance';
+                                }
                                 return null;
                               },
                               keyboardType: TextInputType.number,
@@ -2794,7 +2797,7 @@ class LoanController extends GetxController {
                                 ),
                               ),
                             )
-                            .toList(),
+                           ,
                         const SizedBox(height: 16),
                         Divider(
                           height: 1,

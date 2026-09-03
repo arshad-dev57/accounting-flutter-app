@@ -160,7 +160,9 @@ class _MessageBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
-      color: isSuccess ? kGreen.withValues(alpha: 0.1) : kRed.withValues(alpha: 0.1),
+      color: isSuccess
+          ? kGreen.withValues(alpha: 0.1)
+          : kRed.withValues(alpha: 0.1),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
@@ -272,7 +274,9 @@ class _SettingsTab extends StatelessWidget {
               ),
               leading: const Icon(Icons.percent, color: kPrimary),
               title: const Text('Tax rates live in Tax Compliance'),
-              subtitle: const Text('Country packs, inclusive/exclusive, exemptions'),
+              subtitle: const Text(
+                'Country packs, inclusive/exclusive, exemptions',
+              ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => Get.toNamed('/tax'),
             ),
@@ -633,7 +637,9 @@ class _SettingsList extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: kPrimaryLight,
                         borderRadius: BorderRadius.circular(7),
-                        border: Border.all(color: kPrimary.withValues(alpha: 0.2)),
+                        border: Border.all(
+                          color: kPrimary.withValues(alpha: 0.2),
+                        ),
                       ),
                       child: const Icon(Icons.add, size: 15, color: kPrimary),
                     ),
@@ -647,7 +653,8 @@ class _SettingsList extends StatelessWidget {
               child: ListView.separated(
                 padding: EdgeInsets.zero,
                 itemCount: items.length,
-                separatorBuilder: (context, index) => Divider(height: 1, color: kBorder),
+                separatorBuilder: (context, index) =>
+                    Divider(height: 1, color: kBorder),
                 itemBuilder: (context, index) {
                   final item = items[index];
                   final showZone = ctrl.activeCategory.value == 'rackLocation';
@@ -1068,7 +1075,7 @@ void _showFormSheet(
             const SizedBox(height: 20),
 
             // ── Name field ──
-            FieldLabel('Name *'),
+            fieldLabel('Name *'),
             const SizedBox(height: 6),
             _InputField(
               controller: nameCtrl,
@@ -1085,7 +1092,7 @@ void _showFormSheet(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        FieldLabel('Symbol'),
+                        fieldLabel('Symbol'),
                         const SizedBox(height: 6),
                         _InputField(
                           controller: symbolCtrl,
@@ -1099,7 +1106,7 @@ void _showFormSheet(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        FieldLabel('Code'),
+                        fieldLabel('Code'),
                         const SizedBox(height: 6),
                         _InputField(
                           controller: codeCtrl,
@@ -1115,7 +1122,7 @@ void _showFormSheet(
 
             // ── Rack location zone ──
             if (isRackLocation) ...[
-              FieldLabel('Zone'),
+              fieldLabel('Zone'),
               const SizedBox(height: 6),
               Obx(
                 () => Container(
@@ -1287,7 +1294,9 @@ void _showFormSheet(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        disabledBackgroundColor: kPrimary.withValues(alpha: 0.5),
+                        disabledBackgroundColor: kPrimary.withValues(
+                          alpha: 0.5,
+                        ),
                       ),
                       child: ctrl.isSaving.value
                           ? const SizedBox(
@@ -1319,10 +1328,7 @@ void _showFormSheet(
   );
 }
 
-// ============================================================
-// HELPERS
-// ============================================================
-Widget FieldLabel(String label) => Text(
+Widget fieldLabel(String label) => Text(
   label,
   style: const TextStyle(
     fontSize: 13,

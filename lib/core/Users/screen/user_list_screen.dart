@@ -317,13 +317,15 @@ class _UserListScreenState extends State<UserListScreen> {
         if (_searchQuery.isNotEmpty) {
           final q = _searchQuery.toLowerCase();
           if (!u.fullName.toLowerCase().contains(q) &&
-              !u.email.toLowerCase().contains(q))
+              !u.email.toLowerCase().contains(q)) {
             return false;
+          }
         }
         if (_statusFilter == 'active' && !u.isActive) return false;
         if (_statusFilter == 'inactive' && u.isActive) return false;
-        if (_roleFilter != 'all' && u.role.toLowerCase() != _roleFilter)
+        if (_roleFilter != 'all' && u.role.toLowerCase() != _roleFilter) {
           return false;
+        }
         return true;
       }).toList();
 

@@ -177,7 +177,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                                     steps: stepsCtrl.text,
                                     attachmentPath: attachment?.path,
                                   );
-                                  if (ok && mounted) Navigator.pop(ctx);
+                                  if (ok && ctx.mounted) Navigator.pop(ctx);
                                 },
                           child: controller.isSubmitting.value
                               ? const SizedBox(

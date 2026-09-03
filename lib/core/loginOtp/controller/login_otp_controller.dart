@@ -167,7 +167,7 @@ class LoginOtpController extends GetxController {
         }
 
         if (subscriptionController.hasAccess) {
-          Get.offAllNamed('/dashboard');
+          subscriptionController.goToAppHome();
         } else {
           Get.offAll(() => const SelectPlanScreen());
         }

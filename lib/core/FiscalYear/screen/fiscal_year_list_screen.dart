@@ -648,7 +648,7 @@ class _CreateFiscalYearDialogState extends State<_CreateFiscalYearDialog> {
             ),
             SizedBox(height: 1.5.h),
             DropdownButtonFormField<String>(
-              value: periodKey,
+              initialValue: periodKey,
               decoration: const InputDecoration(
                 labelText: 'Period type',
                 prefixIcon: Icon(Icons.date_range),

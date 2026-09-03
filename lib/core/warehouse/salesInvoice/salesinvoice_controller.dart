@@ -157,7 +157,6 @@ class SalesInvoiceController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   Future<void> fetchInvoices({bool resetPage = false}) async {
-
     if (resetPage) currentPage.value = 1;
     try {
       isLoading.value = true;
@@ -192,7 +191,6 @@ class SalesInvoiceController extends GetxController {
         requiresAuth: true,
       );
 
-
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
 
@@ -225,7 +223,6 @@ class SalesInvoiceController extends GetxController {
           hasNext.value = pagination['hasNext'] == true;
           hasPrev.value = pagination['hasPrev'] == true;
           hasMore.value = pagination['hasNext'] == true;
-
         }
       } else {
         Get.snackbar('Error', response.message);
@@ -240,7 +237,6 @@ class SalesInvoiceController extends GetxController {
   // ─── LOCAL FILTERS ──────────────────────────────────────────
 
   void applyLocalFilters() {
-
     final list = invoices.toList();
     final filtered = list.where((item) {
       // Status filter
@@ -283,7 +279,6 @@ class SalesInvoiceController extends GetxController {
   // ─── LOAD MORE ────────────────────────────────────────────
 
   Future<void> fetchMoreInvoices() async {
-
     if (!hasMore.value || isLoadingMore.value) {
       return;
     }
@@ -298,8 +293,9 @@ class SalesInvoiceController extends GetxController {
       };
       if (searchFilter.value.isNotEmpty) params['search'] = searchFilter.value;
       if (statusFilter.value != 'all') params['status'] = statusFilter.value;
-      if (paymentFilter.value != 'all')
+      if (paymentFilter.value != 'all') {
         params['paymentStatus'] = paymentFilter.value;
+      }
 
       final query = params.entries
           .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
@@ -327,8 +323,7 @@ class SalesInvoiceController extends GetxController {
           totalRecords.value = (pagination['total'] as num?)?.toInt() ?? 0;
           totalPages.value = (pagination['pages'] as num?)?.toInt() ?? 1;
         }
-      } else {
-      }
+      } else {}
     } catch (e) {
       debugPrint('Error: $e');
     } finally {
@@ -390,7 +385,6 @@ class SalesInvoiceController extends GetxController {
   // ─── ORDER SEARCH ─────────────────────────────────────────────
 
   Future<void> searchOrders(String query) async {
-
     try {
       isSearchingOrders.value = true;
       final params = <String, String>{'limit': '15'};
@@ -422,7 +416,6 @@ class SalesInvoiceController extends GetxController {
   }
 
   void selectOrderForInvoice(Map<String, dynamic> order) {
-
     selectedOrder.value = order;
     orderSearchResults.clear();
     orderSearchController.text = order['orderNumber'] ?? '';
@@ -443,7 +436,8 @@ class SalesInvoiceController extends GetxController {
       final item = Map<String, dynamic>.from(raw as Map);
       return InvoiceLineDraft(
         productId: item['productId']?.toString() ?? '',
-        productName: item['productName']?.toString() ??
+        productName:
+            item['productName']?.toString() ??
             item['product']?['name']?.toString() ??
             '',
         sku: item['sku']?.toString() ?? '',
@@ -453,7 +447,6 @@ class SalesInvoiceController extends GetxController {
         taxRate: toD(item['taxRate']),
       );
     }).toList();
-
   }
 
   // ─── DATE SELECTION ──────────────────────────────────────────
@@ -500,7 +493,6 @@ class SalesInvoiceController extends GetxController {
   }
 
   void nextStep() {
-
     if (wizardStep.value == 0 && !canGoToStep2()) {
       Get.snackbar('Validation', 'Select an order first');
       return;
@@ -525,7 +517,6 @@ class SalesInvoiceController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   Future<bool> createInvoice() async {
-
     final order = selectedOrder.value;
     if (order == null) {
       return false;
@@ -547,8 +538,6 @@ class SalesInvoiceController extends GetxController {
     try {
       isSubmitting.value = true;
 
-     
-
       final payload = {
         'orderId': order['id'],
         'dueDate': dueDate.toIso8601String().split('T').first,
@@ -560,13 +549,11 @@ class SalesInvoiceController extends GetxController {
             : notesController.text.trim(),
       };
 
-
       final response = await _api.post(
         '/api/sales/invoices/from-order',
         body: payload,
         requiresAuth: true,
       );
-
 
       if (response.success) {
         Get.snackbar('Success', 'Invoice created successfully');
@@ -594,7 +581,6 @@ class SalesInvoiceController extends GetxController {
   }
 
   Future<bool> postInvoice(String id) async {
-
     try {
       isSubmitting.value = true;
       final response = await _api.post(
@@ -602,7 +588,6 @@ class SalesInvoiceController extends GetxController {
         body: {},
         requiresAuth: true,
       );
-
 
       if (response.success) {
         Get.snackbar(
@@ -624,7 +609,6 @@ class SalesInvoiceController extends GetxController {
   }
 
   Future<bool> cancelInvoice(String id, {String? reason}) async {
-
     try {
       isSubmitting.value = true;
       final response = await _api.post(
@@ -632,7 +616,6 @@ class SalesInvoiceController extends GetxController {
         body: {'reason': reason ?? 'Cancelled by user'},
         requiresAuth: true,
       );
-
 
       if (response.success) {
         Get.snackbar('Success', 'Invoice cancelled');
@@ -651,7 +634,6 @@ class SalesInvoiceController extends GetxController {
   }
 
   Future<bool> sendInvoice(String id, {String? email}) async {
-
     try {
       isSubmitting.value = true;
       final response = await _api.post(
@@ -659,7 +641,6 @@ class SalesInvoiceController extends GetxController {
         body: {'email': email ?? ''},
         requiresAuth: true,
       );
-
 
       if (response.success) {
         Get.snackbar('Success', 'Invoice sent successfully');
@@ -678,14 +659,12 @@ class SalesInvoiceController extends GetxController {
   }
 
   Future<bool> deleteInvoice(String id) async {
-
     try {
       isSubmitting.value = true;
       final response = await _api.delete(
         '/api/sales/invoices/$id',
         requiresAuth: true,
       );
-
 
       if (response.success) {
         Get.snackbar('Success', 'Invoice deleted successfully');
@@ -704,13 +683,11 @@ class SalesInvoiceController extends GetxController {
   }
 
   Future<SalesInvoiceModel?> getInvoiceById(String id) async {
-
     try {
       final response = await _api.get(
         '/api/sales/invoices/$id',
         requiresAuth: true,
       );
-
 
       if (response.success && response.data != null) {
         final invoice = SalesInvoiceModel.fromJson(
@@ -776,7 +753,6 @@ class SalesInvoiceController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   Future<void> generateAndDownloadPdf(SalesInvoiceModel invoice) async {
-
     try {
       isSubmitting.value = true;
       Get.dialog(
@@ -815,7 +791,6 @@ class SalesInvoiceController extends GetxController {
   }
 
   Future<void> shareInvoice(SalesInvoiceModel invoice) async {
-
     try {
       isSubmitting.value = true;
       Get.dialog(
@@ -844,11 +819,13 @@ class SalesInvoiceController extends GetxController {
       if (Get.isDialogOpen ?? false) Get.back();
       isSubmitting.value = false;
 
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        subject: 'Invoice ${invoice.invoiceNumber}',
-        text:
-            'Please find attached invoice ${invoice.invoiceNumber} for ${invoice.customerName}',
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          subject: 'Invoice ${invoice.invoiceNumber}',
+          text:
+              'Please find attached invoice ${invoice.invoiceNumber} for ${invoice.customerName}',
+        ),
       );
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
@@ -858,7 +835,6 @@ class SalesInvoiceController extends GetxController {
   }
 
   Future<void> shareViaWhatsApp(SalesInvoiceModel invoice) async {
-
     try {
       isSubmitting.value = true;
       Get.dialog(
@@ -899,10 +875,12 @@ class SalesInvoiceController extends GetxController {
         );
 
         // Also share the file after opening WhatsApp
-        await Share.shareXFiles(
-          [XFile(file.path)],
-          subject: 'Invoice ${invoice.invoiceNumber}',
-          text: message,
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [XFile(file.path)],
+            subject: 'Invoice ${invoice.invoiceNumber}',
+            text: message,
+          ),
         );
       } else {
         Get.snackbar('Error', 'WhatsApp not installed');
@@ -1197,7 +1175,7 @@ class SalesInvoiceController extends GetxController {
               ],
             ),
           );
-        }).toList(),
+        }),
         pw.SizedBox(height: 16),
         // Summary
         pw.Container(

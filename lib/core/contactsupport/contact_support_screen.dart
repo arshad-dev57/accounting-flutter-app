@@ -26,7 +26,7 @@ class _ContactSupportScreenState extends State<ContactSupportScreen> {
   late final SupportTicketController _controller;
 
   static const _supportEmail = 'support@bisonstechs.com';
-  static const _supportPhone = '+92 300 0000000';
+  static const _supportPhone = '+92 325 3411482';
 
   @override
   void initState() {

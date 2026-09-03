@@ -1,4 +1,3 @@
-/// Mirrors accounting-web-app/lib/subscription-pricing.ts
 
 const int trialDays = 14;
 
