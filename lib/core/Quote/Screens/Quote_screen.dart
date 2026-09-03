@@ -119,7 +119,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
               decoration: InputDecoration(
                 hintText: 'Search or select a customer',
                 hintStyle: TextStyle(
-                  color: kSubText.withOpacity(0.5),
+                  color: kSubText.withValues(alpha: 0.5),
                   fontSize: 14,
                 ),
                 prefixIcon: Icon(Icons.search, color: kSubText, size: 20),
@@ -261,7 +261,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
                     Icon(
                       Icons.inventory_2_outlined,
                       size: 48,
-                      color: kSubText.withOpacity(0.3),
+                      color: kSubText.withValues(alpha: 0.3),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -277,7 +277,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _items.length,
-              separatorBuilder: (_, __) => Divider(color: kBorder),
+              separatorBuilder: (_, _) => Divider(color: kBorder),
               itemBuilder: (context, index) {
                 return _buildItemTile(_items[index], index);
               },
@@ -594,7 +594,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: kPrimary.withOpacity(0.1),
+          color: kPrimary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(icon, color: kPrimary),
@@ -621,7 +621,7 @@ class _QuoteScreenState extends State<QuoteScreen> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),

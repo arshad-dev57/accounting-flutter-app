@@ -74,7 +74,6 @@ class PurchaseReturnController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    print('🟢 [PurchaseReturnController] onInit called');
     selectedReturnDate.value = DateTime.now();
     returnDateController.text = DateFormat(
       'dd MMM yyyy',
@@ -84,7 +83,6 @@ class PurchaseReturnController extends GetxController {
 
   @override
   void onClose() {
-    print('🟢 [PurchaseReturnController] onClose called');
     supplierSearchController.dispose();
     notesController.dispose();
     returnDateController.dispose();
@@ -122,7 +120,6 @@ class PurchaseReturnController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   Future<void> fetchReturns({bool resetPage = false}) async {
-    print('🔵 [PurchaseReturnController] fetchReturns called');
     if (resetPage) currentPage.value = 1;
 
     try {
@@ -144,9 +141,6 @@ class PurchaseReturnController extends GetxController {
       final query = params.entries
           .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
           .join('&');
-      print(
-        '🔵 [PurchaseReturnController] API Request: GET /api/purchase/returns?$query',
-      );
 
       final response = await _api.get(
         '/api/purchase/returns?$query',
@@ -180,13 +174,10 @@ class PurchaseReturnController extends GetxController {
           hasMore.value = pagination['hasNext'] == true;
         }
 
-        print('✅ [PurchaseReturnController] Fetched ${returns.length} returns');
       } else {
-        print('❌ [PurchaseReturnController] Failed to fetch returns');
-        Get.snackbar('Error', response.message ?? 'Failed to load returns');
+        Get.snackbar('Error', response.message);
       }
     } catch (e) {
-      print('❌ [PurchaseReturnController] fetchReturns error: $e');
       Get.snackbar('Error', e.toString());
     } finally {
       isLoading.value = false;
@@ -280,7 +271,7 @@ class PurchaseReturnController extends GetxController {
         }
       }
     } catch (e) {
-      print('❌ [PurchaseReturnController] fetchMoreReturns error: $e');
+      debugPrint('Error fetching more returns: $e');
     } finally {
       isLoadingMore.value = false;
     }
@@ -339,14 +330,10 @@ class PurchaseReturnController extends GetxController {
         supplierSearchResults.value = list
             .map((e) => Map<String, dynamic>.from(e))
             .toList();
-        print(
-          '🔵 [PurchaseReturnController] Found ${supplierSearchResults.length} suppliers',
-        );
       } else {
         supplierSearchResults.clear();
       }
     } catch (e) {
-      print('❌ [PurchaseReturnController] searchSuppliers error: $e');
       supplierSearchResults.clear();
     } finally {
       isSearchingSuppliers.value = false;
@@ -378,12 +365,9 @@ class PurchaseReturnController extends GetxController {
         availableInvoices.value = list
             .map((e) => InvoiceForReturn.fromJson(Map<String, dynamic>.from(e)))
             .toList();
-        print(
-          '🔵 [PurchaseReturnController] Found ${availableInvoices.length} invoices',
-        );
       }
     } catch (e) {
-      print('❌ [PurchaseReturnController] fetchSupplierInvoices error: $e');
+      debugPrint('Error fetching supplier invoices: $e');
     } finally {
       isLoadingInvoices.value = false;
     }
@@ -427,12 +411,9 @@ class PurchaseReturnController extends GetxController {
             )
             .toList();
 
-        print(
-          '🔵 [PurchaseReturnController] Found ${returnItems.length} products for return',
-        );
       }
     } catch (e) {
-      print('❌ [PurchaseReturnController] fetchInvoiceProducts error: $e');
+      debugPrint('Error fetching invoice products: $e');
     } finally {
       isLoadingProducts.value = false;
     }
@@ -575,7 +556,6 @@ class PurchaseReturnController extends GetxController {
         'items': items,
       };
 
-      print('🔵 [PurchaseReturnController] Creating return...');
       final response = await _api.post(
         '/api/purchase/returns/draft',
         body: payload,
@@ -583,21 +563,18 @@ class PurchaseReturnController extends GetxController {
       );
 
       if (response.success) {
-        print('✅ [PurchaseReturnController] Return created successfully');
         Get.snackbar('Success', 'Purchase return created successfully');
         closeCreateForm();
         await fetchReturns(resetPage: true);
         return true;
       }
 
-      print('❌ [PurchaseReturnController] Failed to create return');
       Get.snackbar(
         'Error',
-        response.message ?? 'Failed to create return',
+        response.message,
       );
       return false;
     } catch (e) {
-      print('❌ [PurchaseReturnController] createDraftReturn error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -628,10 +605,9 @@ class PurchaseReturnController extends GetxController {
         return true;
       }
 
-      Get.snackbar('Error', response.message ?? 'Failed to process return');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [PurchaseReturnController] processReturn error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -655,10 +631,9 @@ class PurchaseReturnController extends GetxController {
         return true;
       }
 
-      Get.snackbar('Error', response.message ?? 'Failed to cancel return');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [PurchaseReturnController] cancelReturn error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -681,10 +656,9 @@ class PurchaseReturnController extends GetxController {
         return true;
       }
 
-      Get.snackbar('Error', response.message ?? 'Failed to delete return');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [PurchaseReturnController] deleteReturn error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {

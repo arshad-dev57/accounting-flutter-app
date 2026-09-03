@@ -26,7 +26,7 @@ class PurchasePaymentScreen extends StatelessWidget {
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
@@ -61,7 +61,7 @@ class PurchasePaymentScreen extends StatelessWidget {
       ),
       body: Obx(() {
         if (controller.showCreateForm.value) {
-          return _CreatePaymentForm(
+          return PurchasePaymentCreateForm(
             controller: controller,
             onCancel: controller.closeCreateForm,
           );
@@ -112,7 +112,7 @@ class PurchasePaymentScreen extends StatelessWidget {
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(9),
                     ),
                     child: const Icon(
@@ -140,7 +140,7 @@ class PurchasePaymentScreen extends StatelessWidget {
                             '${controller.totalRecords.value} payments',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -181,13 +181,13 @@ class PurchasePaymentScreen extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(9),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 17,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -203,7 +203,7 @@ class PurchasePaymentScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
+                      color: Colors.black.withValues(alpha: 0.06),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -264,7 +264,7 @@ class PurchasePaymentScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -281,10 +281,10 @@ class PurchasePaymentScreen extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
-            color: selected ? Colors.white : Colors.white.withOpacity(0.18),
+            color: selected ? Colors.white : Colors.white.withValues(alpha: 0.18),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: selected ? Colors.white : Colors.white.withOpacity(0.4),
+              color: selected ? Colors.white : Colors.white.withValues(alpha: 0.4),
             ),
           ),
           child: Text(
@@ -411,11 +411,17 @@ class _SearchFieldState extends State<_SearchField> {
 // CREATE PAYMENT FORM
 // ═══════════════════════════════════════════════════════════════
 
-class _CreatePaymentForm extends StatelessWidget {
+class PurchasePaymentCreateForm extends StatelessWidget {
   final PurchasePaymentController controller;
   final VoidCallback onCancel;
+  final VoidCallback? onSuccess;
 
-  const _CreatePaymentForm({required this.controller, required this.onCancel});
+  const PurchasePaymentCreateForm({
+    super.key,
+    required this.controller,
+    required this.onCancel,
+    this.onSuccess,
+  });
 
   String _format(double v) {
     final currency = Get.find<CurrencyController>();
@@ -440,7 +446,7 @@ class _CreatePaymentForm extends StatelessWidget {
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
@@ -483,28 +489,30 @@ class _CreatePaymentForm extends StatelessWidget {
       children: [
         // ─── Supplier Section ─────────────────────────────────
         _section('Supplier', [
-          TextField(
-            controller: controller.supplierSearchController,
-            decoration: const InputDecoration(
-              hintText: 'Search supplier by name, email, phone...',
-              prefixIcon: Icon(Icons.search, size: 18),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
+          if (!controller.lockSupplier.value) ...[
+            TextField(
+              controller: controller.supplierSearchController,
+              decoration: const InputDecoration(
+                hintText: 'Search supplier by name, email, phone...',
+                prefixIcon: Icon(Icons.search, size: 18),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                ),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                isDense: true,
               ),
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 10,
+              onChanged: controller.searchSuppliers,
+            ),
+            if (controller.isSearchingSuppliers.value)
+              const Padding(
+                padding: EdgeInsets.all(8),
+                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
               ),
-              isDense: true,
-            ),
-            onChanged: controller.searchSuppliers,
-          ),
-          if (controller.isSearchingSuppliers.value)
-            const Padding(
-              padding: EdgeInsets.all(8),
-              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-            ),
-          ...controller.supplierSearchResults.map(_supplierTile),
+            ...controller.supplierSearchResults.map(_supplierTile),
+          ],
           if (controller.selectedSupplier.value != null)
             _selectedSupplierCard(controller.selectedSupplier.value!),
         ]),
@@ -569,7 +577,7 @@ class _CreatePaymentForm extends StatelessWidget {
 
             // Payment Method
             DropdownButtonFormField<String>(
-              value: controller.paymentMethod.value,
+              initialValue: controller.paymentMethod.value,
               isExpanded: true,
               decoration: const InputDecoration(
                 labelText: 'Payment Method *',
@@ -607,7 +615,7 @@ class _CreatePaymentForm extends StatelessWidget {
             // Bank Account (required for non-cash methods)
             if (controller.paymentMethod.value != 'Cash') ...[
               DropdownButtonFormField<Map<String, dynamic>>(
-                value: controller.selectedBankAccount.value,
+                initialValue: controller.selectedBankAccount.value,
                 isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: 'Select Bank Account *',
@@ -730,9 +738,9 @@ class _CreatePaymentForm extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: kPrimary.withOpacity(0.08),
+              color: kPrimary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: kPrimary.withOpacity(0.2)),
+              border: Border.all(color: kPrimary.withValues(alpha: 0.2)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -766,10 +774,10 @@ class _CreatePaymentForm extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -811,9 +819,9 @@ class _CreatePaymentForm extends StatelessWidget {
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: kPrimary.withOpacity(0.08),
+        color: kPrimary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: kPrimary.withOpacity(0.3)),
+        border: Border.all(color: kPrimary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -839,14 +847,14 @@ class _CreatePaymentForm extends StatelessWidget {
       child: Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: isSelected ? kPrimary.withOpacity(0.05) : Colors.white,
+        color: isSelected ? kPrimary.withValues(alpha: 0.05) : Colors.white,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: !canPay
-              ? Colors.orange.withOpacity(0.45)
+              ? Colors.orange.withValues(alpha: 0.45)
               : isSelected
                   ? kPrimary
-                  : Colors.grey.withOpacity(0.2),
+                  : Colors.grey.withValues(alpha: 0.2),
           width: isSelected ? 2 : 1,
         ),
       ),
@@ -877,7 +885,7 @@ class _CreatePaymentForm extends StatelessWidget {
                       Text(
                         invoice.isDraft
                             ? 'Not payable'
-                            : '${invoice.paymentStatus.isNotEmpty ? invoice.paymentStatus : invoice.invoiceStatus}',
+                            : invoice.paymentStatus.isNotEmpty ? invoice.paymentStatus : invoice.invoiceStatus,
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
@@ -923,7 +931,7 @@ class _CreatePaymentForm extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
+                          color: Colors.red.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -1013,7 +1021,7 @@ class _CreatePaymentForm extends StatelessWidget {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withValues(alpha: 0.06),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),
@@ -1049,7 +1057,10 @@ class _CreatePaymentForm extends StatelessWidget {
                 onPressed:
                     controller.isSubmitting.value || !controller.canMakePayment
                     ? null
-                    : controller.makePayment,
+                    : () async {
+                        final ok = await controller.makePayment();
+                        if (ok) onSuccess?.call();
+                      },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kSuccess,
                   padding: const EdgeInsets.symmetric(
@@ -1169,7 +1180,7 @@ class _PaymentDetailSheetState extends State<_PaymentDetailSheet> {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: _statusColor(current.status).withOpacity(0.1),
+                  color: _statusColor(current.status).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -1204,7 +1215,7 @@ class _PaymentDetailSheetState extends State<_PaymentDetailSheet> {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: _statusColor(current.status).withOpacity(0.1),
+                  color: _statusColor(current.status).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -1219,7 +1230,7 @@ class _PaymentDetailSheetState extends State<_PaymentDetailSheet> {
             ],
           ),
           const SizedBox(height: 16),
-          Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+          Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
           const SizedBox(height: 16),
           _detailRow('Supplier', current.supplierName),
           _detailRow(
@@ -1234,7 +1245,7 @@ class _PaymentDetailSheetState extends State<_PaymentDetailSheet> {
             _detailRow('Reference', current.reference),
           if (current.notes.isNotEmpty) _detailRow('Notes', current.notes),
           const SizedBox(height: 16),
-          Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+          Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1255,7 +1266,7 @@ class _PaymentDetailSheetState extends State<_PaymentDetailSheet> {
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(color: Colors.grey.withOpacity(0.06)),
+                  bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.06)),
                 ),
               ),
               child: Row(
@@ -1295,7 +1306,7 @@ class _PaymentDetailSheetState extends State<_PaymentDetailSheet> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: kPrimary.withOpacity(0.05),
+              color: kPrimary.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -1554,13 +1565,13 @@ class _PaymentListView extends StatelessWidget {
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.08),
+                  color: kPrimary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Icon(
                   Icons.payment_outlined,
                   size: 36,
-                  color: kPrimary.withOpacity(0.5),
+                  color: kPrimary.withValues(alpha: 0.5),
                 ),
               ),
               const SizedBox(height: 16),
@@ -1625,10 +1636,10 @@ class _PaymentListView extends StatelessWidget {
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
+                        color: Colors.black.withValues(alpha: 0.03),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -1641,7 +1652,7 @@ class _PaymentListView extends StatelessWidget {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: color.withOpacity(0.1),
+                          color: color.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -1711,7 +1722,7 @@ class _PaymentListView extends StatelessWidget {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: color.withOpacity(0.1),
+                                    color: color.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(

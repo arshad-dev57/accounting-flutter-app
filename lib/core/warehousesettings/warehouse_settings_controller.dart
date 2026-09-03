@@ -116,12 +116,6 @@ const List<SettingCategory> productSettingCategories = [
     description: 'Manage stock units',
     iconName: 'box',
   ),
-  SettingCategory(
-    id: 'taxType',
-    label: 'Tax Types',
-    description: 'Manage tax types',
-    iconName: 'file_text',
-  ),
 ];
 
 const List<SettingCategory> orderSettingCategories = [
@@ -265,13 +259,9 @@ class SettingsController extends GetxController
         queryParameters: {'category': activeCategory.value},
       );
 
-      print('Response status: ${response.statusCode}');
-      print('Response success: ${response.success}');
-      print('Response data: ${response.data}');
 
       if (response.success) {
         final data = response.data;
-        print('Full response data: $data');
 
         // Check if data is a Map
         if (data is Map<String, dynamic>) {
@@ -303,10 +293,8 @@ class SettingsController extends GetxController
               list = data['list'] as List;
             }
 
-            print('Found ${list.length} items');
 
             items.value = list.map((e) {
-              print('Processing item: $e');
               return SettingItem.fromJson(e as Map<String, dynamic>);
             }).toList();
           } else {
@@ -316,11 +304,11 @@ class SettingsController extends GetxController
           _showError('Invalid response format');
         }
       } else {
-        _showError(response.message ?? 'Failed to load settings');
+        _showError(response.message);
       }
     } catch (e, stackTrace) {
-      print('Error fetching settings: $e');
-      print('Stack trace: $stackTrace');
+      debugPrint('Error: $e');
+      debugPrint('Stack trace: $stackTrace');
       _showError('Network error: $e');
     } finally {
       isLoading.value = false;
@@ -334,7 +322,6 @@ class SettingsController extends GetxController
     try {
       final response = await _api.post('/api/settings', body: payload);
 
-      print('Create response: ${response.data}');
 
       if (response.success) {
         final data = response.data;
@@ -347,11 +334,10 @@ class SettingsController extends GetxController
           return false;
         }
       } else {
-        _showError(response.message ?? 'Failed to create');
+        _showError(response.message);
         return false;
       }
     } catch (e) {
-      print('Error creating setting: $e');
       _showError('Network error: $e');
       return false;
     } finally {
@@ -366,7 +352,6 @@ class SettingsController extends GetxController
     try {
       final response = await _api.put('/api/settings/$id', body: payload);
 
-      print('Update response: ${response.data}');
 
       if (response.success) {
         final data = response.data;
@@ -379,11 +364,10 @@ class SettingsController extends GetxController
           return false;
         }
       } else {
-        _showError(response.message ?? 'Failed to update');
+        _showError(response.message);
         return false;
       }
     } catch (e) {
-      print('Error updating setting: $e');
       _showError('Network error: $e');
       return false;
     } finally {
@@ -402,7 +386,6 @@ class SettingsController extends GetxController
     try {
       final response = await _api.delete('/api/settings/$id');
 
-      print('Delete response: ${response.data}');
 
       if (response.success) {
         final data = response.data;
@@ -413,10 +396,9 @@ class SettingsController extends GetxController
           _showError(data['message'] ?? 'Failed to delete');
         }
       } else {
-        _showError(response.message ?? 'Failed to delete');
+        _showError(response.message);
       }
     } catch (e) {
-      print('Error deleting setting: $e');
       _showError('Network error: $e');
     }
   }

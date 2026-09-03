@@ -7,7 +7,6 @@ import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'dart:io';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
-import 'package:BisonsTechs_app/config/apiconfig.dart';
 import 'package:BisonsTechs_app/core/FixedAssets/models/fixed_asset_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -171,7 +170,7 @@ class FixedAssetController extends GetxController {
             serverSupportsPagination.value = false;
           }
 
-          _updateSummaryForFiltered(assets.value);
+          _updateSummaryForFiltered(assets);
           assets.refresh();
         } else {
           _showError('Failed to load fixed assets');
@@ -180,7 +179,6 @@ class FixedAssetController extends GetxController {
         _showError('Failed to load fixed assets: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error loading fixed assets: $e');
       _showError('Error loading fixed assets');
     } finally {
       isLoading.value = false;
@@ -208,7 +206,7 @@ class FixedAssetController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error loading vendors: $e');
+      // Optional vendors list; ignore fetch errors.
     }
   }
 
@@ -227,7 +225,7 @@ class FixedAssetController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error loading bank accounts: $e');
+      // Optional vendors list; ignore fetch errors.
     }
   }
 
@@ -248,7 +246,7 @@ class FixedAssetController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error loading summary: $e');
+      // Optional vendors list; ignore fetch errors.
     }
   }
 
@@ -371,7 +369,6 @@ class FixedAssetController extends GetxController {
         _showError(response.data['message'] ?? 'Failed to add asset');
       }
     } catch (e) {
-      print('Error creating fixed asset: $e');
       _showError('Error creating fixed asset');
     } finally {
       isProcessing.value = false;
@@ -441,7 +438,6 @@ class FixedAssetController extends GetxController {
         _showError(response.data['message'] ?? 'Failed to update asset');
       }
     } catch (e) {
-      print('Error updating fixed asset: $e');
       _showError('Error updating fixed asset');
     } finally {
       isProcessing.value = false;
@@ -529,7 +525,6 @@ class FixedAssetController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error depreciating asset: $e');
       _showError('Error depreciating asset');
     } finally {
       isProcessing.value = false;
@@ -616,7 +611,6 @@ class FixedAssetController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error running monthly depreciation: $e');
       _showError('Error running monthly depreciation');
     } finally {
       isProcessing.value = false;
@@ -717,7 +711,6 @@ class FixedAssetController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error disposing asset: $e');
       _showError('Error disposing asset');
     } finally {
       isProcessing.value = false;
@@ -791,7 +784,6 @@ class FixedAssetController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error deleting fixed asset: $e');
       _showError('Error deleting fixed asset');
     } finally {
       isProcessing.value = false;
@@ -913,7 +905,7 @@ class FixedAssetController extends GetxController {
             ),
             Text(
               subtitle,
-              style: TextStyle(fontSize: 10, color: color.withOpacity(0.7)),
+              style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.7)),
             ),
           ],
         ),
@@ -1510,7 +1502,7 @@ class FixedAssetController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+         ,
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),
@@ -1659,7 +1651,7 @@ class FixedAssetController extends GetxController {
               ],
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }
@@ -2164,10 +2156,17 @@ class FixedAssetController extends GetxController {
                               hint: '0.00',
                               prefixText: CurrencyUtils.prefix,
                               initialValue: purchaseCost.toString(),
-                              onChanged: (v) =>
-                                  purchaseCost = double.tryParse(v) ?? 0,
-                              validator: (v) =>
-                                  v?.isEmpty == true ? 'Required' : null,
+                              onChanged: (v) => setState(
+                                () => purchaseCost = double.tryParse(v) ?? 0,
+                              ),
+                              validator: (v) {
+                                if (v == null || v.isEmpty) return 'Required';
+                                final cost = double.tryParse(v) ?? 0;
+                                if (cost < asset.accumulatedDepreciation) {
+                                  return 'Cannot be below accumulated depreciation';
+                                }
+                                return null;
+                              },
                               keyboardType: TextInputType.number,
                             ),
                             const SizedBox(height: 16),
@@ -2175,8 +2174,9 @@ class FixedAssetController extends GetxController {
                               label: 'Useful Life (years) *',
                               hint: '5',
                               initialValue: usefulLife.toString(),
-                              onChanged: (v) =>
-                                  usefulLife = int.tryParse(v) ?? 5,
+                              onChanged: (v) => setState(
+                                () => usefulLife = int.tryParse(v) ?? 5,
+                              ),
                               validator: (v) =>
                                   v?.isEmpty == true ? 'Required' : null,
                               keyboardType: TextInputType.number,
@@ -2187,9 +2187,19 @@ class FixedAssetController extends GetxController {
                               hint: '0.00',
                               prefixText: CurrencyUtils.prefix,
                               initialValue: salvageValue.toString(),
-                              onChanged: (v) =>
-                                  salvageValue = double.tryParse(v) ?? 0,
+                              onChanged: (v) => setState(
+                                () => salvageValue = double.tryParse(v) ?? 0,
+                              ),
                               keyboardType: TextInputType.number,
+                            ),
+                            const SizedBox(height: 12),
+                            _depreciationPreviewCard(
+                              cost: purchaseCost,
+                              salvage: salvageValue,
+                              usefulLifeYears: usefulLife,
+                              accumulated: asset.accumulatedDepreciation,
+                              purchaseDate: purchaseDate,
+                              lastDepreciationDate: asset.lastDepreciationDate,
                             ),
                             const SizedBox(height: 16),
                             _buildTextField(
@@ -2573,7 +2583,7 @@ class FixedAssetController extends GetxController {
                             decoration: BoxDecoration(
                               color: getAssetCategoryColor(
                                 asset.category,
-                              ).withOpacity(0.12),
+                              ).withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Icon(
@@ -2611,11 +2621,11 @@ class FixedAssetController extends GetxController {
                                       ),
                                       decoration: BoxDecoration(
                                         color: asset.status == 'Active'
-                                            ? kSuccess.withOpacity(0.08)
+                                            ? kSuccess.withValues(alpha: 0.08)
                                             : asset.status ==
                                                   'Fully Depreciated'
-                                            ? kWarning.withOpacity(0.08)
-                                            : kDanger.withOpacity(0.08),
+                                            ? kWarning.withValues(alpha: 0.08)
+                                            : kDanger.withValues(alpha: 0.08),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
@@ -2675,7 +2685,7 @@ class FixedAssetController extends GetxController {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
                       const SizedBox(height: 16),
 
                       // Details
@@ -2726,7 +2736,7 @@ class FixedAssetController extends GetxController {
                             : 'N/A',
                       ),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
                       const SizedBox(height: 16),
 
                       // Footer Buttons
@@ -2843,13 +2853,65 @@ class FixedAssetController extends GetxController {
     );
   }
 
+  Widget _depreciationPreviewCard({
+    required double cost,
+    required double salvage,
+    required int usefulLifeYears,
+    required double accumulated,
+    required DateTime purchaseDate,
+    DateTime? lastDepreciationDate,
+  }) {
+    final nbv = (cost - accumulated).clamp(0.0, double.infinity);
+    final remaining = (cost - salvage - accumulated).clamp(0.0, double.infinity);
+    final totalMonths = (usefulLifeYears <= 0 ? 1 : usefulLifeYears) * 12;
+    var usedMonths = 0;
+    if (lastDepreciationDate != null) {
+      usedMonths = (lastDepreciationDate.year - purchaseDate.year) * 12 +
+              (lastDepreciationDate.month - purchaseDate.month) +
+              1;
+      if (usedMonths < 0) usedMonths = 0;
+    }
+    final remainingMonths = (totalMonths - usedMonths).clamp(1, totalMonths);
+    final monthly = remaining <= 0 ? 0.0 : remaining / remainingMonths;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F6FA),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Depreciation after this update',
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+          ),
+          const SizedBox(height: 8),
+          _detailRow('Accumulated (kept)', formatAmount(accumulated)),
+          _detailRow('Net book value', formatAmount(nbv)),
+          _detailRow('Next monthly charge', formatAmount(monthly)),
+          if (accumulated > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                'Posted depreciation stays. Future months use remaining value ÷ remaining life.',
+                style: TextStyle(fontSize: 11, color: kSubText, height: 1.3),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   // ─── HELPER WIDGETS ──────────────────────────────────────────────
   Widget _miniKpi(String label, String value, Color color, IconData icon) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.06),
+          color: color.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
@@ -2871,7 +2933,7 @@ class FixedAssetController extends GetxController {
               label,
               style: TextStyle(
                 fontSize: 9,
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withValues(alpha: 0.5),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -2951,7 +3013,7 @@ class FixedAssetController extends GetxController {
     required void Function(String?) onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -2976,7 +3038,7 @@ class FixedAssetController extends GetxController {
     List<Map<String, dynamic>> suppliers,
   ) {
     return DropdownButtonFormField<String>(
-      value: selectedId,
+      initialValue: selectedId,
       decoration: InputDecoration(
         labelText: 'Supplier (Optional)',
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -3004,7 +3066,7 @@ class FixedAssetController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+     ,
       ],
       onChanged: (v) => onChanged(v),
     );
@@ -3033,7 +3095,7 @@ class FixedAssetController extends GetxController {
         selectedId != null && validIds.contains(selectedId) ? selectedId : null;
 
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: 'Bank Account *',
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),

@@ -1,5 +1,6 @@
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/Users/controller/user_management_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/controller/location_controller.dart';
 import 'package:country_picker_pro/country_picker_pro.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -35,6 +36,12 @@ class _UserFormScreenState extends State<UserFormScreen> {
   String? _selectedRoleId;
   bool _isActive = true;
   String _countryName = 'Pakistan';
+  final Set<String> _selectedLocationIds = {};
+
+  bool get _roleIsAdmin {
+    final r = _selectedRole.toLowerCase();
+    return r == 'admin' || r == 'owner' || r == 'superadmin';
+  }
 
   bool get isEditMode => widget.userId != null;
 
@@ -47,6 +54,9 @@ class _UserFormScreenState extends State<UserFormScreen> {
 
     if (isEditMode) {
       _loadUserData();
+    }
+    if (Get.isRegistered<LocationController>()) {
+      Get.find<LocationController>().ensureLocationsLoaded();
     }
   }
 
@@ -63,6 +73,9 @@ class _UserFormScreenState extends State<UserFormScreen> {
       _selectedRole = user.role;
       _selectedRoleId = user.roleId;
       _isActive = user.isActive;
+      _selectedLocationIds
+        ..clear()
+        ..addAll(user.locationIds);
     });
 
     final phone = (user.phone ?? '').trim();
@@ -118,6 +131,17 @@ class _UserFormScreenState extends State<UserFormScreen> {
       return;
     }
 
+    if (!_roleIsAdmin && _selectedLocationIds.isEmpty) {
+      Get.snackbar(
+        'Locations required',
+        'Assign at least one store / location to this user',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: kDanger,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
     _isSaving.value = true;
     bool success;
     try {
@@ -132,6 +156,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
           role: _selectedRole,
           roleId: _selectedRoleId,
           isActive: _isActive,
+          locationIds: _selectedLocationIds.toList(),
         );
       } else {
         success = await _controller.createUser(
@@ -143,6 +168,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
           country: _countryName.trim(),
           role: _selectedRole,
           roleId: _selectedRoleId,
+          locationIds: _selectedLocationIds.toList(),
         );
       }
     } finally {
@@ -165,15 +191,29 @@ class _UserFormScreenState extends State<UserFormScreen> {
           (u) => u.email.toLowerCase() == email,
         );
         Get.back();
-        _showSetPermissionsPrompt(created?.id, _firstNameController.text.trim());
+        _showSetPermissionsPrompt(
+          created?.id,
+          _firstNameController.text.trim(),
+          emailSent: _controller.lastInviteEmailSent.value,
+          email: email,
+        );
       }
     } else {
+      final msg = _controller.errorMessage.value.trim().isNotEmpty
+          ? _controller.errorMessage.value.trim()
+          : (isEditMode ? 'Failed to update user' : 'Failed to create user');
+      final isDuplicate = msg.toLowerCase().contains('already exists');
       Get.snackbar(
-        'Error',
-        isEditMode ? 'Failed to update user' : 'Failed to create user',
+        isDuplicate
+            ? 'Already exists'
+            : (isEditMode ? 'Could not update user' : 'Could not create user'),
+        msg,
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: kDanger,
         colorText: Colors.white,
+        margin: const EdgeInsets.all(16),
+        borderRadius: 10,
+        duration: const Duration(seconds: 4),
       );
     }
   }
@@ -323,6 +363,15 @@ class _UserFormScreenState extends State<UserFormScreen> {
                         },
                       ),
                     ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Login email, this password, their role, and the BisonsTechs app link will be emailed to the user.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                        height: 1.4,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -332,6 +381,8 @@ class _UserFormScreenState extends State<UserFormScreen> {
               _buildCard(
                 children: [
                   _buildRoleDropdown(),
+                  const SizedBox(height: 16),
+                  _buildLocationPicker(),
                   const SizedBox(height: 16),
                   _buildSwitchTile(
                     title: 'Active Status',
@@ -386,7 +437,16 @@ class _UserFormScreenState extends State<UserFormScreen> {
     );
   }
 
-  void _showSetPermissionsPrompt(String? userId, String firstName) {
+  void _showSetPermissionsPrompt(
+    String? userId,
+    String firstName, {
+    bool emailSent = false,
+    String email = '',
+  }) {
+    final emailLine = emailSent
+        ? 'Login email, password, and role were sent to ${email.isEmpty ? 'their inbox' : email}.'
+        : 'User was created, but the invite email could not be sent. Share the login details with them manually.';
+
     Get.dialog(
       AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -396,8 +456,8 @@ class _UserFormScreenState extends State<UserFormScreen> {
         ),
         content: Text(
           userId == null
-              ? '$firstName was added. Open Team Members and tap “Set permissions” on their card to choose modules.'
-              : '$firstName was added successfully.\n\nNext: choose which modules and screens they can open (Sales, Accounting, etc.).',
+              ? '$firstName was added. $emailLine Open Team Members and tap “Set permissions” on their card to choose modules.'
+              : '$firstName was added successfully.\n\n$emailLine\n\nNext: choose which modules and screens they can open (Sales, Accounting, etc.).',
           style: TextStyle(fontSize: 14, color: Colors.grey.shade700, height: 1.4),
         ),
         actions: [
@@ -680,6 +740,65 @@ class _UserFormScreenState extends State<UserFormScreen> {
         ),
       ],
     );
+  }
+
+  Widget _buildLocationPicker() {
+    if (!Get.isRegistered<LocationController>()) {
+      Get.put(LocationController(), permanent: true);
+    }
+    final locController = Get.find<LocationController>();
+    locController.ensureLocationsLoaded();
+
+    return Obx(() {
+      final locs = locController.locations;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _fieldLabel('Store / location access'),
+          const SizedBox(height: 6),
+          Text(
+            _roleIsAdmin
+                ? 'Admin can see every location. Optional pins below are stored if you later change the role.'
+                : 'Select the shops this user can work in.',
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600, height: 1.3),
+          ),
+          const SizedBox(height: 8),
+          if (locs.isEmpty)
+            Text(
+              'No locations yet. Create them in Warehouse → Locations first.',
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+            )
+          else
+            ...locs.map((loc) {
+              final checked = _selectedLocationIds.contains(loc.id);
+              return CheckboxListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                value: checked,
+                onChanged: (v) {
+                  setState(() {
+                    if (v == true) {
+                      _selectedLocationIds.add(loc.id);
+                    } else {
+                      _selectedLocationIds.remove(loc.id);
+                    }
+                  });
+                },
+                title: Text(
+                  loc.isDefault ? '${loc.name} · Default' : loc.name,
+                  style: const TextStyle(fontSize: 14),
+                ),
+                subtitle: Text(
+                  '${loc.code} · ${loc.typeDisplay}',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                ),
+                controlAffinity: ListTileControlAffinity.leading,
+                activeColor: kPrimary,
+              );
+            }),
+        ],
+      );
+    });
   }
 
   Widget _buildRoleDropdown() {

@@ -1,14 +1,10 @@
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
-import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
-import 'package:BisonsTechs_app/config/apiconfig.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:universal_html/html.dart' as html;
 import 'package:get/get.dart';
 import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
-import 'dart:convert';
 import 'dart:io';
 import 'package:BisonsTechs_app/core/GeneralLedger/Screen/general_ledger_screen.dart';
 import 'package:BisonsTechs_app/core/Transfer/screen/transfer_screen.dart';
@@ -129,7 +125,6 @@ class BankAccountController extends GetxController {
         );
       }
     } catch (e) {
-      print('Error fetching bank accounts: $e');
       AppSnackbar.error(
         Colors.red,
         'Error',
@@ -149,7 +144,7 @@ class BankAccountController extends GetxController {
         AppSnackbar.success(
           Colors.green,
           'Success',
-          'Bank account added successfully\nJournal entry created for opening balance',
+          'Bank account added successfully',
           duration: const Duration(seconds: 3),
         );
 
@@ -165,7 +160,6 @@ class BankAccountController extends GetxController {
         return false;
       }
     } catch (e) {
-      print('Error creating bank account: $e');
       AppSnackbar.error(
         Colors.red,
         'Error',
@@ -173,6 +167,27 @@ class BankAccountController extends GetxController {
         duration: const Duration(seconds: 2),
       );
       return false;
+    }
+  }
+
+  final openingSourceAccounts = <Map<String, dynamic>>[].obs;
+
+  Future<void> loadOpeningSourceAccounts() async {
+    try {
+      final response = await _api.get(
+        '/api/chart-of-accounts',
+        queryParameters: {'type': 'Asset', 'limit': '100'},
+      );
+      if (response.success) {
+        final data = response.data['data'] ?? [];
+        openingSourceAccounts.assignAll(
+          List<Map<String, dynamic>>.from(
+            (data as List).map((e) => Map<String, dynamic>.from(e)),
+          ),
+        );
+      }
+    } catch (e) {
+      // Optional source accounts; ignore fetch errors.
     }
   }
 
@@ -205,7 +220,6 @@ class BankAccountController extends GetxController {
         );
       }
     } catch (e) {
-      print('Error updating bank account: $e');
       AppSnackbar.error(
         Colors.red,
         'Error',
@@ -238,7 +252,6 @@ class BankAccountController extends GetxController {
         );
       }
     } catch (e) {
-      print('Error deleting bank account: $e');
       AppSnackbar.error(
         Colors.red,
         'Error',
@@ -308,8 +321,6 @@ class BankAccountController extends GetxController {
           }
         }
       }
-    } catch (e) {
-      print('Error: $e');
     } finally {
       isLoading(false);
     }
@@ -320,7 +331,7 @@ class BankAccountController extends GetxController {
 
     if (query.isEmpty) {
       // Agar search empty hai to original accounts dikhao
-      bankAccounts.value = allBankAccounts.value;
+      bankAccounts.value = allBankAccounts.toList();
       _updateSummaryTotals(); // Update totals for filtered data
     } else {
       // Local search - koi API call nahi
@@ -546,9 +557,8 @@ class BankAccountController extends GetxController {
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(24),
-          header: (ctx) => branding.buildHeader(
-            reportTitle: 'Bank Accounts Report',
-          ),
+          header: (ctx) =>
+              branding.buildHeader(reportTitle: 'Bank Accounts Report'),
           footer: (ctx) => branding.buildFooter(ctx),
           build: (ctx) => [
             _pdfSummarySection(branding.accent),
@@ -564,13 +574,7 @@ class BankAccountController extends GetxController {
           'bank_accounts_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
 
       if (kIsWeb) {
-        // WEB: Download using HTML anchor tag
-        final blob = html.Blob([bytes], 'application/pdf');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
+      
 
         if (Get.isDialogOpen ?? false) Get.back();
 
@@ -607,8 +611,6 @@ class BankAccountController extends GetxController {
       );
     }
   }
-
-
 
   pw.Widget _pdfSummarySection(PdfColor accent) {
     return pw.Container(
@@ -800,7 +802,7 @@ class BankAccountController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+          ,
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),
@@ -1029,14 +1031,7 @@ class BankAccountController extends GetxController {
 
       if (kIsWeb) {
         // WEB: Download Excel
-        final blob = html.Blob([
-          bytes,
-        ], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
+       
 
         if (Get.isDialogOpen ?? false) Get.back();
 
@@ -1103,14 +1098,7 @@ class BankAccountController extends GetxController {
     );
   }
 
-  void _handleSessionExpired() {
-    AppSnackbar.error(
-      Colors.red,
-      'Session Expired',
-      'Please login again',
-      duration: const Duration(seconds: 2),
-    );
-  }
+ 
 }
 
 class BankAccount {

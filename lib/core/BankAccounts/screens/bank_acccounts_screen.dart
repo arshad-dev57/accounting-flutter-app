@@ -1,13 +1,12 @@
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/widgets/expandable_stat_card.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/BankAccounts/controllers/bankaccount_controller.dart';
 import 'package:BisonsTechs_app/core/GeneralLedger/Screen/general_ledger_screen.dart';
-import 'package:BisonsTechs_app/core/Transfer/screen/transfer_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class BankAccountsScreen extends StatelessWidget {
@@ -100,7 +99,7 @@ class BankAccountsScreen extends StatelessWidget {
                             '${controller.bankAccounts.length} accounts',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -114,13 +113,13 @@ class BankAccountsScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 18,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -132,13 +131,13 @@ class BankAccountsScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.add,
                         size: 20,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -149,13 +148,13 @@ class BankAccountsScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.download_outlined,
                         size: 18,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -175,7 +174,7 @@ class BankAccountsScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
+                            color: Colors.black.withValues(alpha: 0.06),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -212,7 +211,7 @@ class BankAccountsScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
+                          color: Colors.black.withValues(alpha: 0.06),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -311,57 +310,14 @@ class BankAccountsScreen extends StatelessWidget {
     required IconData icon,
     required Color accentColor,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: kCardBg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: accentColor.withOpacity(0.18), width: 1.2),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 18, color: accentColor),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 9,
-                    color: kSubText,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: accentColor,
-                    letterSpacing: -0.4,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return ExpandableStatTile(
+      label: label,
+      value: value,
+      icon: icon,
+      accentColor: accentColor,
     );
   }
+
 
   // ── Mobile Accounts List ──
   Widget _buildMobileBankAccountsList(
@@ -378,7 +334,7 @@ class BankAccountsScreen extends StatelessWidget {
               Icon(
                 Icons.account_balance,
                 size: 64,
-                color: kSubText.withOpacity(0.4),
+                color: kSubText.withValues(alpha: 0.4),
               ),
               const SizedBox(height: 16),
               Text(
@@ -443,15 +399,15 @@ class BankAccountsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: account.color.withOpacity(0.2), width: 1.5),
+        border: Border.all(color: account.color.withValues(alpha: 0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
           BoxShadow(
-            color: account.color.withOpacity(0.06),
+            color: account.color.withValues(alpha: 0.06),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -476,10 +432,10 @@ class BankAccountsScreen extends StatelessWidget {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: account.color.withOpacity(0.12),
+                        color: account.color.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: account.color.withOpacity(0.2),
+                          color: account.color.withValues(alpha: 0.2),
                           width: 1,
                         ),
                       ),
@@ -542,13 +498,13 @@ class BankAccountsScreen extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: balancePositive
-                            ? kSuccess.withOpacity(0.1)
-                            : kDanger.withOpacity(0.1),
+                            ? kSuccess.withValues(alpha: 0.1)
+                            : kDanger.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: balancePositive
-                              ? kSuccess.withOpacity(0.2)
-                              : kDanger.withOpacity(0.2),
+                              ? kSuccess.withValues(alpha: 0.2)
+                              : kDanger.withValues(alpha: 0.2),
                         ),
                       ),
                       child: Column(
@@ -621,7 +577,7 @@ class BankAccountsScreen extends StatelessWidget {
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                          side: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
                           padding: const EdgeInsets.symmetric(vertical: 9),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -644,7 +600,7 @@ class BankAccountsScreen extends StatelessWidget {
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: kPrimary.withOpacity(0.4)),
+                          side: BorderSide(color: kPrimary.withValues(alpha: 0.4)),
                           padding: const EdgeInsets.symmetric(vertical: 9),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -757,16 +713,16 @@ class BankAccountsScreen extends StatelessWidget {
               decoration: InputDecoration(
                 hintText: 'Search accounts...',
                 hintStyle: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 13,
                 ),
                 prefixIcon: Icon(
                   Icons.search,
                   size: 16,
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                 ),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.3),
+                fillColor: Colors.white.withValues(alpha: 0.3),
                 contentPadding: const EdgeInsets.symmetric(
                   vertical: 0,
                   horizontal: 12,
@@ -783,7 +739,7 @@ class BankAccountsScreen extends StatelessWidget {
             width: 130,
             height: 34,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: DropdownButtonHideUnderline(
@@ -793,7 +749,7 @@ class BankAccountsScreen extends StatelessWidget {
                   icon: Icon(
                     Icons.arrow_drop_down,
                     size: 20,
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   isExpanded: true,
@@ -840,19 +796,19 @@ class BankAccountsScreen extends StatelessWidget {
         height: 34,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.white.withOpacity(0.2)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 15, color: Colors.white.withOpacity(0.9)),
+            Icon(icon, size: 15, color: Colors.white.withValues(alpha: 0.9)),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
                 fontSize: 13,
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -939,7 +895,7 @@ class BankAccountsScreen extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(9),
             ),
             child: Icon(icon, size: 18, color: color),
@@ -976,7 +932,7 @@ class BankAccountsScreen extends StatelessWidget {
   }
 
   Widget _kpiDivider() =>
-      Container(width: 1, height: 36, color: Colors.grey.withOpacity(0.15));
+      Container(width: 1, height: 36, color: Colors.grey.withValues(alpha: 0.15));
 
   Widget _buildWebToolbar(
     BankAccountController controller,
@@ -988,8 +944,8 @@ class BankAccountsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kBg,
         border: Border(
-          bottom: BorderSide(color: Colors.grey.withOpacity(0.15)),
-          top: BorderSide(color: Colors.grey.withOpacity(0.1)),
+          bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.15)),
+          top: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
         ),
       ),
       child: Row(
@@ -1007,7 +963,7 @@ class BankAccountsScreen extends StatelessWidget {
             () => Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: kPrimary.withOpacity(0.1),
+                color: kPrimary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -1040,7 +996,7 @@ class BankAccountsScreen extends StatelessWidget {
               Icon(
                 Icons.account_balance,
                 size: 56,
-                color: kSubText.withOpacity(0.4),
+                color: kSubText.withValues(alpha: 0.4),
               ),
               const SizedBox(height: 12),
               Text(
@@ -1112,12 +1068,12 @@ class BankAccountsScreen extends StatelessWidget {
               ],
             ),
           ),
-          Container(height: 1, color: Colors.grey.withOpacity(0.15)),
+          Container(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
           Expanded(
             child: ListView.separated(
               itemCount: accounts.length,
-              separatorBuilder: (_, __) =>
-                  Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
+              separatorBuilder: (_, _) =>
+                  Divider(height: 1, color: Colors.grey.withValues(alpha: 0.1)),
               itemBuilder: (context, index) {
                 return _buildWebTableRow(accounts[index], controller, context);
               },
@@ -1154,7 +1110,7 @@ class BankAccountsScreen extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: () => _showAccountDetails(account, controller, context),
-        hoverColor: kPrimary.withOpacity(0.03),
+        hoverColor: kPrimary.withValues(alpha: 0.03),
         child: Container(
           height: 56,
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -1165,10 +1121,10 @@ class BankAccountsScreen extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: account.color.withOpacity(0.12),
+                  color: account.color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: account.color.withOpacity(0.2),
+                    color: account.color.withValues(alpha: 0.2),
                     width: 1,
                   ),
                 ),
@@ -1241,7 +1197,7 @@ class BankAccountsScreen extends StatelessWidget {
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.08),
+                    color: kPrimary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -1283,13 +1239,13 @@ class BankAccountsScreen extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: balancePositive
-                        ? kSuccess.withOpacity(0.08)
-                        : kDanger.withOpacity(0.08),
+                        ? kSuccess.withValues(alpha: 0.08)
+                        : kDanger.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(7),
                     border: Border.all(
                       color: balancePositive
-                          ? kSuccess.withOpacity(0.15)
-                          : kDanger.withOpacity(0.15),
+                          ? kSuccess.withValues(alpha: 0.15)
+                          : kDanger.withValues(alpha: 0.15),
                     ),
                   ),
                   child: Text(
@@ -1314,13 +1270,13 @@ class BankAccountsScreen extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: isActive
-                          ? kSuccess.withOpacity(0.1)
-                          : kDanger.withOpacity(0.1),
+                          ? kSuccess.withValues(alpha: 0.1)
+                          : kDanger.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: isActive
-                            ? kSuccess.withOpacity(0.2)
-                            : kDanger.withOpacity(0.2),
+                            ? kSuccess.withValues(alpha: 0.2)
+                            : kDanger.withValues(alpha: 0.2),
                       ),
                     ),
                     child: Row(
@@ -1389,7 +1345,7 @@ class BankAccountsScreen extends StatelessWidget {
         width: 30,
         height: 30,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(6),
         ),
         child: Icon(icon, size: 16, color: color),
@@ -1406,8 +1362,8 @@ class BankAccountsScreen extends StatelessWidget {
       height: 52,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
-        color: kPrimary.withOpacity(0.04),
-        border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.2))),
+        color: kPrimary.withValues(alpha: 0.04),
+        border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
       ),
       child: Row(
         children: [
@@ -1444,9 +1400,9 @@ class BankAccountsScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: kSuccess.withOpacity(0.1),
+                color: kSuccess.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(7),
-                border: Border.all(color: kSuccess.withOpacity(0.2)),
+                border: Border.all(color: kSuccess.withValues(alpha: 0.2)),
               ),
               child: Text(
                 _formatAmount(totalCurrent),
@@ -1465,7 +1421,7 @@ class BankAccountsScreen extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: kSuccess.withOpacity(0.1),
+                  color: kSuccess.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -1501,15 +1457,32 @@ class BankAccountsScreen extends StatelessWidget {
     String bankName = '';
     String branchCode = '';
     String accountType = 'Current';
-    String currency = '\$';
     double openingBalance = 0;
+    String offsetType = 'source_account';
+    String? sourceAccountId;
     bool isSaving = false;
+    var loadingSources = true;
+    var sourceLoadStarted = false;
+    var sourceAccounts = <Map<String, dynamic>>[];
 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
+          if (!sourceLoadStarted) {
+            sourceLoadStarted = true;
+            controller.fetchDepositSourceAccounts().then((list) {
+              if (!context.mounted) return;
+              setState(() {
+                sourceAccounts = list.where((a) {
+                  final type = (a['type'] ?? '').toString();
+                  return type == 'Asset';
+                }).toList();
+                loadingSources = false;
+              });
+            });
+          }
           return Dialog(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
@@ -1519,8 +1492,8 @@ class BankAccountsScreen extends StatelessWidget {
               width: isWeb ? 480 : double.infinity,
               constraints: BoxConstraints(
                 maxHeight: isWeb
-                    ? 650
-                    : MediaQuery.of(context).size.height * 0.88,
+                    ? 780
+                    : MediaQuery.of(context).size.height * 0.9,
                 maxWidth: 500,
               ),
               decoration: BoxDecoration(
@@ -1528,7 +1501,7 @@ class BankAccountsScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -1540,7 +1513,7 @@ class BankAccountsScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
                     decoration: BoxDecoration(
-                      color: kPrimary.withOpacity(0.05),
+                      color: kPrimary.withValues(alpha: 0.05),
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(24),
                       ),
@@ -1718,12 +1691,110 @@ class BankAccountsScreen extends StatelessWidget {
                             _formField(
                               'Opening Balance',
                               '0.00',
-                              (v) => openingBalance = double.tryParse(v) ?? 0,
+                              (v) => setState(
+                                () => openingBalance = double.tryParse(v) ?? 0,
+                              ),
                               keyboardType: TextInputType.number,
                               prefixText: CurrencyUtils.prefix,
                               isWeb: isWeb,
                               enabled: !isSaving,
                             ),
+                            if (openingBalance > 0) ...[
+                              const SizedBox(height: 16),
+                              Text(
+                                'Where is this opening balance from?',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: kText,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              RadioGroup<String>(
+                                groupValue: offsetType,
+                                onChanged: (v) => setState(
+                                  () => offsetType = v ?? 'source_account',
+                                ),
+                                child: Column(
+                                  children: [
+                                    RadioListTile<String>(
+                                      dense: true,
+                                      contentPadding: EdgeInsets.zero,
+                                      value: 'source_account',
+                                      activeColor: kPrimary,
+                                      title: const Text(
+                                        'Existing cash / another account',
+                                        style: TextStyle(fontSize: 13),
+                                      ),
+                                      subtitle: const Text(
+                                        'Dr Bank / Cr source account — does not increase equity',
+                                        style: TextStyle(fontSize: 11),
+                                      ),
+                                    ),
+                                    RadioListTile<String>(
+                                      dense: true,
+                                      contentPadding: EdgeInsets.zero,
+                                      value: 'owner_capital',
+                                      activeColor: kPrimary,
+                                      title: const Text(
+                                        'Owner capital / new investment',
+                                        style: TextStyle(fontSize: 13),
+                                      ),
+                                      subtitle: const Text(
+                                        'Dr Bank / Cr Capital — only when it is new owner money',
+                                        style: TextStyle(fontSize: 11),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (offsetType == 'source_account') ...[
+                                const SizedBox(height: 8),
+                                if (loadingSources)
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 12),
+                                    child: Center(
+                                      child: SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                else
+                                  DropdownButtonFormField<String>(
+                                    initialValue: sourceAccounts.any(
+                                          (a) =>
+                                              a['id']?.toString() ==
+                                              sourceAccountId,
+                                        )
+                                        ? sourceAccountId
+                                        : null,
+                                    isExpanded: true,
+                                    decoration: InputDecoration(
+                                      labelText: 'Source account (Cash, etc.)',
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    items: sourceAccounts
+                                        .map(
+                                          (a) => DropdownMenuItem<String>(
+                                            value: a['id']?.toString(),
+                                            child: Text(
+                                              '${a['code'] ?? ''} ${a['name'] ?? ''}',
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: (v) =>
+                                        setState(() => sourceAccountId = v),
+                                  ),
+                              ],
+                            ],
                           ],
                         ),
                       ),
@@ -1737,7 +1808,7 @@ class BankAccountsScreen extends StatelessWidget {
                       color: Colors.white,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, -5),
                         ),
@@ -1775,16 +1846,36 @@ class BankAccountsScreen extends StatelessWidget {
                                 ? null
                                 : () async {
                                     if (formKey.currentState!.validate()) {
+                                      if (openingBalance > 0 &&
+                                          offsetType == 'source_account' &&
+                                          (sourceAccountId == null ||
+                                              sourceAccountId!.isEmpty)) {
+                                        AppSnackbar.error(
+                                          kDanger,
+                                          'Required',
+                                          'Select the cash/source account for this opening balance',
+                                        );
+                                        return;
+                                      }
                                       setState(() => isSaving = true);
+                                      final payload = <String, dynamic>{
+                                        'accountName': accountName,
+                                        'accountNumber': accountNumber,
+                                        'bankName': bankName,
+                                        'branchCode': branchCode,
+                                        'accountType': accountType,
+                                        'openingBalance': openingBalance,
+                                      };
+                                      if (openingBalance > 0) {
+                                        payload['offsetType'] = offsetType;
+                                        if (offsetType == 'source_account') {
+                                          payload['sourceAccountId'] =
+                                              sourceAccountId;
+                                        }
+                                      }
                                       final success = await controller
-                                          .createBankAccount({
-                                            'accountName': accountName,
-                                            'accountNumber': accountNumber,
-                                            'bankName': bankName,
-                                            'branchCode': branchCode,
-                                            'accountType': accountType,
-                                            'openingBalance': openingBalance,
-                                          });
+                                          .createBankAccount(payload);
+                                      if (!context.mounted) return;
                                       if (success) {
                                         Navigator.pop(context);
                                       } else {
@@ -1872,10 +1963,10 @@ class BankAccountsScreen extends StatelessWidget {
                     width: 50,
                     height: 50,
                     decoration: BoxDecoration(
-                      color: account.color.withOpacity(0.12),
+                      color: account.color.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: account.color.withOpacity(0.2),
+                        color: account.color.withValues(alpha: 0.2),
                         width: 1,
                       ),
                     ),
@@ -1919,7 +2010,7 @@ class BankAccountsScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: kBgLight,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.withOpacity(0.12)),
+                  border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
                 ),
                 child: Column(
                   children: [
@@ -1938,7 +2029,7 @@ class BankAccountsScreen extends StatelessWidget {
                       'Opening Balance',
                       _formatAmount(account.openingBalance),
                     ),
-                    Divider(height: 20, color: Colors.grey.withOpacity(0.15)),
+                    Divider(height: 20, color: Colors.grey.withValues(alpha: 0.15)),
                     _detailRow(
                       'Current Balance',
                       _formatAmount(account.currentBalance),
@@ -2003,7 +2094,7 @@ class BankAccountsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(5),
       ),
       child: Text(
@@ -2026,9 +2117,9 @@ class BankAccountsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
+        color: color.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.15)),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2129,7 +2220,7 @@ class BankAccountsScreen extends StatelessWidget {
     bool enabled = true,
   }) {
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -2211,7 +2302,7 @@ class BankAccountsScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 12),
                             DropdownButtonFormField<String>(
-                              value: sourceAccountId,
+                              initialValue: sourceAccountId,
                               isExpanded: true,
                               decoration: const InputDecoration(
                                 labelText: 'Source Account *',

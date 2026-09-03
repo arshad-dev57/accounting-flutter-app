@@ -3,9 +3,9 @@ import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:universal_html/html.dart' as html;
 import 'package:get/get.dart';
 import 'dart:io';
 import 'package:intl/intl.dart';
@@ -68,16 +68,23 @@ class AccountsPayableController extends GetxController {
     return CurrencyUtils.format(amount);
   }
 
+  Worker? _fyWorker;
+
   @override
   void onInit() {
     super.onInit();
     searchController.addListener(_onSearchChanged);
-    fetchAllData();
     fetchBankAccounts();
+    Future(() async {
+      await waitForFiscalYearReady();
+      fetchAllData();
+    });
+    _fyWorker = listenFiscalYearChanges(fetchAllData);
   }
 
   @override
   void onClose() {
+    _fyWorker?.dispose();
     searchController.removeListener(_onSearchChanged);
     searchController.dispose();
     scrollController.dispose();
@@ -109,11 +116,10 @@ class AccountsPayableController extends GetxController {
           suppliers.value = (data['data'] as List)
               .map((e) => Supplier.fromJson(e))
               .toList();
-          print('✅ Loaded ${suppliers.length} suppliers');
         }
       }
     } catch (e) {
-      print('❌ Error fetching suppliers: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -133,7 +139,7 @@ class AccountsPayableController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error fetching summary: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -236,7 +242,7 @@ class AccountsPayableController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error fetching bills: $e');
+      debugPrint('Error: $e');
     } finally {
       isLoading.value = false;
       isLoadingMore.value = false;
@@ -274,7 +280,7 @@ class AccountsPayableController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error fetching bank accounts: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -292,7 +298,7 @@ class AccountsPayableController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error fetching next bill number: $e');
+      debugPrint('Error: $e');
     }
 
     // Fallback: generate locally based on existing bills
@@ -685,7 +691,7 @@ class AccountsPayableController extends GetxController {
             ),
             Text(
               subtitle,
-              style: TextStyle(fontSize: 10, color: color.withOpacity(0.7)),
+              style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.7)),
             ),
           ],
         ),
@@ -746,9 +752,8 @@ class AccountsPayableController extends GetxController {
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(24),
-          header: (ctx) => branding.buildHeader(
-            reportTitle: 'Accounts Payable Report',
-          ),
+          header: (ctx) =>
+              branding.buildHeader(reportTitle: 'Accounts Payable Report'),
           footer: (ctx) => branding.buildFooter(ctx),
           build: (ctx) => [
             _pdfSummarySection(branding.accent),
@@ -766,13 +771,6 @@ class AccountsPayableController extends GetxController {
           'accounts_payable_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
 
       if (kIsWeb) {
-        final blob = html.Blob([bytes], 'application/pdf');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
-
         if (Get.isDialogOpen ?? false) Get.back();
 
         AppSnackbar.success(
@@ -800,8 +798,6 @@ class AccountsPayableController extends GetxController {
       AppSnackbar.error(kDanger, 'Error', 'Failed to export PDF: $e');
     }
   }
-
-
 
   pw.Widget _pdfSummarySection(PdfColor accent) {
     return pw.Container(
@@ -1028,7 +1024,7 @@ class AccountsPayableController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+          ,
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),
@@ -1239,7 +1235,7 @@ class AccountsPayableController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+     ,
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),
@@ -1680,15 +1676,6 @@ class AccountsPayableController extends GetxController {
           'accounts_payable_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx';
 
       if (kIsWeb) {
-        final blob = html.Blob([
-          bytes,
-        ], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
-
         if (Get.isDialogOpen ?? false) Get.back();
 
         AppSnackbar.success(
@@ -1824,6 +1811,8 @@ class Bill {
   final String notes;
   final String reference;
   final String description; // ✅ ADDED: description field
+  /// `bill` | `purchaseInvoice`
+  final String source;
 
   Bill({
     required this.id,
@@ -1841,8 +1830,11 @@ class Bill {
     required this.status,
     required this.notes,
     this.reference = '',
-    this.description = '', // ✅ ADDED: default value
+    this.description = '',
+    this.source = 'bill',
   });
+
+  bool get isPurchaseInvoice => source == 'purchaseInvoice';
 
   double get outstanding => (totalAmount - paidAmount).toDouble();
 
@@ -1860,9 +1852,10 @@ class Bill {
       return 0.0;
     }
 
-    dynamic vendorData = json['vendor'] ?? json['vendorId'] ?? {};
-    String supplierId = '';
-    String supplierName = json['vendorName'] ?? '';
+    dynamic vendorData =
+        json['vendor'] ?? json['vendorId'] ?? json['supplierId'] ?? {};
+    String supplierId = json['supplierId']?.toString() ?? '';
+    String supplierName = json['vendorName'] ?? json['supplierName'] ?? '';
 
     if (vendorData is Map) {
       supplierId = vendorData['id'] ?? vendorData['_id'] ?? '';
@@ -1875,7 +1868,7 @@ class Bill {
 
     return Bill(
       id: json['id'] ?? json['_id'] ?? '',
-      billNumber: json['billNumber'] ?? '',
+      billNumber: json['billNumber'] ?? json['invoiceNumber'] ?? '',
       supplierId: supplierId,
       supplierName: supplierName,
       date: json['date'] != null
@@ -1895,7 +1888,8 @@ class Bill {
       status: json['status'] ?? 'Unpaid',
       notes: json['notes'] ?? '',
       reference: json['reference'] ?? '',
-      description: json['description'] ?? '', // ✅ ADDED: parse description
+      description: json['description'] ?? '',
+      source: json['source']?.toString() ?? 'bill',
     );
   }
 }

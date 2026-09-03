@@ -126,7 +126,7 @@ class ReturnListView extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,7 +152,7 @@ class ReturnListView extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
       ),
       child: Wrap(
         spacing: 8,
@@ -176,7 +176,7 @@ class ReturnListView extends StatelessWidget {
           SizedBox(
             width: fieldWidth,
             child: DropdownButtonFormField<String>(
-              value: controller.statusFilter.value,
+              initialValue: controller.statusFilter.value,
               decoration: const InputDecoration(
                 labelText: 'Status',
                 isDense: true,
@@ -199,7 +199,7 @@ class ReturnListView extends StatelessWidget {
           SizedBox(
             width: fieldWidth,
             child: DropdownButtonFormField<String>(
-              value: controller.typeFilter.value,
+              initialValue: controller.typeFilter.value,
               decoration: const InputDecoration(
                 labelText: 'Type',
                 isDense: true,
@@ -238,12 +238,12 @@ class ReturnListView extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
       ),
       child: ListView.separated(
         itemCount: controller.returns.length,
-        separatorBuilder: (_, __) =>
-            Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
+        separatorBuilder: (context, index) =>
+            Divider(height: 1, color: Colors.grey.withValues(alpha: 0.1)),
         itemBuilder: (context, index) {
           final item = controller.returns[index];
           final color = _statusColor(item.returnStatus);
@@ -307,7 +307,7 @@ class ReturnListView extends StatelessWidget {
                     spacing: 6,
                     runSpacing: 6,
                     children: [
-                      _badge(item.returnStatus, color.withOpacity(0.12), color),
+                      _badge(item.returnStatus, color.withValues(alpha: 0.12), color),
                       _badge(
                         item.returnType,
                         Colors.purple.shade50,

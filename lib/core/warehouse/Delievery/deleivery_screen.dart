@@ -1,7 +1,6 @@
 // lib/core/warehouse/delivery/views/delivery_screen.dart
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
-import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/core/warehouse/Delievery/deleivery_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/Delievery/deleivery_model.dart';
@@ -10,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:universal_html/js.dart';
 
 class DeliveryScreen extends StatelessWidget {
   const DeliveryScreen({super.key});
@@ -111,7 +109,7 @@ class DeliveryScreen extends StatelessWidget {
                             '${controller.totalRecords.value} deliveries',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.black.withOpacity(0.55),
+                              color: Colors.black.withValues(alpha: 0.55),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -154,7 +152,7 @@ class DeliveryScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
+                      color: Colors.black.withValues(alpha: 0.06),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -215,7 +213,7 @@ class DeliveryScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withValues(alpha: 0.5),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -232,10 +230,10 @@ class DeliveryScreen extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
-            color: selected ? Colors.black : Colors.white.withOpacity(0.18),
+            color: selected ? Colors.black : Colors.white.withValues(alpha: 0.18),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: selected ? Colors.black : Colors.white.withOpacity(0.4),
+              color: selected ? Colors.black : Colors.white.withValues(alpha: 0.4),
             ),
           ),
           child: Text(
@@ -367,10 +365,7 @@ class _CreateDeliveryWizard extends StatelessWidget {
     required this.onCancel,
   });
 
-  String _format(double v) {
-    final currency = Get.find<CurrencyController>();
-    return currency.formatAmount(v);
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -615,7 +610,7 @@ class _CreateDeliveryWizard extends StatelessWidget {
       Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: kPrimary.withOpacity(0.08),
+          color: kPrimary.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
@@ -665,7 +660,7 @@ class _CreateDeliveryWizard extends StatelessWidget {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -755,10 +750,10 @@ class _CreateDeliveryWizard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -802,9 +797,9 @@ class _CreateDeliveryWizard extends StatelessWidget {
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: kPrimary.withOpacity(0.08),
+        color: kPrimary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: kPrimary.withOpacity(0.3)),
+        border: Border.all(color: kPrimary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -832,10 +827,7 @@ class _DeliveryDetailSheet extends StatelessWidget {
     required this.onClose,
   });
 
-  String _format(double v) {
-    final currency = Get.find<CurrencyController>();
-    return currency.formatAmount(v);
-  }
+
 
   Color _statusColor(String status) {
     switch (status) {
@@ -866,7 +858,7 @@ class _DeliveryDetailSheet extends StatelessWidget {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: _statusColor(current.deliveryStatus).withOpacity(0.1),
+                  color: _statusColor(current.deliveryStatus).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -901,7 +893,7 @@ class _DeliveryDetailSheet extends StatelessWidget {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: _statusColor(current.deliveryStatus).withOpacity(0.1),
+                  color: _statusColor(current.deliveryStatus).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -916,7 +908,7 @@ class _DeliveryDetailSheet extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+          Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
           const SizedBox(height: 16),
           _detailRow('Order', current.salesOrderNumber),
           _detailRow('Customer', current.customerName),
@@ -938,7 +930,7 @@ class _DeliveryDetailSheet extends StatelessWidget {
               DateFormat('dd MMM yyyy HH:mm').format(current.confirmedAt!),
             ),
           const SizedBox(height: 16),
-          Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+          Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -981,7 +973,7 @@ class _DeliveryDetailSheet extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 6),
               decoration: BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(color: Colors.grey.withOpacity(0.06)),
+                  bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.06)),
                 ),
               ),
               child: Row(
@@ -1011,8 +1003,8 @@ class _DeliveryDetailSheet extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: item.isFullyDelivered
-                          ? Colors.green.withOpacity(0.1)
-                          : Colors.orange.withOpacity(0.1),
+                          ? Colors.green.withValues(alpha: 0.1)
+                          : Colors.orange.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -1192,13 +1184,13 @@ class _DeliveryListView extends StatelessWidget {
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.08),
+                  color: kPrimary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Icon(
                   Icons.local_shipping_outlined,
                   size: 36,
-                  color: kPrimary.withOpacity(0.5),
+                  color: kPrimary.withValues(alpha: 0.5),
                 ),
               ),
               const SizedBox(height: 16),
@@ -1263,10 +1255,10 @@ class _DeliveryListView extends StatelessWidget {
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
+                        color: Colors.black.withValues(alpha: 0.03),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -1279,7 +1271,7 @@ class _DeliveryListView extends StatelessWidget {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: color.withOpacity(0.1),
+                          color: color.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -1318,7 +1310,7 @@ class _DeliveryListView extends StatelessWidget {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: color.withOpacity(0.1),
+                                    color: color.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(

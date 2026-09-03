@@ -3,6 +3,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:BisonsTechs_app/config/apiconfig.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_dates.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/controller/location_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
@@ -37,11 +41,6 @@ class ApiClient extends GetxService {
   String? _cleanToken(String? token) {
     if (token == null || token.isEmpty) return null;
     return token.trim().replaceAll('"', '').replaceAll(RegExp(r'\s'), '');
-  }
-
-  @override
-  void onInit() {
-    super.onInit();
   }
 
   Future<void> _loadToken() async {
@@ -85,6 +84,16 @@ class ApiClient extends GetxService {
     await prefs.remove('refresh_token');
     _cachedToken = null;
     _cachedRefreshToken = null;
+    try {
+      if (Get.isRegistered<FiscalYearController>()) {
+        await Get.find<FiscalYearController>().clearSession();
+      }
+    } catch (_) {}
+    try {
+      if (Get.isRegistered<LocationController>()) {
+        await Get.find<LocationController>().clearSession();
+      }
+    } catch (_) {}
   }
 
   Future<String?> getToken() async {
@@ -193,7 +202,7 @@ class ApiClient extends GetxService {
     );
 
     if (response.statusCode == 401 && retryCount == 0) {
-      final message = response.message?.toLowerCase() ?? '';
+      final message = response.message.toLowerCase();
       final isTokenExpired =
           message.contains('expired') ||
           message.contains('invalid token') ||
@@ -264,11 +273,56 @@ class ApiClient extends GetxService {
       final headers = await _getHeaders(requiresAuth);
       Uri uri = Uri.parse('$baseUrl$endpoint');
 
-      if (queryParameters != null && queryParameters.isNotEmpty) {
-        final stringParams = queryParameters.map(
+      // Keep any query already on the endpoint (e.g. /api/sales/invoices?page=1)
+      var params = <String, dynamic>{
+        ...uri.queryParameters,
+        ...?queryParameters,
+      };
+
+      // Attach selected fiscal year on whitelisted GETs (mirrors Next.js interceptor)
+      if (method.toUpperCase() == 'GET' && shouldAttachFiscalYear(endpoint)) {
+        if (!params.containsKey('fiscalYearId') ||
+            params['fiscalYearId'] == null ||
+            params['fiscalYearId'].toString().isEmpty) {
+          final fyId = _resolveSelectedFiscalYearId();
+          if (fyId != null && fyId.isNotEmpty) {
+            params['fiscalYearId'] = fyId;
+          }
+        }
+      }
+
+      if (method.toUpperCase() == 'GET' && shouldAttachLocationId(endpoint)) {
+        if (!params.containsKey('locationId') ||
+            params['locationId'] == null ||
+            params['locationId'].toString().isEmpty) {
+          final locId = currentLocationId();
+          if (locId != null && locId.isNotEmpty) {
+            params['locationId'] = locId;
+          }
+        }
+      }
+
+      if (params.isNotEmpty) {
+        final stringParams = params.map(
           (key, value) => MapEntry(key, value.toString()),
         );
         uri = uri.replace(queryParameters: stringParams);
+      }
+
+      dynamic requestBody = body;
+      if (['POST', 'PUT', 'PATCH'].contains(method.toUpperCase()) &&
+          shouldAttachLocationId(endpoint) &&
+          requestBody is Map) {
+        final map = Map<String, dynamic>.from(requestBody);
+        if (!map.containsKey('locationId') ||
+            map['locationId'] == null ||
+            map['locationId'].toString().isEmpty) {
+          final locId = currentLocationId();
+          if (locId != null && locId.isNotEmpty) {
+            map['locationId'] = locId;
+            requestBody = map;
+          }
+        }
       }
 
       http.Response response;
@@ -280,21 +334,21 @@ class ApiClient extends GetxService {
           response = await http.post(
             uri,
             headers: headers,
-            body: body != null ? json.encode(body) : null,
+            body: requestBody != null ? json.encode(requestBody) : null,
           );
           break;
         case 'PUT':
           response = await http.put(
             uri,
             headers: headers,
-            body: body != null ? json.encode(body) : null,
+            body: requestBody != null ? json.encode(requestBody) : null,
           );
           break;
         case 'PATCH':
           response = await http.patch(
             uri,
             headers: headers,
-            body: body != null ? json.encode(body) : null,
+            body: requestBody != null ? json.encode(requestBody) : null,
           );
           break;
         case 'DELETE':
@@ -312,6 +366,15 @@ class ApiClient extends GetxService {
         success: false,
         message: e.toString(),
       );
+    }
+  }
+
+  String? _resolveSelectedFiscalYearId() {
+    try {
+      if (!Get.isRegistered<FiscalYearController>()) return null;
+      return Get.find<FiscalYearController>().selectedFiscalYearId;
+    } catch (_) {
+      return null;
     }
   }
 
@@ -468,7 +531,8 @@ class ApiClient extends GetxService {
     String endpoint, {
     required Map<String, String> fields,
     Map<String, String>? filePaths, // key: fieldName, value: filePath
-    Map<String, List<String>>? multiFilePaths, // multiple files same field (e.g. images)
+    Map<String, List<String>>?
+    multiFilePaths, // multiple files same field (e.g. images)
     bool requiresAuth = true,
   }) async {
     return _executeMultipartRequest(

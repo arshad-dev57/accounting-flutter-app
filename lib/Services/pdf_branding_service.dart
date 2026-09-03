@@ -172,7 +172,7 @@ class PdfBrandingBundle {
 
   pw.Widget buildHeader({required String reportTitle}) {
     final s = settings;
-    final accentColor = this.accent;
+    final accentColor = accent;
     final generated =
         'Generated: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now())}';
 

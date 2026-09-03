@@ -1,4 +1,5 @@
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/widgets/expandable_stat_card.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
 import 'package:BisonsTechs_app/core/TrailBalance/controller/trail_balance_controller.dart';
@@ -94,7 +95,7 @@ class TrialBalanceScreen extends StatelessWidget {
                             '${controller.totalAccounts.value} accounts',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -271,7 +272,7 @@ class TrialBalanceScreen extends StatelessWidget {
                                   child: Switch(
                                     value: controller.showZeroBalance.value,
                                     onChanged: controller.toggleZeroBalance,
-                                    activeColor: kPrimary,
+                                    activeThumbColor: kPrimary,
                                     materialTapTargetSize:
                                         MaterialTapTargetSize.shrinkWrap,
                                   ),
@@ -340,12 +341,12 @@ class TrialBalanceScreen extends StatelessWidget {
                                 decoration: BoxDecoration(
                                   color: isSelected
                                       ? Colors.white
-                                      : Colors.white.withOpacity(0.18),
+                                      : Colors.white.withValues(alpha: 0.18),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
                                     color: isSelected
                                         ? Colors.white
-                                        : Colors.white.withOpacity(0.4),
+                                        : Colors.white.withValues(alpha: 0.4),
                                   ),
                                 ),
                                 alignment: Alignment.center,
@@ -382,10 +383,10 @@ class TrialBalanceScreen extends StatelessWidget {
         width: 34,
         height: 34,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(icon, size: 17, color: Colors.white.withOpacity(0.9)),
+        child: Icon(icon, size: 17, color: Colors.white.withValues(alpha: 0.9)),
       ),
     );
   }
@@ -398,7 +399,7 @@ class TrialBalanceScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -462,62 +463,68 @@ class TrialBalanceScreen extends StatelessWidget {
     IconData icon, {
     double width = 132,
   }) {
-    return Container(
-      width: width,
-      height: 52,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: kCardBg,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: accentColor.withOpacity(0.2)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(8),
+    return ExpandableStatWrap(
+      title: label,
+      value: amount,
+      color: accentColor,
+      icon: icon,
+      child: Container(
+        width: width,
+        height: 52,
+        padding: const EdgeInsets.fromLTRB(10, 6, 22, 6),
+        decoration: BoxDecoration(
+          color: kCardBg,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: accentColor.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: accentColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 15, color: accentColor),
             ),
-            child: Icon(icon, size: 15, color: accentColor),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: kSubText,
-                    fontWeight: FontWeight.w600,
-                    height: 1.1,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    amount,
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    label,
                     style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: accentColor,
+                      fontSize: 10,
+                      color: kSubText,
+                      fontWeight: FontWeight.w600,
                       height: 1.1,
                     ),
                     maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 2),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      amount,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: accentColor,
+                        height: 1.1,
+                      ),
+                      maxLines: 1,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -540,7 +547,7 @@ class TrialBalanceScreen extends StatelessWidget {
               Icon(
                 Icons.account_balance,
                 size: 64,
-                color: kSubText.withOpacity(0.5),
+                color: kSubText.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               Text(
@@ -589,19 +596,19 @@ class TrialBalanceScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isZeroBalance
-              ? Colors.grey.withOpacity(0.15)
-              : accountColor.withOpacity(0.2),
+              ? Colors.grey.withValues(alpha: 0.15)
+              : accountColor.withValues(alpha: 0.2),
           width: isZeroBalance ? 1 : 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
           if (!isZeroBalance)
             BoxShadow(
-              color: accountColor.withOpacity(0.06),
+              color: accountColor.withValues(alpha: 0.06),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -626,10 +633,10 @@ class TrialBalanceScreen extends StatelessWidget {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: accountColor.withOpacity(0.1),
+                        color: accountColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: accountColor.withOpacity(0.2),
+                          color: accountColor.withValues(alpha: 0.2),
                           width: 1,
                         ),
                       ),
@@ -675,13 +682,13 @@ class TrialBalanceScreen extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: netBalance >= 0
-                            ? kSuccess.withOpacity(0.1)
-                            : kDanger.withOpacity(0.1),
+                            ? kSuccess.withValues(alpha: 0.1)
+                            : kDanger.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: netBalance >= 0
-                              ? kSuccess.withOpacity(0.2)
-                              : kDanger.withOpacity(0.2),
+                              ? kSuccess.withValues(alpha: 0.2)
+                              : kDanger.withValues(alpha: 0.2),
                         ),
                       ),
                       child: Column(
@@ -753,7 +760,7 @@ class TrialBalanceScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(5),
       ),
       child: Text(
@@ -777,9 +784,9 @@ class TrialBalanceScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
+        color: color.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.15)),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -905,7 +912,7 @@ class TrialBalanceScreen extends StatelessWidget {
               label: 'Print',
               subtitle: 'Physical copy',
               color: kPrimary,
-              bgColor: kPrimary.withOpacity(0.08),
+              bgColor: kPrimary.withValues(alpha: 0.08),
               onTap: () {
                 Navigator.pop(ctx);
                 controller.printTrialBalance();
@@ -932,7 +939,7 @@ class TrialBalanceScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
@@ -955,7 +962,7 @@ class TrialBalanceScreen extends StatelessWidget {
             ),
             Text(
               subtitle,
-              style: TextStyle(fontSize: 10, color: color.withOpacity(0.7)),
+              style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.7)),
             ),
           ],
         ),
@@ -1010,7 +1017,7 @@ class TrialBalanceScreen extends StatelessWidget {
                             width: 52,
                             height: 52,
                             decoration: BoxDecoration(
-                              color: accountColor.withOpacity(0.12),
+                              color: accountColor.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Icon(
@@ -1041,7 +1048,7 @@ class TrialBalanceScreen extends StatelessWidget {
                                         vertical: 2,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: accountColor.withOpacity(0.1),
+                                        color: accountColor.withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
@@ -1094,7 +1101,7 @@ class TrialBalanceScreen extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
                       const SizedBox(height: 16),
                       _detailRow('Account Type', account.accountType),
                       _detailRow('Account Code', account.accountCode),
@@ -1103,7 +1110,7 @@ class TrialBalanceScreen extends StatelessWidget {
                         netBalance >= 0 ? 'Debit Balance' : 'Credit Balance',
                       ),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
                       const SizedBox(height: 16),
                       Row(
                         children: [
@@ -1137,7 +1144,6 @@ class TrialBalanceScreen extends StatelessWidget {
                               child: ElevatedButton(
                                 onPressed: () {
                                   Navigator.pop(context);
-                                  // TODO: Navigate to account details
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: kPrimary,
@@ -1176,9 +1182,9 @@ class TrialBalanceScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.06),
+          color: color.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.15)),
+          border: Border.all(color: color.withValues(alpha: 0.15)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1199,7 +1205,7 @@ class TrialBalanceScreen extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 9,
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withValues(alpha: 0.5),
                 fontWeight: FontWeight.w600,
               ),
             ),

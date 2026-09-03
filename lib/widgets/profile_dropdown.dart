@@ -72,12 +72,11 @@ class _ProfileDropdownState extends State<ProfileDropdown>
             setState(() {
               _businessLogo = logo;
             });
-            print('✅ [ProfileDropdown] Business logo loaded: $logo');
           }
         }
       }
     } catch (e) {
-      print('❌ [ProfileDropdown] Error loading business logo: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -143,7 +142,7 @@ class _ProfileDropdownState extends State<ProfileDropdown>
               boxShadow: (_isHovered || _isOpen)
                   ? [
                       BoxShadow(
-                        color: _kBlue.withOpacity(0.35),
+                        color: _kBlue.withValues(alpha: 0.35),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -291,12 +290,11 @@ class _ProfileDropdownCardState extends State<_ProfileDropdownCard> {
             setState(() {
               _businessLogo = logo;
             });
-            print('✅ [ProfileDropdownCard] Business logo loaded: $logo');
           }
         }
       }
     } catch (e) {
-      print('❌ [ProfileDropdownCard] Error loading business logo: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -347,12 +345,12 @@ class _ProfileDropdownCardState extends State<_ProfileDropdownCard> {
         border: Border.all(color: _kCardBorder),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.10),
+            color: Colors.black.withValues(alpha: 0.10),
             blurRadius: 32,
             offset: const Offset(0, 12),
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -392,10 +390,10 @@ class _ProfileDropdownCardState extends State<_ProfileDropdownCard> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: Colors.white.withOpacity(0.25),
+                color: Colors.white.withValues(alpha: 0.25),
                 width: 1.5,
               ),
             ),
@@ -457,7 +455,7 @@ class _ProfileDropdownCardState extends State<_ProfileDropdownCard> {
                         : widget.profileCtrl.personName.value,
                     style: TextStyle(
                       fontSize: 11,
-                      color: Colors.white.withOpacity(0.72),
+                      color: Colors.white.withValues(alpha: 0.72),
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -470,9 +468,9 @@ class _ProfileDropdownCardState extends State<_ProfileDropdownCard> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.18),
+                color: Colors.white.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(7),
-                border: Border.all(color: Colors.white.withOpacity(0.22)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -502,7 +500,7 @@ class _ProfileDropdownCardState extends State<_ProfileDropdownCard> {
               width: 26,
               height: 26,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(7),
               ),
               child: const Icon(
@@ -569,7 +567,7 @@ class _ProfileDropdownCardState extends State<_ProfileDropdownCard> {
             label: const Text('Sign Out'),
             style: TextButton.styleFrom(
               foregroundColor: _kRed,
-              backgroundColor: _kRed.withOpacity(0.07),
+              backgroundColor: _kRed.withValues(alpha: 0.07),
               minimumSize: const Size(double.infinity, 40),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(9),
@@ -596,7 +594,7 @@ class _ProfileDropdownCardState extends State<_ProfileDropdownCard> {
             style: TextStyle(
               fontSize: 9.5,
               fontWeight: FontWeight.w700,
-              color: _kTextSecondary.withOpacity(0.6),
+              color: _kTextSecondary.withValues(alpha: 0.6),
               letterSpacing: 1.2,
             ),
           ),
@@ -640,7 +638,7 @@ class _ProfileDropdownCardState extends State<_ProfileDropdownCard> {
                               fontSize: 11.5,
                               fontWeight: FontWeight.w500,
                               color: e.value.value.isEmpty
-                                  ? _kTextSecondary.withOpacity(0.35)
+                                  ? _kTextSecondary.withValues(alpha: 0.35)
                                   : _kTextPrimary,
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -770,7 +768,7 @@ class _ProfileDropdownCardState extends State<_ProfileDropdownCard> {
             style: TextStyle(
               fontSize: 9.5,
               fontWeight: FontWeight.w700,
-              color: _kTextSecondary.withOpacity(0.6),
+              color: _kTextSecondary.withValues(alpha: 0.6),
               letterSpacing: 1.2,
             ),
           ),
@@ -815,7 +813,7 @@ class _ProfileDropdownCardState extends State<_ProfileDropdownCard> {
             hintText: f.hint,
             hintStyle: TextStyle(
               fontSize: 12,
-              color: _kTextSecondary.withOpacity(0.4),
+              color: _kTextSecondary.withValues(alpha: 0.4),
             ),
             filled: true,
             fillColor: _kPageBg,

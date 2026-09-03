@@ -1,15 +1,15 @@
-import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/Splash/controller/splash_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sizer/sizer.dart';
 
 class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
   @override
-  _SplashScreenState createState() => _SplashScreenState();
+  SplashScreenState createState() => SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
@@ -54,7 +54,7 @@ class _SplashScreenState extends State<SplashScreen>
           opacity: _fadeAnimation,
           child: ScaleTransition(
             scale: _scaleAnimation,
-            child: Image.asset("assets/logo.png", height: 80.h, width: 80.w),
+            child: Image.asset("assets/logo.png", width: 72.w, fit: BoxFit.contain),
           ),
         ),
       ),

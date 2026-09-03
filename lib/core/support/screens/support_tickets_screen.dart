@@ -105,7 +105,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: category,
+                      initialValue: category,
                       decoration: const InputDecoration(
                         labelText: 'Category',
                         border: OutlineInputBorder(),
@@ -117,7 +117,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      value: priority,
+                      initialValue: priority,
                       decoration: const InputDecoration(
                         labelText: 'Priority',
                         border: OutlineInputBorder(),
@@ -177,7 +177,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                                     steps: stepsCtrl.text,
                                     attachmentPath: attachment?.path,
                                   );
-                                  if (ok && mounted) Navigator.pop(ctx);
+                                  if (ok && ctx.mounted) Navigator.pop(ctx);
                                 },
                           child: controller.isSubmitting.value
                               ? const SizedBox(
@@ -383,7 +383,7 @@ class _SupportTicketsScreenState extends State<SupportTicketsScreen> {
                 child: ListView.separated(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
                   itemCount: controller.filteredTickets.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  separatorBuilder: (context, index) => const SizedBox(height: 10),
                   itemBuilder: (_, i) {
                     final t = controller.filteredTickets[i];
                     return InkWell(

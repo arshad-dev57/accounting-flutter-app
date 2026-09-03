@@ -1,6 +1,7 @@
 // screens/payments_made_screen.dart - PROFESSIONAL MOBILE DESIGN (NO WEB)
 
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/widgets/expandable_stat_card.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/PaymentMade/controller/paymentmade_controller.dart';
@@ -51,7 +52,7 @@ class PaymentsMadeScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: kDanger.withOpacity(0.4),
+              color: kDanger.withValues(alpha: 0.4),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -105,7 +106,7 @@ class PaymentsMadeScreen extends StatelessWidget {
                             '${controller.payments.length} payments',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -122,13 +123,13 @@ class PaymentsMadeScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 18,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -139,13 +140,13 @@ class PaymentsMadeScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.download_outlined,
                         size: 18,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -165,7 +166,7 @@ class PaymentsMadeScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
+                            color: Colors.black.withValues(alpha: 0.06),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -205,7 +206,7 @@ class PaymentsMadeScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
+                          color: Colors.black.withValues(alpha: 0.06),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -260,8 +261,8 @@ class PaymentsMadeScreen extends StatelessWidget {
               amount: controller.formatAmount(controller.totalPaid.value),
               color: kDanger,
               icon: Icons.payment,
-              bgColor: kDanger.withOpacity(0.08),
-              borderColor: kDanger.withOpacity(0.2),
+              bgColor: kDanger.withValues(alpha: 0.08),
+              borderColor: kDanger.withValues(alpha: 0.2),
             ),
             const SizedBox(width: 8),
             _buildProfessionalCard(
@@ -269,8 +270,8 @@ class PaymentsMadeScreen extends StatelessWidget {
               amount: controller.formatAmount(controller.thisMonthTotal.value),
               color: kPrimary,
               icon: Icons.calendar_month,
-              bgColor: kPrimary.withOpacity(0.08),
-              borderColor: kPrimary.withOpacity(0.2),
+              bgColor: kPrimary.withValues(alpha: 0.08),
+              borderColor: kPrimary.withValues(alpha: 0.2),
             ),
             const SizedBox(width: 8),
             _buildProfessionalCard(
@@ -278,8 +279,8 @@ class PaymentsMadeScreen extends StatelessWidget {
               amount: controller.pendingCount.value.toString(),
               color: kWarning,
               icon: Icons.pending_outlined,
-              bgColor: kWarning.withOpacity(0.08),
-              borderColor: kWarning.withOpacity(0.2),
+              bgColor: kWarning.withValues(alpha: 0.08),
+              borderColor: kWarning.withValues(alpha: 0.2),
               isNumber: true,
             ),
           ],
@@ -297,79 +298,16 @@ class PaymentsMadeScreen extends StatelessWidget {
     required Color borderColor,
     bool isNumber = false,
   }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: kCardBg,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: borderColor, width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: bgColor,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(icon, size: 14, color: color),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: kSubText,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              amount,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: color,
-                letterSpacing: -0.5,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            Container(
-              height: 2,
-              width: 30,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [color, color.withOpacity(0.3)],
-                ),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return ExpandableStatCard(
+      title: title,
+      amount: amount,
+      color: color,
+      icon: icon,
+      bgColor: bgColor,
+      borderColor: borderColor,
     );
   }
+
 
   // ═══════════════════════════════════════════════════════════════
   // LIST VIEW WITH LAZY LOADING
@@ -390,7 +328,7 @@ class PaymentsMadeScreen extends StatelessWidget {
               Icon(
                 Icons.payment_outlined,
                 size: 64,
-                color: kSubText.withOpacity(0.5),
+                color: kSubText.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               Text(
@@ -484,15 +422,15 @@ class PaymentsMadeScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: statusColor.withOpacity(0.2), width: 1.5),
+        border: Border.all(color: statusColor.withValues(alpha: 0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
           BoxShadow(
-            color: statusColor.withOpacity(0.06),
+            color: statusColor.withValues(alpha: 0.06),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -516,15 +454,15 @@ class PaymentsMadeScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            kDanger.withOpacity(0.15),
-                            kDanger.withOpacity(0.05),
+                            kDanger.withValues(alpha: 0.15),
+                            kDanger.withValues(alpha: 0.05),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: kDanger.withOpacity(0.2),
+                          color: kDanger.withValues(alpha: 0.2),
                           width: 1,
                         ),
                       ),
@@ -600,7 +538,7 @@ class PaymentsMadeScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 14),
-                Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
+                Divider(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -622,7 +560,7 @@ class PaymentsMadeScreen extends StatelessWidget {
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                          side: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -703,7 +641,7 @@ class PaymentsMadeScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -715,7 +653,7 @@ class PaymentsMadeScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
                     decoration: BoxDecoration(
-                      color: kDanger.withOpacity(0.05),
+                      color: kDanger.withValues(alpha: 0.05),
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(24),
                       ),
@@ -785,7 +723,7 @@ class PaymentsMadeScreen extends StatelessWidget {
                               children: [
                                 Expanded(
                                   child: DropdownButtonFormField<String>(
-                                    value: selectedSupplierId.isEmpty
+                                    initialValue: selectedSupplierId.isEmpty
                                         ? null
                                         : selectedSupplierId,
                                     decoration: InputDecoration(
@@ -886,10 +824,10 @@ class PaymentsMadeScreen extends StatelessWidget {
                                 return Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: kWarning.withOpacity(0.08),
+                                    color: kWarning.withValues(alpha: 0.08),
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
-                                      color: kWarning.withOpacity(0.3),
+                                      color: kWarning.withValues(alpha: 0.3),
                                     ),
                                   ),
                                   child: Row(
@@ -952,13 +890,13 @@ class PaymentsMadeScreen extends StatelessWidget {
                                       margin: const EdgeInsets.only(bottom: 6),
                                       decoration: BoxDecoration(
                                         color: isSelected
-                                            ? kDanger.withOpacity(0.05)
+                                            ? kDanger.withValues(alpha: 0.05)
                                             : kBgLight,
                                         borderRadius: BorderRadius.circular(8),
                                         border: Border.all(
                                           color: isSelected
                                               ? kDanger
-                                              : Colors.grey.withOpacity(0.2),
+                                              : Colors.grey.withValues(alpha: 0.2),
                                         ),
                                       ),
                                       child: CheckboxListTile(
@@ -1023,7 +961,7 @@ class PaymentsMadeScreen extends StatelessWidget {
                                         activeColor: kDanger,
                                       ),
                                     );
-                                  }).toList(),
+                                  }),
 
                                   // Select All / Deselect All
                                   if (controller.currentBills.isNotEmpty)
@@ -1165,7 +1103,7 @@ class PaymentsMadeScreen extends StatelessWidget {
 
                             // Payment Method
                             DropdownButtonFormField<String>(
-                              value: paymentMethod,
+                              initialValue: paymentMethod,
                               decoration: InputDecoration(
                                 labelText: 'Payment Method *',
                                 border: OutlineInputBorder(
@@ -1238,7 +1176,7 @@ class PaymentsMadeScreen extends StatelessWidget {
                             if (paymentMethod == 'Bank Transfer') ...[
                               Obx(
                                 () => DropdownButtonFormField<String>(
-                                  value: selectedBankAccountId.isEmpty
+                                  initialValue: selectedBankAccountId.isEmpty
                                       ? null
                                       : selectedBankAccountId,
                                   decoration: InputDecoration(
@@ -1348,7 +1286,7 @@ class PaymentsMadeScreen extends StatelessWidget {
                       color: Colors.white,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, -5),
                         ),
@@ -1390,7 +1328,9 @@ class PaymentsMadeScreen extends StatelessWidget {
                                   ? null
                                   : () async {
                                       if (!formKey.currentState!.validate())
+                                      {
                                         return;
+                                      }
 
                                       if (controller.selectedBillIds.isEmpty) {
                                         AppSnackbar.error(
@@ -1546,7 +1486,7 @@ class PaymentsMadeScreen extends StatelessWidget {
                             width: 52,
                             height: 52,
                             decoration: BoxDecoration(
-                              color: kDanger.withOpacity(0.12),
+                              color: kDanger.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: const Icon(
@@ -1583,7 +1523,7 @@ class PaymentsMadeScreen extends StatelessWidget {
                                         vertical: 2,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: statusColor.withOpacity(0.08),
+                                        color: statusColor.withValues(alpha: 0.08),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
@@ -1638,7 +1578,7 @@ class PaymentsMadeScreen extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
                       const SizedBox(height: 16),
 
                       // Details
@@ -1662,7 +1602,7 @@ class PaymentsMadeScreen extends StatelessWidget {
                         ).format(payment.createdAt),
                       ),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
                       const SizedBox(height: 16),
 
                       // Footer Buttons
@@ -1876,9 +1816,9 @@ class PaymentsMadeScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.06),
+          color: color.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.15)),
+          border: Border.all(color: color.withValues(alpha: 0.15)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1899,7 +1839,7 @@ class PaymentsMadeScreen extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 9,
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withValues(alpha: 0.5),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1944,9 +1884,9 @@ class PaymentsMadeScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1975,7 +1915,7 @@ class PaymentsMadeScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
@@ -1989,5 +1929,4 @@ class PaymentsMadeScreen extends StatelessWidget {
     );
   }
 
-  String _formatAmount(double amount) => CurrencyUtils.format(amount);
 }

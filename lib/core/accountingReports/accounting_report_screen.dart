@@ -1,4 +1,5 @@
 import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/widgets/expandable_stat_card.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/core/accountingReports/accounting_report_controller.dart';
 import 'package:flutter/material.dart';
@@ -7,12 +8,72 @@ import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class AccountingReportScreen extends StatelessWidget {
-  const AccountingReportScreen({super.key});
+  final bool embedded;
+
+  const AccountingReportScreen({super.key, this.embedded = false});
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(AccountingReportController());
     final isMobile = ResponsiveUtils.isMobile(context);
+
+    if (embedded) {
+      return ColoredBox(
+        color: kBg,
+        child: Column(
+          children: [
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Accounting Reports',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: kText,
+                      ),
+                    ),
+                  ),
+                  Obx(
+                    () => IconButton(
+                      icon: controller.isExporting.value
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: kPrimary,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.picture_as_pdf_outlined,
+                              color: kPrimary,
+                            ),
+                      onPressed: controller.isExporting.value
+                          ? null
+                          : () => controller.exportToPdf(),
+                      tooltip: 'Download PDF',
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh, color: kPrimary),
+                    onPressed: () => controller.loadReport(),
+                    tooltip: 'Refresh',
+                  ),
+                ],
+              ),
+            ),
+            _FiltersBar(controller: controller, isMobile: true),
+            Expanded(
+              child: _buildReportBody(controller, isMobile: true),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: kBg,
@@ -62,49 +123,7 @@ class AccountingReportScreen extends StatelessWidget {
         children: [
           _FiltersBar(controller: controller, isMobile: isMobile),
           Expanded(
-            child: Obx(() {
-              if (controller.isLoading.value && controller.rows.isEmpty) {
-                return Center(
-                  child: LoadingAnimationWidget.discreteCircle(
-                    color: kPrimary,
-                    size: 40,
-                  ),
-                );
-              }
-              if (controller.error.value.isNotEmpty && controller.rows.isEmpty) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(controller.error.value, textAlign: TextAlign.center),
-                        const SizedBox(height: 12),
-                        ElevatedButton(
-                          onPressed: controller.loadReport,
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
-              return RefreshIndicator(
-                onRefresh: controller.loadReport,
-                child: ListView(
-                  padding: EdgeInsets.all(isMobile ? 12 : 20),
-                  children: [
-                    _SummaryCards(controller: controller, isMobile: isMobile),
-                    const SizedBox(height: 12),
-                    _ChannelBreakdown(controller: controller),
-                    const SizedBox(height: 12),
-                    _RowsTable(controller: controller, isMobile: isMobile),
-                    const SizedBox(height: 12),
-                    _Pagination(controller: controller),
-                  ],
-                ),
-              );
-            }),
+            child: _buildReportBody(controller, isMobile: isMobile),
           ),
         ],
       ),
@@ -118,6 +137,60 @@ class AccountingReportScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildReportBody(
+    AccountingReportController controller, {
+    required bool isMobile,
+  }) {
+    return Obx(() {
+      if (controller.isLoading.value && controller.rows.isEmpty) {
+        return Center(
+          child: LoadingAnimationWidget.discreteCircle(
+            color: kPrimary,
+            size: 40,
+          ),
+        );
+      }
+      if (controller.error.value.isNotEmpty && controller.rows.isEmpty) {
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(controller.error.value, textAlign: TextAlign.center),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: controller.loadReport,
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+      return RefreshIndicator(
+        onRefresh: controller.loadReport,
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(
+            isMobile ? 12 : 20,
+            isMobile ? 12 : 20,
+            isMobile ? 12 : 20,
+            isMobile ? 80 : 20,
+          ),
+          children: [
+            _SummaryCards(controller: controller, isMobile: isMobile),
+            const SizedBox(height: 12),
+            _ChannelBreakdown(controller: controller),
+            const SizedBox(height: 12),
+            _RowsTable(controller: controller, isMobile: isMobile),
+            const SizedBox(height: 12),
+            _Pagination(controller: controller),
+          ],
+        ),
+      );
+    });
   }
 }
 
@@ -309,34 +382,40 @@ class _SummaryCards extends StatelessWidget {
         mainAxisSpacing: 10,
         childAspectRatio: isMobile ? 1.6 : 2.2,
         children: cards.map((c) {
-          return Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(c.$3, size: 18, color: kPrimary),
-                const SizedBox(height: 6),
-                Text(
-                  c.$1,
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  c.$2,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
+          return ExpandableStatWrap(
+            title: c.$1,
+            value: c.$2,
+            color: kPrimary,
+            icon: c.$3,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(12, 12, 22, 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(c.$3, size: 18, color: kPrimary),
+                  const SizedBox(height: 6),
+                  Text(
+                    c.$1,
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 2),
+                  Text(
+                    c.$2,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         }).toList(),

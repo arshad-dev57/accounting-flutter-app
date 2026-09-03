@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -36,8 +38,8 @@ class WarehouseDashboardController extends GetxController {
   final RxInt totalOrders = 0.obs;
 
   // Period Filter — today | week | month | year | custom
-  final RxString selectedPeriod = 'today'.obs;
-  final RxString selectedPeriodLabel = 'Today'.obs;
+  final RxString selectedPeriod = 'year'.obs;
+  final RxString selectedPeriodLabel = 'This Year'.obs;
   final Rx<DateTime?> customStartDate = Rx<DateTime?>(null);
   final Rx<DateTime?> customEndDate = Rx<DateTime?>(null);
 
@@ -97,6 +99,11 @@ class WarehouseDashboardController extends GetxController {
       'route': '/warehouse/stock',
     },
     {
+      'icon': Icons.place_rounded,
+      'title': 'Locations',
+      'route': '/warehouse/locations',
+    },
+    {
       'icon': Icons.assessment_rounded,
       'title': 'Inventory Valuation',
       'route': '/warehouse/inventory',
@@ -107,14 +114,29 @@ class WarehouseDashboardController extends GetxController {
       'route': '/warehouse/reports',
     },
   ];
+  Worker? _fyWorker;
+  Worker? _locWorker;
+
   @override
   void onInit() {
     super.onInit();
     loadBusinessLogo();
-    loadDashboardData();
+    Future(() async {
+      await waitForFiscalYearReady();
+      loadDashboardData();
+    });
+    _fyWorker = listenFiscalYearChanges(loadDashboardData);
+    _locWorker = listenLocationChanges(loadDashboardData);
     ever(currentRoute, (route) {
       _updateSelectedIndex(route);
     });
+  }
+
+  @override
+  void onClose() {
+    _fyWorker?.dispose();
+    _locWorker?.dispose();
+    super.onClose();
   }
 
   Future<void> loadBusinessLogo() async {
@@ -135,7 +157,7 @@ class WarehouseDashboardController extends GetxController {
         }
       }
     } catch (e) {
-      print('❌ [WarehouseDashboardController] Error loading business logo: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -192,11 +214,14 @@ class WarehouseDashboardController extends GetxController {
   Map<String, dynamic> get _periodQueryParams {
     final params = <String, dynamic>{'period': selectedPeriod.value};
     if (selectedPeriod.value == 'custom') {
-      if (customStartDate.value != null)
+      if (customStartDate.value != null) {
         params['startDate'] = customStartDate.value!.toIso8601String();
-      if (customEndDate.value != null)
+      }
+      if (customEndDate.value != null) {
         params['endDate'] = customEndDate.value!.toIso8601String();
+      }
     }
+    putFiscalYearId(params);
     return params;
   }
 
@@ -265,10 +290,8 @@ class WarehouseDashboardController extends GetxController {
         _fetchOrderStatus(),
       ]);
 
-      print('✅ Dashboard data loaded successfully');
     } catch (e) {
       error.value = e.toString();
-      print('❌ Error loading dashboard: $e');
     } finally {
       isLoading.value = false;
     }
@@ -296,10 +319,9 @@ class WarehouseDashboardController extends GetxController {
         pendingOrders.value = data['pendingOrders'] ?? 0;
         todayRevenue.value = (data['todayRevenue'] ?? 0).toDouble();
       } else {
-        print('❌ Metrics API failed: ${response.message}');
       }
     } catch (e) {
-      print('❌ Error fetching metrics: $e');
+      debugPrint('Error fetching metrics: $e');
     }
   }
 
@@ -310,7 +332,6 @@ class WarehouseDashboardController extends GetxController {
         requiresAuth: true,
       );
 
-      print('📋 Activities Response: ${response.statusCode}');
 
       if (response.success && response.data != null) {
         final data = response.data['data'] as Map<String, dynamic>;
@@ -326,12 +347,10 @@ class WarehouseDashboardController extends GetxController {
           };
         }).toList();
 
-        print('✅ Activities loaded: ${recentActivities.length}');
       } else {
-        print('❌ Activities API failed: ${response.message}');
       }
     } catch (e) {
-      print('❌ Error fetching activities: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -355,7 +374,7 @@ class WarehouseDashboardController extends GetxController {
         }).toList();
       }
     } catch (e) {
-      print('❌ Error fetching stock movement chart: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -377,10 +396,9 @@ class WarehouseDashboardController extends GetxController {
             'color': item['color'] ?? '#2196F3',
           };
         }).toList();
-        print('✅ Category distribution loaded: ${categoryDistribution.length}');
       }
     } catch (e) {
-      print('❌ Error fetching category distribution: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -400,10 +418,9 @@ class WarehouseDashboardController extends GetxController {
             'color': item['color'] ?? '#2196F3',
           };
         }).toList();
-        print('✅ Top products loaded: ${topProducts.length}');
       }
     } catch (e) {
-      print('❌ Error fetching top products: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -425,10 +442,9 @@ class WarehouseDashboardController extends GetxController {
           'cancelled': data['cancelled'] ?? 0,
         };
 
-        print('✅ Order status loaded: ${orderStatus.value}');
       }
     } catch (e) {
-      print('❌ Error fetching order status: $e');
+      debugPrint('Error: $e');
     }
   }
 

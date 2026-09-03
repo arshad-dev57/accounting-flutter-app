@@ -1,10 +1,12 @@
 // core/Expense/views/expense_screen.dart - COMPLETE WITH LOADING
 
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/widgets/expandable_stat_card.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/Expense/controller/expense_controller.dart';
+import 'package:BisonsTechs_app/core/tax/tax_rate_field.dart';
 import 'package:BisonsTechs_app/core/Expense/model/expense_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -12,16 +14,69 @@ import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class ExpenseScreen extends StatelessWidget {
-  const ExpenseScreen({super.key});
+  final bool embedded;
+
+  const ExpenseScreen({super.key, this.embedded = false});
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(ExpenseController());
 
+    if (embedded) {
+      return _buildEmbeddedMobileLayout(context, controller);
+    }
+
     if (ResponsiveUtils.isMobile(context)) {
       return _buildMobileLayout(context, controller);
     }
     return _buildWebLayout(context, controller);
+  }
+
+  Widget _buildEmbeddedMobileLayout(
+    BuildContext context,
+    ExpenseController controller,
+  ) {
+    return ColoredBox(
+      color: kBgLight,
+      child: Stack(
+        children: [
+          Column(
+            children: [
+              Expanded(
+                child: Obx(() {
+                  if (controller.isLoading.value) {
+                    return Center(
+                      child: LoadingAnimationWidget.discreteCircle(
+                        color: kPrimary,
+                        size: 40,
+                      ),
+                    );
+                  }
+                  return Column(
+                    children: [
+                      _buildMobileSummaryCards(controller),
+                      Expanded(
+                        child: _buildMobileExpenseList(controller, context),
+                      ),
+                    ],
+                  );
+                }),
+              ),
+            ],
+          ),
+          Positioned(
+            right: 16,
+            bottom: 16,
+            child: FloatingActionButton(
+              onPressed: () => _showAddExpenseDialog(controller, context),
+              backgroundColor: kPrimary,
+              elevation: 0,
+              child: const Icon(Icons.add, color: Colors.white, size: 24),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   // ─────────────────────────────────────────
@@ -104,7 +159,7 @@ class ExpenseScreen extends StatelessWidget {
                             '${controller.expenses.length} entries',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -118,13 +173,13 @@ class ExpenseScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 18,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -135,13 +190,13 @@ class ExpenseScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.download_outlined,
                         size: 18,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -161,7 +216,7 @@ class ExpenseScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
+                            color: Colors.black.withValues(alpha: 0.06),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -198,7 +253,7 @@ class ExpenseScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
+                          color: Colors.black.withValues(alpha: 0.06),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -222,10 +277,11 @@ class ExpenseScreen extends StatelessWidget {
                             return DropdownMenuItem(value: f, child: Text(f));
                           }).toList(),
                           onChanged: (v) {
-                            if (v != null)
+                            if (v != null) {
                               controller.applyTypeFilter(
                                 v == 'All Types' ? 'All' : v,
                               );
+                            }
                           },
                         ),
                       ),
@@ -310,57 +366,14 @@ class ExpenseScreen extends StatelessWidget {
     required IconData icon,
     required Color accentColor,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: kCardBg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: accentColor.withOpacity(0.18), width: 1.2),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 18, color: accentColor),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 9,
-                    color: kSubText,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: accentColor,
-                    letterSpacing: -0.4,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return ExpandableStatTile(
+      label: label,
+      value: value,
+      icon: icon,
+      accentColor: accentColor,
     );
   }
+
 
   Widget _buildMobileExpenseList(
     ExpenseController controller,
@@ -376,7 +389,7 @@ class ExpenseScreen extends StatelessWidget {
               Icon(
                 Icons.trending_down,
                 size: 64,
-                color: kSubText.withOpacity(0.5),
+                color: kSubText.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               Text(
@@ -449,15 +462,15 @@ class ExpenseScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: statusColor.withOpacity(0.2), width: 1.5),
+        border: Border.all(color: statusColor.withValues(alpha: 0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
           BoxShadow(
-            color: statusColor.withOpacity(0.06),
+            color: statusColor.withValues(alpha: 0.06),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -482,10 +495,10 @@ class ExpenseScreen extends StatelessWidget {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: typeColor.withOpacity(0.12),
+                        color: typeColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: typeColor.withOpacity(0.2),
+                          color: typeColor.withValues(alpha: 0.2),
                           width: 1,
                         ),
                       ),
@@ -545,9 +558,9 @@ class ExpenseScreen extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: kDanger.withOpacity(0.1),
+                        color: kDanger.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: kDanger.withOpacity(0.2)),
+                        border: Border.all(color: kDanger.withValues(alpha: 0.2)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -599,7 +612,7 @@ class ExpenseScreen extends StatelessWidget {
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                          side: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
                           padding: const EdgeInsets.symmetric(vertical: 9),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -649,7 +662,7 @@ class ExpenseScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
@@ -722,16 +735,16 @@ class ExpenseScreen extends StatelessWidget {
               decoration: InputDecoration(
                 hintText: 'Search expenses...',
                 hintStyle: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 13,
                 ),
                 prefixIcon: Icon(
                   Icons.search,
                   size: 16,
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                 ),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.3),
+                fillColor: Colors.white.withValues(alpha: 0.3),
                 contentPadding: const EdgeInsets.symmetric(
                   vertical: 0,
                   horizontal: 12,
@@ -748,7 +761,7 @@ class ExpenseScreen extends StatelessWidget {
             width: 130,
             height: 34,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: DropdownButtonHideUnderline(
@@ -760,7 +773,7 @@ class ExpenseScreen extends StatelessWidget {
                   icon: Icon(
                     Icons.arrow_drop_down,
                     size: 20,
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   isExpanded: true,
@@ -776,8 +789,9 @@ class ExpenseScreen extends StatelessWidget {
                     );
                   }).toList(),
                   onChanged: (v) {
-                    if (v != null)
+                    if (v != null) {
                       controller.applyTypeFilter(v == 'All Types' ? 'All' : v);
+                    }
                   },
                 ),
               ),
@@ -808,19 +822,19 @@ class ExpenseScreen extends StatelessWidget {
         height: 34,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.white.withOpacity(0.2)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 15, color: Colors.white.withOpacity(0.9)),
+            Icon(icon, size: 15, color: Colors.white.withValues(alpha: 0.9)),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
                 fontSize: 13,
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -907,7 +921,7 @@ class ExpenseScreen extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(9),
             ),
             child: Icon(icon, size: 18, color: color),
@@ -943,7 +957,7 @@ class ExpenseScreen extends StatelessWidget {
   }
 
   Widget _kpiDivider() =>
-      Container(width: 1, height: 36, color: Colors.grey.withOpacity(0.15));
+      Container(width: 1, height: 36, color: Colors.grey.withValues(alpha: 0.15));
 
   Widget _buildWebToolbar(ExpenseController controller, BuildContext context) {
     return Container(
@@ -952,8 +966,8 @@ class ExpenseScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kBg,
         border: Border(
-          bottom: BorderSide(color: Colors.grey.withOpacity(0.15)),
-          top: BorderSide(color: Colors.grey.withOpacity(0.1)),
+          bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.15)),
+          top: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
         ),
       ),
       child: Row(
@@ -971,7 +985,7 @@ class ExpenseScreen extends StatelessWidget {
             () => Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: kPrimary.withOpacity(0.1),
+                color: kPrimary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -1004,7 +1018,7 @@ class ExpenseScreen extends StatelessWidget {
               Icon(
                 Icons.trending_down,
                 size: 56,
-                color: kSubText.withOpacity(0.4),
+                color: kSubText.withValues(alpha: 0.4),
               ),
               const SizedBox(height: 12),
               Text(
@@ -1066,12 +1080,12 @@ class ExpenseScreen extends StatelessWidget {
               ],
             ),
           ),
-          Container(height: 1, color: Colors.grey.withOpacity(0.15)),
+          Container(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
           Expanded(
             child: ListView.separated(
               itemCount: expenses.length,
-              separatorBuilder: (_, __) =>
-                  Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
+              separatorBuilder: (context, index) =>
+                  Divider(height: 1, color: Colors.grey.withValues(alpha: 0.1)),
               itemBuilder: (context, index) =>
                   _buildWebTableRow(expenses[index], controller, context),
             ),
@@ -1117,7 +1131,7 @@ class ExpenseScreen extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: () => _showExpenseDetails(expense, controller, context),
-        hoverColor: kPrimary.withOpacity(0.03),
+        hoverColor: kPrimary.withValues(alpha: 0.03),
         child: Container(
           height: 56,
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -1128,10 +1142,10 @@ class ExpenseScreen extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: typeColor.withOpacity(0.12),
+                  color: typeColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: typeColor.withOpacity(0.2),
+                    color: typeColor.withValues(alpha: 0.2),
                     width: 1,
                   ),
                 ),
@@ -1182,7 +1196,7 @@ class ExpenseScreen extends StatelessWidget {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: typeColor.withOpacity(0.08),
+                        color: typeColor.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -1284,7 +1298,7 @@ class ExpenseScreen extends StatelessWidget {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
+                        color: statusColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -1321,10 +1335,10 @@ class ExpenseScreen extends StatelessWidget {
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.05),
+          color: Colors.black.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(icon, size: 16, color: Colors.black.withOpacity(0.5)),
+        child: Icon(icon, size: 16, color: Colors.black.withValues(alpha: 0.5)),
       ),
     );
   }
@@ -1340,8 +1354,8 @@ class ExpenseScreen extends StatelessWidget {
       height: 52,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
-        color: kPrimary.withOpacity(0.04),
-        border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.15))),
+        color: kPrimary.withValues(alpha: 0.04),
+        border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.15))),
       ),
       child: Row(
         children: [
@@ -1369,7 +1383,7 @@ class ExpenseScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
               decoration: BoxDecoration(
-                color: kDanger.withOpacity(0.08),
+                color: kDanger.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
@@ -1419,24 +1433,99 @@ class ExpenseScreen extends StatelessWidget {
   // ─────────────────────────────────────────
   // ADD EXPENSE DIALOG WITH LOADING
   // ─────────────────────────────────────────
-  void _showAddExpenseDialog(ExpenseController controller, BuildContext ctx) {
+  void _showAddExpenseDialog(
+    ExpenseController controller,
+    BuildContext ctx, {
+    Expense? expense,
+  }) {
     final isWeb = ResponsiveUtils.isWeb(ctx);
+    final isEditing = expense != null;
     final formKey = GlobalKey<FormState>();
-    DateTime selectedDate = DateTime.now();
+    DateTime selectedDate = expense?.date ?? DateTime.now();
     String expenseType = 'Rent';
-    String? selectedExpenseAccountId;
-    String? selectedVendorId;
-    List<Map<String, dynamic>> items = [
-      {'description': '', 'quantity': 1, 'unitPrice': 0.0},
-    ];
-    double simpleAmount = 0;
-    double taxRate = 0;
-    String description = '';
-    String reference = '';
-    String paymentMethod = 'Cash';
-    String? selectedBankAccountId;
+    if (expense != null) {
+      final existingType = expense.expenseType;
+      if (controller.formExpenseTypes.contains(existingType)) {
+        expenseType = existingType;
+      } else {
+        controller.rememberCustomExpenseType(existingType);
+        expenseType = controller.formExpenseTypes.contains(existingType)
+            ? existingType
+            : 'Other';
+      }
+    }
+    String? selectedExpenseAccountId = expense?.expenseAccountId;
+    String? selectedVendorId = expense?.vendorId;
+    List<Map<String, dynamic>> items = expense != null && expense.items.isNotEmpty
+        ? expense.items
+              .map(
+                (i) => {
+                  'description': i['description'] ?? '',
+                  'quantity': i['quantity'] ?? 1,
+                  'unitPrice': (i['unitPrice'] ?? 0).toDouble(),
+                },
+              )
+              .toList()
+        : [
+            {'description': '', 'quantity': 1, 'unitPrice': 0.0},
+          ];
+    double simpleAmount = expense == null
+        ? 0
+        : (expense.hasItems ? 0 : (expense.amount > 0 ? expense.amount : expense.totalAmount));
+    double taxRate = expense?.taxRate ?? 0;
+    String description = expense?.description ?? '';
+    String reference = expense?.reference ?? '';
+    String paymentMethod = expense?.paymentMethod ?? 'Cash';
+    String? selectedBankAccountId = expense?.bankAccountId;
+    final customTypeController = TextEditingController(
+      text: expense != null && expenseType == 'Other' ? expense.expenseType : '',
+    );
 
     bool requiresItems() => controller.requiresItems(expenseType);
+
+    Widget expenseTypeField(void Function(void Function()) setState) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _dropdownField(
+            label: 'Expense Type',
+            value: expenseType,
+            items: [
+              ...controller.formExpenseTypes,
+              if (!controller.formExpenseTypes.contains(expenseType))
+                expenseType,
+            ],
+            onChanged: (v) => setState(() => expenseType = v!),
+          ),
+          if (expenseType == 'Other') ...[
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: customTypeController,
+              decoration: InputDecoration(
+                labelText: 'Custom expense type *',
+                hintText: 'e.g. Printing, Courier, Donation',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                isDense: true,
+              ),
+              style: const TextStyle(fontSize: 13, color: Colors.black87),
+              validator: (v) {
+                if (expenseType != 'Other') return null;
+                if (v == null || v.trim().length < 2) {
+                  return 'Enter a custom type';
+                }
+                return null;
+              },
+            ),
+          ],
+        ],
+      );
+    }
 
     showDialog(
       context: ctx,
@@ -1475,7 +1564,7 @@ class ExpenseScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -1487,7 +1576,7 @@ class ExpenseScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
                     decoration: BoxDecoration(
-                      color: kDanger.withOpacity(0.05),
+                      color: kDanger.withValues(alpha: 0.05),
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(24),
                       ),
@@ -1513,7 +1602,7 @@ class ExpenseScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Add Expense',
+                                isEditing ? 'Edit Expense' : 'Add Expense',
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w800,
@@ -1522,7 +1611,9 @@ class ExpenseScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Create a new expense entry',
+                                isEditing
+                                    ? 'Update ${expense.expenseNumber} — ledger will follow'
+                                    : 'Create a new expense entry',
                                 style: TextStyle(fontSize: 12, color: kSubText),
                               ),
                             ],
@@ -1563,15 +1654,7 @@ class ExpenseScreen extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
-                                    child: _dropdownField(
-                                      label: 'Expense Type',
-                                      value: expenseType,
-                                      items: controller.expenseTypes
-                                          .skip(1)
-                                          .toList(),
-                                      onChanged: (v) =>
-                                          setState(() => expenseType = v!),
-                                    ),
+                                    child: expenseTypeField(setState),
                                   ),
                                 ],
                               )
@@ -1584,13 +1667,7 @@ class ExpenseScreen extends StatelessWidget {
                                 context,
                               ),
                               const SizedBox(height: 12),
-                              _dropdownField(
-                                label: 'Expense Type',
-                                value: expenseType,
-                                items: controller.expenseTypes.skip(1).toList(),
-                                onChanged: (v) =>
-                                    setState(() => expenseType = v!),
-                              ),
+                              expenseTypeField(setState),
                             ],
 
                             const SizedBox(height: 12),
@@ -1699,7 +1776,7 @@ class ExpenseScreen extends StatelessWidget {
                                     ],
                                   ),
                                 );
-                              }).toList(),
+                              }),
                               TextButton.icon(
                                 onPressed: () => setState(
                                   () => items.add({
@@ -1715,17 +1792,18 @@ class ExpenseScreen extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 8),
-                              _formField(
-                                'Tax Rate (%)',
-                                '0',
-                                (v) => taxRate = double.tryParse(v) ?? 0,
-                                keyboardType: TextInputType.number,
+                              TaxRateField(
+                                value: taxRate,
+                                onRateChanged: (v) => setState(() => taxRate = v),
                               ),
                             ] else
                               _formField(
                                 'Amount *',
                                 '0.00',
                                 (v) => simpleAmount = double.tryParse(v) ?? 0,
+                                initialValue: simpleAmount > 0
+                                    ? simpleAmount.toString()
+                                    : '',
                                 keyboardType: TextInputType.number,
                                 prefixText: CurrencyUtils.prefix,
                               ),
@@ -1739,6 +1817,7 @@ class ExpenseScreen extends StatelessWidget {
                                       'Description',
                                       '',
                                       (v) => description = v,
+                                      initialValue: description,
                                     ),
                                   ),
                                   const SizedBox(width: 12),
@@ -1747,6 +1826,7 @@ class ExpenseScreen extends StatelessWidget {
                                       'Reference #',
                                       '',
                                       (v) => reference = v,
+                                      initialValue: reference,
                                     ),
                                   ),
                                 ],
@@ -1756,12 +1836,14 @@ class ExpenseScreen extends StatelessWidget {
                                 'Description',
                                 '',
                                 (v) => description = v,
+                                initialValue: description,
                               ),
                               const SizedBox(height: 12),
                               _formField(
                                 'Reference #',
                                 '',
                                 (v) => reference = v,
+                                initialValue: reference,
                               ),
                             ],
                             const SizedBox(height: 12),
@@ -1800,10 +1882,10 @@ class ExpenseScreen extends StatelessWidget {
                                 vertical: 12,
                               ),
                               decoration: BoxDecoration(
-                                color: kDanger.withOpacity(0.06),
+                                color: kDanger.withValues(alpha: 0.06),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: kDanger.withOpacity(0.15),
+                                  color: kDanger.withValues(alpha: 0.15),
                                 ),
                               ),
                               child: Row(
@@ -1845,7 +1927,7 @@ class ExpenseScreen extends StatelessWidget {
                                 ? null
                                 : () => Navigator.pop(context),
                             style: OutlinedButton.styleFrom(
-                              backgroundColor: Colors.grey.withOpacity(0.1),
+                              backgroundColor: Colors.grey.withValues(alpha: 0.1),
                               elevation: 0,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
@@ -1870,8 +1952,18 @@ class ExpenseScreen extends StatelessWidget {
                               onPressed: controller.isSaving.value
                                   ? null
                                   : () async {
-                                      if (!formKey.currentState!.validate())
+                                      if (!formKey.currentState!.validate()) {
                                         return;
+                                      }
+
+                                      var typeToSave = expenseType;
+                                      if (expenseType == 'Other') {
+                                        typeToSave =
+                                            customTypeController.text.trim();
+                                        controller.rememberCustomExpenseType(
+                                          typeToSave,
+                                        );
+                                      }
 
                                       if (selectedExpenseAccountId == null ||
                                           selectedExpenseAccountId!.isEmpty) {
@@ -1921,42 +2013,44 @@ class ExpenseScreen extends StatelessWidget {
                                           ? null
                                           : selectedBankAccountId;
 
-                                      print(
-                                        '🔍 [Flutter Screen] Before createExpense:',
-                                      );
-                                      print(
-                                        '🔍 [Flutter Screen] paymentMethod: $paymentMethod',
-                                      );
-                                      print(
-                                        '🔍 [Flutter Screen] selectedBankAccountId: $selectedBankAccountId',
-                                      );
-                                      print(
-                                        '🔍 [Flutter Screen] selectedBankAccountId type: ${selectedBankAccountId.runtimeType}',
-                                      );
-                                      print(
-                                        '🔍 [Flutter Screen] finalBankAccountId: $finalBankAccountId',
-                                      );
-                                      print(
-                                        '🔍 [Flutter Screen] finalBankAccountId type: ${finalBankAccountId.runtimeType}',
-                                      );
 
                                       Navigator.pop(context);
-                                      await controller.createExpense(
-                                        date: selectedDate,
-                                        expenseType: expenseType,
-                                        expenseAccountId:
-                                            selectedExpenseAccountId,
-                                        vendorId: selectedVendorId,
-                                        items: requiresItems() ? items : [],
-                                        amount: requiresItems()
-                                            ? null
-                                            : simpleAmount,
-                                        taxRate: requiresItems() ? taxRate : 0,
-                                        description: description,
-                                        reference: reference,
-                                        paymentMethod: paymentMethod,
-                                        bankAccountId: finalBankAccountId,
-                                      );
+                                      if (isEditing) {
+                                        await controller.updateExpense(
+                                          id: expense.id,
+                                          date: selectedDate,
+                                          expenseType: typeToSave,
+                                          expenseAccountId:
+                                              selectedExpenseAccountId,
+                                          vendorId: selectedVendorId,
+                                          items: requiresItems() ? items : [],
+                                          amount: requiresItems()
+                                              ? null
+                                              : simpleAmount,
+                                          taxRate: requiresItems() ? taxRate : 0,
+                                          description: description,
+                                          reference: reference,
+                                          paymentMethod: paymentMethod,
+                                          bankAccountId: finalBankAccountId,
+                                        );
+                                      } else {
+                                        await controller.createExpense(
+                                          date: selectedDate,
+                                          expenseType: typeToSave,
+                                          expenseAccountId:
+                                              selectedExpenseAccountId,
+                                          vendorId: selectedVendorId,
+                                          items: requiresItems() ? items : [],
+                                          amount: requiresItems()
+                                              ? null
+                                              : simpleAmount,
+                                          taxRate: requiresItems() ? taxRate : 0,
+                                          description: description,
+                                          reference: reference,
+                                          paymentMethod: paymentMethod,
+                                          bankAccountId: finalBankAccountId,
+                                        );
+                                      }
                                     },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: kPrimary,
@@ -1980,8 +2074,8 @@ class ExpenseScreen extends StatelessWidget {
                                             ),
                                       ),
                                     )
-                                  : const Text(
-                                      'Save Expense',
+                                  : Text(
+                                      isEditing ? 'Update Expense' : 'Save Expense',
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w700,
@@ -2000,7 +2094,7 @@ class ExpenseScreen extends StatelessWidget {
           );
         },
       ),
-    );
+    ).whenComplete(customTypeController.dispose);
   }
 
   // ─── FORM HELPERS ──────────────────────────────────────────────
@@ -2011,7 +2105,7 @@ class ExpenseScreen extends StatelessWidget {
     bool isWeb,
   ) {
     return DropdownButtonFormField<String>(
-      value: selectedId,
+      initialValue: selectedId,
       decoration: InputDecoration(
         labelText: 'Expense Account *',
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
@@ -2054,7 +2148,7 @@ class ExpenseScreen extends StatelessWidget {
     bool isWeb,
   ) {
     return DropdownButtonFormField<String>(
-      value: selectedId,
+      initialValue: selectedId,
       decoration: InputDecoration(
         labelText: 'Vendor',
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
@@ -2088,7 +2182,7 @@ class ExpenseScreen extends StatelessWidget {
     bool isWeb,
   ) {
     return DropdownButtonFormField<String>(
-      value: selectedId,
+      initialValue: selectedId,
       decoration: InputDecoration(
         labelText: 'Bank Account',
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
@@ -2105,9 +2199,6 @@ class ExpenseScreen extends StatelessWidget {
       ),
       items: bankAccounts.map((a) {
         final accountId = a['id']?.toString() ?? a['_id']?.toString();
-        print(
-          '🔍 [Flutter Bank Dropdown] Account: ${a['accountName']}, id: ${a['id']}, _id: ${a['_id']}, final: $accountId',
-        );
         return DropdownMenuItem(
           value: accountId,
           child: Text(a['accountName'], overflow: TextOverflow.ellipsis),
@@ -2137,7 +2228,7 @@ class ExpenseScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.withOpacity(0.4)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.4)),
           borderRadius: BorderRadius.circular(6),
         ),
         child: Row(
@@ -2173,7 +2264,7 @@ class ExpenseScreen extends StatelessWidget {
     required void Function(T?) onChanged,
   }) {
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
@@ -2255,7 +2346,7 @@ class ExpenseScreen extends StatelessWidget {
                     width: isWeb ? 44 : 50,
                     height: isWeb ? 44 : 50,
                     decoration: BoxDecoration(
-                      color: kDanger.withOpacity(0.1),
+                      color: kDanger.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
@@ -2293,7 +2384,7 @@ class ExpenseScreen extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(5),
                     ),
                     child: Text(
@@ -2315,7 +2406,7 @@ class ExpenseScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 14),
-              Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
+              Divider(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
               const SizedBox(height: 14),
               Flexible(
                 child: SingleChildScrollView(
@@ -2353,7 +2444,7 @@ class ExpenseScreen extends StatelessWidget {
                           _formatAmount(expense.taxAmount),
                           isWeb,
                         ),
-                      Divider(height: 20, color: Colors.grey.withOpacity(0.15)),
+                      Divider(height: 20, color: Colors.grey.withValues(alpha: 0.15)),
                       _buildDetailRow(
                         'Total Amount',
                         _formatAmount(expense.totalAmount),
@@ -2428,7 +2519,7 @@ class ExpenseScreen extends StatelessWidget {
                                 ),
                               ),
                             )
-                            .toList(),
+                            ,
                       ],
                     ],
                   ),
@@ -2437,6 +2528,40 @@ class ExpenseScreen extends StatelessWidget {
               const SizedBox(height: 16),
               Row(
                 children: [
+                  if (expense.status != 'Cancelled') ...[
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          _showAddExpenseDialog(
+                            controller,
+                            context,
+                            expense: expense,
+                          );
+                        },
+                        icon: const Icon(
+                          Icons.edit,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                        label: const Text(
+                          'Edit',
+                          style: TextStyle(fontSize: 12, color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kPrimary,
+                          padding: EdgeInsets.symmetric(
+                            vertical: isWeb ? 10 : 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          elevation: 0,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                  ],
                   if (expense.status == 'Draft') ...[
                     Expanded(
                       child: ElevatedButton.icon(
@@ -2474,7 +2599,7 @@ class ExpenseScreen extends StatelessWidget {
                         padding: EdgeInsets.symmetric(
                           vertical: isWeb ? 10 : 12,
                         ),
-                        side: BorderSide(color: Colors.grey.withOpacity(0.4)),
+                        side: BorderSide(color: Colors.grey.withValues(alpha: 0.4)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(6),
                         ),
@@ -2509,10 +2634,20 @@ class ExpenseScreen extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       items: [
         PopupMenuItem(
-          onTap: () => AppSnackbar.info(
-            'Info',
-            'Edit expense #${expense.expenseNumber}',
-          ),
+          onTap: () {
+            Future.microtask(() {
+              if (!context.mounted) return;
+              if (expense.status == 'Cancelled') {
+                AppSnackbar.error(
+                  kWarning,
+                  'Error',
+                  'Cancelled expenses cannot be edited',
+                );
+                return;
+              }
+              _showAddExpenseDialog(controller, context, expense: expense);
+            });
+          },
           child: const ListTile(
             leading: Icon(Icons.edit, size: 18),
             title: Text('Edit', style: TextStyle(fontSize: 13)),

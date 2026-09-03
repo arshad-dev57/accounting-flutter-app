@@ -1,4 +1,5 @@
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/core/Sales/model/sales_credit_model.dart';
 import 'package:flutter/material.dart';
@@ -60,15 +61,25 @@ class SalesCreditController extends GetxController {
   final Rx<SalesCreditInvoice?> applyInvoice = Rx<SalesCreditInvoice?>(null);
   final RxBool isLoadingApplyInvoices = false.obs;
 
+  Worker? _fyWorker;
+
   @override
   void onInit() {
     super.onInit();
-    fetchCredits();
-    fetchSummary();
+    Future(() async {
+      await waitForFiscalYearReady();
+      fetchCredits();
+      fetchSummary();
+    });
+    _fyWorker = listenFiscalYearChanges(() {
+      fetchCredits();
+      fetchSummary();
+    });
   }
 
   @override
   void onClose() {
+    _fyWorker?.dispose();
     try {
       customerSearchController.dispose();
       amountController.dispose();
@@ -132,7 +143,7 @@ class SalesCreditController extends GetxController {
             .toList();
         applyLocalFilters();
       } else {
-        Get.snackbar('Error', response.message ?? 'Failed to load credits');
+        Get.snackbar('Error', response.message);
       }
     } catch (e) {
       Get.snackbar('Error', e.toString());
@@ -276,9 +287,7 @@ class SalesCreditController extends GetxController {
         availableInvoices.clear();
         Get.snackbar(
           'Error',
-          response.data?['message']?.toString() ??
-              response.message ??
-              'Failed to load sales invoices',
+          response.data?['message']?.toString() ?? response.message,
         );
       }
     } catch (e) {
@@ -421,9 +430,7 @@ class SalesCreditController extends GetxController {
       }
       Get.snackbar(
         'Error',
-        response.data?['message']?.toString() ??
-            response.message ??
-            'Failed to create credit',
+        response.data?['message']?.toString() ?? response.message,
       );
       return false;
     } catch (e) {
@@ -520,9 +527,7 @@ class SalesCreditController extends GetxController {
       }
       Get.snackbar(
         'Error',
-        response.data?['message']?.toString() ??
-            response.message ??
-            'Failed to apply credit',
+        response.data?['message']?.toString() ?? response.message,
       );
       return false;
     } catch (e) {
@@ -546,9 +551,7 @@ class SalesCreditController extends GetxController {
       } else {
         Get.snackbar(
           'Error',
-          response.data?['message']?.toString() ??
-              response.message ??
-              'Failed to void',
+          response.data?['message']?.toString() ?? response.message,
         );
       }
     } catch (e) {

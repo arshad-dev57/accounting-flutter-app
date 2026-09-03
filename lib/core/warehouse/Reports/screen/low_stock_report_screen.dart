@@ -25,7 +25,7 @@ class LowStockReportScreen extends StatelessWidget {
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
@@ -240,10 +240,10 @@ class LowStockReportScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.withOpacity(0.08)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.08)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 4,
             offset: const Offset(0, 1),
           ),
@@ -257,7 +257,7 @@ class LowStockReportScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Icon(icon, color: color, size: isMobile ? 16 : 18),
@@ -310,7 +310,7 @@ class LowStockReportScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: kCardBg,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.grey.withOpacity(0.08)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.08)),
         ),
         child: Column(
           children: [
@@ -400,12 +400,12 @@ class LowStockReportScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: isOutOfStock
-              ? Colors.red.withOpacity(0.2)
-              : Colors.orange.withOpacity(0.2),
+              ? Colors.red.withValues(alpha: 0.2)
+              : Colors.orange.withValues(alpha: 0.2),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 4,
             offset: const Offset(0, 1),
           ),
@@ -417,7 +417,7 @@ class LowStockReportScreen extends StatelessWidget {
             width: isMobile ? 40 : 44,
             height: isMobile ? 40 : 44,
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
+              color: statusColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
@@ -485,7 +485,7 @@ class LowStockReportScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
+                  color: statusColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(

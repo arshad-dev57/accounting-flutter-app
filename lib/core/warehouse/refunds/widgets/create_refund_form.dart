@@ -71,7 +71,7 @@ class CreateRefundForm extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: controller.refundMethod.value,
+                initialValue: controller.refundMethod.value,
                 decoration: const InputDecoration(
                   labelText: 'Refund Method',
                   border: OutlineInputBorder(),
@@ -174,7 +174,7 @@ class CreateRefundForm extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -209,9 +209,9 @@ class CreateRefundForm extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: kPrimary.withOpacity(0.08),
+        color: kPrimary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: kPrimary.withOpacity(0.3)),
+        border: Border.all(color: kPrimary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -129,7 +129,7 @@ class _CustomerPickerSheetState extends State<CustomerPickerSheet> {
                     final customer = customerController.customers[index];
                     return ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: kPrimary.withOpacity(0.15),
+                        backgroundColor: kPrimary.withValues(alpha: 0.15),
                         child: Text(
                           customer.name.isNotEmpty
                               ? customer.name[0].toUpperCase()

@@ -7,7 +7,7 @@ import 'package:get/get.dart';
 class ThemeOverride extends StatelessWidget {
   final Widget child;
 
-  const ThemeOverride({Key? key, required this.child}) : super(key: key);
+  const ThemeOverride({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {

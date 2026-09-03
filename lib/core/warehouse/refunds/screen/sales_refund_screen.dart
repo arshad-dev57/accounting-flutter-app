@@ -2,7 +2,6 @@
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
-import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/core/warehouse/order/model/order_model.dart';
 import 'package:BisonsTechs_app/core/warehouse/refunds/controller/sales_refund_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/refunds/model/refund_model.dart';
@@ -84,7 +83,7 @@ class SalesRefundsScreen extends StatelessWidget {
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(9),
                     ),
                     child: const Icon(
@@ -112,7 +111,7 @@ class SalesRefundsScreen extends StatelessWidget {
                             '${controller.totalRecords.value} refunds',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -151,13 +150,13 @@ class SalesRefundsScreen extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(9),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 17,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -174,7 +173,7 @@ class SalesRefundsScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
+                      color: Colors.black.withValues(alpha: 0.06),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -246,7 +245,7 @@ class SalesRefundsScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -263,10 +262,10 @@ class SalesRefundsScreen extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
-            color: selected ? Colors.white : Colors.white.withOpacity(0.18),
+            color: selected ? Colors.white : Colors.white.withValues(alpha: 0.18),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: selected ? Colors.white : Colors.white.withOpacity(0.4),
+              color: selected ? Colors.white : Colors.white.withValues(alpha: 0.4),
             ),
           ),
           child: Text(
@@ -418,7 +417,7 @@ class _CreateRefundForm extends StatelessWidget {
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
@@ -488,7 +487,7 @@ class _CreateRefundForm extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: controller.refundMethod.value,
+                  initialValue: controller.refundMethod.value,
                   decoration: const InputDecoration(
                     labelText: 'Refund Method',
                     border: OutlineInputBorder(
@@ -613,10 +612,10 @@ class _CreateRefundForm extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -659,9 +658,9 @@ class _CreateRefundForm extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: kPrimary.withOpacity(0.08),
+        color: kPrimary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: kPrimary.withOpacity(0.3)),
+        border: Border.all(color: kPrimary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -728,7 +727,7 @@ class _RefundDetailSheet extends StatelessWidget {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.1),
+                  color: kPrimary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(Icons.payment, color: kPrimary, size: 24),
@@ -759,7 +758,7 @@ class _RefundDetailSheet extends StatelessWidget {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: _statusColor(current.refundStatus).withOpacity(0.1),
+                  color: _statusColor(current.refundStatus).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -774,7 +773,7 @@ class _RefundDetailSheet extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+          Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
           const SizedBox(height: 16),
 
           // Details
@@ -795,7 +794,7 @@ class _RefundDetailSheet extends StatelessWidget {
 
           if (current.bankName != null && current.bankName!.isNotEmpty) ...[
             const SizedBox(height: 12),
-            Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+            Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
             const SizedBox(height: 12),
             const Text(
               'Bank Details',
@@ -991,13 +990,13 @@ class _RefundListView extends StatelessWidget {
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.08),
+                  color: kPrimary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Icon(
                   Icons.payment_outlined,
                   size: 36,
-                  color: kPrimary.withOpacity(0.5),
+                  color: kPrimary.withValues(alpha: 0.5),
                 ),
               ),
               const SizedBox(height: 16),
@@ -1062,10 +1061,10 @@ class _RefundListView extends StatelessWidget {
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
+                        color: Colors.black.withValues(alpha: 0.03),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -1079,7 +1078,7 @@ class _RefundListView extends StatelessWidget {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: color.withOpacity(0.1),
+                          color: color.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(Icons.payment, color: color, size: 22),
@@ -1115,7 +1114,7 @@ class _RefundListView extends StatelessWidget {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: color.withOpacity(0.1),
+                                    color: color.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(

@@ -7,42 +7,49 @@ import 'package:BisonsTechs_app/core/warehouse/Stock_in/widgets/stock_movement_d
 import 'package:BisonsTechs_app/core/warehouse/Stock_in/widgets/stock_out_form.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 
 class StockScreen extends StatelessWidget {
-  const StockScreen({super.key});
+  final bool embedded;
+
+  const StockScreen({super.key, this.embedded = false});
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(StockController());
 
-    return Scaffold(
-      backgroundColor: kBgLight,
-      body: Column(
-        children: [
-          _buildTopHeader(controller),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
-              child: Column(
-                children: [
-                  const SizedBox(height: 16),
-                  _buildActionButtons(context, controller),
-                  const SizedBox(height: 16),
-                  StockHistoryList(
-                    controller: controller,
-                    onView: (m) => _showDetail(context, controller, m),
-                  ),
-                ],
-              ),
+    final body = Column(
+      children: [
+        _buildTopHeader(controller, embedded: embedded),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+            child: Column(
+              children: [
+                const SizedBox(height: 16),
+                _buildActionButtons(context, controller),
+                const SizedBox(height: 16),
+                StockHistoryList(
+                  controller: controller,
+                  onView: (m) => _showDetail(context, controller, m),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
+    );
+
+    if (embedded) {
+      return ColoredBox(color: kBgLight, child: body);
+    }
+
+    return Scaffold(
+      backgroundColor: kBgLight,
+      body: body,
     );
   }
 
-  Widget _buildTopHeader(StockController controller) {
+  Widget _buildTopHeader(StockController controller, {bool embedded = false}) {
     return Container(
       color: kPrimary,
       child: SafeArea(
@@ -54,15 +61,16 @@ class StockScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
               child: Row(
                 children: [
-                  IconButton(
-                    onPressed: () => Get.back(),
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  ),
+                  if (!embedded)
+                    IconButton(
+                      onPressed: () => Get.back(),
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    ),
                   Container(
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(9),
                     ),
                     child: const Icon(
@@ -90,7 +98,7 @@ class StockScreen extends StatelessWidget {
                             '${controller.totalRecords.value} movements',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -128,13 +136,13 @@ class StockScreen extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(9),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 17,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -150,7 +158,7 @@ class StockScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
+                      color: Colors.black.withValues(alpha: 0.06),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -206,7 +214,7 @@ class StockScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -223,10 +231,10 @@ class StockScreen extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
-            color: selected ? Colors.white : Colors.white.withOpacity(0.18),
+            color: selected ? Colors.white : Colors.white.withValues(alpha: 0.18),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: selected ? Colors.white : Colors.white.withOpacity(0.4),
+              color: selected ? Colors.white : Colors.white.withValues(alpha: 0.4),
             ),
           ),
           child: Text(
@@ -273,7 +281,7 @@ class StockScreen extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return Material(
-      color: color.withOpacity(0.1),
+      color: color.withValues(alpha: 0.1),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,
@@ -281,7 +289,7 @@ class StockScreen extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            border: Border.all(color: color.withOpacity(0.3)),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(

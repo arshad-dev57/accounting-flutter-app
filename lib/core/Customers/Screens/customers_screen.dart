@@ -69,7 +69,7 @@ class CustomersScreen extends StatelessWidget {
             width: 30,
             height: 30,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(
@@ -130,7 +130,7 @@ class CustomersScreen extends StatelessWidget {
                   onSelected: (_) =>
                       controller.changeFilter(isSelected ? 'All' : f),
                   backgroundColor: kBg,
-                  selectedColor: kPrimary.withOpacity(0.2),
+                  selectedColor: kPrimary.withValues(alpha: 0.2),
                   labelStyle: TextStyle(
                     color: isSelected ? kPrimary : kSubText,
                     fontWeight: isSelected
@@ -213,7 +213,7 @@ class CustomersScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 5,
             offset: const Offset(0, 2),
           ),
@@ -273,7 +273,7 @@ class CustomersScreen extends StatelessWidget {
               Icon(
                 Icons.people_outline,
                 size: 64,
-                color: kSubText.withOpacity(0.5),
+                color: kSubText.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               Text(
@@ -336,7 +336,7 @@ class CustomersScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 5,
             offset: const Offset(0, 2),
           ),
@@ -358,7 +358,7 @@ class CustomersScreen extends StatelessWidget {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: kPrimary.withOpacity(0.1),
+                        color: kPrimary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Center(
@@ -405,7 +405,7 @@ class CustomersScreen extends StatelessWidget {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: statusColor.withOpacity(0.1),
+                                  color: statusColor.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
@@ -464,7 +464,7 @@ class CustomersScreen extends StatelessWidget {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: kSuccess.withOpacity(0.1),
+                              color: kSuccess.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Row(
@@ -492,7 +492,7 @@ class CustomersScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 10),
-                Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
+                Divider(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
                 const SizedBox(height: 10),
                 Row(
                   children: [
@@ -506,7 +506,7 @@ class CustomersScreen extends StatelessWidget {
                           style: TextStyle(fontSize: 11, color: kText),
                         ),
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                          side: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(6),
@@ -554,7 +554,7 @@ class CustomersScreen extends StatelessWidget {
                           ),
                           style: OutlinedButton.styleFrom(
                             side: BorderSide(
-                              color: Colors.grey.withOpacity(0.3),
+                              color: Colors.grey.withValues(alpha: 0.3),
                             ),
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             shape: RoundedRectangleBorder(
@@ -618,7 +618,7 @@ class CustomersScreen extends StatelessWidget {
             width: 30,
             height: 30,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(
@@ -667,7 +667,7 @@ class CustomersScreen extends StatelessWidget {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(6),
-                  borderSide: BorderSide(color: Colors.white.withOpacity(0.5)),
+                  borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.5)),
                 ),
               ),
             ),
@@ -681,14 +681,14 @@ class CustomersScreen extends StatelessWidget {
               style: TextStyle(fontSize: 13, color: Colors.white),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white.withOpacity(0.18),
+              backgroundColor: Colors.white.withValues(alpha: 0.18),
               elevation: 0,
               minimumSize: const Size(0, 34),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               padding: const EdgeInsets.symmetric(horizontal: 14),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(6),
-                side: BorderSide(color: Colors.white.withOpacity(0.35)),
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.35)),
               ),
             ),
           ),
@@ -705,14 +705,14 @@ class CustomersScreen extends StatelessWidget {
               style: TextStyle(fontSize: 13, color: Colors.white),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white.withOpacity(0.18),
+              backgroundColor: Colors.white.withValues(alpha: 0.18),
               elevation: 0,
               minimumSize: const Size(0, 34),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               padding: const EdgeInsets.symmetric(horizontal: 14),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(6),
-                side: BorderSide(color: Colors.white.withOpacity(0.35)),
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.35)),
               ),
             ),
           ),
@@ -725,14 +725,14 @@ class CustomersScreen extends StatelessWidget {
               style: TextStyle(fontSize: 13, color: Colors.white),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white.withOpacity(0.18),
+              backgroundColor: Colors.white.withValues(alpha: 0.18),
               elevation: 0,
               minimumSize: const Size(0, 34),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               padding: const EdgeInsets.symmetric(horizontal: 14),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(6),
-                side: BorderSide(color: Colors.white.withOpacity(0.35)),
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.35)),
               ),
             ),
           ),
@@ -796,7 +796,7 @@ class CustomersScreen extends StatelessWidget {
               width: 34,
               height: 34,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, size: 16, color: color),
@@ -832,7 +832,7 @@ class CustomersScreen extends StatelessWidget {
   }
 
   Widget _buildWebKpiDivider() =>
-      Container(width: 1, height: 36, color: Colors.grey.withOpacity(0.15));
+      Container(width: 1, height: 36, color: Colors.grey.withValues(alpha: 0.15));
 
   Widget _buildWebToolbar(CustomerController controller, BuildContext context) {
     final filters = ['All', 'Active', 'Inactive', 'With Balance'];
@@ -842,8 +842,8 @@ class CustomersScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kBg,
         border: Border(
-          bottom: BorderSide(color: Colors.grey.withOpacity(0.15)),
-          top: BorderSide(color: Colors.grey.withOpacity(0.1)),
+          bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.15)),
+          top: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
         ),
       ),
       child: Row(
@@ -867,11 +867,11 @@ class CustomersScreen extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? kPrimary.withOpacity(0.1)
+                              ? kPrimary.withValues(alpha: 0.1)
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(4),
                           border: isSelected
-                              ? Border.all(color: kPrimary.withOpacity(0.3))
+                              ? Border.all(color: kPrimary.withValues(alpha: 0.3))
                               : null,
                         ),
                         child: Text(
@@ -911,7 +911,7 @@ class CustomersScreen extends StatelessWidget {
               Icon(
                 Icons.people_outline,
                 size: 48,
-                color: kSubText.withOpacity(0.4),
+                color: kSubText.withValues(alpha: 0.4),
               ),
               const SizedBox(height: 12),
               Text(
@@ -988,12 +988,12 @@ class CustomersScreen extends StatelessWidget {
               ],
             ),
           ),
-          Container(height: 1, color: Colors.grey.withOpacity(0.15)),
+          Container(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
           Expanded(
             child: ListView.separated(
               itemCount: customers.length,
-              separatorBuilder: (_, __) =>
-                  Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
+              separatorBuilder: (context, index) =>
+                  Divider(height: 1, color: Colors.grey.withValues(alpha: 0.1)),
               itemBuilder: (context, index) =>
                   _buildWebTableRow(customers[index], controller, context),
             ),
@@ -1029,7 +1029,7 @@ class CustomersScreen extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: () => _showCustomerDetails(customer, controller, context),
-        hoverColor: kPrimary.withOpacity(0.03),
+        hoverColor: kPrimary.withValues(alpha: 0.03),
         child: Container(
           height: 52,
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -1040,7 +1040,7 @@ class CustomersScreen extends StatelessWidget {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.1),
+                  color: kPrimary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Center(
@@ -1103,7 +1103,7 @@ class CustomersScreen extends StatelessWidget {
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.06),
+                    color: kPrimary.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -1164,7 +1164,7 @@ class CustomersScreen extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: hasOutstanding
-                          ? kDanger.withOpacity(0.08)
+                          ? kDanger.withValues(alpha: 0.08)
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(4),
                     ),
@@ -1189,7 +1189,7 @@ class CustomersScreen extends StatelessWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(3),
                     ),
                     child: Text(
@@ -1259,8 +1259,8 @@ class CustomersScreen extends StatelessWidget {
       height: 52,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
-        color: kPrimary.withOpacity(0.04),
-        border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.15))),
+        color: kPrimary.withValues(alpha: 0.04),
+        border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.15))),
       ),
       child: Row(
         children: [
@@ -1335,7 +1335,7 @@ class CustomersScreen extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                 decoration: BoxDecoration(
-                  color: kDanger.withOpacity(0.08),
+                  color: kDanger.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -1367,7 +1367,7 @@ class CustomersScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 24),
         decoration: BoxDecoration(
           color: kCardBg,
-          border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.15))),
+          border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.15))),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1386,7 +1386,7 @@ class CustomersScreen extends StatelessWidget {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.1),
+                    color: kPrimary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -1425,7 +1425,7 @@ class CustomersScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             border: Border.all(
-              color: enabled ? kPrimary : Colors.grey.withOpacity(0.3),
+              color: enabled ? kPrimary : Colors.grey.withValues(alpha: 0.3),
             ),
             borderRadius: BorderRadius.circular(6),
           ),
@@ -1530,7 +1530,7 @@ class CustomersScreen extends StatelessWidget {
               ),
               Divider(
                 height: isWeb ? 20 : 16,
-                color: Colors.grey.withOpacity(0.2),
+                color: Colors.grey.withValues(alpha: 0.2),
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -1653,7 +1653,7 @@ class CustomersScreen extends StatelessWidget {
                         padding: EdgeInsets.symmetric(
                           vertical: isWeb ? 10 : 12,
                         ),
-                        side: BorderSide(color: Colors.grey.withOpacity(0.4)),
+                        side: BorderSide(color: Colors.grey.withValues(alpha: 0.4)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(6),
                         ),
@@ -1775,7 +1775,7 @@ class CustomersScreen extends StatelessWidget {
                 ),
                 Divider(
                   height: isWeb ? 20 : 16,
-                  color: Colors.grey.withOpacity(0.2),
+                  color: Colors.grey.withValues(alpha: 0.2),
                 ),
                 Expanded(
                   child: SingleChildScrollView(
@@ -1906,7 +1906,7 @@ class CustomersScreen extends StatelessWidget {
                               Switch(
                                 value: isActive,
                                 onChanged: (v) => setState(() => isActive = v),
-                                activeColor: kSuccess,
+                                activeThumbColor: kSuccess,
                               ),
                             ],
                           ),
@@ -1925,7 +1925,7 @@ class CustomersScreen extends StatelessWidget {
                           padding: EdgeInsets.symmetric(
                             vertical: isWeb ? 10 : 12,
                           ),
-                          side: BorderSide(color: Colors.grey.withOpacity(0.4)),
+                          side: BorderSide(color: Colors.grey.withValues(alpha: 0.4)),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(6),
                           ),
@@ -2027,7 +2027,7 @@ class CustomersScreen extends StatelessWidget {
                     width: isWeb ? 44 : 50,
                     height: isWeb ? 44 : 50,
                     decoration: BoxDecoration(
-                      color: kPrimary.withOpacity(0.1),
+                      color: kPrimary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Center(
@@ -2074,7 +2074,7 @@ class CustomersScreen extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(5),
                     ),
                     child: Text(
@@ -2096,7 +2096,7 @@ class CustomersScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 14),
-              Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
+              Divider(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
               const SizedBox(height: 14),
               Flexible(
                 child: SingleChildScrollView(
@@ -2118,7 +2118,7 @@ class CustomersScreen extends StatelessWidget {
                         customer.invoiceCount.toString(),
                         isWeb,
                       ),
-                      Divider(height: 20, color: Colors.grey.withOpacity(0.15)),
+                      Divider(height: 20, color: Colors.grey.withValues(alpha: 0.15)),
                       _buildDetailRow(
                         'Total Sales',
                         _formatAmount(customer.totalAmount),
@@ -2166,7 +2166,7 @@ class CustomersScreen extends StatelessWidget {
                         padding: EdgeInsets.symmetric(
                           vertical: isWeb ? 10 : 12,
                         ),
-                        side: BorderSide(color: Colors.grey.withOpacity(0.4)),
+                        side: BorderSide(color: Colors.grey.withValues(alpha: 0.4)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(6),
                         ),
@@ -2218,7 +2218,7 @@ class CustomersScreen extends StatelessWidget {
                           padding: EdgeInsets.symmetric(
                             vertical: isWeb ? 10 : 12,
                           ),
-                          side: BorderSide(color: Colors.grey.withOpacity(0.4)),
+                          side: BorderSide(color: Colors.grey.withValues(alpha: 0.4)),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(6),
                           ),
@@ -2259,7 +2259,7 @@ class CustomersScreen extends StatelessWidget {
                     Navigator.pop(context);
                     controller.changeFilter(v ? 'Active' : 'All');
                   },
-                  activeColor: kSuccess,
+                  activeThumbColor: kSuccess,
                 ),
               ),
             ),
@@ -2276,7 +2276,7 @@ class CustomersScreen extends StatelessWidget {
                     Navigator.pop(context);
                     controller.changeFilter(v ? 'With Balance' : 'All');
                   },
-                  activeColor: kDanger,
+                  activeThumbColor: kDanger,
                 ),
               ),
             ),
@@ -2344,7 +2344,7 @@ class CustomersScreen extends StatelessWidget {
     bool isWeb,
   ) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: 'Payment Terms',
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),

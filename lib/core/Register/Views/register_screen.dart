@@ -93,6 +93,12 @@ class RegistrationScreen extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Image.asset(
+            'assets/logo.png',
+            height: 72,
+            fit: BoxFit.contain,
+          ),
+          const SizedBox(height: 20),
           Text(
             titles[step],
             style: const TextStyle(
@@ -128,7 +134,7 @@ class RegistrationScreen extends StatelessWidget {
               color: filled
                   ? kPrimary
                   : active
-                  ? kPrimary.withOpacity(0.4)
+                  ? kPrimary.withValues(alpha: 0.4)
                   : const Color(0xFFDDE3EE),
             ),
           ),
@@ -156,7 +162,7 @@ class RegistrationScreen extends StatelessWidget {
                   color: isDone
                       ? kPrimary
                       : isActive
-                      ? kPrimary.withOpacity(0.2)
+                      ? kPrimary.withValues(alpha: 0.2)
                       : Colors.transparent,
                   border: Border.all(
                     color: isDone || isActive
@@ -407,7 +413,7 @@ class RegistrationScreen extends StatelessWidget {
     return Obx(
       () => _dropdownContainer(
         child: DropdownButtonFormField<String>(
-          value: auth.selectedBusinessType.value.isEmpty
+          initialValue: auth.selectedBusinessType.value.isEmpty
               ? null
               : auth.selectedBusinessType.value,
           hint: _dropdownHint('Select business type'),
@@ -442,7 +448,7 @@ class RegistrationScreen extends StatelessWidget {
     return Obx(
       () => _dropdownContainer(
         child: DropdownButtonFormField<String>(
-          value: auth.selectedFiscalYear.value.isEmpty
+          initialValue: auth.selectedFiscalYear.value.isEmpty
               ? null
               : auth.selectedFiscalYear.value,
           hint: _dropdownHint('Select fiscal year'),
@@ -566,7 +572,7 @@ class RegistrationScreen extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: kPrimary.withOpacity(0.3),
+                      color: kPrimary.withValues(alpha: 0.3),
                       blurRadius: 22,
                       offset: const Offset(0, 10),
                     ),
@@ -672,40 +678,6 @@ class RegistrationScreen extends StatelessWidget {
   // ══════════════════════════════════════════════════
   // SHARED WIDGETS
   // ══════════════════════════════════════════════════
-
-  void _showSignatureOptions(BuildContext context) {
-    final auth = Get.find<AuthController>();
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.draw_outlined, color: kPrimary),
-                title: const Text('Draw Signature'),
-                onTap: () {
-                  Navigator.pop(context);
-                  auth.drawSignature(context);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.image_outlined, color: kPrimary),
-                title: const Text('Upload from Gallery'),
-                onTap: () {
-                  Navigator.pop(context);
-                  auth.pickSignatureFromGallery();
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
   Widget _buildImageBox({
     required String label,
@@ -1318,7 +1290,7 @@ class RegistrationScreen extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: kPrimary.withOpacity(0.08),
+              color: kPrimary.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: kPrimary, size: 14),

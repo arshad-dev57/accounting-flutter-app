@@ -70,16 +70,16 @@ class AboutAppScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(isWeb ? 30 : 25),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
+                  color: Colors.black.withValues(alpha: 0.2),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
               ],
             ),
-            child: Icon(
-              Icons.account_balance,
-              size: isWeb ? 80 : 60,
-              color: kPrimary,
+            child: Image.asset(
+              'assets/logo.png',
+              height: isWeb ? 96 : 72,
+              fit: BoxFit.contain,
             ),
           ),
           SizedBox(height: isWeb ? 24 : 20),
@@ -115,7 +115,7 @@ class AboutAppScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(isWeb ? 24 : 20),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: Colors.grey.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -129,7 +129,7 @@ class AboutAppScreen extends StatelessWidget {
                 Container(
                   padding: EdgeInsets.all(isWeb ? 10 : 8),
                   decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.1),
+                    color: kPrimary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(isWeb ? 14 : 12),
                   ),
                   child: Icon(
@@ -247,7 +247,7 @@ class AboutAppScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(isWeb ? 20 : 16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.08),
+                      color: Colors.grey.withValues(alpha: 0.08),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -259,7 +259,7 @@ class AboutAppScreen extends StatelessWidget {
                     Container(
                       padding: EdgeInsets.all(isWeb ? 12 : 10),
                       decoration: BoxDecoration(
-                        color: (feature['color'] as Color).withOpacity(0.1),
+                        color: (feature['color'] as Color).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(isWeb ? 14 : 12),
                       ),
                       child: Icon(
@@ -300,7 +300,7 @@ class AboutAppScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(isWeb ? 24 : 20),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: Colors.grey.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -347,7 +347,7 @@ class AboutAppScreen extends StatelessWidget {
         Container(
           padding: EdgeInsets.all(isWeb ? 10 : 8),
           decoration: BoxDecoration(
-            color: kPrimary.withOpacity(0.1),
+            color: kPrimary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(isWeb ? 12 : 10),
           ),
           child: Icon(icon, color: kPrimary, size: isWeb ? 22 : 20),
@@ -429,7 +429,7 @@ class AboutAppScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(isWeb ? 24 : 20),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: Colors.grey.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -467,10 +467,10 @@ class AboutAppScreen extends StatelessWidget {
                       vertical: isWeb ? 12 : 10,
                     ),
                     decoration: BoxDecoration(
-                      color: (social['color'] as Color).withOpacity(0.1),
+                      color: (social['color'] as Color).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(isWeb ? 14 : 12),
                       border: Border.all(
-                        color: (social['color'] as Color).withOpacity(0.3),
+                        color: (social['color'] as Color).withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(

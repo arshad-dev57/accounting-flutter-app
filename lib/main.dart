@@ -1,6 +1,8 @@
 // lib/main.dart - COMPLETE FIXED
 
+import 'package:BisonsTechs_app/Utils/app_fonts.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/widgets/reload_when_visible.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/core/Onboarding/views/Onboarding_screen.dart';
 import 'package:BisonsTechs_app/core/Register/Views/register_screen.dart';
@@ -8,6 +10,8 @@ import 'package:BisonsTechs_app/core/Sales/screens/sales_credits_screen.dart';
 import 'package:BisonsTechs_app/core/Sales/screens/sales_dashbaord_screen.dart';
 import 'package:BisonsTechs_app/core/Sales/screens/sales_report_screen.dart';
 import 'package:BisonsTechs_app/core/accountingReports/accounting_report_screen.dart';
+import 'package:BisonsTechs_app/core/purchasedashboard/purchase_controller.dart';
+import 'package:BisonsTechs_app/core/purchasedashboard/purchase_dashboard_screen.dart';
 import 'package:BisonsTechs_app/core/purchasedashboard/purchase_report_screen.dart';
 import 'package:BisonsTechs_app/core/Splash/screen/splash_screen.dart';
 import 'package:BisonsTechs_app/core/dashboard/Screens/dashbaord_screen.dart';
@@ -56,8 +60,9 @@ import 'package:BisonsTechs_app/core/warehousecustomer/warehouse_customer_contro
 import 'package:BisonsTechs_app/core/warehousecustomer/warehouse_customer_screen.dart';
 import 'package:BisonsTechs_app/core/Users/screen/user_list_screen.dart';
 import 'package:BisonsTechs_app/core/Users/screen/user_form_screen.dart';
-import 'package:BisonsTechs_app/core/Users/screen/access_management_screen.dart';
 import 'package:BisonsTechs_app/core/Users/screen/enhanced_access_management_screen.dart';
+
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -67,9 +72,14 @@ import 'package:sizer/sizer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:BisonsTechs_app/Services/api_client.dart';
-import 'package:BisonsTechs_app/Services/notification_Service.dart';
+import 'package:BisonsTechs_app/Services/notification_service.dart';
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/controller/location_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_reload_binder.dart';
+import 'package:BisonsTechs_app/core/warehouse/widgets/location_scope_bar.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/screen/locations_screen.dart';
+import 'package:BisonsTechs_app/core/tax/tax_screen.dart';
 
 class ThemeController extends GetxController {
   var isDarkMode = false.obs;
@@ -84,6 +94,9 @@ void main() {
   Get.put(ThemeController(), permanent: true);
   Get.put(CurrencyController(), permanent: true);
   Get.put(FiscalYearController(), permanent: true);
+  Get.put(LocationController(), permanent: true);
+  Get.put(LocationScopeController(), permanent: true);
+  Get.put(LocationReloadBinder(), permanent: true);
   Get.put(PermissionService(), permanent: true);
 
   runApp(const MyApp());
@@ -98,10 +111,19 @@ class MyApp extends StatelessWidget {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         await NotificationService.instance.init();
         final prefs = await SharedPreferences.getInstance();
-        final userId = prefs.getString('auth_user_id');
+        String? userId = prefs.getString('auth_user_id');
+        if (userId == null || userId.isEmpty) {
+          final raw = prefs.getString('user_data');
+          if (raw != null && raw.isNotEmpty) {
+            try {
+              final user = json.decode(raw) as Map<String, dynamic>;
+              userId = user['_id']?.toString() ?? user['id']?.toString();
+            } catch (_) {}
+          }
+        }
         if (userId != null && userId.isNotEmpty) {
-          await NotificationService.instance.login(userId);
-          await NotificationService.instance.verifyDeviceRegistration();
+          final token = prefs.getString('auth_token');
+          await NotificationService.instance.login(userId, token: token);
         }
       });
     }
@@ -110,16 +132,32 @@ class MyApp extends StatelessWidget {
       builder: (context, orientation, deviceType) {
         return GetMaterialApp(
           debugShowCheckedModeBanner: false,
-          title: 'BisonsTechs App',
+          title: 'BisonsTechs',
+          navigatorObservers: [appRouteObserver],
           theme: _buildLightTheme(),
           darkTheme: _buildDarkTheme(),
           themeMode: Get.find<ThemeController>().isDarkMode.value
               ? ThemeMode.dark
               : ThemeMode.light,
+          routingCallback: (routing) {
+            if (Get.isRegistered<LocationScopeController>()) {
+              Get.find<LocationScopeController>().setRoute(
+                routing?.current ?? '',
+              );
+            }
+          },
+          builder: (context, child) {
+            return DefaultTextStyle.merge(
+              style: AppFonts.style,
+              child: LocationScopeHost(
+                child: child ?? const SizedBox.shrink(),
+              ),
+            );
+          },
           initialRoute: '/',
           getPages: [
             // ========== AUTH ROUTES ==========
-            GetPage(name: '/', page: () => OnboardingScreen()),
+            GetPage(name: '/', page: () => SplashScreen()),
             GetPage(name: '/login', page: () => const LoginScreen()),
             GetPage(name: '/register', page: () => RegistrationScreen()),
             GetPage(name: '/onboarding', page: () => const OnboardingScreen()),
@@ -130,10 +168,21 @@ class MyApp extends StatelessWidget {
               page: () => const DashboardSelectionScreen(),
             ),
             GetPage(
+              name: '/tax',
+              page: () => const TaxComplianceScreen(),
+            ),
+            GetPage(
               name: '/accounting/dashboard',
               page: () => const DashboardScreen(),
               binding: BindingsBuilder(() {
                 Get.lazyPut(() => DashboardController(), fenix: true);
+              }),
+            ),
+            GetPage(
+              name: '/purchase/dashboard',
+              page: () => const PurchaseDashboardScreen(),
+              binding: BindingsBuilder(() {
+                Get.lazyPut(() => PurchaseController(), fenix: true);
               }),
             ),
             GetPage(
@@ -222,7 +271,6 @@ class MyApp extends StatelessWidget {
               page: () => const PaymentCancelScreen(),
             ),
 
-            // ========== WAREHOUSE ROUTES ==========
             GetPage(
               name: '/warehouse/dashboard',
               page: () => WarehouseDashboard(),
@@ -274,6 +322,10 @@ class MyApp extends StatelessWidget {
             ),
             GetPage(name: '/warehouse/stock', page: () => const StockScreen()),
             GetPage(
+              name: '/warehouse/locations',
+              page: () => const LocationsScreen(),
+            ),
+            GetPage(
               name: '/warehouse/reports',
               page: () => const ReportsScreen(),
             ),
@@ -301,7 +353,7 @@ class MyApp extends StatelessWidget {
             GetPage(
               name: '/sales/invoices',
               page: () =>
-                  const SalesDashboardScreen(), // TODO: Replace with actual invoice screen
+                  const SalesDashboardScreen(),
             ),
             GetPage(
               name: '/sales/returns',
@@ -322,6 +374,13 @@ class MyApp extends StatelessWidget {
             GetPage(
               name: '/purchase/reports',
               page: () => const PurchaseReportScreen(),
+            ),
+            GetPage(
+              name: '/purchase/products',
+              page: () => const ProductsScreen(),
+              binding: BindingsBuilder(() {
+                Get.lazyPut(() => ProductsController());
+              }),
             ),
             GetPage(
               name: '/accounting/reports',
@@ -357,18 +416,24 @@ class MyApp extends StatelessWidget {
     return ThemeData(
       brightness: Brightness.light,
       primarySwatch: Colors.blue,
-      fontFamily: 'Poppins',
+      fontFamily: AppFonts.family,
       colorScheme: ColorScheme.fromSeed(
         seedColor: const Color(0xFF1AB4F5),
         primary: const Color(0xFF1AB4F5),
         brightness: Brightness.light,
       ),
-      scaffoldBackgroundColor: kBg,
-      appBarTheme: const AppBarTheme(
+      scaffoldBackgroundColor: kBgLight,
+      appBarTheme: AppBarTheme(
         elevation: 0,
         centerTitle: false,
-        backgroundColor: Color(0xFF1AB4F5),
+        backgroundColor: const Color(0xFF1AB4F5),
         foregroundColor: Colors.white,
+        titleTextStyle: AppFonts.style.copyWith(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+        toolbarTextStyle: AppFonts.style,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -428,18 +493,24 @@ class MyApp extends StatelessWidget {
     return ThemeData(
       brightness: Brightness.dark,
       primarySwatch: Colors.blue,
-      fontFamily: 'Poppins',
+      fontFamily: AppFonts.family,
       colorScheme: ColorScheme.fromSeed(
         seedColor: const Color(0xFF1AB4F5),
         primary: const Color(0xFF1AB4F5),
         brightness: Brightness.dark,
       ),
       scaffoldBackgroundColor: const Color(0xFF121212),
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         elevation: 0,
         centerTitle: false,
-        backgroundColor: Color(0xFF1AB4F5),
+        backgroundColor: const Color(0xFF1AB4F5),
         foregroundColor: Colors.white,
+        titleTextStyle: AppFonts.style.copyWith(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+        toolbarTextStyle: AppFonts.style,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(

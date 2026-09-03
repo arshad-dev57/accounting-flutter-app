@@ -1,7 +1,5 @@
-﻿// lib/core/warehouse/order/screen/sales_order_screen.dart
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
-import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/core/warehouse/order/controller/sales_order_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/order/model/order_model.dart';
 import 'package:BisonsTechs_app/core/warehouse/order/widgets/create_order_form.dart';
@@ -12,34 +10,64 @@ import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class SalesOrdersScreen extends StatelessWidget {
-  const SalesOrdersScreen({super.key});
+  final bool embedded;
+
+  const SalesOrdersScreen({super.key, this.embedded = false});
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(SalesOrderController());
 
+    final body = Obx(() {
+      if (controller.showCreateForm.value) {
+        return CreateOrderForm(
+          controller: controller,
+          onCancel: controller.closeCreateForm,
+        );
+      }
+
+      return Column(
+        children: [
+          _buildTopHeader(controller, embedded: embedded),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: _buildBody(controller, context),
+            ),
+          ),
+        ],
+      );
+    });
+
+    if (embedded) {
+      return ColoredBox(
+        color: kBgLight,
+        child: Stack(
+          children: [
+            body,
+            Obx(() {
+              if (controller.showCreateForm.value) {
+                return const SizedBox.shrink();
+              }
+              return Positioned(
+                right: 16,
+                bottom: 16,
+                child: FloatingActionButton(
+                  onPressed: controller.openCreateForm,
+                  backgroundColor: kPrimary,
+                  elevation: 2,
+                  child: const Icon(Icons.add, color: Colors.white, size: 24),
+                ),
+              );
+            }),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: kBgLight,
-      body: Obx(() {
-        if (controller.showCreateForm.value) {
-          return CreateOrderForm(
-            controller: controller,
-            onCancel: controller.closeCreateForm,
-          );
-        }
-
-        return Column(
-          children: [
-            _buildTopHeader(controller),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                child: _buildBody(controller, context),
-              ),
-            ),
-          ],
-        );
-      }),
+      body: body,
       floatingActionButton: FloatingActionButton(
         onPressed: controller.openCreateForm,
         backgroundColor: kPrimary,
@@ -51,7 +79,7 @@ class SalesOrdersScreen extends StatelessWidget {
 
   // ─── TOP HEADER ──────────────────────────────────────────────
 
-  Widget _buildTopHeader(SalesOrderController controller) {
+  Widget _buildTopHeader(SalesOrderController controller, {bool embedded = false}) {
     return Container(
       color: kPrimary,
       child: SafeArea(
@@ -59,24 +87,24 @@ class SalesOrdersScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Title row ──
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
               child: Row(
                 children: [
-                  GestureDetector(
-                    onTap: () => Get.back(),
-                    child: const Icon(
-                      Icons.arrow_back,
-                      color: Colors.white,
+                  if (!embedded)
+                    GestureDetector(
+                      onTap: () => Get.back(),
+                      child: const Icon(
+                        Icons.arrow_back,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
+                  if (!embedded) const SizedBox(width: 10),
                   Container(
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(9),
                     ),
                     child: const Icon(
@@ -104,7 +132,7 @@ class SalesOrdersScreen extends StatelessWidget {
                             '${controller.totalRecords.value} orders',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -149,13 +177,13 @@ class SalesOrdersScreen extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(9),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 17,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -173,7 +201,7 @@ class SalesOrdersScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
+                      color: Colors.black.withValues(alpha: 0.06),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -248,7 +276,7 @@ class SalesOrdersScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 4,
             offset: const Offset(0, 1),
           ),
@@ -308,7 +336,7 @@ class SalesOrdersScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -338,13 +366,13 @@ class SalesOrdersScreen extends StatelessWidget {
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.08),
+                  color: kPrimary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Icon(
                   Icons.shopping_cart_outlined,
                   size: 36,
-                  color: kPrimary.withOpacity(0.5),
+                  color: kPrimary.withValues(alpha: 0.5),
                 ),
               ),
               const SizedBox(height: 16),

@@ -7,10 +7,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 
 class SignatureDialog extends StatefulWidget {
-  const SignatureDialog({Key? key}) : super(key: key);
+  const SignatureDialog({super.key});
 
   @override
-  _SignatureDialogState createState() => _SignatureDialogState();
+  State<SignatureDialog> createState() => _SignatureDialogState();
 }
 
 class _SignatureDialogState extends State<SignatureDialog> {
@@ -52,7 +52,6 @@ class _SignatureDialogState extends State<SignatureDialog> {
         Get.back(result: null);
       }
     } catch (e) {
-      print("Error saving signature: $e");
       Get.back(result: null);
     }
   }

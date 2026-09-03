@@ -2,6 +2,7 @@
 
 import 'dart:io';
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/salesInvoice/sales_invoice_model.dart';
 import 'package:flutter/material.dart';
@@ -98,10 +99,11 @@ class SalesInvoiceController extends GetxController {
   final Rx<DateTime?> selectedInvoiceDate = Rx<DateTime?>(null);
   final Rx<DateTime?> selectedDueDate = Rx<DateTime?>(null);
 
+  Worker? _fyWorker;
+
   @override
   void onInit() {
     super.onInit();
-    print('🟢 [SalesInvoiceController] onInit called');
     selectedInvoiceDate.value = DateTime.now();
     selectedDueDate.value = DateTime.now().add(const Duration(days: 30));
     invoiceDateController.text = DateFormat(
@@ -110,12 +112,16 @@ class SalesInvoiceController extends GetxController {
     dueDateController.text = DateFormat(
       'dd MMM yyyy',
     ).format(selectedDueDate.value!);
-    fetchInvoices();
+    Future(() async {
+      await waitForFiscalYearReady();
+      fetchInvoices();
+    });
+    _fyWorker = listenFiscalYearChanges(() => fetchInvoices());
   }
 
   @override
   void onClose() {
-    print('🟢 [SalesInvoiceController] onClose called - disposing controllers');
+    _fyWorker?.dispose();
     orderSearchController.dispose();
     invoiceDateController.dispose();
     dueDateController.dispose();
@@ -151,12 +157,6 @@ class SalesInvoiceController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   Future<void> fetchInvoices({bool resetPage = false}) async {
-    print('🔵 [SalesInvoiceController] fetchInvoices called');
-    print(
-      '🔵 [SalesInvoiceController] Current Page: ${currentPage.value}, Limit: ${pageLimit.value}',
-    );
-    print('🔵 [SalesInvoiceController] Reset Page: $resetPage');
-
     if (resetPage) currentPage.value = 1;
     try {
       isLoading.value = true;
@@ -166,53 +166,33 @@ class SalesInvoiceController extends GetxController {
       };
       if (searchFilter.value.isNotEmpty) {
         params['search'] = searchFilter.value;
-        print(
-          '🔵 [SalesInvoiceController] Search filter: ${searchFilter.value}',
-        );
       }
       if (statusFilter.value != 'all') {
         params['status'] = statusFilter.value;
-        print(
-          '🔵 [SalesInvoiceController] Status filter: ${statusFilter.value}',
-        );
       }
       if (paymentFilter.value != 'all') {
         params['paymentStatus'] = paymentFilter.value;
-        print(
-          '🔵 [SalesInvoiceController] Payment filter: ${paymentFilter.value}',
-        );
       }
       if (fromDate.value != null) {
         params['fromDate'] = fromDate.value!.toIso8601String().split('T').first;
-        print('🔵 [SalesInvoiceController] From date: ${params['fromDate']}');
       }
       if (toDate.value != null) {
         params['toDate'] = toDate.value!.toIso8601String().split('T').first;
-        print('🔵 [SalesInvoiceController] To date: ${params['toDate']}');
       }
+      final fyId = currentFiscalYearId();
+      if (fyId != null) params['fiscalYearId'] = fyId;
 
       final query = params.entries
           .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
           .join('&');
-      print(
-        '🔵 [SalesInvoiceController] API Request: GET /api/sales/invoices?$query',
-      );
 
       final response = await _api.get(
         '/api/sales/invoices?$query',
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [SalesInvoiceController] Response Status: ${response.statusCode}',
-      );
-      print(
-        '🔵 [SalesInvoiceController] Response Success: ${response.success}',
-      );
-
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
-        print('🔵 [SalesInvoiceController] Data length: ${list.length}');
 
         invoices.value = list
             .map(
@@ -226,15 +206,11 @@ class SalesInvoiceController extends GetxController {
           stats.value = InvoiceStats.fromJson(
             Map<String, dynamic>.from(response.data['kpi']),
           );
-          print('🔵 [SalesInvoiceController] Stats: ${stats.value}');
         }
 
         if (response.data['stats'] != null) {
           monthlyStats.value = Map<String, dynamic>.from(
             response.data['stats'],
-          );
-          print(
-            '🔵 [SalesInvoiceController] Monthly stats: ${monthlyStats.value}',
           );
         }
 
@@ -247,40 +223,20 @@ class SalesInvoiceController extends GetxController {
           hasNext.value = pagination['hasNext'] == true;
           hasPrev.value = pagination['hasPrev'] == true;
           hasMore.value = pagination['hasNext'] == true;
-
-          print(
-            '✅ [SalesInvoiceController] Invoices fetched successfully: ${invoices.length} invoices',
-          );
-          print(
-            '✅ [SalesInvoiceController] Total records: ${totalRecords.value}, Total pages: ${totalPages.value}',
-          );
         }
       } else {
-        print('❌ [SalesInvoiceController] Failed to fetch invoices');
-        print('❌ [SalesInvoiceController] Response data: ${response.data}');
-        Get.snackbar('Error', response.message ?? 'Failed to load invoices');
+        Get.snackbar('Error', response.message);
       }
     } catch (e) {
-      print('❌ [SalesInvoiceController] fetchInvoices error: $e');
-      print('❌ [SalesInvoiceController] Stack trace: ${StackTrace.current}');
       Get.snackbar('Error', e.toString());
     } finally {
       isLoading.value = false;
-      print(
-        '🔵 [SalesInvoiceController] fetchInvoices completed, isLoading: ${isLoading.value}',
-      );
     }
   }
 
   // ─── LOCAL FILTERS ──────────────────────────────────────────
 
   void applyLocalFilters() {
-    print('🟣 [SalesInvoiceController] applyLocalFilters called');
-    print(
-      '🟣 [SalesInvoiceController] Selected filter: ${selectedFilter.value}',
-    );
-    print('🟣 [SalesInvoiceController] Search filter: ${searchFilter.value}');
-
     final list = invoices.toList();
     final filtered = list.where((item) {
       // Status filter
@@ -301,26 +257,20 @@ class SalesInvoiceController extends GetxController {
       return true;
     }).toList();
 
-    print(
-      '🟣 [SalesInvoiceController] Filtered invoices: ${filtered.length} out of ${list.length}',
-    );
     filteredInvoices.value = filtered;
   }
 
   void filterInvoices(String filter) {
-    print('🟣 [SalesInvoiceController] filterInvoices called with: $filter');
     selectedFilter.value = filter;
     applyLocalFilters();
   }
 
   void searchInvoices(String query) {
-    print('🟣 [SalesInvoiceController] searchInvoices called with: $query');
     searchFilter.value = query;
     applyLocalFilters();
   }
 
   void clearSearch() {
-    print('🟣 [SalesInvoiceController] clearSearch called');
     searchFilter.value = '';
     applyLocalFilters();
     fetchInvoices(resetPage: true);
@@ -329,20 +279,13 @@ class SalesInvoiceController extends GetxController {
   // ─── LOAD MORE ────────────────────────────────────────────
 
   Future<void> fetchMoreInvoices() async {
-    print('🟡 [SalesInvoiceController] fetchMoreInvoices called');
-    print(
-      '🟡 [SalesInvoiceController] hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}',
-    );
-
     if (!hasMore.value || isLoadingMore.value) {
-      print('🟡 [SalesInvoiceController] Skipping load more');
       return;
     }
 
     try {
       isLoadingMore.value = true;
       currentPage.value += 1;
-      print('🟡 [SalesInvoiceController] Loading page: ${currentPage.value}');
 
       final params = <String, String>{
         'page': currentPage.value.toString(),
@@ -350,15 +293,13 @@ class SalesInvoiceController extends GetxController {
       };
       if (searchFilter.value.isNotEmpty) params['search'] = searchFilter.value;
       if (statusFilter.value != 'all') params['status'] = statusFilter.value;
-      if (paymentFilter.value != 'all')
+      if (paymentFilter.value != 'all') {
         params['paymentStatus'] = paymentFilter.value;
+      }
 
       final query = params.entries
           .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
           .join('&');
-      print(
-        '🟡 [SalesInvoiceController] API Request: GET /api/sales/invoices?$query',
-      );
 
       final response = await _api.get(
         '/api/sales/invoices?$query',
@@ -373,9 +314,6 @@ class SalesInvoiceController extends GetxController {
             )
             .toList();
 
-        print(
-          '🟡 [SalesInvoiceController] Loaded ${newInvoices.length} more invoices',
-        );
         invoices.addAll(newInvoices);
         applyLocalFilters();
 
@@ -385,38 +323,26 @@ class SalesInvoiceController extends GetxController {
           totalRecords.value = (pagination['total'] as num?)?.toInt() ?? 0;
           totalPages.value = (pagination['pages'] as num?)?.toInt() ?? 1;
         }
-        print(
-          '🟡 [SalesInvoiceController] Total invoices now: ${invoices.length}, hasMore: ${hasMore.value}',
-        );
-      } else {
-        print('❌ [SalesInvoiceController] Failed to load more invoices');
-      }
+      } else {}
     } catch (e) {
-      print('❌ [SalesInvoiceController] fetchMoreInvoices error: $e');
+      debugPrint('Error: $e');
     } finally {
       isLoadingMore.value = false;
-      print('🟡 [SalesInvoiceController] fetchMoreInvoices completed');
     }
   }
 
   // ─── REFRESH ──────────────────────────────────────────────────
 
   Future<void> refreshInvoices() {
-    print('🟢 [SalesInvoiceController] refreshInvoices called');
     return fetchInvoices(resetPage: true);
   }
 
   void applyFilters() {
-    print('🟣 [SalesInvoiceController] applyFilters called');
     fetchInvoices(resetPage: true);
   }
 
   void goToPage(int page) {
-    print('🟣 [SalesInvoiceController] goToPage called: $page');
     if (page < 1 || page > totalPages.value) {
-      print(
-        '🟣 [SalesInvoiceController] Invalid page: $page, totalPages: ${totalPages.value}',
-      );
       return;
     }
     currentPage.value = page;
@@ -428,26 +354,17 @@ class SalesInvoiceController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   void openCreateWizard() {
-    print('🟢 [SalesInvoiceController] openCreateWizard called');
     _resetWizard();
     showCreateWizard.value = true;
     searchOrders('');
-    print(
-      '🟢 [SalesInvoiceController] showCreateWizard: ${showCreateWizard.value}',
-    );
   }
 
   void closeCreateWizard() {
-    print('🟢 [SalesInvoiceController] closeCreateWizard called');
     showCreateWizard.value = false;
     _resetWizard();
-    print(
-      '🟢 [SalesInvoiceController] showCreateWizard: ${showCreateWizard.value}',
-    );
   }
 
   void _resetWizard() {
-    print('🟢 [SalesInvoiceController] _resetWizard called');
     wizardStep.value = 0;
     selectedOrder.value = null;
     orderSearchResults.clear();
@@ -463,14 +380,11 @@ class SalesInvoiceController extends GetxController {
     dueDateController.text = DateFormat(
       'dd MMM yyyy',
     ).format(selectedDueDate.value!);
-    print('✅ [SalesInvoiceController] Wizard reset complete');
   }
 
   // ─── ORDER SEARCH ─────────────────────────────────────────────
 
   Future<void> searchOrders(String query) async {
-    print('🔵 [SalesInvoiceController] searchOrders called with: "$query"');
-
     try {
       isSearchingOrders.value = true;
       final params = <String, String>{'limit': '15'};
@@ -480,9 +394,6 @@ class SalesInvoiceController extends GetxController {
       final qs = params.entries
           .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
           .join('&');
-      print(
-        '🔵 [SalesInvoiceController] API Request: GET /api/sales/invoices/available-orders?$qs',
-      );
 
       final response = await _api.get(
         '/api/sales/invoices/available-orders?$qs',
@@ -494,28 +405,17 @@ class SalesInvoiceController extends GetxController {
         orderSearchResults.value = list
             .map((e) => Map<String, dynamic>.from(e))
             .toList();
-        print(
-          '🔵 [SalesInvoiceController] Found ${orderSearchResults.length} orders for query: $query',
-        );
       } else {
-        print('❌ [SalesInvoiceController] No orders found');
         orderSearchResults.clear();
       }
     } catch (e) {
-      print('❌ [SalesInvoiceController] searchOrders error: $e');
       orderSearchResults.clear();
     } finally {
       isSearchingOrders.value = false;
-      print('🔵 [SalesInvoiceController] searchOrders completed');
     }
   }
 
   void selectOrderForInvoice(Map<String, dynamic> order) {
-    print('🔵 [SalesInvoiceController] selectOrderForInvoice called');
-    print(
-      '🔵 [SalesInvoiceController] Selected order: ${order['orderNumber']} - ${order['customerName']}',
-    );
-
     selectedOrder.value = order;
     orderSearchResults.clear();
     orderSearchController.text = order['orderNumber'] ?? '';
@@ -536,7 +436,8 @@ class SalesInvoiceController extends GetxController {
       final item = Map<String, dynamic>.from(raw as Map);
       return InvoiceLineDraft(
         productId: item['productId']?.toString() ?? '',
-        productName: item['productName']?.toString() ??
+        productName:
+            item['productName']?.toString() ??
             item['product']?['name']?.toString() ??
             '',
         sku: item['sku']?.toString() ?? '',
@@ -546,10 +447,6 @@ class SalesInvoiceController extends GetxController {
         taxRate: toD(item['taxRate']),
       );
     }).toList();
-
-    print(
-      '🔵 [SalesInvoiceController] Created ${lineDrafts.length} line drafts for order',
-    );
   }
 
   // ─── DATE SELECTION ──────────────────────────────────────────
@@ -587,46 +484,31 @@ class SalesInvoiceController extends GetxController {
 
   bool canGoToStep2() {
     final canGo = selectedOrder.value != null;
-    print('🔵 [SalesInvoiceController] canGoToStep2: $canGo');
     return canGo;
   }
 
   bool canGoToStep3() {
     final canGo = lineDrafts.isNotEmpty;
-    print('🔵 [SalesInvoiceController] canGoToStep3: $canGo');
     return canGo;
   }
 
   void nextStep() {
-    print(
-      '🟡 [SalesInvoiceController] nextStep called, current step: ${wizardStep.value}',
-    );
-
     if (wizardStep.value == 0 && !canGoToStep2()) {
-      print(
-        '❌ [SalesInvoiceController] Cannot go to step 2 - no order selected',
-      );
       Get.snackbar('Validation', 'Select an order first');
       return;
     }
     if (wizardStep.value == 1 && !canGoToStep3()) {
-      print('❌ [SalesInvoiceController] Cannot go to step 3 - no items added');
       Get.snackbar('Validation', 'Add at least one item to the invoice');
       return;
     }
     if (wizardStep.value < 2) {
       wizardStep.value++;
-      print('🟡 [SalesInvoiceController] Step changed to: ${wizardStep.value}');
     }
   }
 
   void previousStep() {
-    print(
-      '🟡 [SalesInvoiceController] previousStep called, current step: ${wizardStep.value}',
-    );
     if (wizardStep.value > 0) {
       wizardStep.value--;
-      print('🟡 [SalesInvoiceController] Step changed to: ${wizardStep.value}');
     }
   }
 
@@ -635,16 +517,12 @@ class SalesInvoiceController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   Future<bool> createInvoice() async {
-    print('🔵 [SalesInvoiceController] createInvoice called');
-
     final order = selectedOrder.value;
     if (order == null) {
-      print('❌ [SalesInvoiceController] No order selected');
       return false;
     }
 
     if (lineDrafts.isEmpty) {
-      print('❌ [SalesInvoiceController] No items in invoice');
       Get.snackbar('Validation', 'Add at least one item');
       return false;
     }
@@ -653,26 +531,12 @@ class SalesInvoiceController extends GetxController {
     final dueDate = selectedDueDate.value;
 
     if (invoiceDate == null || dueDate == null) {
-      print('❌ [SalesInvoiceController] Dates not selected');
       Get.snackbar('Validation', 'Please select dates');
       return false;
     }
 
     try {
       isSubmitting.value = true;
-
-      final items = lineDrafts
-          .map(
-            (line) => ({
-              'productId': line.productId,
-              'quantity': line.quantity,
-              'unitPrice': line.unitPrice,
-              'discount': line.discount,
-              'taxRate': line.taxRate,
-              'notes': null,
-            }),
-          )
-          .toList();
 
       final payload = {
         'orderId': order['id'],
@@ -685,39 +549,22 @@ class SalesInvoiceController extends GetxController {
             : notesController.text.trim(),
       };
 
-      print('🔵 [SalesInvoiceController] Submitting invoice payload');
-      print(
-        '🔵 [SalesInvoiceController] Order: ${order['orderNumber']}, Items: ${items.length}',
-      );
-
       final response = await _api.post(
         '/api/sales/invoices/from-order',
         body: payload,
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [SalesInvoiceController] Response Status: ${response.statusCode}',
-      );
-      print(
-        '🔵 [SalesInvoiceController] Response Success: ${response.success}',
-      );
-
       if (response.success) {
-        print('✅ [SalesInvoiceController] Invoice created successfully!');
         Get.snackbar('Success', 'Invoice created successfully');
         closeCreateWizard();
         await fetchInvoices(resetPage: true);
         return true;
       }
 
-      print(
-        '❌ [SalesInvoiceController] Failed to create invoice: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to create invoice');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [SalesInvoiceController] createInvoice error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -730,15 +577,10 @@ class SalesInvoiceController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   void selectInvoice(SalesInvoiceModel invoice) {
-    print(
-      '🔵 [SalesInvoiceController] selectInvoice called for: ${invoice.invoiceNumber}',
-    );
     selectedInvoice.value = invoice;
   }
 
   Future<bool> postInvoice(String id) async {
-    print('🟣 [SalesInvoiceController] postInvoice called for ID: $id');
-
     try {
       isSubmitting.value = true;
       final response = await _api.post(
@@ -747,15 +589,7 @@ class SalesInvoiceController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🟣 [SalesInvoiceController] Response Status: ${response.statusCode}',
-      );
-      print(
-        '🟣 [SalesInvoiceController] Response Success: ${response.success}',
-      );
-
       if (response.success) {
-        print('✅ [SalesInvoiceController] Invoice posted successfully');
         Get.snackbar(
           'Success',
           'Invoice posted and accounting entries created',
@@ -764,13 +598,9 @@ class SalesInvoiceController extends GetxController {
         return true;
       }
 
-      print(
-        '❌ [SalesInvoiceController] Failed to post invoice: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to post invoice');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [SalesInvoiceController] postInvoice error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -779,9 +609,6 @@ class SalesInvoiceController extends GetxController {
   }
 
   Future<bool> cancelInvoice(String id, {String? reason}) async {
-    print('🟣 [SalesInvoiceController] cancelInvoice called for ID: $id');
-    print('🟣 [SalesInvoiceController] Reason: $reason');
-
     try {
       isSubmitting.value = true;
       final response = await _api.post(
@@ -790,27 +617,15 @@ class SalesInvoiceController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🟣 [SalesInvoiceController] Response Status: ${response.statusCode}',
-      );
-      print(
-        '🟣 [SalesInvoiceController] Response Success: ${response.success}',
-      );
-
       if (response.success) {
-        print('✅ [SalesInvoiceController] Invoice cancelled successfully');
         Get.snackbar('Success', 'Invoice cancelled');
         await fetchInvoices();
         return true;
       }
 
-      print(
-        '❌ [SalesInvoiceController] Failed to cancel invoice: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to cancel invoice');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [SalesInvoiceController] cancelInvoice error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -819,9 +634,6 @@ class SalesInvoiceController extends GetxController {
   }
 
   Future<bool> sendInvoice(String id, {String? email}) async {
-    print('🟣 [SalesInvoiceController] sendInvoice called for ID: $id');
-    print('🟣 [SalesInvoiceController] Email: $email');
-
     try {
       isSubmitting.value = true;
       final response = await _api.post(
@@ -830,27 +642,15 @@ class SalesInvoiceController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🟣 [SalesInvoiceController] Response Status: ${response.statusCode}',
-      );
-      print(
-        '🟣 [SalesInvoiceController] Response Success: ${response.success}',
-      );
-
       if (response.success) {
-        print('✅ [SalesInvoiceController] Invoice sent successfully');
         Get.snackbar('Success', 'Invoice sent successfully');
         await fetchInvoices();
         return true;
       }
 
-      print(
-        '❌ [SalesInvoiceController] Failed to send invoice: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to send invoice');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [SalesInvoiceController] sendInvoice error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -859,8 +659,6 @@ class SalesInvoiceController extends GetxController {
   }
 
   Future<bool> deleteInvoice(String id) async {
-    print('🔵 [SalesInvoiceController] deleteInvoice called for ID: $id');
-
     try {
       isSubmitting.value = true;
       final response = await _api.delete(
@@ -868,27 +666,15 @@ class SalesInvoiceController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [SalesInvoiceController] Response Status: ${response.statusCode}',
-      );
-      print(
-        '🔵 [SalesInvoiceController] Response Success: ${response.success}',
-      );
-
       if (response.success) {
-        print('✅ [SalesInvoiceController] Invoice deleted successfully');
         Get.snackbar('Success', 'Invoice deleted successfully');
         await fetchInvoices(resetPage: true);
         return true;
       }
 
-      print(
-        '❌ [SalesInvoiceController] Failed to delete invoice: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to delete invoice');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [SalesInvoiceController] deleteInvoice error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -897,34 +683,20 @@ class SalesInvoiceController extends GetxController {
   }
 
   Future<SalesInvoiceModel?> getInvoiceById(String id) async {
-    print('🔵 [SalesInvoiceController] getInvoiceById called for ID: $id');
-
     try {
       final response = await _api.get(
         '/api/sales/invoices/$id',
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [SalesInvoiceController] Response Status: ${response.statusCode}',
-      );
-      print(
-        '🔵 [SalesInvoiceController] Response Success: ${response.success}',
-      );
-
       if (response.success && response.data != null) {
         final invoice = SalesInvoiceModel.fromJson(
           Map<String, dynamic>.from(response.data['data']),
         );
-        print(
-          '✅ [SalesInvoiceController] Invoice found: ${invoice.invoiceNumber}',
-        );
         return invoice;
       }
-      print('❌ [SalesInvoiceController] Invoice not found');
       return null;
     } catch (e) {
-      print('❌ [SalesInvoiceController] getInvoiceById error: $e');
       return null;
     }
   }
@@ -981,10 +753,6 @@ class SalesInvoiceController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   Future<void> generateAndDownloadPdf(SalesInvoiceModel invoice) async {
-    print(
-      '🟣 [SalesInvoiceController] generateAndDownloadPdf called for: ${invoice.invoiceNumber}',
-    );
-
     try {
       isSubmitting.value = true;
       Get.dialog(
@@ -1018,16 +786,11 @@ class SalesInvoiceController extends GetxController {
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
       isSubmitting.value = false;
-      print('❌ [SalesInvoiceController] PDF generation error: $e');
       Get.snackbar('Error', 'Failed to generate PDF: $e');
     }
   }
 
   Future<void> shareInvoice(SalesInvoiceModel invoice) async {
-    print(
-      '🟣 [SalesInvoiceController] shareInvoice called for: ${invoice.invoiceNumber}',
-    );
-
     try {
       isSubmitting.value = true;
       Get.dialog(
@@ -1056,25 +819,22 @@ class SalesInvoiceController extends GetxController {
       if (Get.isDialogOpen ?? false) Get.back();
       isSubmitting.value = false;
 
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        subject: 'Invoice ${invoice.invoiceNumber}',
-        text:
-            'Please find attached invoice ${invoice.invoiceNumber} for ${invoice.customerName}',
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          subject: 'Invoice ${invoice.invoiceNumber}',
+          text:
+              'Please find attached invoice ${invoice.invoiceNumber} for ${invoice.customerName}',
+        ),
       );
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
       isSubmitting.value = false;
-      print('❌ [SalesInvoiceController] Share error: $e');
       Get.snackbar('Error', 'Failed to share invoice: $e');
     }
   }
 
   Future<void> shareViaWhatsApp(SalesInvoiceModel invoice) async {
-    print(
-      '🟣 [SalesInvoiceController] shareViaWhatsApp called for: ${invoice.invoiceNumber}',
-    );
-
     try {
       isSubmitting.value = true;
       Get.dialog(
@@ -1115,10 +875,12 @@ class SalesInvoiceController extends GetxController {
         );
 
         // Also share the file after opening WhatsApp
-        await Share.shareXFiles(
-          [XFile(file.path)],
-          subject: 'Invoice ${invoice.invoiceNumber}',
-          text: message,
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [XFile(file.path)],
+            subject: 'Invoice ${invoice.invoiceNumber}',
+            text: message,
+          ),
         );
       } else {
         Get.snackbar('Error', 'WhatsApp not installed');
@@ -1126,7 +888,6 @@ class SalesInvoiceController extends GetxController {
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
       isSubmitting.value = false;
-      print('❌ [SalesInvoiceController] WhatsApp share error: $e');
       Get.snackbar('Error', 'Failed to share via WhatsApp: $e');
     }
   }
@@ -1414,7 +1175,7 @@ class SalesInvoiceController extends GetxController {
               ],
             ),
           );
-        }).toList(),
+        }),
         pw.SizedBox(height: 16),
         // Summary
         pw.Container(

@@ -39,13 +39,13 @@ class StockHistoryList extends StatelessWidget {
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.08),
+                  color: kPrimary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Icon(
                   Icons.swap_vert,
                   size: 36,
-                  color: kPrimary.withOpacity(0.5),
+                  color: kPrimary.withValues(alpha: 0.5),
                 ),
               ),
               const SizedBox(height: 16),
@@ -88,10 +88,10 @@ class StockHistoryList extends StatelessWidget {
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
+                        color: Colors.black.withValues(alpha: 0.03),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -104,7 +104,7 @@ class StockHistoryList extends StatelessWidget {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: color.withOpacity(0.1),
+                          color: color.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(m.getTypeIcon(), color: color, size: 22),
@@ -139,7 +139,7 @@ class StockHistoryList extends StatelessWidget {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: color.withOpacity(0.1),
+                                    color: color.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
@@ -159,8 +159,7 @@ class StockHistoryList extends StatelessWidget {
                                   ),
                                   decoration: BoxDecoration(
                                     color: controller
-                                        .getStatusColor(m.status)
-                                        .withOpacity(0.1),
+                                        .getStatusColor(m.status).withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(

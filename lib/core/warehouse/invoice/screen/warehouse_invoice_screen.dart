@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/tax/tax_rate_field.dart';
 import 'package:BisonsTechs_app/core/warehouse/invoice/controller/warehouse_invoice_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/products/screen/product_screen.dart';
 import 'package:flutter/material.dart';
@@ -179,7 +180,7 @@ class WarehouseInvoiceListView extends StatelessWidget {
                     Icon(
                       Icons.receipt_long,
                       size: 64,
-                      color: kSubText.withOpacity(0.3),
+                      color: kSubText.withValues(alpha: 0.3),
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -194,7 +195,7 @@ class WarehouseInvoiceListView extends StatelessWidget {
                     Text(
                       'Create your first invoice',
                       style: TextStyle(
-                        color: kSubText.withOpacity(0.6),
+                        color: kSubText.withValues(alpha: 0.6),
                         fontSize: 12,
                       ),
                     ),
@@ -325,7 +326,7 @@ class WarehouseInvoiceListView extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -366,10 +367,10 @@ class WarehouseInvoiceListView extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -390,7 +391,7 @@ class WarehouseInvoiceListView extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: kPrimary.withOpacity(0.1),
+                      color: kPrimary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
@@ -424,8 +425,8 @@ class WarehouseInvoiceListView extends StatelessWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: invoice.isPurchase
-                                    ? const Color(0xFF7C3AED).withOpacity(0.1)
-                                    : kPrimary.withOpacity(0.1),
+                                    ? const Color(0xFF7C3AED).withValues(alpha: 0.1)
+                                    : kPrimary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
@@ -456,9 +457,9 @@ class WarehouseInvoiceListView extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
+                      color: color.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: color.withOpacity(0.3)),
+                      border: Border.all(color: color.withValues(alpha: 0.3)),
                     ),
                     child: Text(
                       status,
@@ -472,7 +473,7 @@ class WarehouseInvoiceListView extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 10),
-              Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+              Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
               const SizedBox(height: 10),
               // Financial summary row
               Row(
@@ -517,7 +518,7 @@ class WarehouseInvoiceListView extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: kSuccess.withOpacity(0.1),
+                    color: kSuccess.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -616,7 +617,7 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
@@ -702,7 +703,7 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
@@ -788,7 +789,7 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: Colors.black.withValues(alpha: 0.08),
                     blurRadius: 16,
                     offset: const Offset(0, 4),
                   ),
@@ -804,13 +805,13 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
                       vertical: 16,
                     ),
                     decoration: BoxDecoration(
-                      color: kPrimary.withOpacity(0.05),
+                      color: kPrimary.withValues(alpha: 0.05),
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(16),
                       ),
                       border: Border(
                         bottom: BorderSide(
-                          color: Colors.grey.withOpacity(0.12),
+                          color: Colors.grey.withValues(alpha: 0.12),
                         ),
                       ),
                     ),
@@ -827,7 +828,7 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: kPrimary.withOpacity(0.4),
+                              color: kPrimary.withValues(alpha: 0.4),
                             ),
                           ),
                           child: Text(
@@ -850,8 +851,8 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
                               ),
                               decoration: BoxDecoration(
                                 color: invoice.isPurchase
-                                    ? const Color(0xFF7C3AED).withOpacity(0.12)
-                                    : kPrimary.withOpacity(0.12),
+                                    ? const Color(0xFF7C3AED).withValues(alpha: 0.12)
+                                    : kPrimary.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
@@ -872,10 +873,10 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: statusColor.withOpacity(0.12),
+                                color: statusColor.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
-                                  color: statusColor.withOpacity(0.4),
+                                  color: statusColor.withValues(alpha: 0.4),
                                 ),
                               ),
                               child: Text(
@@ -946,7 +947,7 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
                         Container(
                           width: 1,
                           height: 100,
-                          color: Colors.grey.withOpacity(0.15),
+                          color: Colors.grey.withValues(alpha: 0.15),
                         ),
                         const SizedBox(width: 16),
                         // Client Details
@@ -1015,7 +1016,7 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
                     decoration: BoxDecoration(
                       color: kBg,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.withOpacity(0.12)),
+                      border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
                     ),
                     child: Row(
                       children: [
@@ -1106,7 +1107,7 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: kPrimary.withOpacity(0.08),
+                      color: kPrimary.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -1181,10 +1182,10 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
                       decoration: BoxDecoration(
                         color: isEven
                             ? Colors.transparent
-                            : Colors.grey.withOpacity(0.04),
+                            : Colors.grey.withValues(alpha: 0.04),
                         border: Border(
                           bottom: BorderSide(
-                            color: Colors.grey.withOpacity(0.1),
+                            color: Colors.grey.withValues(alpha: 0.1),
                           ),
                         ),
                       ),
@@ -1218,7 +1219,7 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
                                     'SKU: ${item.sku}',
                                     style: TextStyle(
                                       fontSize: 10,
-                                      color: kSubText.withOpacity(0.7),
+                                      color: kSubText.withValues(alpha: 0.7),
                                     ),
                                   ),
                               ],
@@ -1260,7 +1261,7 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
                         ],
                       ),
                     );
-                  }).toList(),
+                  }),
 
                   const SizedBox(height: 16),
 
@@ -1274,7 +1275,7 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
                         color: kBg,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: Colors.grey.withOpacity(0.15),
+                          color: Colors.grey.withValues(alpha: 0.15),
                         ),
                       ),
                       child: Column(
@@ -1286,7 +1287,7 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
                               vertical: 10,
                             ),
                             decoration: BoxDecoration(
-                              color: kPrimary.withOpacity(0.08),
+                              color: kPrimary.withValues(alpha: 0.08),
                               borderRadius: const BorderRadius.vertical(
                                 top: Radius.circular(10),
                               ),
@@ -1313,7 +1314,7 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
                             _summaryRow('Discount', -invoice.discountTotal),
                           Container(
                             height: 1,
-                            color: Colors.grey.withOpacity(0.2),
+                            color: Colors.grey.withValues(alpha: 0.2),
                           ),
                           _summaryRow(
                             'Total',
@@ -1354,10 +1355,10 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.amber.withOpacity(0.06),
+                          color: Colors.amber.withValues(alpha: 0.06),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: Colors.amber.withOpacity(0.2),
+                            color: Colors.amber.withValues(alpha: 0.2),
                           ),
                         ),
                         child: Row(
@@ -1618,7 +1619,7 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.3),
+                        color: Colors.grey.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
@@ -1638,7 +1639,7 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
                         ],
                       ),
                     ),
-                    Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
+                    Divider(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
                     Expanded(
                       child: orders.isEmpty
                           ? Center(
@@ -1659,7 +1660,7 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
                                     color: kCardBg,
                                     borderRadius: BorderRadius.circular(10),
                                     border: Border.all(
-                                      color: Colors.grey.withOpacity(0.12),
+                                      color: Colors.grey.withValues(alpha: 0.12),
                                     ),
                                   ),
                                   child: ListTile(
@@ -1675,7 +1676,7 @@ class _WarehouseInvoiceScreenState extends State<WarehouseInvoiceScreen> {
                                       width: 36,
                                       height: 36,
                                       decoration: BoxDecoration(
-                                        color: kPrimary.withOpacity(0.1),
+                                        color: kPrimary.withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Icon(
@@ -1864,7 +1865,7 @@ class _CreateWarehouseInvoiceFormState
                   onPressed: widget.onCancel,
                   icon: const Icon(Icons.arrow_back, color: Colors.white),
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.white.withOpacity(0.15),
+                    backgroundColor: Colors.white.withValues(alpha: 0.15),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -1872,7 +1873,7 @@ class _CreateWarehouseInvoiceFormState
                   width: 30,
                   height: 30,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
@@ -1926,7 +1927,7 @@ class _CreateWarehouseInvoiceFormState
           _section('Customer', [
             Obx(() {
               return DropdownButtonFormField<String>(
-                value: _draft.customerId,
+                initialValue: _draft.customerId,
                 decoration: InputDecoration(
                   labelText: 'Select warehouse customer *',
                   border: OutlineInputBorder(
@@ -1984,7 +1985,7 @@ class _CreateWarehouseInvoiceFormState
                         color: kBg,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: Colors.grey.withOpacity(0.25),
+                          color: Colors.grey.withValues(alpha: 0.25),
                         ),
                       ),
                       child: Row(
@@ -2024,7 +2025,7 @@ class _CreateWarehouseInvoiceFormState
                         color: kBg,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: Colors.grey.withOpacity(0.25),
+                          color: Colors.grey.withValues(alpha: 0.25),
                         ),
                       ),
                       child: Row(
@@ -2119,10 +2120,10 @@ class _CreateWarehouseInvoiceFormState
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.grey.withOpacity(0.15)),
+                  border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 8,
                     ),
                   ],
@@ -2167,7 +2168,7 @@ class _CreateWarehouseInvoiceFormState
                       Icon(
                         Icons.playlist_add,
                         size: 36,
-                        color: kSubText.withOpacity(0.4),
+                        color: kSubText.withValues(alpha: 0.4),
                       ),
                       const SizedBox(height: 6),
                       Text(
@@ -2261,9 +2262,9 @@ class _CreateWarehouseInvoiceFormState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 6),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6),
         ],
       ),
       child: Padding(
@@ -2277,7 +2278,7 @@ class _CreateWarehouseInvoiceFormState
                   width: 30,
                   height: 30,
                   decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.1),
+                    color: kPrimary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Center(
@@ -2352,20 +2353,10 @@ class _CreateWarehouseInvoiceFormState
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: TextFormField(
-                    initialValue: line.taxRate.toStringAsFixed(1),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: 'Tax %',
-                      isDense: true,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    onChanged: (v) =>
-                        setState(() => line.taxRate = double.tryParse(v) ?? 0),
+                  child: TaxRateField(
+                    dense: true,
+                    value: line.taxRate,
+                    onRateChanged: (v) => setState(() => line.taxRate = v),
                   ),
                 ),
               ],
@@ -2394,7 +2385,7 @@ class _CreateWarehouseInvoiceFormState
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.withOpacity(0.12)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

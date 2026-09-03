@@ -1,18 +1,24 @@
-import 'dart:io';
-
 import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/widgets/dashboard_hero_watermark.dart';
+import 'package:BisonsTechs_app/widgets/dashboard_mobile_chrome.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/widgets/fiscal_year_select.dart';
+import 'package:BisonsTechs_app/core/warehouse/widgets/location_switcher.dart';
 import 'package:BisonsTechs_app/core/Notifications/screens/notification_screen.dart';
+import 'package:BisonsTechs_app/widgets/reload_when_visible.dart';
 import 'package:BisonsTechs_app/core/purchasedashboard/purchase_controller.dart';
-import 'package:BisonsTechs_app/core/purchasedashboard/purchase_dashboard_model.dart';
+import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
+import 'package:BisonsTechs_app/core/purchasedashboard/purchase_report_screen.dart';
+import 'package:BisonsTechs_app/core/purchaseInvoice/purchase_invoice_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/purchases/screen/purchase_order_screen.dart';
+import 'package:BisonsTechs_app/widgets/module_logout_dialog.dart';
+import 'package:BisonsTechs_app/widgets/module_settings_tab.dart';
 import 'package:BisonsTechs_app/core/purchasedashboard/purchase_drawer.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
-// ─── White theme palette (identical to DashboardScreen) ───────────────────
 const _kPageBg = Color(0xFFF5F6FA);
 const _kCardBg = Color(0xFFFFFFFF);
 const _kCardBorder = Color(0xFFEEEFF4);
@@ -22,7 +28,6 @@ const _kTextMuted = Color(0xFFB0B4C8);
 const _kAppBarBg = Color(0xFFF7F9FC);
 const _kChipBg = Color(0xFFF0F2F8);
 
-// Semantic colours — same as DashboardScreen
 const _kPrimaryBg = Color(0xFFE6EEF5);
 const _kGreen = Color(0xFF22A869);
 const _kGreenBg = Color(0xFFEAF7F1);
@@ -35,75 +40,254 @@ const _kPurpleBg = Color(0xFFF5F0FF);
 const _kTeal = Color(0xFF0891B2);
 const _kTealBg = Color(0xFFECFAFF);
 
-// Hero card — same gradient tint as DashboardScreen hero
 const _kHeroBg = Color(0xFFE6EEF5);
 const _kHeroBgEnd = Color(0xFFD6E4F0);
 const _kHeroBorder = Color(0xFFB8CFE0);
 const _kHeroIcon = Color(0xFFC5D8E8);
 
-class PurchaseDashboardScreen extends GetView<PurchaseController> {
+
+class PurchaseDashboardScreen extends StatefulWidget {
   const PurchaseDashboardScreen({super.key});
+
+  @override
+  State<PurchaseDashboardScreen> createState() =>
+      _PurchaseDashboardScreenState();
+}
+
+class _PurchaseDashboardScreenState extends State<PurchaseDashboardScreen>
+    with RouteAware, ReloadWhenVisible {
+  @override
+  void reloadOnOpen() {
+    if (Get.isRegistered<PurchaseController>()) {
+      Get.find<PurchaseController>().fetchDashboard();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => const _PurchaseDashboardView();
+}
+
+class _PurchaseDashboardView extends StatefulWidget {
+  const _PurchaseDashboardView();
+
+  @override
+  State<_PurchaseDashboardView> createState() => _PurchaseDashboardViewState();
+}
+
+class _PurchaseDashboardViewState extends State<_PurchaseDashboardView> {
+  int _tabIndex = 0;
+
+  static const _tabLabels = [
+    'Dashboard',
+    'Orders',
+    'Invoices',
+    'Reports',
+    'Settings',
+  ];
+
+  void _selectTab(int index) {
+    if (_tabIndex == index) return;
+    setState(() => _tabIndex = index);
+  }
+
+  List<DashboardBreadcrumbSegment> _breadcrumbSegments() {
+    final segments = <DashboardBreadcrumbSegment>[
+      DashboardBreadcrumbSegment(
+        label: 'Home',
+        onTap: () => Get.offAllNamed('/dashboard'),
+      ),
+      const DashboardBreadcrumbSegment(label: 'Purchase'),
+    ];
+    if (_tabIndex > 0) {
+      segments.add(DashboardBreadcrumbSegment(label: _tabLabels[_tabIndex]));
+    }
+    return segments;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _PurchaseDashboardBody(
+      tabIndex: _tabIndex,
+      onSelectTab: _selectTab,
+      breadcrumbSegments: _breadcrumbSegments(),
+    );
+  }
+}
+
+class _PurchaseDashboardBody extends GetView<PurchaseController> {
+  final int tabIndex;
+  final ValueChanged<int> onSelectTab;
+  final List<DashboardBreadcrumbSegment> breadcrumbSegments;
+
+  const _PurchaseDashboardBody({
+    required this.tabIndex,
+    required this.onSelectTab,
+    required this.breadcrumbSegments,
+  });
 
   @override
   Widget build(BuildContext context) {
     Get.put(PurchaseController());
-    final isMobile = MediaQuery.of(context).size.width < 600;
+    final isMobile = ResponsiveUtils.isMobile(context);
     final isTablet = !isMobile;
+    final bottomReserve =
+        isMobile ? DashboardGlassBottomNav.reservedHeight(context) : 100.0;
 
     return Scaffold(
       backgroundColor: _kPageBg,
+      extendBody: isMobile,
       appBar: _buildAppBar(isMobile),
       drawer: PurchaseDrawer(currentRoute: '/warehouse/purchase'),
-      body: Obx(() {
-        if (controller.isLoading.value && controller.dashboard.value == null) {
-          return _buildShimmer();
-        }
-        return RefreshIndicator(
-          color: kPrimary,
-          backgroundColor: _kCardBg,
-          onRefresh: controller.refreshDashboard,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeroCard(),
-                const SizedBox(height: 14),
-                _buildPeriodChips(),
-                const SizedBox(height: 16),
-                _buildKpiGrid(isTablet),
-                const SizedBox(height: 16),
-                _buildFinancialOverview(),
-                const SizedBox(height: 16),
-                _buildSpendTrendCard(),
-                const SizedBox(height: 16),
-                _buildOrderStatusCard(),
-                const SizedBox(height: 16),
-                _buildPurchaseHealth(),
-                const SizedBox(height: 16),
-                _buildRecentActivity(),
-                const SizedBox(height: 16),
-                _buildQuickActions(),
-              ],
+      body: SizedBox.expand(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (isMobile)
+              _buildMobileTab(isTablet: isTablet, bottomReserve: bottomReserve)
+            else
+              _buildDashboardTab(isTablet: isTablet, bottomReserve: bottomReserve),
+            if (isMobile)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: DashboardGlassBottomNav(
+                items: [
+                  DashboardBottomNavItem(
+                    label: 'Dashboard',
+                    iconAsset: 'assets/icons/dashboard.svg',
+                    fallbackIcon: Icons.dashboard_outlined,
+                    selected: tabIndex == 0,
+                    onTap: () => onSelectTab(0),
+                  ),
+                  DashboardBottomNavItem(
+                    label: 'Orders',
+                    iconAsset: 'assets/icons/purchase.svg',
+                    fallbackIcon: Icons.shopping_bag_outlined,
+                    selected: tabIndex == 1,
+                    onTap: () => onSelectTab(1),
+                  ),
+                  DashboardBottomNavItem(
+                    label: 'Invoices',
+                    iconAsset: 'assets/icons/accounting.svg',
+                    fallbackIcon: Icons.receipt_long_outlined,
+                    selected: tabIndex == 2,
+                    onTap: () => onSelectTab(2),
+                  ),
+                  DashboardBottomNavItem(
+                    label: 'Reports',
+                    iconAsset: 'assets/icons/reports.svg',
+                    fallbackIcon: Icons.assessment_outlined,
+                    selected: tabIndex == 3,
+                    onTap: () => onSelectTab(3),
+                  ),
+                  DashboardBottomNavItem(
+                    label: 'Settings',
+                    iconAsset: 'assets/icons/settings.svg',
+                    fallbackIcon: Icons.settings_outlined,
+                    selected: tabIndex == 4,
+                    onTap: () => onSelectTab(4),
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
-      }),
+          ],
+        ),
+      ),
     );
   }
 
-  // ─── AppBar (identical structure to DashboardScreen) ─────────────────────
+  Widget _buildMobileTab({
+    required bool isTablet,
+    required double bottomReserve,
+  }) {
+    final pad = EdgeInsets.only(bottom: bottomReserve);
+    switch (tabIndex) {
+      case 1:
+        return Padding(
+          padding: pad,
+          child: const PurchaseOrderScreen(embedded: true),
+        );
+      case 2:
+        return Padding(
+          padding: pad,
+          child: const PurchaseInvoiceScreen(embedded: true),
+        );
+      case 3:
+        return Padding(
+          padding: pad,
+          child: const PurchaseReportScreen(embedded: true),
+        );
+      case 4:
+        return Padding(
+          padding: pad,
+          child: ModuleSettingsTab(
+            onLogout: showModuleLogoutDialog,
+            embedded: true,
+          ),
+        );
+      default:
+        return _buildDashboardTab(isTablet: isTablet, bottomReserve: bottomReserve);
+    }
+  }
+
+  Widget _buildDashboardTab({
+    required bool isTablet,
+    required double bottomReserve,
+  }) {
+    return Obx(() {
+      if (controller.isLoading.value && controller.dashboard.value == null) {
+        return _buildShimmer(bottomReserve: bottomReserve);
+      }
+      return RefreshIndicator(
+        color: kPrimary,
+        backgroundColor: _kCardBg,
+        onRefresh: controller.refreshDashboard,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(16, 16, 16, bottomReserve),
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeroCard(),
+              const SizedBox(height: 14),
+              _buildPeriodChips(),
+              const SizedBox(height: 16),
+              _buildKpiGrid(isTablet),
+              const SizedBox(height: 16),
+              _buildFinancialOverview(),
+              const SizedBox(height: 16),
+              _buildSpendTrendCard(),
+              const SizedBox(height: 16),
+              _buildOrderStatusCard(),
+              const SizedBox(height: 16),
+              _buildPurchaseHealth(),
+              const SizedBox(height: 16),
+              _buildRecentActivity(),
+              const SizedBox(height: 16),
+              _buildQuickActions(),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
   PreferredSizeWidget _buildAppBar(bool isMobile) {
     return AppBar(
       backgroundColor: _kAppBarBg,
       elevation: 0,
       scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(0.5),
-        child: Container(height: 0.5, color: _kCardBorder),
-      ),
+      bottom: isMobile
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(44),
+              child: DashboardBreadcrumbBar(segments: breadcrumbSegments),
+            )
+          : PreferredSize(
+              preferredSize: const Size.fromHeight(0.5),
+              child: Container(height: 0.5, color: _kCardBorder),
+            ),
       leading: isMobile
           ? Builder(
               builder: (ctx) => IconButton(
@@ -116,88 +300,27 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
               ),
             )
           : null,
-      title: Obx(() {
-        final logo = controller.businessLogo.value;
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            logo.isNotEmpty
-                ? Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: logo.startsWith('http')
-                          ? Image.network(
-                              logo,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  width: 30,
-                                  height: 30,
-                                  decoration: BoxDecoration(
-                                    color: kPrimary,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Icon(
-                                    Icons.shopping_bag_outlined,
-                                    size: 16,
-                                    color: Colors.white,
-                                  ),
-                                );
-                              },
-                            )
-                          : Image.file(
-                              File(logo),
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  width: 30,
-                                  height: 30,
-                                  decoration: BoxDecoration(
-                                    color: kPrimary,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Icon(
-                                    Icons.shopping_bag_outlined,
-                                    size: 16,
-                                    color: Colors.white,
-                                  ),
-                                );
-                              },
-                            ),
-                    ),
-                  )
-                : Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: kPrimary,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.shopping_bag_outlined,
-                      size: 16,
-                      color: Colors.white,
-                    ),
-                  ),
-            const SizedBox(width: 8),
-            const Text(
-              'Purchase',
-              style: TextStyle(
-                color: _kTextPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.3,
+      titleSpacing: isMobile ? 0 : NavigationToolbar.kMiddleSpacing,
+      title: isMobile
+          ? Align(
+              alignment: Alignment.centerLeft,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    LocationSwitcher(compact: true, showManageLink: false),
+                    FiscalYearSelect(compact: true, showManageLink: false),
+                  ],
+                ),
               ),
-            ),
-          ],
-        );
-      }),
+            )
+          : const SizedBox.shrink(),
       actions: [
+        if (!isMobile) ...[
+          LocationSwitcher(compact: true, showManageLink: true),
+          FiscalYearSelect(compact: true, showManageLink: true),
+        ],
         IconButton(
           icon: const Icon(
             Icons.notifications_none_rounded,
@@ -205,36 +328,39 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
             size: 22,
           ),
           onPressed: () => Get.to(() => const NotificationScreen()),
+          visualDensity: VisualDensity.compact,
+          padding: const EdgeInsets.all(8),
+          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
         ),
         const SizedBox(width: 4),
       ],
     );
   }
 
-  // ─── Shimmer (identical pattern to DashboardScreen) ──────────────────────
-  Widget _buildShimmer() {
+  Widget _buildShimmer({double bottomReserve = 100}) {
     return Shimmer.fromColors(
       baseColor: const Color(0xFFEEEFF4),
       highlightColor: const Color(0xFFF8F9FC),
       period: const Duration(milliseconds: 1200),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+        padding: EdgeInsets.fromLTRB(16, 16, 16, bottomReserve),
         physics: const NeverScrollableScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _shimmerBox(height: 180, radius: 18),
             const SizedBox(height: 14),
-            Row(
-              children: List.generate(
-                4,
-                (i) => Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: _shimmerBox(
-                    height: 34,
-                    width: 80 + (i * 10).toDouble(),
-                    radius: 20,
-                  ),
+            SizedBox(
+              height: 34,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: 4,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (_, i) => _shimmerBox(
+                  height: 34,
+                  width: 72 + (i * 4).toDouble(),
+                  radius: 20,
                 ),
               ),
             ),
@@ -249,7 +375,7 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
                 mainAxisSpacing: 10,
                 childAspectRatio: 1.55,
               ),
-              itemBuilder: (_, __) => _shimmerBox(radius: 14),
+              itemBuilder: (_, _) => _shimmerBox(radius: 14),
             ),
             const SizedBox(height: 16),
             _shimmerBox(height: 200, radius: 16),
@@ -274,13 +400,10 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
     );
   }
 
-  // ─── Hero Card (same structure as DashboardScreen hero) ──────────────────
   Widget _buildHeroCard() {
     return Obx(() {
       final data = controller.dashboard.value;
       final fmt = Get.find<CurrencyController>().formatAmount;
-      final logo = controller.businessLogo.value;
-      final hasLogo = logo.isNotEmpty;
 
       final totalSpend = data?.invoices.totalSpend ?? 0.0;
       final outstanding = data?.invoices.outstanding ?? 0.0;
@@ -298,7 +421,7 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
           border: Border.all(color: _kHeroBorder),
           boxShadow: [
             BoxShadow(
-              color: kPrimary.withOpacity(0.10),
+              color: kPrimary.withValues(alpha: 0.10),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -308,33 +431,7 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
           borderRadius: BorderRadius.circular(17),
           child: Stack(
             children: [
-              if (hasLogo)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: Opacity(
-                      opacity: 0.07,
-                      child: logo.startsWith('http')
-                          ? Image.network(
-                              logo,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                              alignment: Alignment.center,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const SizedBox.shrink(),
-                            )
-                          : Image.file(
-                              File(logo),
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                              alignment: Alignment.center,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const SizedBox.shrink(),
-                            ),
-                    ),
-                  ),
-                ),
+              const DashboardHeroWatermark(),
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -527,7 +624,6 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
   Widget _heroDivider() =>
       Container(width: 0.5, height: 44, color: _kCardBorder);
 
-  // ─── Period Chips (identical to DashboardScreen) ──────────────────────────
   Widget _buildPeriodChips() {
     return Obx(() {
       final selected = controller.selectedTimePeriodLabel.value;
@@ -536,7 +632,7 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           itemCount: PurchaseController.timePeriodLabels.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          separatorBuilder: (_, _) => const SizedBox(width: 8),
           itemBuilder: (_, i) {
             final period = PurchaseController.timePeriodLabels[i];
             final isActive = period == selected;
@@ -566,7 +662,6 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
     });
   }
 
-  // ─── KPI Grid (same card style as DashboardScreen _KpiCard) ──────────────
   Widget _buildKpiGrid(bool isTablet) {
     return Obx(() {
       final data = controller.dashboard.value;
@@ -626,7 +721,6 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
     });
   }
 
-  // ─── Financial Overview bars (same as DashboardScreen _buildFinancialOverview)
   Widget _buildFinancialOverview() {
     return Obx(() {
       final data = controller.dashboard.value;
@@ -791,8 +885,6 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
       ),
     );
   }
-
-  // ─── Spend Trend Chart (wrapped in SectionCard matching dashboard style) ──
   Widget _buildSpendTrendCard() {
     return Obx(() {
       final trend = controller.spendTrend;
@@ -912,7 +1004,7 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
         isStrokeCapRound: true,
         dotData: FlDotData(
           show: true,
-          getDotPainter: (_, __, ___, ____) =>
+          getDotPainter: (_, _, _, _) =>
               FlDotCirclePainter(radius: 3, color: color, strokeWidth: 0),
         ),
         belowBarData: BarAreaData(
@@ -920,7 +1012,7 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [color.withOpacity(0.15), color.withOpacity(0.0)],
+            colors: [color.withValues(alpha: 0.15), color.withValues(alpha: 0.0)],
           ),
         ),
       );
@@ -939,7 +1031,6 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
     );
   }
 
-  // ─── Order Status Pie Chart ───────────────────────────────────────────────
   Widget _buildOrderStatusCard() {
     return Obx(() {
       final statuses = controller.orderStatuses
@@ -1068,7 +1159,6 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
     });
   }
 
-  // ─── Purchase Health (bar rows, same style as _buildKpiSources) ──────────
   Widget _buildPurchaseHealth() {
     return Obx(() {
       final data = controller.dashboard.value;
@@ -1214,7 +1304,6 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
     });
   }
 
-  // ─── Recent Activity (same transaction tile style as DashboardScreen) ─────
   Widget _buildRecentActivity() {
     return Obx(() {
       final shown = controller.activities.length > 5
@@ -1367,8 +1456,6 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
       );
     });
   }
-
-  // ─── Quick Actions (same 4-icon row as DashboardScreen) ──────────────────
   Widget _buildQuickActions() {
     final actions = [
       _QuickAction(
@@ -1379,8 +1466,15 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
         () => Get.toNamed('/purchase-order'),
       ),
       _QuickAction(
-        'Receive',
+        'Products',
         Icons.inventory_2_outlined,
+        _kTeal,
+        _kTealBg,
+        () => Get.toNamed('/purchase/products'),
+      ),
+      _QuickAction(
+        'Receive',
+        Icons.move_to_inbox_outlined,
         _kGreen,
         _kGreenBg,
         () => Get.toNamed('/purchase/goods-receiving'),
@@ -1422,6 +1516,9 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
                   const SizedBox(height: 6),
                   Text(
                     a.label,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -1438,7 +1535,6 @@ class PurchaseDashboardScreen extends GetView<PurchaseController> {
   }
 }
 
-// ─── Section Card wrapper (identical to DashboardScreen) ──────────────────
 class _SectionCard extends StatelessWidget {
   final String title;
   final Widget? trailing;
@@ -1469,7 +1565,7 @@ class _SectionCard extends StatelessWidget {
                   color: _kTextPrimary,
                 ),
               ),
-              if (trailing != null) trailing!,
+              ?trailing,
             ],
           ),
           const SizedBox(height: 14),
@@ -1480,7 +1576,6 @@ class _SectionCard extends StatelessWidget {
   }
 }
 
-// ─── KPI Card (identical to DashboardScreen _KpiCard) ─────────────────────
 class _KpiItem {
   final String label;
   final String value;
@@ -1500,6 +1595,7 @@ class _KpiItem {
     required this.trendUp,
   });
 }
+
 
 class _KpiCard extends StatelessWidget {
   final _KpiItem item;
@@ -1591,7 +1687,6 @@ class _KpiCard extends StatelessWidget {
   }
 }
 
-// ─── Bar Item model ────────────────────────────────────────────────────────
 class _BarItem {
   final String label;
   final String value;
@@ -1610,7 +1705,6 @@ class _BarItem {
   ]);
 }
 
-// ─── Quick Action model ────────────────────────────────────────────────────
 class _QuickAction {
   final String label;
   final IconData icon;

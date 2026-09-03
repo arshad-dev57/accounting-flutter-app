@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:BisonsTechs_app/core/Users/controller/user_management_controller.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:flutter/material.dart';
 class PermissionService extends GetxService {
   static PermissionService get to => Get.find<PermissionService>();
 
@@ -28,7 +28,7 @@ class PermissionService extends GetxService {
         _currentUser = User.fromJson(userMap);
       }
     } catch (e) {
-      print('Error loading current user: $e');
+      debugPrint('Error loading current user: $e');
     } finally {
       isLoading.value = false;
     }

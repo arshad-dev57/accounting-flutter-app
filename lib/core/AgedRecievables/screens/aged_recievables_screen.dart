@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
+import 'package:BisonsTechs_app/widgets/expandable_stat_card.dart';
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
@@ -19,7 +20,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:universal_html/html.dart' as html;
 
 class AgedReceivablesScreen extends StatefulWidget {
   const AgedReceivablesScreen({super.key});
@@ -205,7 +205,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: kPrimary.withOpacity(0.4),
+              color: kPrimary.withValues(alpha: 0.4),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -263,7 +263,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                           '${_customers.length} customers',
                           style: TextStyle(
                             fontSize: 11,
-                            color: Colors.white.withOpacity(0.7),
+                            color: Colors.white.withValues(alpha: 0.7),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -276,13 +276,13 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 18,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -293,13 +293,13 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.download_outlined,
                         size: 18,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -338,7 +338,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: kPrimary.withOpacity(0.08),
+                color: kPrimary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
@@ -370,8 +370,8 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
             amount: _formatAmount(totalCurrent),
             color: kSuccess,
             icon: Icons.access_time,
-            bgColor: kSuccess.withOpacity(0.08),
-            borderColor: kSuccess.withOpacity(0.2),
+            bgColor: kSuccess.withValues(alpha: 0.08),
+            borderColor: kSuccess.withValues(alpha: 0.2),
           ),
           const SizedBox(width: 8),
           _buildProfessionalCard(
@@ -379,8 +379,8 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
             amount: _formatAmount(total1to30),
             color: kWarning,
             icon: Icons.calendar_view_month,
-            bgColor: kWarning.withOpacity(0.08),
-            borderColor: kWarning.withOpacity(0.2),
+            bgColor: kWarning.withValues(alpha: 0.08),
+            borderColor: kWarning.withValues(alpha: 0.2),
           ),
           const SizedBox(width: 8),
           _buildProfessionalCard(
@@ -388,8 +388,8 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
             amount: _formatAmount(totalOver90),
             color: kDanger,
             icon: Icons.warning_amber_rounded,
-            bgColor: kDanger.withOpacity(0.08),
-            borderColor: kDanger.withOpacity(0.2),
+            bgColor: kDanger.withValues(alpha: 0.08),
+            borderColor: kDanger.withValues(alpha: 0.2),
           ),
         ],
       ),
@@ -403,79 +403,14 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
     required IconData icon,
     required Color bgColor,
     required Color borderColor,
-    bool isNumber = false,
   }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: kCardBg,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: borderColor, width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: bgColor,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(icon, size: 14, color: color),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: kSubText,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              amount,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: color,
-                letterSpacing: -0.5,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            Container(
-              height: 2,
-              width: 30,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [color, color.withOpacity(0.3)],
-                ),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return ExpandableStatCard(
+      title: title,
+      amount: amount,
+      color: color,
+      icon: icon,
+      bgColor: bgColor,
+      borderColor: borderColor,
     );
   }
 
@@ -556,7 +491,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
             Icon(
               Icons.people_outline,
               size: 64,
-              color: kSubText.withOpacity(0.5),
+              color: kSubText.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(
@@ -595,13 +530,13 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: customer.totalOutstanding > 0
-              ? kDanger.withOpacity(0.2)
-              : kSuccess.withOpacity(0.2),
+              ? kDanger.withValues(alpha: 0.2)
+              : kSuccess.withValues(alpha: 0.2),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -625,15 +560,15 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            kPrimary.withOpacity(0.15),
-                            kPrimary.withOpacity(0.05),
+                            kPrimary.withValues(alpha: 0.15),
+                            kPrimary.withValues(alpha: 0.05),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: kPrimary.withOpacity(0.2),
+                          color: kPrimary.withValues(alpha: 0.2),
                           width: 1,
                         ),
                       ),
@@ -709,7 +644,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                             vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: kDanger.withOpacity(0.1),
+                            color: kDanger.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
@@ -726,7 +661,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                   ],
                 ),
                 const SizedBox(height: 14),
-                Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
+                Divider(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
                 const SizedBox(height: 12),
                 // Aging Buckets
                 Row(
@@ -759,7 +694,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
+                Divider(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -776,7 +711,9 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                          side: BorderSide(
+                            color: Colors.grey.withValues(alpha: 0.3),
+                          ),
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -802,7 +739,9 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: kPrimary.withOpacity(0.3)),
+                          side: BorderSide(
+                            color: kPrimary.withValues(alpha: 0.3),
+                          ),
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -866,7 +805,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.08),
+                color: color.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -894,7 +833,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
@@ -952,7 +891,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                             width: 52,
                             height: 52,
                             decoration: BoxDecoration(
-                              color: kPrimary.withOpacity(0.12),
+                              color: kPrimary.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Center(
@@ -1003,7 +942,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: kDanger.withOpacity(0.08),
+                              color: kDanger.withValues(alpha: 0.08),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -1045,7 +984,10 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      Divider(
+                        height: 1,
+                        color: Colors.grey.withValues(alpha: 0.12),
+                      ),
                       const SizedBox(height: 16),
 
                       // Aging Breakdown
@@ -1064,7 +1006,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                           color: kBgLight,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: Colors.grey.withOpacity(0.1),
+                            color: Colors.grey.withValues(alpha: 0.1),
                           ),
                         ),
                         child: Column(
@@ -1091,7 +1033,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                             ),
                             Divider(
                               height: 16,
-                              color: Colors.grey.withOpacity(0.15),
+                              color: Colors.grey.withValues(alpha: 0.15),
                             ),
                             _detailRow(
                               'Total Outstanding',
@@ -1103,7 +1045,10 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      Divider(
+                        height: 1,
+                        color: Colors.grey.withValues(alpha: 0.12),
+                      ),
                       const SizedBox(height: 16),
 
                       // Invoices
@@ -1118,7 +1063,10 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                       const SizedBox(height: 12),
                       ...customer.invoices.map((inv) => _buildInvoiceItem(inv)),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      Divider(
+                        height: 1,
+                        color: Colors.grey.withValues(alpha: 0.12),
+                      ),
                       const SizedBox(height: 16),
 
                       // Footer Buttons
@@ -1205,9 +1153,9 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.06),
+          color: color.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.15)),
+          border: Border.all(color: color.withValues(alpha: 0.15)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1228,7 +1176,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
               label,
               style: TextStyle(
                 fontSize: 9,
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withValues(alpha: 0.5),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1288,8 +1236,8 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: isPaid
-              ? kSuccess.withOpacity(0.2)
-              : statusColor.withOpacity(0.2),
+              ? kSuccess.withValues(alpha: 0.2)
+              : statusColor.withValues(alpha: 0.2),
         ),
       ),
       child: Row(
@@ -1326,7 +1274,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.1),
+                color: statusColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -1342,7 +1290,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: kSuccess.withOpacity(0.1),
+                color: kSuccess.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -1520,7 +1468,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
@@ -1543,7 +1491,10 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
             ),
             Text(
               subtitle,
-              style: TextStyle(fontSize: 10, color: color.withOpacity(0.7)),
+              style: TextStyle(
+                fontSize: 10,
+                color: color.withValues(alpha: 0.7),
+              ),
             ),
           ],
         ),
@@ -1604,9 +1555,8 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(24),
-          header: (ctx) => branding.buildHeader(
-            reportTitle: 'Aged Receivables Report',
-          ),
+          header: (ctx) =>
+              branding.buildHeader(reportTitle: 'Aged Receivables Report'),
           footer: (ctx) => branding.buildFooter(ctx),
           build: (ctx) => [
             _pdfSummarySection(branding.accent),
@@ -1622,13 +1572,6 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
           'aged_receivables_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
 
       if (kIsWeb) {
-        final blob = html.Blob([bytes], 'application/pdf');
-        final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
-          ..setAttribute('download', fileName)
-          ..click();
-        html.Url.revokeObjectUrl(url);
-
         if (Get.isDialogOpen ?? false) Get.back();
         AppSnackbar.success(
           kSuccess,
@@ -1674,11 +1617,7 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                 _formatAmount(totalOutstanding),
                 PdfColors.red700,
               ),
-              _pdfSummaryItem(
-                'Current',
-                _formatAmount(totalCurrent),
-                accent,
-              ),
+              _pdfSummaryItem('Current', _formatAmount(totalCurrent), accent),
               _pdfSummaryItem(
                 '1-30 Days',
                 _formatAmount(total1to30),
@@ -1759,7 +1698,10 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                 flex: 3,
                 child: pw.Text(
                   'Customer',
-                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8),
+                  style: pw.TextStyle(
+                    fontWeight: pw.FontWeight.bold,
+                    fontSize: 8,
+                  ),
                 ),
               ),
               pw.Expanded(
@@ -1767,7 +1709,10 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                 child: pw.Text(
                   'Current',
                   textAlign: pw.TextAlign.right,
-                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8),
+                  style: pw.TextStyle(
+                    fontWeight: pw.FontWeight.bold,
+                    fontSize: 8,
+                  ),
                 ),
               ),
               pw.Expanded(
@@ -1775,7 +1720,10 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                 child: pw.Text(
                   '1-30',
                   textAlign: pw.TextAlign.right,
-                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8),
+                  style: pw.TextStyle(
+                    fontWeight: pw.FontWeight.bold,
+                    fontSize: 8,
+                  ),
                 ),
               ),
               pw.Expanded(
@@ -1783,7 +1731,10 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                 child: pw.Text(
                   '31-60',
                   textAlign: pw.TextAlign.right,
-                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8),
+                  style: pw.TextStyle(
+                    fontWeight: pw.FontWeight.bold,
+                    fontSize: 8,
+                  ),
                 ),
               ),
               pw.Expanded(
@@ -1791,7 +1742,10 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                 child: pw.Text(
                   '61-90',
                   textAlign: pw.TextAlign.right,
-                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8),
+                  style: pw.TextStyle(
+                    fontWeight: pw.FontWeight.bold,
+                    fontSize: 8,
+                  ),
                 ),
               ),
               pw.Expanded(
@@ -1799,7 +1753,10 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                 child: pw.Text(
                   '90+',
                   textAlign: pw.TextAlign.right,
-                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8),
+                  style: pw.TextStyle(
+                    fontWeight: pw.FontWeight.bold,
+                    fontSize: 8,
+                  ),
                 ),
               ),
               pw.Expanded(
@@ -1807,7 +1764,10 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
                 child: pw.Text(
                   'Total',
                   textAlign: pw.TextAlign.right,
-                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8),
+                  style: pw.TextStyle(
+                    fontWeight: pw.FontWeight.bold,
+                    fontSize: 8,
+                  ),
                 ),
               ),
             ],
@@ -1825,7 +1785,10 @@ class _AgedReceivablesScreenState extends State<AgedReceivablesScreen> {
               children: [
                 pw.Expanded(
                   flex: 3,
-                  child: pw.Text(c.name, style: const pw.TextStyle(fontSize: 8)),
+                  child: pw.Text(
+                    c.name,
+                    style: const pw.TextStyle(fontSize: 8),
+                  ),
                 ),
                 pw.Expanded(
                   flex: 2,

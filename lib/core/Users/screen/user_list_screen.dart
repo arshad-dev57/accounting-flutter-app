@@ -1,3 +1,4 @@
+import 'package:BisonsTechs_app/core/plans/services/subscription_limit_helper.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/Users/controller/user_management_controller.dart';
 import 'package:BisonsTechs_app/core/Users/screen/enhanced_access_management_screen.dart';
@@ -49,7 +50,10 @@ class _UserListScreenState extends State<UserListScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Get.toNamed('/admin/users/add'),
+        onPressed: () async {
+          final ok = await SubscriptionLimitHelper.guardAddUser(context);
+          if (ok) Get.toNamed('/admin/users/add');
+        },
         backgroundColor: kPrimary,
         icon: const Icon(Icons.person_add_rounded, color: Colors.white),
         label: const Text(
@@ -313,13 +317,15 @@ class _UserListScreenState extends State<UserListScreen> {
         if (_searchQuery.isNotEmpty) {
           final q = _searchQuery.toLowerCase();
           if (!u.fullName.toLowerCase().contains(q) &&
-              !u.email.toLowerCase().contains(q))
+              !u.email.toLowerCase().contains(q)) {
             return false;
+          }
         }
         if (_statusFilter == 'active' && !u.isActive) return false;
         if (_statusFilter == 'inactive' && u.isActive) return false;
-        if (_roleFilter != 'all' && u.role.toLowerCase() != _roleFilter)
+        if (_roleFilter != 'all' && u.role.toLowerCase() != _roleFilter) {
           return false;
+        }
         return true;
       }).toList();
 
@@ -382,18 +388,7 @@ class _UserListScreenState extends State<UserListScreen> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: _controller.refresh,
-            icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Retry'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: kPrimary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          ),
+       
         ],
       ),
     );
@@ -523,7 +518,7 @@ class _UserTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -709,7 +704,7 @@ class _MiniStat extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.07),
+          color: color.withValues(alpha: 0.07),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
@@ -731,7 +726,7 @@ class _MiniStat extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               label,
-              style: TextStyle(fontSize: 11, color: color.withOpacity(0.8)),
+              style: TextStyle(fontSize: 11, color: color.withValues(alpha: 0.8)),
             ),
           ],
         ),

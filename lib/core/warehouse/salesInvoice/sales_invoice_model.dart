@@ -1,6 +1,5 @@
 // lib/core/warehouse/salesInvoice/sales_invoice_model.dart - FIXED
 
-import 'package:intl/intl.dart';
 
 class SalesInvoiceModel {
   final String id;

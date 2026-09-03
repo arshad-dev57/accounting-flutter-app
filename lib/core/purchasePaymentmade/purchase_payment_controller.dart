@@ -75,6 +75,8 @@ class PurchasePaymentController extends GetxController {
   final RxList<PurchaseInvoiceForPayment> selectedInvoices =
       <PurchaseInvoiceForPayment>[].obs;
   final RxBool isLoadingInvoices = false.obs;
+  final RxBool lockSupplier = false.obs;
+  final RxnString lockedInvoiceId = RxnString();
 
   // ─── CONTROLLERS ─────────────────────────────────────────────
   final supplierSearchController = TextEditingController();
@@ -94,7 +96,6 @@ class PurchasePaymentController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    print('🟢 [PurchasePaymentController] onInit called');
     selectedPaymentDate.value = DateTime.now();
     paymentDateController.text = DateFormat(
       'dd MMM yyyy',
@@ -105,9 +106,6 @@ class PurchasePaymentController extends GetxController {
 
   @override
   void onClose() {
-    print(
-      '🟢 [PurchasePaymentController] onClose called - disposing controllers',
-    );
     supplierSearchController.dispose();
     amountController.dispose();
     referenceController.dispose();
@@ -128,23 +126,17 @@ class PurchasePaymentController extends GetxController {
 
   bool get canMakePayment {
     if (selectedSupplier.value == null) {
-      print('❌ [PurchasePaymentController] No supplier selected');
       return false;
     }
     if (selectedInvoices.isEmpty) {
-      print('❌ [PurchasePaymentController] No invoices selected');
       return false;
     }
     if (selectedTotalAmount <= 0) {
-      print('❌ [PurchasePaymentController] Total amount is 0 or negative');
       return false;
     }
 
     // Check bank account for non-cash payments
     if (paymentMethod.value != 'Cash' && selectedBankAccount.value == null) {
-      print(
-        '❌ [PurchasePaymentController] No bank account selected for ${paymentMethod.value}',
-      );
       return false;
     }
 
@@ -156,11 +148,6 @@ class PurchasePaymentController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   Future<void> fetchPayments({bool resetPage = false}) async {
-    print('🔵 [PurchasePaymentController] fetchPayments called');
-    print(
-      '🔵 [PurchasePaymentController] Current Page: ${currentPage.value}, Limit: ${pageLimit.value}',
-    );
-    print('🔵 [PurchasePaymentController] Reset Page: $resetPage');
 
     if (resetPage) currentPage.value = 1;
     try {
@@ -171,43 +158,26 @@ class PurchasePaymentController extends GetxController {
       };
       if (searchFilter.value.isNotEmpty) {
         params['search'] = searchFilter.value;
-        print(
-          '🔵 [PurchasePaymentController] Search filter: ${searchFilter.value}',
-        );
       }
       if (fromDate.value != null) {
         params['fromDate'] = fromDate.value!.toIso8601String().split('T').first;
-        print(
-          '🔵 [PurchasePaymentController] From date: ${params['fromDate']}',
-        );
       }
       if (toDate.value != null) {
         params['toDate'] = toDate.value!.toIso8601String().split('T').first;
-        print('🔵 [PurchasePaymentController] To date: ${params['toDate']}');
       }
 
       final query = params.entries
           .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
           .join('&');
-      print(
-        '🔵 [PurchasePaymentController] API Request: GET /api/purchase/payments?$query',
-      );
 
       final response = await _api.get(
         '/api/purchase/payments?$query',
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [PurchasePaymentController] Response Status: ${response.statusCode}',
-      );
-      print(
-        '🔵 [PurchasePaymentController] Response Success: ${response.success}',
-      );
 
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
-        print('🔵 [PurchasePaymentController] Data length: ${list.length}');
 
         payments.value = list
             .map(
@@ -222,7 +192,6 @@ class PurchasePaymentController extends GetxController {
           stats.value = PurchasePaymentStats.fromJson(
             Map<String, dynamic>.from(response.data['stats']),
           );
-          print('🔵 [PurchasePaymentController] Stats: ${stats.value}');
         }
 
         final pagination = response.data['pagination'] as Map<String, dynamic>?;
@@ -235,40 +204,20 @@ class PurchasePaymentController extends GetxController {
           hasPrev.value = pagination['hasPrev'] == true;
           hasMore.value = pagination['hasNext'] == true;
 
-          print(
-            '✅ [PurchasePaymentController] Payments fetched successfully: ${payments.length} payments',
-          );
-          print(
-            '✅ [PurchasePaymentController] Total records: ${totalRecords.value}, Total pages: ${totalPages.value}',
-          );
         }
       } else {
-        print('❌ [PurchasePaymentController] Failed to fetch payments');
-        print('❌ [PurchasePaymentController] Response data: ${response.data}');
-        Get.snackbar('Error', response.message ?? 'Failed to load payments');
+        Get.snackbar('Error', response.message);
       }
     } catch (e) {
-      print('❌ [PurchasePaymentController] fetchPayments error: $e');
-      print('❌ [PurchasePaymentController] Stack trace: ${StackTrace.current}');
       Get.snackbar('Error', e.toString());
     } finally {
       isLoading.value = false;
-      print(
-        '🔵 [PurchasePaymentController] fetchPayments completed, isLoading: ${isLoading.value}',
-      );
     }
   }
 
   // ─── LOCAL FILTERS ──────────────────────────────────────────
 
   void applyLocalFilters() {
-    print('🟣 [PurchasePaymentController] applyLocalFilters called');
-    print(
-      '🟣 [PurchasePaymentController] Selected filter: ${selectedFilter.value}',
-    );
-    print(
-      '🟣 [PurchasePaymentController] Search filter: ${searchFilter.value}',
-    );
 
     final list = payments.toList();
     final filtered = list.where((item) {
@@ -289,26 +238,20 @@ class PurchasePaymentController extends GetxController {
       return true;
     }).toList();
 
-    print(
-      '🟣 [PurchasePaymentController] Filtered payments: ${filtered.length} out of ${list.length}',
-    );
     filteredPayments.value = filtered;
   }
 
   void filterPayments(String filter) {
-    print('🟣 [PurchasePaymentController] filterPayments called with: $filter');
     selectedFilter.value = filter;
     applyLocalFilters();
   }
 
   void searchPayments(String query) {
-    print('🟣 [PurchasePaymentController] searchPayments called with: $query');
     searchFilter.value = query;
     applyLocalFilters();
   }
 
   void clearSearch() {
-    print('🟣 [PurchasePaymentController] clearSearch called');
     searchFilter.value = '';
     applyLocalFilters();
     fetchPayments(resetPage: true);
@@ -317,22 +260,14 @@ class PurchasePaymentController extends GetxController {
   // ─── LOAD MORE ────────────────────────────────────────────
 
   Future<void> fetchMorePayments() async {
-    print('🟡 [PurchasePaymentController] fetchMorePayments called');
-    print(
-      '🟡 [PurchasePaymentController] hasMore: ${hasMore.value}, isLoadingMore: ${isLoadingMore.value}',
-    );
 
     if (!hasMore.value || isLoadingMore.value) {
-      print('🟡 [PurchasePaymentController] Skipping load more');
       return;
     }
 
     try {
       isLoadingMore.value = true;
       currentPage.value += 1;
-      print(
-        '🟡 [PurchasePaymentController] Loading page: ${currentPage.value}',
-      );
 
       final params = <String, String>{
         'page': currentPage.value.toString(),
@@ -343,9 +278,6 @@ class PurchasePaymentController extends GetxController {
       final query = params.entries
           .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
           .join('&');
-      print(
-        '🟡 [PurchasePaymentController] API Request: GET /api/purchase/payments?$query',
-      );
 
       final response = await _api.get(
         '/api/purchase/payments?$query',
@@ -361,9 +293,6 @@ class PurchasePaymentController extends GetxController {
             )
             .toList();
 
-        print(
-          '🟡 [PurchasePaymentController] Loaded ${newPayments.length} more payments',
-        );
         payments.addAll(newPayments);
         applyLocalFilters();
 
@@ -373,29 +302,22 @@ class PurchasePaymentController extends GetxController {
           totalRecords.value = (pagination['total'] as num?)?.toInt() ?? 0;
           totalPages.value = (pagination['pages'] as num?)?.toInt() ?? 1;
         }
-        print(
-          '🟡 [PurchasePaymentController] Total payments now: ${payments.length}, hasMore: ${hasMore.value}',
-        );
       } else {
-        print('❌ [PurchasePaymentController] Failed to load more payments');
       }
     } catch (e) {
-      print('❌ [PurchasePaymentController] fetchMorePayments error: $e');
+      debugPrint('Error: $e');
     } finally {
       isLoadingMore.value = false;
-      print('🟡 [PurchasePaymentController] fetchMorePayments completed');
     }
   }
 
   // ─── REFRESH ──────────────────────────────────────────────────
 
   Future<void> refreshPayments() {
-    print('🟢 [PurchasePaymentController] refreshPayments called');
     return fetchPayments(resetPage: true);
   }
 
   void applyFilters() {
-    print('🟣 [PurchasePaymentController] applyFilters called');
     fetchPayments(resetPage: true);
   }
 
@@ -404,25 +326,35 @@ class PurchasePaymentController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   void openCreateForm() {
-    print('🟢 [PurchasePaymentController] openCreateForm called');
     _resetCreateForm();
     showCreateForm.value = true;
-    print(
-      '🟢 [PurchasePaymentController] showCreateForm: ${showCreateForm.value}',
-    );
   }
 
   void closeCreateForm() {
-    print('🟢 [PurchasePaymentController] closeCreateForm called');
     showCreateForm.value = false;
     _resetCreateForm();
-    print(
-      '🟢 [PurchasePaymentController] showCreateForm: ${showCreateForm.value}',
+  }
+
+  /// Prefill the purchase-payment form for one Purchase Invoice (AP Pay).
+  Future<void> prepareForInvoicePayment({
+    required String supplierId,
+    required String supplierName,
+    required String invoiceId,
+  }) async {
+    _resetCreateForm();
+    lockSupplier.value = true;
+    lockedInvoiceId.value = invoiceId;
+    selectedSupplier.value = {'id': supplierId, 'name': supplierName};
+    supplierSearchController.text = supplierName;
+    showCreateForm.value = true;
+    await fetchBankAccounts();
+    await fetchSupplierInvoices(
+      supplierId,
+      selectOnlyInvoiceId: invoiceId,
     );
   }
 
   void _resetCreateForm() {
-    print('🟢 [PurchasePaymentController] _resetCreateForm called');
     selectedSupplier.value = null;
     supplierSearchResults.clear();
     supplierSearchController.clear();
@@ -433,22 +365,19 @@ class PurchasePaymentController extends GetxController {
     selectedBankAccount.value = null;
     availableInvoices.clear();
     selectedInvoices.clear();
+    lockSupplier.value = false;
+    lockedInvoiceId.value = null;
     selectedPaymentDate.value = DateTime.now();
     paymentDateController.text = DateFormat(
       'dd MMM yyyy',
     ).format(selectedPaymentDate.value!);
-    print('✅ [PurchasePaymentController] Create form reset complete');
   }
 
   // ─── SUPPLIER SEARCH ──────────────────────────────────────────
 
   Future<void> searchSuppliers(String query) async {
-    print(
-      '🔵 [PurchasePaymentController] searchSuppliers called with: "$query"',
-    );
 
     if (query.trim().length < 2) {
-      print('🔵 [PurchasePaymentController] Query too short, clearing results');
       supplierSearchResults.clear();
       return;
     }
@@ -457,9 +386,6 @@ class PurchasePaymentController extends GetxController {
       isSearchingSuppliers.value = true;
       final encoded = Uri.encodeComponent(query.trim());
 
-      print(
-        '🔵 [PurchasePaymentController] API Request: GET /api/warehouse/supplier?search=$encoded&limit=10',
-      );
 
       final response = await _api.get(
         '/api/warehouse/supplier?search=$encoded&limit=10',
@@ -471,27 +397,17 @@ class PurchasePaymentController extends GetxController {
         supplierSearchResults.value = list
             .map((e) => Map<String, dynamic>.from(e))
             .toList();
-        print(
-          '🔵 [PurchasePaymentController] Found ${supplierSearchResults.length} suppliers for query: $query',
-        );
       } else {
-        print('❌ [PurchasePaymentController] No suppliers found');
         supplierSearchResults.clear();
       }
     } catch (e) {
-      print('❌ [PurchasePaymentController] searchSuppliers error: $e');
       supplierSearchResults.clear();
     } finally {
       isSearchingSuppliers.value = false;
-      print('🔵 [PurchasePaymentController] searchSuppliers completed');
     }
   }
 
   void selectSupplier(Map<String, dynamic> supplier) {
-    print('🔵 [PurchasePaymentController] selectSupplier called');
-    print(
-      '🔵 [PurchasePaymentController] Selected supplier: ${supplier['name']}',
-    );
 
     selectedSupplier.value = supplier;
     supplierSearchResults.clear();
@@ -503,16 +419,13 @@ class PurchasePaymentController extends GetxController {
 
   // ─── SUPPLIER INVOICES ──────────────────────────────────────
 
-  Future<void> fetchSupplierInvoices(String supplierId) async {
-    print(
-      '🔵 [PurchasePaymentController] fetchSupplierInvoices called for supplier: $supplierId',
-    );
+  Future<void> fetchSupplierInvoices(
+    String supplierId, {
+    String? selectOnlyInvoiceId,
+  }) async {
 
     try {
       isLoadingInvoices.value = true;
-      print(
-        '🔵 [PurchasePaymentController] API Request: GET /api/purchase/payments/supplier/$supplierId/invoices',
-      );
 
       final response = await _api.get(
         '/api/purchase/payments/supplier/$supplierId/invoices',
@@ -521,7 +434,7 @@ class PurchasePaymentController extends GetxController {
 
       if (response.success && response.data != null) {
         final list = response.data['data'] as List? ?? [];
-        availableInvoices.value = list
+        var invoices = list
             .map(
               (e) => PurchaseInvoiceForPayment.fromJson(
                 Map<String, dynamic>.from(e),
@@ -530,7 +443,14 @@ class PurchasePaymentController extends GetxController {
             .where((invoice) => invoice.outstanding > 0)
             .toList();
 
-        // Auto-select only payable (Posted / Partially Paid) invoices
+        if (selectOnlyInvoiceId != null) {
+          invoices = invoices
+              .where((invoice) => invoice.id == selectOnlyInvoiceId)
+              .toList();
+        }
+
+        availableInvoices.value = invoices;
+
         selectedInvoices.clear();
         for (var invoice in availableInvoices) {
           if (!invoice.payable) continue;
@@ -539,16 +459,18 @@ class PurchasePaymentController extends GetxController {
           selectedInvoices.add(invoice);
         }
 
-        // Update amount
         amountController.text = selectedTotalAmount.toStringAsFixed(2);
 
-        final draftCount =
-            availableInvoices.where((i) => i.isDraft).length;
-        print(
-          '🔵 [PurchasePaymentController] Found ${availableInvoices.length} invoices (${selectedInvoices.length} payable, $draftCount draft)',
-        );
+       
 
-        if (availableInvoices.isNotEmpty && selectedInvoices.isEmpty) {
+        if (selectOnlyInvoiceId != null && selectedInvoices.isEmpty) {
+          Get.snackbar(
+            'Not Payable',
+            'This purchase invoice is not posted or has no outstanding amount.',
+            snackPosition: SnackPosition.BOTTOM,
+            duration: const Duration(seconds: 3),
+          );
+        } else if (availableInvoices.isNotEmpty && selectedInvoices.isEmpty) {
           Get.snackbar(
             'No Payable Invoices',
             'No unpaid posted invoices found for this supplier.',
@@ -557,24 +479,20 @@ class PurchasePaymentController extends GetxController {
           );
         }
       } else {
-        print('❌ [PurchasePaymentController] No invoices found');
         availableInvoices.clear();
         selectedInvoices.clear();
       }
     } catch (e) {
-      print('❌ [PurchasePaymentController] fetchSupplierInvoices error: $e');
       availableInvoices.clear();
       selectedInvoices.clear();
     } finally {
       isLoadingInvoices.value = false;
-      print('🔵 [PurchasePaymentController] fetchSupplierInvoices completed');
     }
   }
 
   // ─── INVOICE SELECTION ──────────────────────────────────────
 
   void toggleInvoiceSelection(PurchaseInvoiceForPayment invoice) {
-    print('🔵 [PurchasePaymentController] toggleInvoiceSelection called');
 
     if (!invoice.payable) {
       Get.snackbar(
@@ -598,13 +516,9 @@ class PurchasePaymentController extends GetxController {
     // Update amount
     amountController.text = selectedTotalAmount.toStringAsFixed(2);
 
-    print(
-      '🔵 [PurchasePaymentController] Selected invoices: ${selectedInvoices.length}',
-    );
   }
 
   void updateInvoiceAmount(PurchaseInvoiceForPayment invoice, double amount) {
-    print('🔵 [PurchasePaymentController] updateInvoiceAmount called');
 
     if (amount > invoice.outstanding) {
       amount = invoice.outstanding;
@@ -622,7 +536,6 @@ class PurchasePaymentController extends GetxController {
   // ─── BANK ACCOUNTS ──────────────────────────────────────────
 
   Future<void> fetchBankAccounts() async {
-    print('🔵 [PurchasePaymentController] fetchBankAccounts called');
 
     try {
       final response = await _api.get('/api/bank-accounts', requiresAuth: true);
@@ -632,21 +545,14 @@ class PurchasePaymentController extends GetxController {
         bankAccounts.value = data
             .map((e) => Map<String, dynamic>.from(e))
             .toList();
-        print(
-          '🔵 [PurchasePaymentController] Found ${bankAccounts.length} bank accounts',
-        );
 
         // Log the first account for debugging
         if (bankAccounts.isNotEmpty) {
-          print(
-            '🔵 [PurchasePaymentController] First account: ${bankAccounts.first['accountName']} (ID: ${bankAccounts.first['id']})',
-          );
         }
       } else {
-        print('❌ [PurchasePaymentController] Failed to fetch bank accounts');
       }
     } catch (e) {
-      print('❌ [PurchasePaymentController] fetchBankAccounts error: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -671,24 +577,20 @@ class PurchasePaymentController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   Future<bool> makePayment() async {
-    print('🔵 [PurchasePaymentController] makePayment called');
 
     final supplier = selectedSupplier.value;
     if (supplier == null) {
-      print('❌ [PurchasePaymentController] No supplier selected');
       Get.snackbar('Validation', 'Please select a supplier');
       return false;
     }
 
     if (selectedInvoices.isEmpty) {
-      print('❌ [PurchasePaymentController] No invoices selected');
       Get.snackbar('Validation', 'Please select at least one invoice');
       return false;
     }
 
     final amount = double.tryParse(amountController.text.trim());
     if (amount == null || amount <= 0) {
-      print('❌ [PurchasePaymentController] Invalid amount');
       Get.snackbar('Validation', 'Enter a valid payment amount');
       return false;
     }
@@ -701,9 +603,6 @@ class PurchasePaymentController extends GetxController {
 
     if (isBankTransfer) {
       if (selectedBankAccount.value == null) {
-        print(
-          '❌ [PurchasePaymentController] No bank account selected for ${paymentMethod.value}',
-        );
         Get.snackbar(
           'Validation',
           'Please select a bank account for ${paymentMethod.value}',
@@ -713,20 +612,14 @@ class PurchasePaymentController extends GetxController {
 
       final bankId = selectedBankAccount.value?['id'];
       if (bankId == null || bankId.toString().isEmpty) {
-        print('❌ [PurchasePaymentController] Bank account ID is null or empty');
         Get.snackbar('Validation', 'Invalid bank account selected');
         return false;
       }
 
-      print('🔵 [PurchasePaymentController] Selected Bank Account ID: $bankId');
-      print(
-        '🔵 [PurchasePaymentController] Selected Bank Account Name: ${selectedBankAccount.value?['accountName']}',
-      );
     }
 
     final paymentDate = selectedPaymentDate.value;
     if (paymentDate == null) {
-      print('❌ [PurchasePaymentController] No payment date selected');
       Get.snackbar('Validation', 'Please select a payment date');
       return false;
     }
@@ -764,19 +657,6 @@ class PurchasePaymentController extends GetxController {
             'Bank Account';
       }
 
-      print('🔵 [PurchasePaymentController] Submitting payment payload');
-      print(
-        '🔵 [PurchasePaymentController] Supplier: ${supplier['name']}, Amount: $amount, Invoices: ${invoicePayments.length}',
-      );
-      print(
-        '🔵 [PurchasePaymentController] Payment Method: ${paymentMethod.value}',
-      );
-      print(
-        '🔵 [PurchasePaymentController] Bank Account ID: ${payload['bankAccountId'] ?? 'N/A'}',
-      );
-      print(
-        '🔵 [PurchasePaymentController] Bank Account Name: ${payload['bankAccountName'] ?? 'N/A'}',
-      );
 
       final response = await _api.post(
         '/api/purchase/payments/make',
@@ -784,31 +664,17 @@ class PurchasePaymentController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [PurchasePaymentController] Response Status: ${response.statusCode}',
-      );
-      print(
-        '🔵 [PurchasePaymentController] Response Success: ${response.success}',
-      );
-      print(
-        '🔵 [PurchasePaymentController] Response Message: ${response.message}',
-      );
 
       if (response.success) {
-        print('✅ [PurchasePaymentController] Payment made successfully!');
         Get.snackbar('Success', 'Payment made successfully');
         closeCreateForm();
         await fetchPayments(resetPage: true);
         return true;
       }
 
-      print(
-        '❌ [PurchasePaymentController] Failed to make payment: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to make payment');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [PurchasePaymentController] makePayment error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -821,15 +687,10 @@ class PurchasePaymentController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   void selectPayment(PurchasePaymentModel payment) {
-    print(
-      '🔵 [PurchasePaymentController] selectPayment called for: ${payment.paymentNumber}',
-    );
     selectedPayment.value = payment;
   }
 
   Future<bool> cancelPayment(String id, {String? reason}) async {
-    print('🟣 [PurchasePaymentController] cancelPayment called for ID: $id');
-    print('🟣 [PurchasePaymentController] Reason: $reason');
 
     try {
       isSubmitting.value = true;
@@ -839,27 +700,16 @@ class PurchasePaymentController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🟣 [PurchasePaymentController] Response Status: ${response.statusCode}',
-      );
-      print(
-        '🟣 [PurchasePaymentController] Response Success: ${response.success}',
-      );
 
       if (response.success) {
-        print('✅ [PurchasePaymentController] Payment cancelled successfully');
         Get.snackbar('Success', 'Payment cancelled successfully');
         await fetchPayments();
         return true;
       }
 
-      print(
-        '❌ [PurchasePaymentController] Failed to cancel payment: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to cancel payment');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [PurchasePaymentController] cancelPayment error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -868,7 +718,6 @@ class PurchasePaymentController extends GetxController {
   }
 
   Future<bool> deletePayment(String id) async {
-    print('🔵 [PurchasePaymentController] deletePayment called for ID: $id');
 
     try {
       isSubmitting.value = true;
@@ -877,27 +726,16 @@ class PurchasePaymentController extends GetxController {
         requiresAuth: true,
       );
 
-      print(
-        '🔵 [PurchasePaymentController] Response Status: ${response.statusCode}',
-      );
-      print(
-        '🔵 [PurchasePaymentController] Response Success: ${response.success}',
-      );
 
       if (response.success) {
-        print('✅ [PurchasePaymentController] Payment deleted successfully');
         Get.snackbar('Success', 'Payment deleted successfully');
         await fetchPayments(resetPage: true);
         return true;
       }
 
-      print(
-        '❌ [PurchasePaymentController] Failed to delete payment: ${response.message}',
-      );
-      Get.snackbar('Error', response.message ?? 'Failed to delete payment');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [PurchasePaymentController] deletePayment error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {

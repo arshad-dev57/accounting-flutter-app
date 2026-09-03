@@ -57,7 +57,7 @@ class CategoriesScreen extends StatelessWidget {
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(9),
                     ),
                     child: const Icon(
@@ -85,7 +85,7 @@ class CategoriesScreen extends StatelessWidget {
                             '${controller.totalCategories.value} categories • ${controller.totalSubCategories.value} sub-categories',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -123,13 +123,13 @@ class CategoriesScreen extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(9),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 17,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -147,7 +147,7 @@ class CategoriesScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
+                      color: Colors.black.withValues(alpha: 0.06),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -162,7 +162,7 @@ class CategoriesScreen extends StatelessWidget {
               margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.18),
+                color: Colors.white.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: TabBar(
@@ -176,13 +176,13 @@ class CategoriesScreen extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                 ),
                 labelColor: kPrimary,
-                unselectedLabelColor: Colors.white.withOpacity(0.7),
+                unselectedLabelColor: Colors.white.withValues(alpha: 0.7),
                 indicator: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(9),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
+                      color: Colors.black.withValues(alpha: 0.08),
                       blurRadius: 4,
                       offset: const Offset(0, 1),
                     ),
@@ -206,7 +206,7 @@ class CategoriesScreen extends StatelessWidget {
                               vertical: 1,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.blue.withOpacity(0.15),
+                              color: Colors.blue.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
@@ -237,7 +237,7 @@ class CategoriesScreen extends StatelessWidget {
                               vertical: 1,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.purple.withOpacity(0.15),
+                              color: Colors.purple.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
@@ -278,7 +278,7 @@ class CategoriesScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -589,10 +589,10 @@ class _CategoryCard extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.grey.withOpacity(0.1)),
+              border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
+                  color: Colors.black.withValues(alpha: 0.03),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -605,7 +605,7 @@ class _CategoryCard extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(Icons.folder, color: color, size: 22),
@@ -636,7 +636,7 @@ class _CategoryCard extends StatelessWidget {
                               (cat['description'] != null &&
                                   cat['description'] != '')
                               ? kSubText
-                              : kSubText.withOpacity(0.5),
+                              : kSubText.withValues(alpha: 0.5),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -648,14 +648,14 @@ class _CategoryCard extends StatelessWidget {
                             icon: Icons.account_tree_outlined,
                             label: '$subCount sub',
                             color: Colors.blue.shade700,
-                            bg: Colors.blue.withOpacity(0.08),
+                            bg: Colors.blue.withValues(alpha: 0.08),
                           ),
                           const SizedBox(width: 6),
                           _badgeChip(
                             icon: Icons.inventory_2_outlined,
                             label: '$productCount items',
                             color: color,
-                            bg: color.withOpacity(0.08),
+                            bg: color.withValues(alpha: 0.08),
                           ),
                         ],
                       ),
@@ -741,10 +741,10 @@ class _SubCategoryCard extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.purple.withOpacity(0.1)),
+              border: Border.all(color: Colors.purple.withValues(alpha: 0.1)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
+                  color: Colors.black.withValues(alpha: 0.03),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -757,7 +757,7 @@ class _SubCategoryCard extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -792,7 +792,7 @@ class _SubCategoryCard extends StatelessWidget {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.purple.withOpacity(0.08),
+                                color: Colors.purple.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Row(
@@ -828,7 +828,7 @@ class _SubCategoryCard extends StatelessWidget {
                               (cat['description'] != null &&
                                   cat['description'] != '')
                               ? kSubText
-                              : kSubText.withOpacity(0.5),
+                              : kSubText.withValues(alpha: 0.5),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -841,7 +841,7 @@ class _SubCategoryCard extends StatelessWidget {
                               icon: Icons.account_tree_outlined,
                               label: '$subCount nested',
                               color: Colors.teal.shade700,
-                              bg: Colors.teal.withOpacity(0.08),
+                              bg: Colors.teal.withValues(alpha: 0.08),
                             ),
                             const SizedBox(width: 6),
                           ],
@@ -849,7 +849,7 @@ class _SubCategoryCard extends StatelessWidget {
                             icon: Icons.inventory_2_outlined,
                             label: '$productCount items',
                             color: color,
-                            bg: color.withOpacity(0.08),
+                            bg: color.withValues(alpha: 0.08),
                           ),
                         ],
                       ),
@@ -919,10 +919,10 @@ Widget _buildEmptyState(
           width: 72,
           height: 72,
           decoration: BoxDecoration(
-            color: kPrimary.withOpacity(0.08),
+            color: kPrimary.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Icon(icon, size: 36, color: kPrimary.withOpacity(0.5)),
+          child: Icon(icon, size: 36, color: kPrimary.withValues(alpha: 0.5)),
         ),
         const SizedBox(height: 16),
         Text(
@@ -1047,7 +1047,7 @@ void _showAddCategoryDialog(
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: kPrimary.withOpacity(0.1),
+              color: kPrimary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(Icons.folder, color: kPrimary, size: 20),
@@ -1104,8 +1104,10 @@ void _showAddCategoryDialog(
                       'description': descCtrl.text.trim(),
                     });
                     if (ok) {
-                      Navigator.pop(context);
-                      _snackSuccess('Category created successfully');
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        _snackSuccess('Category created successfully');
+                      }
                     } else {
                       _snackError('Failed to create category');
                     }
@@ -1156,7 +1158,7 @@ void _showAddSubCategoryDialog(
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.purple.withOpacity(0.1),
+                color: Colors.purple.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -1189,7 +1191,7 @@ void _showAddSubCategoryDialog(
                 decoration: BoxDecoration(
                   color: kCardBg,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                  border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 child: DropdownButtonHideUnderline(
@@ -1270,8 +1272,10 @@ void _showAddSubCategoryDialog(
                         'parentId': selectedParentId,
                       });
                       if (ok) {
-                        Navigator.pop(context);
-                        _snackSuccess('Sub-category created successfully');
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          _snackSuccess('Sub-category created successfully');
+                        }
                       } else {
                         _snackError('Failed to create sub-category');
                       }
@@ -1342,7 +1346,7 @@ void _showCategoryDetails(
                           width: 52,
                           height: 52,
                           decoration: BoxDecoration(
-                            color: color.withOpacity(0.12),
+                            color: color.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: Icon(Icons.folder, color: color, size: 26),
@@ -1374,7 +1378,7 @@ void _showCategoryDetails(
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: color.withOpacity(0.1),
+                            color: color.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
@@ -1389,7 +1393,7 @@ void _showCategoryDetails(
                       ],
                     ),
                     const SizedBox(height: 16),
-                    Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                    Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
                     const SizedBox(height: 16),
                     _detailRow(
                       'Description',
@@ -1514,7 +1518,7 @@ void _showSubCategoryDetails(
                           width: 52,
                           height: 52,
                           decoration: BoxDecoration(
-                            color: color.withOpacity(0.12),
+                            color: color.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: Icon(
@@ -1563,7 +1567,7 @@ void _showSubCategoryDetails(
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: color.withOpacity(0.1),
+                            color: color.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
@@ -1578,7 +1582,7 @@ void _showSubCategoryDetails(
                       ],
                     ),
                     const SizedBox(height: 16),
-                    Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                    Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
                     const SizedBox(height: 16),
                     _detailRow(
                       'Description',
@@ -1674,7 +1678,7 @@ void _showEditCategoryDialog(
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: kPrimary.withOpacity(0.1),
+              color: kPrimary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(Icons.edit_outlined, color: kPrimary, size: 20),
@@ -1732,8 +1736,10 @@ void _showEditCategoryDialog(
                           'description': descCtrl.text.trim(),
                         });
                     if (ok) {
-                      Navigator.pop(context);
-                      _snackSuccess('Category updated successfully');
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        _snackSuccess('Category updated successfully');
+                      }
                     } else {
                       _snackError('Failed to update category');
                     }
@@ -1799,9 +1805,9 @@ void _showDeleteDialog(
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: kDanger.withOpacity(0.08),
+                color: kDanger.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: kDanger.withOpacity(0.2)),
+                border: Border.all(color: kDanger.withValues(alpha: 0.2)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1932,11 +1938,11 @@ Widget _textField({
       hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 13),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: Colors.grey.withOpacity(0.3)),
+        borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: BorderSide(color: Colors.grey.withOpacity(0.3)),
+        borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),

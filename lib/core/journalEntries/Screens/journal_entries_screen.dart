@@ -1,6 +1,7 @@
 // screens/journal_entries_screen.dart
 
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/widgets/expandable_stat_card.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/journalEntries/Controllers/journal_entries_exportservice.dart';
@@ -14,18 +15,17 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 class JournalEntriesScreen extends StatelessWidget {
   const JournalEntriesScreen({super.key});
 
-  static final GlobalKey _repaintKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(JournalEntryController());
-    final _searchCtrl = TextEditingController();
+      final searchCtrl = TextEditingController();
 
     return Scaffold(
       backgroundColor: kBgLight,
       body: Column(
         children: [
-          _buildTopHeader(context, controller, _searchCtrl),
+          _buildTopHeader(context, controller, searchCtrl),
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value &&
@@ -55,7 +55,7 @@ class JournalEntriesScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: kPrimary.withOpacity(0.4),
+              color: kPrimary.withValues(alpha: 0.4),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -76,14 +76,7 @@ class JournalEntriesScreen extends StatelessWidget {
     JournalEntryController controller,
     TextEditingController searchCtrl,
   ) {
-    void showDateRangePicker_() async {
-      final picked = await showDateRangePicker(
-        context: context,
-        firstDate: DateTime(2020),
-        lastDate: DateTime.now(),
-      );
-      if (picked != null) controller.setDateRange(picked);
-    }
+
 
     return Container(
       color: kPrimary,
@@ -119,7 +112,7 @@ class JournalEntriesScreen extends StatelessWidget {
                             '${controller.totalEntries.value} entries',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -133,13 +126,13 @@ class JournalEntriesScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 18,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -150,13 +143,13 @@ class JournalEntriesScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.download_outlined,
                         size: 18,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -173,7 +166,7 @@ class JournalEntriesScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
+                      color: Colors.black.withValues(alpha: 0.06),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -239,12 +232,12 @@ class JournalEntriesScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? Colors.white
-                                : Colors.white.withOpacity(0.18),
+                                : Colors.white.withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color: isSelected
                                   ? Colors.white
-                                  : Colors.white.withOpacity(0.4),
+                                  : Colors.white.withValues(alpha: 0.4),
                             ),
                           ),
                           child: Text(
@@ -274,9 +267,9 @@ class JournalEntriesScreen extends StatelessWidget {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: kPrimary.withOpacity(0.15),
+                      color: kPrimary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.white.withOpacity(0.25)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -368,49 +361,57 @@ class JournalEntriesScreen extends StatelessWidget {
     Color color,
     IconData icon,
   ) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: kCardBg,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 14, color: color),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: kSubText,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            amount,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              color: color,
+    return ExpandableStatWrap(
+      title: title,
+      value: amount,
+      color: color,
+      icon: icon,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(12, 12, 22, 12),
+        decoration: BoxDecoration(
+          color: kCardBg,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 5,
+              offset: const Offset(0, 2),
             ),
-          ),
-        ],
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 14, color: color),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: kSubText,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              amount,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: color,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -433,7 +434,7 @@ class JournalEntriesScreen extends StatelessWidget {
               Icon(
                 Icons.book_outlined,
                 size: 64,
-                color: kSubText.withOpacity(0.5),
+                color: kSubText.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               Text(
@@ -510,7 +511,7 @@ class JournalEntriesScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -533,7 +534,7 @@ class JournalEntriesScreen extends StatelessWidget {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.12),
+                        color: statusColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(statusIcon, color: statusColor, size: 22),
@@ -565,7 +566,7 @@ class JournalEntriesScreen extends StatelessWidget {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: statusColor.withOpacity(0.08),
+                                  color: statusColor.withValues(alpha: 0.08),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
@@ -614,7 +615,7 @@ class JournalEntriesScreen extends StatelessWidget {
                     _entryLinesPreview(entry),
                     style: TextStyle(
                       fontSize: 10,
-                      color: kSubText.withOpacity(0.8),
+                      color: kSubText.withValues(alpha: 0.8),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -634,8 +635,7 @@ class JournalEntriesScreen extends StatelessWidget {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: (entry.isBalanced ? kSuccess : kWarning)
-                            .withOpacity(0.1),
+                        color: (entry.isBalanced ? kSuccess : kWarning).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -681,7 +681,7 @@ class JournalEntriesScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
@@ -734,7 +734,7 @@ class JournalEntriesScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -794,7 +794,7 @@ class JournalEntriesScreen extends StatelessWidget {
                             width: 52,
                             height: 52,
                             decoration: BoxDecoration(
-                              color: statusColor.withOpacity(0.12),
+                              color: statusColor.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Icon(
@@ -831,7 +831,7 @@ class JournalEntriesScreen extends StatelessWidget {
                                         vertical: 2,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: statusColor.withOpacity(0.08),
+                                        color: statusColor.withValues(alpha: 0.08),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
@@ -885,7 +885,7 @@ class JournalEntriesScreen extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
                       const SizedBox(height: 16),
                       _detailRow('Description', entry.description),
                       _detailRow(
@@ -894,7 +894,7 @@ class JournalEntriesScreen extends StatelessWidget {
                       ),
                       _detailRow('Created By', entry.createdBy),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
                       const SizedBox(height: 16),
                       Text(
                         'Journal Lines',
@@ -1003,7 +1003,6 @@ class JournalEntriesScreen extends StatelessWidget {
                               child: ElevatedButton(
                                 onPressed: () {
                                   Navigator.pop(context);
-                                  // TODO: Add edit functionality
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: kPrimary,
@@ -1047,9 +1046,9 @@ class JournalEntriesScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.06),
+          color: color.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.15)),
+          border: Border.all(color: color.withValues(alpha: 0.15)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1070,7 +1069,7 @@ class JournalEntriesScreen extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 9,
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withValues(alpha: 0.5),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -1112,111 +1111,9 @@ class JournalEntriesScreen extends StatelessWidget {
   // SEARCH DIALOG
   // ═══════════════════════════════════════════════════════════════
 
-  void _showSearchDialog(
-    BuildContext context,
-    JournalEntryController controller,
-  ) {
-    final searchCtrl = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        title: const Text(
-          'Search Entries',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Colors.black,
-          ),
-        ),
-        content: TextField(
-          controller: searchCtrl,
-          autofocus: true,
-          style: const TextStyle(color: Colors.black),
-          decoration: const InputDecoration(
-            hintText: 'Entry ID, description, or reference',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.search),
-            isDense: true,
-          ),
-          onSubmitted: (v) {
-            controller.searchEntries(v);
-            Navigator.pop(context);
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Colors.black)),
-          ),
-          TextButton(
-            onPressed: () {
-              controller.searchEntries(searchCtrl.text);
-              Navigator.pop(context);
-            },
-            child: const Text('Search', style: TextStyle(color: Colors.black)),
-          ),
-        ],
-      ),
-    );
-  }
-
   // ═══════════════════════════════════════════════════════════════
   // FILTER DIALOG
   // ═══════════════════════════════════════════════════════════════
-
-  void _showFilterDialog(
-    BuildContext context,
-    JournalEntryController controller,
-  ) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        title: const Text(
-          'Filter',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: Colors.black,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.date_range, color: Colors.black),
-              title: const Text(
-                'Date Range',
-                style: TextStyle(fontSize: 13, color: Colors.black),
-              ),
-              trailing: const Icon(
-                Icons.arrow_forward_ios,
-                size: 14,
-                color: Colors.black,
-              ),
-              contentPadding: EdgeInsets.zero,
-              onTap: () async {
-                Navigator.pop(context);
-                final picked = await showDateRangePicker(
-                  context: context,
-                  firstDate: DateTime(2020),
-                  lastDate: DateTime.now(),
-                );
-                if (picked != null) controller.setDateRange(picked);
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close', style: TextStyle(color: Colors.black)),
-          ),
-        ],
-      ),
-    );
-  }
 
   // ═══════════════════════════════════════════════════════════════
   // EXPORT BOTTOM SHEET
@@ -1366,7 +1263,7 @@ class JournalEntriesScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
@@ -1390,7 +1287,7 @@ class JournalEntriesScreen extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               subtitle,
-              style: TextStyle(fontSize: 11, color: color.withOpacity(0.7)),
+              style: TextStyle(fontSize: 11, color: color.withValues(alpha: 0.7)),
             ),
           ],
         ),
@@ -1446,7 +1343,7 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
   DateTime _selectedDate = DateTime.now();
   String _description = '';
   String _reference = '';
-  List<JournalLineInput> _lines = [];
+  final List<JournalLineInput> _lines = [];
   bool _showLineErrors = false;
   bool _isSubmitting = false;
 
@@ -1517,13 +1414,13 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide(
-              color: hasError ? kDanger : Colors.grey.withOpacity(0.4),
+              color: hasError ? kDanger : Colors.grey.withValues(alpha: 0.4),
             ),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide(
-              color: hasError ? kDanger : Colors.grey.withOpacity(0.4),
+              color: hasError ? kDanger : Colors.grey.withValues(alpha: 0.4),
             ),
           ),
           focusedBorder: OutlineInputBorder(
@@ -1543,7 +1440,7 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
           color: Colors.black,
           fontWeight: FontWeight.w500,
         ),
-        value: line.accountId.isEmpty || line.accountId == 'null'
+        initialValue: line.accountId.isEmpty || line.accountId == 'null'
             ? null
             : line.accountId,
         items: widget.controller.accounts.map((account) {
@@ -1661,7 +1558,7 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
           Container(
             padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
             decoration: BoxDecoration(
-              color: kPrimary.withOpacity(0.05),
+              color: kPrimary.withValues(alpha: 0.05),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(24),
               ),
@@ -1774,10 +1671,10 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: kPrimary.withOpacity(0.1),
+                              color: kPrimary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: kPrimary.withOpacity(0.3),
+                                color: kPrimary.withValues(alpha: 0.3),
                               ),
                             ),
                             child: Row(
@@ -1815,13 +1712,13 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: isBalanced
-                            ? kSuccess.withOpacity(0.08)
-                            : kWarning.withOpacity(0.08),
+                            ? kSuccess.withValues(alpha: 0.08)
+                            : kWarning.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: isBalanced
-                              ? kSuccess.withOpacity(0.2)
-                              : kWarning.withOpacity(0.2),
+                              ? kSuccess.withValues(alpha: 0.2)
+                              : kWarning.withValues(alpha: 0.2),
                         ),
                       ),
                       child: Row(
@@ -1888,7 +1785,7 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -5),
                 ),
@@ -1981,7 +1878,7 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1991,7 +1888,7 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.1),
+                  color: kPrimary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -2151,7 +2048,7 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
         decoration: BoxDecoration(
           color: kBgLight,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.withOpacity(0.2)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [

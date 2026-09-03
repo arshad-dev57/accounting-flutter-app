@@ -1,6 +1,5 @@
 // lib/core/warehouse/goods_receiving/model/goods_receiving_model.dart
 
-import 'package:intl/intl.dart';
 
 class GoodsReceivingModel {
   final String id;

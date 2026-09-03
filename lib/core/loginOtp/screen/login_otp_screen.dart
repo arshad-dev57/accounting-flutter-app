@@ -90,7 +90,7 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
                       ),
                     );
                   },
-                  errorBuilder: (context, _, __) => Container(
+                  errorBuilder: (context, error, stackTrace) => Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
@@ -106,13 +106,13 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.black.withOpacity(0.4),
-                        Colors.black.withOpacity(0.8),
+                        Colors.black.withValues(alpha: 0.4),
+                        Colors.black.withValues(alpha: 0.8),
                       ],
                     ),
                   ),
                 ),
-                Container(color: kPrimary.withOpacity(0.25)),
+                Container(color: kPrimary.withValues(alpha: 0.25)),
                 Positioned(
                   left: 36,
                   right: 36,
@@ -121,32 +121,20 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: kPrimary,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.account_balance,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Text(
-                            'BisonsTechs',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1.8,
-                            ),
-                          ),
-                        ],
+                      Container(
+                        height: 96,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Image.asset(
+                          'assets/logo.png',
+                          fit: BoxFit.contain,
+                        ),
                       ),
                       const SizedBox(height: 20),
                       const Text(
@@ -162,7 +150,7 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
                       Text(
                         'We verify every login with a one-time code\nto keep your financial data protected.',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.75),
+                          color: Colors.white.withValues(alpha: 0.75),
                           fontSize: 13.5,
                           height: 1.6,
                         ),
@@ -289,9 +277,9 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
         Center(
           child: Image.asset(
             'assets/logo.png',
-            height: isTablet || isWeb ? 72 : 64,
+            height: isTablet || isWeb ? 110 : 90,
             fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => Icon(
+            errorBuilder: (_, error, stackTrace) => Icon(
               Icons.account_balance_rounded,
               size: isTablet || isWeb ? 56 : 48,
               color: kPrimary,
@@ -403,12 +391,12 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: expired
-                  ? kDanger.withOpacity(0.08)
+                  ? kDanger.withValues(alpha: 0.08)
                   : Colors.grey.shade100,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: expired
-                    ? kDanger.withOpacity(0.3)
+                    ? kDanger.withValues(alpha: 0.3)
                     : Colors.grey.shade300,
               ),
             ),
@@ -580,9 +568,9 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.12),
+        color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

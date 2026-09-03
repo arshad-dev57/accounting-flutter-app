@@ -67,7 +67,7 @@ class _OrderListViewState extends State<OrderListView> {
             Icon(
               Icons.shopping_cart_outlined,
               size: 56,
-              color: kSubText.withOpacity(0.35),
+              color: kSubText.withValues(alpha: 0.35),
             ),
             const SizedBox(height: 12),
             Text(
@@ -81,7 +81,7 @@ class _OrderListViewState extends State<OrderListView> {
             const SizedBox(height: 4),
             Text(
               'Try changing your filters',
-              style: TextStyle(color: kSubText.withOpacity(0.65), fontSize: 12),
+              style: TextStyle(color: kSubText.withValues(alpha: 0.65), fontSize: 12),
             ),
           ],
         ),
@@ -92,7 +92,7 @@ class _OrderListViewState extends State<OrderListView> {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
       ),
       child: ListView.separated(
         controller: _scrollController,
@@ -100,8 +100,8 @@ class _OrderListViewState extends State<OrderListView> {
         itemCount:
             widget.controller.orders.length +
             (widget.controller.isLoadingMore.value ? 1 : 0),
-        separatorBuilder: (_, __) =>
-            Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
+        separatorBuilder: (context, index) =>
+            Divider(height: 1, color: Colors.grey.withValues(alpha: 0.1)),
         itemBuilder: (context, index) {
           if (index == widget.controller.orders.length) {
             return Padding(
@@ -198,7 +198,7 @@ class _OrderCard extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: kPrimary.withOpacity(0.1),
+                          color: kPrimary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(7),
                         ),
                         child: Icon(
@@ -233,20 +233,18 @@ class _OrderCard extends StatelessWidget {
                 _badge(
                   order.orderStatus,
                   controller
-                      .getStatusColor(order.orderStatus)
-                      .withOpacity(0.12),
+                      .getStatusColor(order.orderStatus).withValues(alpha: 0.12),
                   controller.getStatusColor(order.orderStatus),
                 ),
                 _badge(
                   order.paymentStatus,
                   controller
-                      .getPaymentColor(order.paymentStatus)
-                      .withOpacity(0.12),
+                      .getPaymentColor(order.paymentStatus).withValues(alpha: 0.12),
                   controller.getPaymentColor(order.paymentStatus),
                 ),
                 _badge(
                   order.priority,
-                  controller.getPriorityColor(order.priority).withOpacity(0.12),
+                  controller.getPriorityColor(order.priority).withValues(alpha: 0.12),
                   controller.getPriorityColor(order.priority),
                 ),
                 _badge(
@@ -269,7 +267,7 @@ class _OrderCard extends StatelessWidget {
         color: bg,
         borderRadius: BorderRadius.circular(20),
         border: bg == Colors.transparent
-            ? Border.all(color: fg.withOpacity(0.25))
+            ? Border.all(color: fg.withValues(alpha: 0.25))
             : null,
       ),
       child: Text(

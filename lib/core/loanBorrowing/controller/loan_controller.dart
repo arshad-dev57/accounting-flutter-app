@@ -183,7 +183,7 @@ class LoanController extends GetxController {
             serverSupportsPagination.value = false;
           }
 
-          _updateSummaryForFiltered(loans.value);
+          _updateSummaryForFiltered(loans);
           loans.refresh();
         } else {
           _showError('Failed to load loans');
@@ -192,7 +192,6 @@ class LoanController extends GetxController {
         _showError('Failed to load loans: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error loading loans: $e');
       _showError('Error loading loans');
     } finally {
       isLoading.value = false;
@@ -225,7 +224,7 @@ class LoanController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error loading bank accounts: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -250,7 +249,7 @@ class LoanController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error loading summary: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -386,7 +385,6 @@ class LoanController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error creating loan: $e');
       _showError('Error creating loan');
     } finally {
       isProcessing.value = false;
@@ -476,7 +474,6 @@ class LoanController extends GetxController {
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
         if (responseData['success'] == true) {
-          final data = responseData['data'];
           AppSnackbar.success(
             kSuccess,
             'Payment Recorded ✅',
@@ -494,7 +491,6 @@ class LoanController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error recording payment: $e');
       _showError('Error recording payment');
     } finally {
       isProcessing.value = false;
@@ -619,7 +615,6 @@ class LoanController extends GetxController {
         _showError(errorData['message'] ?? 'Failed to process prepayment');
       }
     } catch (e) {
-      print('Error prepaying loan: $e');
       _showError('Error prepaying loan');
     } finally {
       isProcessing.value = false;
@@ -719,7 +714,7 @@ class LoanController extends GetxController {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
@@ -742,7 +737,7 @@ class LoanController extends GetxController {
             ),
             Text(
               subtitle,
-              style: TextStyle(fontSize: 10, color: color.withOpacity(0.7)),
+              style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.7)),
             ),
           ],
         ),
@@ -1076,7 +1071,7 @@ class LoanController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+            ,
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),
@@ -1475,7 +1470,7 @@ class LoanController extends GetxController {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -1490,7 +1485,7 @@ class LoanController extends GetxController {
                   Container(
                     padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
                     decoration: BoxDecoration(
-                      color: kPrimary.withOpacity(0.05),
+                      color: kPrimary.withValues(alpha: 0.05),
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(24),
                       ),
@@ -1593,7 +1588,7 @@ class LoanController extends GetxController {
                       color: Colors.white,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, -5),
                         ),
@@ -1773,7 +1768,7 @@ class LoanController extends GetxController {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: kPrimary.withOpacity(0.12),
+                          color: kPrimary.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
@@ -1831,7 +1826,7 @@ class LoanController extends GetxController {
                             color: kBgLight,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: statusColor.withOpacity(0.2),
+                              color: statusColor.withValues(alpha: 0.2),
                             ),
                           ),
                           child: Column(
@@ -1854,7 +1849,7 @@ class LoanController extends GetxController {
                                       vertical: 3,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: statusColor.withOpacity(0.1),
+                                      color: statusColor.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
@@ -1921,7 +1916,6 @@ class LoanController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error loading payment schedule: $e');
       _showError('Error loading payment schedule');
     } finally {
       isProcessing.value = false;
@@ -1971,7 +1965,7 @@ class LoanController extends GetxController {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -1986,7 +1980,7 @@ class LoanController extends GetxController {
                   Container(
                     padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
                     decoration: BoxDecoration(
-                      color: kSuccess.withOpacity(0.05),
+                      color: kSuccess.withValues(alpha: 0.05),
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(24),
                       ),
@@ -2053,7 +2047,7 @@ class LoanController extends GetxController {
                                 color: kBgLight,
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
-                                  color: Colors.grey.withOpacity(0.1),
+                                  color: Colors.grey.withValues(alpha: 0.1),
                                 ),
                               ),
                               child: Column(
@@ -2082,14 +2076,17 @@ class LoanController extends GetxController {
                               onChanged: (v) =>
                                   amount = double.tryParse(v) ?? 0,
                               validator: (v) {
-                                if (v == null || v.isEmpty)
+                                if (v == null || v.isEmpty) {
                                   return 'Amount required';
+                                }
                                 final val = double.tryParse(v);
                                 if (val == null) return 'Invalid amount';
-                                if (val <= 0)
+                                if (val <= 0) {
                                   return 'Amount must be greater than 0';
-                                if (val > loan.outstandingBalance)
+                                }
+                                if (val > loan.outstandingBalance) {
                                   return 'Amount exceeds outstanding balance';
+                                }
                                 return null;
                               },
                               keyboardType: TextInputType.number,
@@ -2128,7 +2125,7 @@ class LoanController extends GetxController {
                       color: Colors.white,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, -5),
                         ),
@@ -2258,7 +2255,7 @@ class LoanController extends GetxController {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -2273,7 +2270,7 @@ class LoanController extends GetxController {
                   Container(
                     padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
                     decoration: BoxDecoration(
-                      color: kPrimary.withOpacity(0.05),
+                      color: kPrimary.withValues(alpha: 0.05),
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(24),
                       ),
@@ -2431,7 +2428,7 @@ class LoanController extends GetxController {
                       color: Colors.white,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, -5),
                         ),
@@ -2575,7 +2572,7 @@ class LoanController extends GetxController {
                             decoration: BoxDecoration(
                               color: getLoanTypeColor(
                                 loan.loanType,
-                              ).withOpacity(0.12),
+                              ).withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Icon(
@@ -2613,10 +2610,10 @@ class LoanController extends GetxController {
                                       ),
                                       decoration: BoxDecoration(
                                         color: loan.status == 'Active'
-                                            ? kPrimary.withOpacity(0.08)
+                                            ? kPrimary.withValues(alpha: 0.08)
                                             : loan.status == 'Fully Paid'
-                                            ? kSuccess.withOpacity(0.08)
-                                            : kDanger.withOpacity(0.08),
+                                            ? kSuccess.withValues(alpha: 0.08)
+                                            : kDanger.withValues(alpha: 0.08),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
@@ -2675,7 +2672,7 @@ class LoanController extends GetxController {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
                       const SizedBox(height: 16),
 
                       // Details
@@ -2714,7 +2711,7 @@ class LoanController extends GetxController {
                         _detailRow('Notes', loan.notes),
 
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
                       const SizedBox(height: 16),
 
                       // Payment History
@@ -2737,7 +2734,7 @@ class LoanController extends GetxController {
                                   color: kBgLight,
                                   borderRadius: BorderRadius.circular(10),
                                   border: Border.all(
-                                    color: Colors.grey.withOpacity(0.1),
+                                    color: Colors.grey.withValues(alpha: 0.1),
                                   ),
                                 ),
                                 child: Row(
@@ -2784,7 +2781,7 @@ class LoanController extends GetxController {
                                         vertical: 3,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: kSuccess.withOpacity(0.1),
+                                        color: kSuccess.withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Text(
@@ -2800,11 +2797,11 @@ class LoanController extends GetxController {
                                 ),
                               ),
                             )
-                            .toList(),
+                           ,
                         const SizedBox(height: 16),
                         Divider(
                           height: 1,
-                          color: Colors.grey.withOpacity(0.12),
+                          color: Colors.grey.withValues(alpha: 0.12),
                         ),
                         const SizedBox(height: 16),
                       ],
@@ -2895,9 +2892,9 @@ class LoanController extends GetxController {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.06),
+          color: color.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.15)),
+          border: Border.all(color: color.withValues(alpha: 0.15)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -2918,7 +2915,7 @@ class LoanController extends GetxController {
               label,
               style: TextStyle(
                 fontSize: 9,
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withValues(alpha: 0.5),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -2998,7 +2995,7 @@ class LoanController extends GetxController {
     required void Function(String?) onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -3024,7 +3021,7 @@ class LoanController extends GetxController {
   ) {
     return DropdownButtonFormField<String>(
       isExpanded: true,
-      value: selectedId,
+      initialValue: selectedId,
       decoration: InputDecoration(
         labelText: 'Disbursement Bank Account',
         helperText: 'Loan amount will be credited to this account',
@@ -3049,7 +3046,7 @@ class LoanController extends GetxController {
               overflow: TextOverflow.ellipsis,
             ),
           );
-        }).toList(),
+        }),
       ],
       onChanged: (value) {
         // If value is empty string, send null
@@ -3081,7 +3078,7 @@ class LoanController extends GetxController {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.withOpacity(0.4)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.4)),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(

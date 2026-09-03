@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserPermission {
@@ -60,12 +61,13 @@ class UserData {
   });
 
   factory UserData.fromJson(Map<String, dynamic> json) {
+    final role = (json['role'] ?? '').toString().trim();
     return UserData(
-      id: json['id'] ?? '',
+      id: (json['id'] ?? json['_id'] ?? '').toString(),
       firstName: json['firstName'] ?? '',
       lastName: json['lastName'] ?? '',
       email: json['email'] ?? '',
-      role: json['role'] ?? 'user',
+      role: role.isNotEmpty ? role : 'user',
       permissions: (json['permissions'] as List?)
               ?.map((p) => UserPermission.fromJson(p))
               .toList() ??
@@ -103,21 +105,18 @@ class PermissionService extends GetxController {
     try {
       loading.value = true;
       final prefs = await SharedPreferences.getInstance();
-      final userDataString = prefs.getString('user');
-      
+      final userDataString =
+          prefs.getString('user') ?? prefs.getString('user_data');
+
       if (userDataString != null) {
         final userData = UserData.fromJson(
           json.decode(userDataString) as Map<String, dynamic>,
         );
         user.value = userData;
-        print('🔍 [PermissionService] User data loaded: ${userData.fullName}');
-        print('🔍 [PermissionService] User role: "${userData.role}" | isAdmin: $isAdmin');
-        print('🔍 [PermissionService] Permissions count: ${userData.permissions.length}');
       } else {
-        print('⚠️ [PermissionService] No user data found in SharedPreferences');
       }
     } catch (e) {
-      print('❌ [PermissionService] Error loading user data: $e');
+      debugPrint('Error: $e');
     } finally {
       loading.value = false;
     }
@@ -128,9 +127,8 @@ class PermissionService extends GetxController {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('user', json.encode(userData.toJson()));
       user.value = userData;
-      print('✅ [PermissionService] User data saved');
     } catch (e) {
-      print('❌ [PermissionService] Error saving user data: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -139,22 +137,28 @@ class PermissionService extends GetxController {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('user');
       user.value = null;
-      print('✅ [PermissionService] User data cleared');
     } catch (e) {
-      print('❌ [PermissionService] Error clearing user data: $e');
+      debugPrint('Error: $e');
     }
   }
 
   bool get isAdmin {
     final role = user.value?.role.toLowerCase().trim() ?? '';
-    return role == 'admin' || role == 'owner' || role == 'superadmin';
+    return role == 'admin' ||
+        role == 'owner' ||
+        role == 'superadmin' ||
+        role == 'company_admin';
+  }
+
+  /// Admin / owner always sees every module. Staff still needs page permissions.
+  bool canAccessModule(String module) {
+    if (isAdmin) return true;
+    return hasModuleAccess(module);
   }
 
   bool hasPermission(String page) {
-    if (user.value == null) return false;
-    
-    // Admin has all permissions
     if (isAdmin) return true;
+    if (user.value == null) return false;
     
     // Check specific permission
     final permission = user.value!.permissions.firstWhereOrNull(
@@ -165,33 +169,24 @@ class PermissionService extends GetxController {
   }
 
   bool hasModuleAccess(String module) {
+    if (isAdmin) return true;
     if (user.value == null) return false;
     
-    // Admin has all module access
-    if (isAdmin) return true;
-    
-    print('🔍 [hasModuleAccess] Checking module access for: $module');
-    print('🔍 [hasModuleAccess] User role: ${user.value!.role}');
-    print('🔍 [hasModuleAccess] User permissions: ${user.value!.permissions.map((p) => p.page).toList()}');
     
     // Check if user has any permission for this module
     final hasModulePermission = user.value!.permissions.any((p) {
       final pageLower = p.page.toLowerCase();
       final moduleLower = module.toLowerCase();
       final matches = pageLower.startsWith(moduleLower) || pageLower == moduleLower;
-      print('🔍 [hasModuleAccess] Checking permission: ${p.page} against $module -> $matches (canView: ${p.canView})');
       return matches && p.canView;
     });
     
-    print('🔍 [hasModuleAccess] Has module permission: $hasModulePermission');
     return hasModulePermission;
   }
 
   bool hasSubPageAccess(String module, String subPage) {
-    if (user.value == null) return false;
-    
-    // Admin has all sub-page access
     if (isAdmin) return true;
+    if (user.value == null) return false;
     
     final moduleLower = module.toLowerCase();
     final sub = subPage.toLowerCase().replaceAll(' ', '-');
@@ -212,10 +207,8 @@ class PermissionService extends GetxController {
   }
 
   bool hasAnyModuleAccess() {
-    if (user.value == null) return false;
-    
-    // Admin has all module access
     if (isAdmin) return true;
+    if (user.value == null) return false;
     
     // Check if user has any permissions at all
     return user.value!.permissions.isNotEmpty;

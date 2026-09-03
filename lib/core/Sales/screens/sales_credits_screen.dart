@@ -208,7 +208,7 @@ class _ListHeader extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: selected
                                 ? Colors.white
-                                : Colors.white.withOpacity(0.18),
+                                : Colors.white.withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
@@ -247,7 +247,7 @@ class _ListHeader extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -365,7 +365,7 @@ class _CreditCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: _statusColor.withOpacity(0.12),
+                      color: _statusColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -637,7 +637,7 @@ class _CreateCreditForm extends StatelessWidget {
                       const SizedBox(height: 14),
                       _section('3. Credit Details', [
                         DropdownButtonFormField<String>(
-                          value: controller.reasonType.value,
+                          initialValue: controller.reasonType.value,
                           decoration: const InputDecoration(
                             labelText: 'Reason type *',
                             border: OutlineInputBorder(
@@ -774,9 +774,9 @@ class _CreateCreditForm extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: kPrimary.withOpacity(0.06),
+        color: kPrimary.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: kPrimary.withOpacity(0.15)),
+        border: Border.all(color: kPrimary.withValues(alpha: 0.15)),
       ),
       child: const Text(
         'Same pattern as Sales Payments: pick customer → invoice → amount. '
@@ -818,9 +818,9 @@ class _CreateCreditForm extends StatelessWidget {
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: kSuccess.withOpacity(0.08),
+        color: kSuccess.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: kSuccess.withOpacity(0.3)),
+        border: Border.all(color: kSuccess.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -843,7 +843,7 @@ class _CreateCreditForm extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: selected ? kPrimary.withOpacity(0.06) : Colors.white,
+          color: selected ? kPrimary.withValues(alpha: 0.06) : Colors.white,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: selected ? kPrimary : Colors.grey.shade300,
@@ -911,7 +911,7 @@ class _CreateCreditForm extends StatelessWidget {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withValues(alpha: 0.06),
               blurRadius: 8,
               offset: const Offset(0, -2),
             ),
@@ -1043,7 +1043,7 @@ class _ApplyCreditForm extends StatelessWidget {
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color: selected
-                                  ? kPrimary.withOpacity(0.06)
+                                  ? kPrimary.withValues(alpha: 0.06)
                                   : Colors.white,
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(

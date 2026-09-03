@@ -15,6 +15,8 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:excel/excel.dart' as excel;
 
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
+
 class EquityController extends GetxController {
   final ApiClient _apiClient = Get.find<ApiClient>();
 
@@ -52,22 +54,38 @@ class EquityController extends GetxController {
   var totalReserves = 0.0.obs;
   var totalDrawings = 0.0.obs;
   var totalEquity = 0.0.obs;
+  var ownerCapital = 0.0.obs;
+  var periodEarnings = 0.0.obs;
+  var equityNow = 0.0.obs;
+  var changeOnCapital = 0.0.obs;
+  var isCapitalIncrease = true.obs;
+  var bankAccounts = <Map<String, dynamic>>[].obs;
 
   // Controllers
   final TextEditingController searchController = TextEditingController();
   final ScrollController scrollController = ScrollController();
+  Worker? _fyWorker;
 
   @override
   void onInit() {
     super.onInit();
     searchController.addListener(_onSearchChanged);
-    loadEquityAccounts(resetPage: true);
-    loadTransactions();
-    loadSummary();
+    Future(() async {
+      await waitForFiscalYearReady();
+      loadEquityAccounts(resetPage: true);
+      loadTransactions();
+      loadSummary();
+      loadBankAccounts();
+    });
+    _fyWorker = listenFiscalYearChanges(() {
+      loadEquityAccounts(resetPage: true);
+      loadSummary();
+    });
   }
 
   @override
   void onClose() {
+    _fyWorker?.dispose();
     searchController.removeListener(_onSearchChanged);
     searchController.dispose();
     scrollController.dispose();
@@ -93,6 +111,7 @@ class EquityController extends GetxController {
 
       Map<String, dynamic> params = {};
       params['type'] = 'Equity';
+      putFiscalYearId(params);
 
       if (serverSupportsPagination.value) {
         params['page'] = currentPage.value;
@@ -168,12 +187,11 @@ class EquityController extends GetxController {
             serverSupportsPagination.value = false;
           }
 
-          _updateSummaryForFiltered(equityAccounts.value);
+          _updateSummaryForFiltered(equityAccounts);
           equityAccounts.refresh();
         }
       }
     } catch (e) {
-      print('Error loading equity accounts: $e');
       _showError('Error loading equity accounts');
     } finally {
       isLoading.value = false;
@@ -204,14 +222,19 @@ class EquityController extends GetxController {
         }
       }
     } catch (e) {
-      print('Error loading transactions: $e');
+      // Optional equity summary; ignore fetch errors.
     }
   }
 
   // ─── LOAD SUMMARY ──────────────────────────────────────────────────
   Future<void> loadSummary() async {
     try {
-      final response = await _apiClient.get('/api/equity/summary');
+      final params = <String, dynamic>{};
+      putFiscalYearId(params);
+      final response = await _apiClient.get(
+        '/api/equity/summary',
+        queryParameters: params,
+      );
 
       if (response.success && response.statusCode == 200) {
         final responseData = response.data;
@@ -223,10 +246,23 @@ class EquityController extends GetxController {
           totalReserves.value = (data['totalReserves'] ?? 0).toDouble();
           totalDrawings.value = (data['totalDrawings'] ?? 0).toDouble();
           totalEquity.value = (data['totalEquity'] ?? 0).toDouble();
+          ownerCapital.value =
+              (data['ownerCapital'] ?? data['totalCapital'] ?? 0).toDouble();
+          periodEarnings.value =
+              (data['periodEarnings'] ?? data['currentYearEarnings'] ?? 0)
+                  .toDouble();
+          equityNow.value = (data['equityNow'] ?? data['totalEquity'] ?? 0)
+              .toDouble();
+          changeOnCapital.value =
+              (data['changeOnCapital'] ??
+                      (equityNow.value - ownerCapital.value))
+                  .toDouble();
+          isCapitalIncrease.value =
+              data['isIncrease'] ?? (periodEarnings.value >= 0);
         }
       }
     } catch (e) {
-      print('Error loading summary: $e');
+      // Optional equity summary; ignore fetch errors.
     }
   }
 
@@ -251,6 +287,7 @@ class EquityController extends GetxController {
       0.0,
       (sum, a) => sum + a.currentBalance,
     );
+    // Keep dashboard-style owner capital / period P&L from loadSummary.
   }
 
   // ─── SEARCH ──────────────────────────────────────────────────────
@@ -266,11 +303,27 @@ class EquityController extends GetxController {
   }
 
   // ─── ADD CAPITAL ──────────────────────────────────────────────────
+  Future<void> loadBankAccounts() async {
+    try {
+      final response = await _apiClient.get('/api/bank-accounts');
+      if (response.success) {
+        final data = response.data['data'];
+        if (data is List) {
+          bankAccounts.value = data
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList();
+        }
+      }
+    } catch (_) {}
+  }
+
   Future<void> addCapital({
     required String accountId,
     required double amount,
     required String description,
     required String reference,
+    String paymentMethod = 'Cash',
+    String? bankAccountId,
   }) async {
     // Show loading dialog
     Get.dialog(
@@ -323,6 +376,11 @@ class EquityController extends GetxController {
         'amount': amount,
         'description': description,
         'reference': reference,
+        'paymentMethod': paymentMethod,
+        if (paymentMethod != 'Cash' &&
+            bankAccountId != null &&
+            bankAccountId.isNotEmpty)
+          'bankAccountId': bankAccountId,
       };
 
       final response = await _apiClient.post(
@@ -354,7 +412,6 @@ class EquityController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error adding capital: $e');
       _showError('Error adding capital');
     } finally {
       isProcessing.value = false;
@@ -367,6 +424,8 @@ class EquityController extends GetxController {
     required double amount,
     required String description,
     required String reference,
+    String paymentMethod = 'Cash',
+    String? bankAccountId,
   }) async {
     // Show loading dialog
     Get.dialog(
@@ -419,6 +478,11 @@ class EquityController extends GetxController {
         'amount': amount,
         'description': description,
         'reference': reference,
+        'paymentMethod': paymentMethod,
+        if (paymentMethod != 'Cash' &&
+            bankAccountId != null &&
+            bankAccountId.isNotEmpty)
+          'bankAccountId': bankAccountId,
       };
 
       final response = await _apiClient.post(
@@ -447,7 +511,6 @@ class EquityController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error recording drawings: $e');
       _showError('Error recording drawings');
     } finally {
       isProcessing.value = false;
@@ -540,7 +603,6 @@ class EquityController extends GetxController {
       }
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('Error transferring to retained earnings: $e');
       _showError('Error transferring');
     } finally {
       isProcessing.value = false;
@@ -640,7 +702,7 @@ class EquityController extends GetxController {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
@@ -663,7 +725,7 @@ class EquityController extends GetxController {
             ),
             Text(
               subtitle,
-              style: TextStyle(fontSize: 10, color: color.withOpacity(0.7)),
+              style: TextStyle(fontSize: 10, color: color.withValues(alpha: 0.7)),
             ),
           ],
         ),
@@ -719,9 +781,7 @@ class EquityController extends GetxController {
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(24),
-          header: (ctx) => branding.buildHeader(
-            reportTitle: 'Equity Report',
-          ),
+          header: (ctx) => branding.buildHeader(reportTitle: 'Equity Report'),
           footer: (ctx) => branding.buildFooter(ctx),
           build: (ctx) => [
             _pdfSummarySection(branding.accent),
@@ -749,8 +809,6 @@ class EquityController extends GetxController {
       AppSnackbar.error(Colors.red, 'Error', 'Failed to export PDF: $e');
     }
   }
-
-
 
   pw.Widget _pdfSummarySection(PdfColor accent) {
     return pw.Container(
@@ -981,7 +1039,7 @@ class EquityController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+         ,
         pw.Divider(),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),
@@ -1149,7 +1207,7 @@ class EquityController extends GetxController {
                 ),
               ),
             )
-            .toList(),
+         ,
       ],
     );
   }
@@ -1517,6 +1575,8 @@ class EquityController extends GetxController {
     double amount = 0;
     String description = '';
     String reference = '';
+    String paymentMethod = 'Cash';
+    String? selectedBankAccountId;
 
     Get.dialog(
       Dialog(
@@ -1533,7 +1593,7 @@ class EquityController extends GetxController {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -1548,7 +1608,7 @@ class EquityController extends GetxController {
                   Container(
                     padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
                     decoration: BoxDecoration(
-                      color: kSuccess.withOpacity(0.05),
+                      color: kSuccess.withValues(alpha: 0.05),
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(24),
                       ),
@@ -1614,7 +1674,7 @@ class EquityController extends GetxController {
                                 color: kBgLight,
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
-                                  color: Colors.grey.withOpacity(0.1),
+                                  color: Colors.grey.withValues(alpha: 0.1),
                                 ),
                               ),
                               child: Column(
@@ -1638,6 +1698,17 @@ class EquityController extends GetxController {
                               validator: (v) =>
                                   v?.isEmpty == true ? 'Required' : null,
                               keyboardType: TextInputType.number,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildPaymentSourceFields(
+                              paymentMethod: paymentMethod,
+                              selectedBankAccountId: selectedBankAccountId,
+                              onPaymentMethodChanged: (v) => setState(() {
+                                paymentMethod = v!;
+                                if (v == 'Cash') selectedBankAccountId = null;
+                              }),
+                              onBankChanged: (v) =>
+                                  setState(() => selectedBankAccountId = v),
                             ),
                             const SizedBox(height: 16),
 
@@ -1667,7 +1738,7 @@ class EquityController extends GetxController {
                       color: Colors.white,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, -5),
                         ),
@@ -1706,11 +1777,19 @@ class EquityController extends GetxController {
                                   ? null
                                   : () {
                                       if (formKey.currentState!.validate()) {
+                                        if (!_validatePaymentSource(
+                                          paymentMethod,
+                                          selectedBankAccountId,
+                                        )) {
+                                          return;
+                                        }
                                         addCapital(
                                           accountId: account.id,
                                           amount: amount,
                                           description: description,
                                           reference: reference,
+                                          paymentMethod: paymentMethod,
+                                          bankAccountId: selectedBankAccountId,
                                         );
                                       }
                                     },
@@ -1765,6 +1844,8 @@ class EquityController extends GetxController {
     double amount = 0;
     String description = '';
     String reference = '';
+    String paymentMethod = 'Cash';
+    String? selectedBankAccountId;
 
     Get.dialog(
       Dialog(
@@ -1781,7 +1862,7 @@ class EquityController extends GetxController {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -1796,7 +1877,7 @@ class EquityController extends GetxController {
                   Container(
                     padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
                     decoration: BoxDecoration(
-                      color: kDanger.withOpacity(0.05),
+                      color: kDanger.withValues(alpha: 0.05),
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(24),
                       ),
@@ -1862,7 +1943,7 @@ class EquityController extends GetxController {
                                 color: kBgLight,
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
-                                  color: Colors.grey.withOpacity(0.1),
+                                  color: Colors.grey.withValues(alpha: 0.1),
                                 ),
                               ),
                               child: Column(
@@ -1886,6 +1967,17 @@ class EquityController extends GetxController {
                               validator: (v) =>
                                   v?.isEmpty == true ? 'Required' : null,
                               keyboardType: TextInputType.number,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildPaymentSourceFields(
+                              paymentMethod: paymentMethod,
+                              selectedBankAccountId: selectedBankAccountId,
+                              onPaymentMethodChanged: (v) => setState(() {
+                                paymentMethod = v!;
+                                if (v == 'Cash') selectedBankAccountId = null;
+                              }),
+                              onBankChanged: (v) =>
+                                  setState(() => selectedBankAccountId = v),
                             ),
                             const SizedBox(height: 16),
 
@@ -1915,7 +2007,7 @@ class EquityController extends GetxController {
                       color: Colors.white,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, -5),
                         ),
@@ -1954,11 +2046,19 @@ class EquityController extends GetxController {
                                   ? null
                                   : () {
                                       if (formKey.currentState!.validate()) {
+                                        if (!_validatePaymentSource(
+                                          paymentMethod,
+                                          selectedBankAccountId,
+                                        )) {
+                                          return;
+                                        }
                                         recordDrawings(
                                           accountId: account.id,
                                           amount: amount,
                                           description: description,
                                           reference: reference,
+                                          paymentMethod: paymentMethod,
+                                          bankAccountId: selectedBankAccountId,
                                         );
                                       }
                                     },
@@ -2014,6 +2114,8 @@ class EquityController extends GetxController {
     double amount = 0;
     String description = '';
     String reference = '';
+    String paymentMethod = 'Cash';
+    String? selectedBankAccountId;
 
     Get.dialog(
       Dialog(
@@ -2030,7 +2132,7 @@ class EquityController extends GetxController {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -2045,7 +2147,7 @@ class EquityController extends GetxController {
                   Container(
                     padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
                     decoration: BoxDecoration(
-                      color: kPrimary.withOpacity(0.05),
+                      color: kPrimary.withValues(alpha: 0.05),
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(24),
                       ),
@@ -2128,6 +2230,21 @@ class EquityController extends GetxController {
                                   v?.isEmpty == true ? 'Required' : null,
                               keyboardType: TextInputType.number,
                             ),
+                            if (transactionType != 'Reserve Transfer') ...[
+                              const SizedBox(height: 16),
+                              _buildPaymentSourceFields(
+                                paymentMethod: paymentMethod,
+                                selectedBankAccountId: selectedBankAccountId,
+                                onPaymentMethodChanged: (v) => setState(() {
+                                  paymentMethod = v!;
+                                  if (v == 'Cash') {
+                                    selectedBankAccountId = null;
+                                  }
+                                }),
+                                onBankChanged: (v) =>
+                                    setState(() => selectedBankAccountId = v),
+                              ),
+                            ],
                             const SizedBox(height: 16),
 
                             _buildTextField(
@@ -2156,7 +2273,7 @@ class EquityController extends GetxController {
                       color: Colors.white,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, -5),
                         ),
@@ -2195,6 +2312,14 @@ class EquityController extends GetxController {
                                   ? null
                                   : () {
                                       if (formKey.currentState!.validate()) {
+                                        if (transactionType !=
+                                                'Reserve Transfer' &&
+                                            !_validatePaymentSource(
+                                              paymentMethod,
+                                              selectedBankAccountId,
+                                            )) {
+                                          return;
+                                        }
                                         if (transactionType ==
                                             'Additional Capital') {
                                           final capitalAccount = equityAccounts
@@ -2208,6 +2333,9 @@ class EquityController extends GetxController {
                                               amount: amount,
                                               description: description,
                                               reference: reference,
+                                              paymentMethod: paymentMethod,
+                                              bankAccountId:
+                                                  selectedBankAccountId,
                                             );
                                           } else {
                                             _showError(
@@ -2227,6 +2355,9 @@ class EquityController extends GetxController {
                                               amount: amount,
                                               description: description,
                                               reference: reference,
+                                              paymentMethod: paymentMethod,
+                                              bankAccountId:
+                                                  selectedBankAccountId,
                                             );
                                           } else {
                                             _showError(
@@ -2330,7 +2461,7 @@ class EquityController extends GetxController {
                             width: 52,
                             height: 52,
                             decoration: BoxDecoration(
-                              color: typeColor.withOpacity(0.12),
+                              color: typeColor.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Icon(
@@ -2367,7 +2498,7 @@ class EquityController extends GetxController {
                                         vertical: 2,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: typeColor.withOpacity(0.08),
+                                        color: typeColor.withValues(alpha: 0.08),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
@@ -2429,7 +2560,7 @@ class EquityController extends GetxController {
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
                       const SizedBox(height: 16),
 
                       // Details
@@ -2455,7 +2586,7 @@ class EquityController extends GetxController {
                       if (account.notes.isNotEmpty)
                         _detailRow('Notes', account.notes),
                       const SizedBox(height: 16),
-                      Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+                      Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
                       const SizedBox(height: 16),
 
                       // Close Button
@@ -2554,9 +2685,9 @@ class EquityController extends GetxController {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.06),
+          color: color.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.15)),
+          border: Border.all(color: color.withValues(alpha: 0.15)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -2577,7 +2708,7 @@ class EquityController extends GetxController {
               label,
               style: TextStyle(
                 fontSize: 9,
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withValues(alpha: 0.5),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -2680,6 +2811,70 @@ class EquityController extends GetxController {
     );
   }
 
+  bool _validatePaymentSource(String paymentMethod, String? bankAccountId) {
+    if (paymentMethod != 'Cash' &&
+        (bankAccountId == null || bankAccountId.isEmpty)) {
+      _showError('Please select a bank account');
+      return false;
+    }
+    return true;
+  }
+
+  Widget _buildPaymentSourceFields({
+    required String paymentMethod,
+    required String? selectedBankAccountId,
+    required void Function(String?) onPaymentMethodChanged,
+    required void Function(String?) onBankChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildDropdownField(
+          label: 'Paid via *',
+          value: paymentMethod,
+          items: const ['Cash', 'Bank Transfer'],
+          onChanged: onPaymentMethodChanged,
+        ),
+        if (paymentMethod != 'Cash') ...[
+          const SizedBox(height: 16),
+          DropdownButtonFormField<String>(
+            initialValue: selectedBankAccountId,
+            decoration: InputDecoration(
+              labelText: 'Bank Account *',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
+              isDense: true,
+              labelStyle: TextStyle(fontSize: 12, color: kSubText),
+            ),
+            style: const TextStyle(fontSize: 13, color: Colors.black),
+            hint: Text(
+              bankAccounts.isEmpty
+                  ? 'No bank accounts found'
+                  : 'Select bank account',
+              style: TextStyle(fontSize: 12, color: kSubText),
+            ),
+            items: bankAccounts.map((a) {
+              final id = a['id']?.toString() ?? a['_id']?.toString();
+              return DropdownMenuItem(
+                value: id,
+                child: Text(
+                  a['accountName']?.toString() ?? 'Bank',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              );
+            }).toList(),
+            onChanged: onBankChanged,
+          ),
+        ],
+      ],
+    );
+  }
+
   Widget _buildDropdownField({
     required String label,
     required String value,
@@ -2687,7 +2882,7 @@ class EquityController extends GetxController {
     required void Function(String?) onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),

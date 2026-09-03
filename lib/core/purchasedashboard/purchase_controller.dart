@@ -3,7 +3,10 @@
 import 'dart:convert';
 
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'package:BisonsTechs_app/core/purchasedashboard/purchase_dashboard_model.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -12,8 +15,8 @@ class PurchaseController extends GetxController {
 
   // ─── STATE ────────────────────────────────────────────────────────────────
   final RxBool isLoading = false.obs;
-  final RxString period = 'today'.obs;
-  final RxString selectedTimePeriodLabel = 'Today'.obs;
+  final RxString period = 'year'.obs;
+  final RxString selectedTimePeriodLabel = 'This Year'.obs;
   final RxString businessLogo = ''.obs;
 
   final Rx<PurchaseDashboardModel?> dashboard = Rx<PurchaseDashboardModel?>(
@@ -46,11 +49,26 @@ class PurchaseController extends GetxController {
     'This Year',
   ];
 
+  Worker? _fyWorker;
+  Worker? _locWorker;
+
   @override
   void onInit() {
     super.onInit();
     loadBusinessLogo();
-    fetchDashboard();
+    Future(() async {
+      await waitForFiscalYearReady();
+      fetchDashboard();
+    });
+    _fyWorker = listenFiscalYearChanges(fetchDashboard);
+    _locWorker = listenLocationChanges(fetchDashboard);
+  }
+
+  @override
+  void onClose() {
+    _fyWorker?.dispose();
+    _locWorker?.dispose();
+    super.onClose();
   }
 
   Future<void> loadBusinessLogo() async {
@@ -71,7 +89,7 @@ class PurchaseController extends GetxController {
         }
       }
     } catch (e) {
-      print('❌ [PurchaseController] Error loading business logo: $e');
+      // Optional business logo; ignore fetch errors.
     }
   }
 
@@ -125,6 +143,8 @@ class PurchaseController extends GetxController {
         params['endDate'] = customEnd.value!.toIso8601String();
       }
     }
+    final fyId = currentFiscalYearId();
+    if (fyId != null) params['fiscalYearId'] = fyId;
     return params;
   }
 
@@ -159,9 +179,6 @@ class PurchaseController extends GetxController {
   Future<void> fetchDashboard() async {
     try {
       isLoading.value = true;
-      print(
-        '🔵 [PurchaseDashboard] fetch period=${period.value} params=$_periodParams',
-      );
 
       await Future.wait([
         _fetchMetrics(),
@@ -171,15 +188,7 @@ class PurchaseController extends GetxController {
         _fetchActivities(),
       ]);
 
-      print(
-        '✅ [PurchaseDashboard] loaded '
-        'spend=${dashboard.value?.invoices.totalSpend} '
-        'orders=${dashboard.value?.orders.total} '
-        'trend=${spendTrend.length} '
-        'activities=${activities.length}',
-      );
     } catch (e) {
-      print('Purchase dashboard fetch error: $e');
       Get.snackbar('Purchase Dashboard', 'Failed to load dashboard data');
     } finally {
       isLoading.value = false;
@@ -193,13 +202,12 @@ class PurchaseController extends GetxController {
         requiresAuth: true,
         queryParameters: _periodParams,
       );
-      print('🔵 [PurchaseDashboard] metrics success=${res.success}');
       if (res.success && res.data != null) {
         final data = Map<String, dynamic>.from(res.data['data'] ?? {});
         dashboard.value = PurchaseDashboardModel.fromMetrics(data);
       }
     } catch (e) {
-      print('Metrics error: $e');
+      debugPrint('Error fetching metrics: $e');
     }
   }
 
@@ -219,7 +227,7 @@ class PurchaseController extends GetxController {
             .toList();
       }
     } catch (e) {
-      print('Spend trend error: $e');
+      debugPrint('Error fetching spend trend: $e');
     }
   }
 
@@ -239,7 +247,7 @@ class PurchaseController extends GetxController {
             .toList();
       }
     } catch (e) {
-      print('Order status error: $e');
+      debugPrint('Error fetching order status: $e');
     }
   }
 
@@ -257,7 +265,7 @@ class PurchaseController extends GetxController {
             .toList();
       }
     } catch (e) {
-      print('Top suppliers error: $e');
+      debugPrint('Error fetching top suppliers: $e');
     }
   }
 
@@ -266,6 +274,7 @@ class PurchaseController extends GetxController {
       final res = await _api.get(
         '/api/purchase/dashboard/activities',
         requiresAuth: true,
+        queryParameters: _periodParams,
       );
       if (res.success && res.data != null) {
         final data = Map<String, dynamic>.from(res.data['data'] ?? {});
@@ -275,7 +284,7 @@ class PurchaseController extends GetxController {
             .toList();
       }
     } catch (e) {
-      print('Activities error: $e');
+      debugPrint('Error fetching activities: $e');
     }
   }
 

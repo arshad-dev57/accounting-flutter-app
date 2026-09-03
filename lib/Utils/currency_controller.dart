@@ -1,6 +1,7 @@
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AppCurrency {
@@ -70,7 +71,6 @@ class CurrencyController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    print('🟢 [CurrencyController] onInit called');
     loadFromPrefs();
   }
 
@@ -82,31 +82,23 @@ class CurrencyController extends GetxController {
   }
 
   Future<void> loadFromPrefs() async {
-    print('🔄 [CurrencyController] loadFromPrefs called');
     final prefs = await SharedPreferences.getInstance();
     final savedCode = prefs.getString(prefsCodeKey);
     final savedSymbol = prefs.getString(prefsSymbolKey);
 
-    print('📦 [CurrencyController] Saved Code: $savedCode');
-    print('📦 [CurrencyController] Saved Symbol: $savedSymbol');
 
     if (savedCode != null && savedCode.isNotEmpty) {
       final currency = findByCode(savedCode);
       if (currency != null) {
         currencyCode.value = currency.code;
         currencySymbol.value = currency.symbol;
-        print(
-          '✅ [CurrencyController] Loaded from Prefs: ${currency.code} (${currency.symbol})',
-        );
+      
         return;
       }
-      // Keep any code/symbol saved from currency_picker (not in local list)
       if (savedSymbol != null && savedSymbol.isNotEmpty) {
         currencyCode.value = savedCode;
         currencySymbol.value = savedSymbol;
-        print(
-          '✅ [CurrencyController] Loaded custom from Prefs: $savedCode ($savedSymbol)',
-        );
+      
         return;
       }
     }
@@ -114,35 +106,27 @@ class CurrencyController extends GetxController {
     final defaultCurrency = findByCode(defaultCode)!;
     currencyCode.value = defaultCurrency.code;
     currencySymbol.value = defaultCurrency.symbol;
-    print(
-      '✅ [CurrencyController] Using Default: ${defaultCurrency.code} (${defaultCurrency.symbol})',
-    );
+  
   }
 
   Future<void> updateFromUserData(Map<String, dynamic>? userData) async {
-    print('🔄 [CurrencyController] updateFromUserData called');
-    print('📦 [CurrencyController] User Data: $userData');
+
 
     if (userData == null) {
-      print('⚠️ [CurrencyController] User data is null');
       return;
     }
 
     final businessDetails =
         userData['businessDetails'] as Map<String, dynamic>?;
-    print('📦 [CurrencyController] Business Details: $businessDetails');
 
     if (businessDetails == null) {
-      print('⚠️ [CurrencyController] Business details is null');
       return;
     }
 
     final code = businessDetails['currencyCode'] as String?;
     final symbol = businessDetails['currencySymbol'] as String?;
 
-    print('📦 [CurrencyController] Currency Code from API: $code');
-    print('📦 [CurrencyController] Currency Symbol from API: $symbol');
-
+  
     if (code != null &&
         code.isNotEmpty &&
         symbol != null &&
@@ -154,17 +138,13 @@ class CurrencyController extends GetxController {
       await prefs.setString(prefsCodeKey, code);
       await prefs.setString(prefsSymbolKey, symbol);
 
-      print('✅ [CurrencyController] Updated from User Data: $code ($symbol)');
       update();
     } else {
-      print(
-        '⚠️ [CurrencyController] No currency found in user data, keeping default',
-      );
+   
     }
   }
 
   Future<void> setCurrency(String code, {String? symbol}) async {
-    print('🔄 [CurrencyController] setCurrency called with: $code');
 
     final currency = findByCode(code);
     final resolvedSymbol = (symbol != null && symbol.isNotEmpty)
@@ -172,13 +152,10 @@ class CurrencyController extends GetxController {
         : currency?.symbol;
 
     if (resolvedSymbol == null || resolvedSymbol.isEmpty) {
-      print('❌ [CurrencyController] Currency not found: $code');
       return;
     }
 
-    print(
-      '📦 [CurrencyController] Found Currency: $code ($resolvedSymbol)',
-    );
+  
 
     currencyCode.value = code;
     currencySymbol.value = resolvedSymbol;
@@ -189,7 +166,6 @@ class CurrencyController extends GetxController {
     update();
 
     try {
-      print('📤 [CurrencyController] Sending to API: /api/users/currency');
       final ApiClient api = Get.find<ApiClient>();
 
       final response = await api.put(
@@ -200,25 +176,16 @@ class CurrencyController extends GetxController {
         },
       );
 
-      print(
-        '📥 [CurrencyController] API Response Status: ${response.statusCode}',
-      );
-      print(
-        '📥 [CurrencyController] API Response Success: ${response.success}',
-      );
-      print('📥 [CurrencyController] API Response Data: ${response.data}');
+    
+   
 
       if (response.success) {
-        print(
-          '✅ [CurrencyController] Currency synced with server successfully',
-        );
+     
       } else {
-        print(
-          '❌ [CurrencyController] Failed to sync currency with server: ${response.message}',
-        );
+     
       }
     } catch (e) {
-      print('❌ [CurrencyController] Failed to sync currency with server: $e');
+      debugPrint('Error: $e');
     }
   }
 

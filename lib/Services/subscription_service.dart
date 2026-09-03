@@ -58,7 +58,61 @@ class SubscriptionService {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // 3️⃣ START 30-DAY FREE TRIAL
+  // 3️⃣ GET SUBSCRIPTION CAPACITY (users / branches limits)
+  // GET /api/subscription/capacity
+  // ═══════════════════════════════════════════════════════════════════
+  Future<Map<String, dynamic>> fetchCapacity() async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/subscription/capacity'),
+        headers: headers,
+      );
+      return json.decode(response.body) as Map<String, dynamic>;
+    } catch (e) {
+      return {'success': false, 'message': e.toString()};
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 4️⃣ UPGRADE SUBSCRIPTION (add user seat or branch)
+  // POST /api/subscription/upgrade
+  // ═══════════════════════════════════════════════════════════════════
+  Future<Map<String, dynamic>> upgradeSubscription({
+    required int licensedUsers,
+    required int licensedBranches,
+  }) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/subscription/upgrade'),
+        headers: headers,
+        body: json.encode({
+          'licensedUsers': licensedUsers,
+          'licensedBranches': licensedBranches,
+        }),
+      );
+
+      final data = json.decode(response.body) as Map<String, dynamic>;
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'data': data['data'] ?? data,
+          'message': data['message'] ?? 'Subscription upgraded',
+        };
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Failed to upgrade subscription',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 5️⃣ START FREE TRIAL
   // POST /api/subscription/trial/start
   // ═══════════════════════════════════════════════════════════════════
   Future<Map<String, dynamic>> startTrial() async {
@@ -75,7 +129,7 @@ class SubscriptionService {
         return {
           'success': true,
           'data': data['data'],
-          'message': data['message'] ?? '30-day trial started! 🎉',
+          'message': data['message'] ?? '14-day trial started! 🎉',
         };
       } else {
         return {
@@ -89,22 +143,22 @@ class SubscriptionService {
   }
 
   // ═══════════════════════════════════════════════════════════════════
-  // 4️⃣ DIRECT SUBSCRIPTION — NO STRIPE
+  // 6️⃣ DIRECT SUBSCRIPTION — NO STRIPE
   // POST /api/subscription/subscribe
-  // Body: { plan: 'monthly'|'yearly', amount: double }
+  // Body: { plan, amount, productTier, licensedUsers, licensedBranches }
   // ═══════════════════════════════════════════════════════════════════
   Future<Map<String, dynamic>> subscribeDirect({
     required String plan,
     required double amount,
+    String productTier = 'erp_pos',
+    int licensedUsers = 1,
+    int licensedBranches = 1,
     String? paymentMethod,
     String? transactionId,
   }) async {
     try {
       final headers = await _getHeaders();
 
-      print(
-        '[SubscriptionService] Subscribing to plan: $plan (amount: $amount)',
-      );
 
       final response = await http.post(
         Uri.parse('$baseUrl/api/subscription/subscribe'),
@@ -112,15 +166,15 @@ class SubscriptionService {
         body: json.encode({
           'plan': plan,
           'amount': amount,
+          'productTier': productTier,
+          'licensedUsers': licensedUsers,
+          'licensedBranches': licensedBranches,
           'paymentMethod': paymentMethod ?? 'direct',
           'transactionId':
               transactionId ?? 'TXN-${DateTime.now().millisecondsSinceEpoch}',
         }),
       );
 
-      print(
-        '[SubscriptionService] Response ${response.statusCode}: ${response.body}',
-      );
 
       final data = json.decode(response.body) as Map<String, dynamic>;
 
@@ -137,7 +191,6 @@ class SubscriptionService {
         };
       }
     } catch (e) {
-      print('[SubscriptionService] Error: $e');
       return {'success': false, 'message': 'Network error: ${e.toString()}'};
     }
   }
@@ -215,6 +268,23 @@ class SubscriptionService {
       final headers = await _getHeaders();
       final response = await http.get(
         Uri.parse('$baseUrl/api/subscription/details'),
+        headers: headers,
+      );
+      return json.decode(response.body) as Map<String, dynamic>;
+    } catch (e) {
+      return {'success': false, 'message': e.toString()};
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 9️⃣ COMPANY BILLING (admin)
+  // GET /api/subscription/billing
+  // ═══════════════════════════════════════════════════════════════════
+  Future<Map<String, dynamic>> fetchCompanyBilling() async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/subscription/billing'),
         headers: headers,
       );
       return json.decode(response.body) as Map<String, dynamic>;

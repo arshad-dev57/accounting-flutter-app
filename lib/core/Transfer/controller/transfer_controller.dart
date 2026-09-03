@@ -1,7 +1,6 @@
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class TransferController extends GetxController {
@@ -17,13 +16,7 @@ class TransferController extends GetxController {
 
   final ApiClient _api = Get.find<ApiClient>();
 
-  double _toDouble(dynamic value) {
-    if (value == null) return 0.0;
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    if (value is String) return double.tryParse(value) ?? 0.0;
-    return 0.0;
-  }
+
 
   @override
   void onInit() {

@@ -1,7 +1,6 @@
 // lib/core/warehouse/goods_receiving/views/goods_receiving_screen.dart
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
-import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/core/goodsRecieving/goods_receiving_controller.dart';
 import 'package:BisonsTechs_app/core/goodsRecieving/goods_receiving_model.dart';
 import 'package:flutter/material.dart';
@@ -26,7 +25,7 @@ class GoodsReceivingScreen extends StatelessWidget {
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
@@ -112,7 +111,7 @@ class GoodsReceivingScreen extends StatelessWidget {
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(9),
                     ),
                     child: const Icon(
@@ -140,7 +139,7 @@ class GoodsReceivingScreen extends StatelessWidget {
                             '${controller.totalRecords.value} GRNs',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -173,13 +172,13 @@ class GoodsReceivingScreen extends StatelessWidget {
                       width: 34,
                       height: 34,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(9),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 17,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -195,7 +194,7 @@ class GoodsReceivingScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
+                      color: Colors.black.withValues(alpha: 0.06),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -251,7 +250,7 @@ class GoodsReceivingScreen extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 9,
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -268,10 +267,10 @@ class GoodsReceivingScreen extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
-            color: selected ? Colors.white : Colors.white.withOpacity(0.18),
+            color: selected ? Colors.white : Colors.white.withValues(alpha: 0.18),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: selected ? Colors.white : Colors.white.withOpacity(0.4),
+              color: selected ? Colors.white : Colors.white.withValues(alpha: 0.4),
             ),
           ),
           child: Text(
@@ -422,7 +421,7 @@ class _CreateGRNWizard extends StatelessWidget {
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
+                color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
@@ -476,7 +475,7 @@ class _CreateGRNWizard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: active
                     ? Colors.white
-                    : Colors.white.withOpacity(0.25),
+                    : Colors.white.withValues(alpha: 0.25),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -578,8 +577,8 @@ class _CreateGRNWizard extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: line.isFullyReceived
-                              ? Colors.green.withOpacity(0.1)
-                              : Colors.blue.withOpacity(0.1),
+                              ? Colors.green.withValues(alpha: 0.1)
+                              : Colors.blue.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -715,7 +714,7 @@ class _CreateGRNWizard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: kPrimary.withOpacity(0.05),
+              color: kPrimary.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -774,7 +773,7 @@ class _CreateGRNWizard extends StatelessWidget {
       Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: kPrimary.withOpacity(0.08),
+          color: kPrimary.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
@@ -858,10 +857,10 @@ class _CreateGRNWizard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -875,7 +874,7 @@ class _CreateGRNWizard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.1),
+                  color: kPrimary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Icon(Icons.inventory_2, size: 18, color: kPrimary),
@@ -918,7 +917,7 @@ class _CreateGRNWizard extends StatelessWidget {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: kPrimary.withOpacity(0.1),
+            color: kPrimary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(Icons.receipt_long, size: 18, color: kPrimary),
@@ -942,9 +941,9 @@ class _CreateGRNWizard extends StatelessWidget {
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: kPrimary.withOpacity(0.08),
+        color: kPrimary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: kPrimary.withOpacity(0.3)),
+        border: Border.all(color: kPrimary.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -998,7 +997,7 @@ class _CreateGRNWizard extends StatelessWidget {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withValues(alpha: 0.06),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),
@@ -1145,8 +1144,7 @@ class _GRNDetailSheetState extends State<_GRNDetailSheet> {
                 height: 50,
                 decoration: BoxDecoration(
                   color: widget.controller
-                      .getStatusColor(current.status)
-                      .withOpacity(0.1),
+                      .getStatusColor(current.status).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -1184,8 +1182,7 @@ class _GRNDetailSheetState extends State<_GRNDetailSheet> {
                 ),
                 decoration: BoxDecoration(
                   color: widget.controller
-                      .getStatusColor(current.status)
-                      .withOpacity(0.1),
+                      .getStatusColor(current.status).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -1200,13 +1197,13 @@ class _GRNDetailSheetState extends State<_GRNDetailSheet> {
             ],
           ),
           const SizedBox(height: 16),
-          Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+          Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
           const SizedBox(height: 16),
 
           // ─── Details Grid ────────────────────────────────────
           _detailGrid(current),
           const SizedBox(height: 16),
-          Divider(height: 1, color: Colors.grey.withOpacity(0.12)),
+          Divider(height: 1, color: Colors.grey.withValues(alpha: 0.12)),
           const SizedBox(height: 12),
 
           // ─── Items ────────────────────────────────────────────
@@ -1229,7 +1226,7 @@ class _GRNDetailSheetState extends State<_GRNDetailSheet> {
               padding: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(color: Colors.grey.withOpacity(0.06)),
+                  bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.06)),
                 ),
               ),
               child: Row(
@@ -1259,8 +1256,8 @@ class _GRNDetailSheetState extends State<_GRNDetailSheet> {
                     ),
                     decoration: BoxDecoration(
                       color: item.isFullyReceived
-                          ? Colors.green.withOpacity(0.1)
-                          : Colors.orange.withOpacity(0.1),
+                          ? Colors.green.withValues(alpha: 0.1)
+                          : Colors.orange.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
@@ -1287,7 +1284,7 @@ class _GRNDetailSheetState extends State<_GRNDetailSheet> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: kPrimary.withOpacity(0.05),
+              color: kPrimary.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
@@ -1464,7 +1461,7 @@ class _GRNDetailSheetState extends State<_GRNDetailSheet> {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.08),
+                  color: kPrimary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Icon(
@@ -1548,13 +1545,13 @@ class _GRNListView extends StatelessWidget {
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.08),
+                  color: kPrimary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Icon(
                   Icons.inventory_2_outlined,
                   size: 36,
-                  color: kPrimary.withOpacity(0.5),
+                  color: kPrimary.withValues(alpha: 0.5),
                 ),
               ),
               const SizedBox(height: 16),
@@ -1619,10 +1616,10 @@ class _GRNListView extends StatelessWidget {
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.03),
+                        color: Colors.black.withValues(alpha: 0.03),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -1635,7 +1632,7 @@ class _GRNListView extends StatelessWidget {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: color.withOpacity(0.1),
+                          color: color.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -1676,7 +1673,7 @@ class _GRNListView extends StatelessWidget {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: color.withOpacity(0.1),
+                                    color: color.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(

@@ -22,7 +22,12 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    controller = Get.put(LoginController());
+    if (Get.isRegistered<LoginController>()) {
+      controller = Get.find<LoginController>();
+      controller.ensureFreshControllers();
+    } else {
+      controller = Get.put(LoginController(), permanent: true);
+    }
     _keyboardFocusNode = FocusNode();
   }
 
@@ -89,7 +94,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     );
                   },
-                  errorBuilder: (context, _, __) => Container(
+                  errorBuilder: (context, error, stackTrace) => Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
@@ -106,14 +111,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.black.withOpacity(0.4),
-                        Colors.black.withOpacity(0.8),
+                        Colors.black.withValues(alpha: 0.4),
+                        Colors.black.withValues(alpha: 0.8),
                       ],
                     ),
                   ),
                 ),
 
-                Container(color: kPrimary.withOpacity(0.25)),
+                Container(color: kPrimary.withValues(alpha: 0.25)),
 
                 Positioned(
                   left: 36,
@@ -124,32 +129,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // Logo lockup
-                      Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: kPrimary,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.account_balance,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Text(
-                            'BisonsTechs',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1.8,
-                            ),
-                          ),
-                        ],
+                      Container(
+                        height: 96,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Image.asset(
+                          'assets/logo.png',
+                          fit: BoxFit.contain,
+                        ),
                       ),
                       const SizedBox(height: 20),
 
@@ -166,7 +159,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Text(
                         'Track inventory, manage ledgers, and generate\nfinancial reports — all in one platform.',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.75),
+                          color: Colors.white.withValues(alpha: 0.75),
                           fontSize: 13.5,
                           height: 1.6,
                         ),
@@ -252,9 +245,9 @@ class _LoginScreenState extends State<LoginScreen> {
         Center(
           child: Image.asset(
             'assets/logo.png',
-            height: isTablet || isWeb ? 72 : 64,
+            height: isTablet || isWeb ? 120 : 96,
             fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => Icon(
+            errorBuilder: (_, error, stackTrace) => Icon(
               Icons.account_balance_rounded,
               size: isTablet || isWeb ? 56 : 48,
               color: kPrimary,
@@ -425,9 +418,9 @@ class _LoginScreenState extends State<LoginScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.12),
+        color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

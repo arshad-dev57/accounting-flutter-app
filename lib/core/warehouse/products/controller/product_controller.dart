@@ -5,9 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -28,6 +26,7 @@ class ProductsController extends GetxController {
   var categories = <Map<String, dynamic>>[].obs;
   var suppliers = <Map<String, dynamic>>[].obs;
   var isSubmitting = false.obs;
+  String lastSubmitError = '';
 
   // ─── Settings dropdowns ───────────────────────────────────────
   var productTypes = <Map<String, dynamic>>[].obs;
@@ -292,6 +291,29 @@ class ProductsController extends GetxController {
   }
 
   // ─── CRUD ─────────────────────────────────────────────────────
+  Map<String, String> _toFields(Map<String, dynamic> data) {
+    final fields = <String, String>{};
+    data.forEach((key, value) {
+      if (value == null) return;
+      if (value is String && value.trim().isEmpty) return;
+      fields[key] = value is bool || value is num
+          ? value.toString()
+          : value.toString();
+    });
+    return fields;
+  }
+
+  String _errorMessage(dynamic response, String fallback) {
+    final data = response.data;
+    if (data is Map && data['message'] != null) {
+      return data['message'].toString();
+    }
+    if (response.message != null && response.message.toString().isNotEmpty) {
+      return response.message.toString();
+    }
+    return fallback;
+  }
+
   Future<bool> createProduct(
     Map<String, dynamic> data, {
     List<String>? imagePaths,
@@ -299,11 +321,8 @@ class ProductsController extends GetxController {
   }) async {
     try {
       isSubmitting.value = true;
-      final fields = <String, String>{};
-      data.forEach((key, value) {
-        if (value == null) return;
-        fields[key] = value is bool || value is num ? value.toString() : value.toString();
-      });
+      lastSubmitError = '';
+      final fields = _toFields(data);
       fields['existingImages'] = jsonEncode(existingImages ?? <String>[]);
 
       final multiFilePaths = <String, List<String>>{};
@@ -311,7 +330,6 @@ class ProductsController extends GetxController {
         multiFilePaths['images'] = imagePaths;
       }
 
-      // Always multipart so Cloudinary image flow matches web/register
       final response = await _api.postMultipart(
         '/api/warehouse/products',
         fields: fields,
@@ -322,9 +340,11 @@ class ProductsController extends GetxController {
         refreshAll();
         return true;
       }
+      lastSubmitError = _errorMessage(response, 'Failed to create product.');
       return false;
     } catch (e) {
       debugPrint('Error creating product: $e');
+      lastSubmitError = e.toString();
       return false;
     } finally {
       isSubmitting.value = false;
@@ -339,11 +359,12 @@ class ProductsController extends GetxController {
   }) async {
     try {
       isSubmitting.value = true;
-      final fields = <String, String>{};
-      data.forEach((key, value) {
-        if (value == null) return;
-        fields[key] = value is bool || value is num ? value.toString() : value.toString();
-      });
+      lastSubmitError = '';
+      if (id.trim().isEmpty) {
+        lastSubmitError = 'Product id is missing.';
+        return false;
+      }
+      final fields = _toFields(data);
       fields['existingImages'] = jsonEncode(existingImages ?? <String>[]);
 
       final multiFilePaths = <String, List<String>>{};
@@ -361,9 +382,11 @@ class ProductsController extends GetxController {
         refreshAll();
         return true;
       }
+      lastSubmitError = _errorMessage(response, 'Failed to update product.');
       return false;
     } catch (e) {
       debugPrint('Error updating product: $e');
+      lastSubmitError = e.toString();
       return false;
     } finally {
       isSubmitting.value = false;
@@ -636,10 +659,13 @@ class ProductsController extends GetxController {
 
   // ─── Share Scanned Data ──────────────────────────────────────
   void shareScannedData() {
-    Share.share(
-      'Scanned QR Code Data:\n${scannedData.value}\n\n'
-      'Time: ${DateTime.now().toString()}\n'
-      'BisonsTechs App',
+    SharePlus.instance.share(
+      ShareParams(
+        text:
+            'Scanned QR Code Data:\n${scannedData.value}\n\n'
+            'Time: ${DateTime.now()}\n'
+            'BisonsTechs App',
+      ),
     );
   }
 
@@ -759,9 +785,12 @@ class ProductsController extends GetxController {
       final file = File('${tempDir.path}/qr_code.png');
       await file.writeAsBytes(pngBytes);
 
-      await Share.shareXFiles([
-        XFile(file.path),
-      ], text: 'QR Code Data: ${qrData.value}');
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          text: 'QR Code Data: ${qrData.value}',
+        ),
+      );
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -780,37 +809,6 @@ class ProductsController extends GetxController {
       backgroundColor: Colors.orange.shade100,
       colorText: Colors.black,
     );
-  }
-
-  // ─── Parse Scanned Data ──────────────────────────────────────
-  void _parseScannedData(String data) {
-    try {
-      if (data.startsWith('{') && data.endsWith('}')) {
-        // Try to parse as JSON
-        final Map<String, dynamic> json = {};
-        final cleaned = data.substring(1, data.length - 1);
-        final pairs = cleaned.split(',');
-        for (var pair in pairs) {
-          final parts = pair.split(':');
-          if (parts.length == 2) {
-            final key = parts[0].trim().replaceAll('"', '');
-            final value = parts[1].trim().replaceAll('"', '');
-            json[key] = value;
-          }
-        }
-        selectedProductForQR.value = json;
-      } else if (data.startsWith('http://') || data.startsWith('https://')) {
-        selectedProductForQR.value = {'url': data};
-      } else if (data.contains('PROD-')) {
-        selectedProductForQR.value = {'id': data, 'type': 'product'};
-      } else {
-        selectedProductForQR.value = {'text': data};
-      }
-      qrData.value = data;
-    } catch (e) {
-      selectedProductForQR.value = {'text': data};
-      qrData.value = data;
-    }
   }
 
   // ─── Clear Scan History ──────────────────────────────────────
@@ -860,7 +858,6 @@ class ProductsController extends GetxController {
 
       return null;
     } catch (e) {
-      print('Error checking barcode: $e');
       return null;
     }
   }

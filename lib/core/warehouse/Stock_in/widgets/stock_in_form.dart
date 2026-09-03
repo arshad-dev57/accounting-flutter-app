@@ -24,11 +24,16 @@ class _StockInFormState extends State<StockInForm> {
   final _quantityCtrl = TextEditingController();
   final _boxCountCtrl = TextEditingController();
   final _piecesPerBoxCtrl = TextEditingController();
+  final _unitCostCtrl = TextEditingController();
   final _referenceCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
   String? _supplierId;
+  String? _bankAccountId;
+  String _stockSourceReason = 'opening_stock';
   List<Map<String, dynamic>> _suppliers = [];
-  bool _loadingSuppliers = true;
+  List<Map<String, dynamic>> _bankAccounts = [];
+  List<Map<String, dynamic>> _stockInReasons = [];
+  bool _loadingMeta = true;
   String? _error;
 
   int get _totalPieces {
@@ -40,20 +45,42 @@ class _StockInFormState extends State<StockInForm> {
     return int.tryParse(_quantityCtrl.text) ?? 0;
   }
 
+  Map<String, dynamic>? get _selectedReasonMeta {
+    for (final r in _stockInReasons) {
+      if (r['value']?.toString() == _stockSourceReason) return r;
+    }
+    return null;
+  }
+
+  bool get _requiresSupplier =>
+      _selectedReasonMeta?['requiresSupplier'] == true;
+
+  bool get _requiresBankAccount =>
+      _selectedReasonMeta?['requiresBankAccount'] == true;
+
   @override
   void initState() {
     super.initState();
-    _loadSuppliers();
+    _loadMeta();
   }
 
-  Future<void> _loadSuppliers() async {
-    final list = await widget.controller.fetchSuppliers();
-    if (mounted) {
-      setState(() {
-        _suppliers = list;
-        _loadingSuppliers = false;
-      });
-    }
+  Future<void> _loadMeta() async {
+    final reasons = await widget.controller.fetchStockReasons();
+    final suppliers = await widget.controller.fetchSuppliers();
+    final banks = await widget.controller.fetchBankAccounts();
+    if (!mounted) return;
+    setState(() {
+      _stockInReasons = List<Map<String, dynamic>>.from(
+        reasons['stockIn'] as List? ?? [],
+      );
+      _suppliers = suppliers;
+      _bankAccounts = banks;
+      if (_stockInReasons.isNotEmpty) {
+        _stockSourceReason =
+            _stockInReasons.first['value']?.toString() ?? 'opening_stock';
+      }
+      _loadingMeta = false;
+    });
   }
 
   @override
@@ -61,6 +88,7 @@ class _StockInFormState extends State<StockInForm> {
     _quantityCtrl.dispose();
     _boxCountCtrl.dispose();
     _piecesPerBoxCtrl.dispose();
+    _unitCostCtrl.dispose();
     _referenceCtrl.dispose();
     _notesCtrl.dispose();
     super.dispose();
@@ -84,6 +112,15 @@ class _StockInFormState extends State<StockInForm> {
         return;
       }
     }
+    if (_requiresSupplier && (_supplierId == null || _supplierId!.isEmpty)) {
+      setState(() => _error = 'Supplier is required for this stock source');
+      return;
+    }
+    if (_requiresBankAccount &&
+        (_bankAccountId == null || _bankAccountId!.isEmpty)) {
+      setState(() => _error = 'Bank account is required for cash purchase');
+      return;
+    }
 
     Map<String, dynamic>? supplier;
     if (_supplierId != null) {
@@ -95,18 +132,23 @@ class _StockInFormState extends State<StockInForm> {
       }
     }
 
+    final unitCost = double.tryParse(_unitCostCtrl.text.trim());
+
     final ok = await widget.controller.addStock(
       productId: _selectedProduct!['id'].toString(),
       stockType: _stockType,
       quantity: _stockType == 'box'
           ? int.parse(_boxCountCtrl.text)
           : int.parse(_quantityCtrl.text),
+      stockSourceReason: _stockSourceReason,
+      unitCost: unitCost,
+      bankAccountId: _bankAccountId,
       boxCount: _stockType == 'box' ? int.parse(_boxCountCtrl.text) : null,
       piecesPerBox: _stockType == 'box'
           ? int.parse(_piecesPerBoxCtrl.text)
           : null,
       supplierId: _supplierId,
-      supplierName: supplier?['name']?.toString() ?? 'Walk-in',
+      supplierName: supplier?['name']?.toString(),
       reference: _referenceCtrl.text.trim(),
       notes: _notesCtrl.text.trim(),
     );
@@ -117,9 +159,11 @@ class _StockInFormState extends State<StockInForm> {
         _quantityCtrl.clear();
         _boxCountCtrl.clear();
         _piecesPerBoxCtrl.clear();
+        _unitCostCtrl.clear();
         _referenceCtrl.clear();
         _notesCtrl.clear();
         _supplierId = null;
+        _bankAccountId = null;
       });
       widget.onSuccess();
     }
@@ -132,7 +176,7 @@ class _StockInFormState extends State<StockInForm> {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.15)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -174,8 +218,15 @@ class _StockInFormState extends State<StockInForm> {
           StockProductSearch(
             controller: widget.controller,
             selectedProduct: _selectedProduct,
-            onSelected: (p) =>
-                setState(() => _selectedProduct = p.isEmpty ? null : p),
+            onSelected: (p) {
+              setState(() {
+                _selectedProduct = p.isEmpty ? null : p;
+                if (p.isNotEmpty && _unitCostCtrl.text.isEmpty) {
+                  final cost = p['costPrice'];
+                  if (cost != null) _unitCostCtrl.text = cost.toString();
+                }
+              });
+            },
           ),
           const SizedBox(height: 16),
           Row(
@@ -258,13 +309,87 @@ class _StockInFormState extends State<StockInForm> {
             ],
           ],
           const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue.shade100),
+            ),
+            child: Text(
+              'Choose why stock is arriving — accounting posts automatically (Dr Inventory).',
+              style: TextStyle(fontSize: 12, color: Colors.blue.shade900),
+            ),
+          ),
+          const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: _supplierId,
+            initialValue: _stockSourceReason,
+            decoration: const InputDecoration(
+              labelText: 'Stock Source *',
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
+            items: _stockInReasons
+                .map(
+                  (r) => DropdownMenuItem(
+                    value: r['value']?.toString() ?? '',
+                    child: Text(r['label']?.toString() ?? ''),
+                  ),
+                )
+                .toList(),
+            onChanged: _loadingMeta
+                ? null
+                : (v) => setState(() {
+                      _stockSourceReason = v ?? 'opening_stock';
+                      if (!_requiresSupplier) _supplierId = null;
+                      if (!_requiresBankAccount) _bankAccountId = null;
+                    }),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _unitCostCtrl,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(
+              labelText: 'Unit Cost *',
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
+          ),
+          if (_requiresBankAccount) ...[
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: _bankAccountId,
+              decoration: const InputDecoration(
+                labelText: 'Pay From Bank Account *',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+              items: [
+                const DropdownMenuItem(
+                  value: null,
+                  child: Text('Select bank account...'),
+                ),
+                ..._bankAccounts.map(
+                  (b) => DropdownMenuItem(
+                    value: b['id']?.toString(),
+                    child: Text(
+                      '${b['accountName']} — ${b['bankName']}',
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ],
+              onChanged: (v) => setState(() => _bankAccountId = v),
+            ),
+          ],
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            initialValue: _supplierId,
             decoration: InputDecoration(
-              labelText: 'Supplier',
+              labelText: _requiresSupplier ? 'Supplier *' : 'Supplier',
               border: const OutlineInputBorder(),
               isDense: true,
-              suffixIcon: _loadingSuppliers
+              suffixIcon: _loadingMeta
                   ? const Padding(
                       padding: EdgeInsets.all(12),
                       child: SizedBox(
@@ -360,7 +485,7 @@ class _StockInFormState extends State<StockInForm> {
             color: selected ? kPrimary : Colors.grey.shade300,
             width: selected ? 2 : 1,
           ),
-          color: selected ? kPrimary.withOpacity(0.05) : Colors.transparent,
+          color: selected ? kPrimary.withValues(alpha: 0.05) : Colors.transparent,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

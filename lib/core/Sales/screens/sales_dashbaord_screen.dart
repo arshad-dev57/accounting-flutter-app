@@ -1,17 +1,24 @@
-import 'dart:io';
-
+import 'package:BisonsTechs_app/widgets/dashboard_hero_watermark.dart';
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/widgets/dashboard_mobile_chrome.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/widgets/fiscal_year_select.dart';
+import 'package:BisonsTechs_app/core/warehouse/widgets/location_switcher.dart';
 import 'package:BisonsTechs_app/core/Notifications/screens/notification_screen.dart';
+import 'package:BisonsTechs_app/widgets/reload_when_visible.dart';
 import 'package:BisonsTechs_app/core/warehouse/sales/controller/sales_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/sales/model/sales_dashboard_model.dart';
+import 'package:BisonsTechs_app/core/Sales/screens/sales_report_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/order/screen/Sales_order_screen.dart';
+import 'package:BisonsTechs_app/core/warehouse/salesInvoice/sales_invoice_screen.dart';
+import 'package:BisonsTechs_app/widgets/module_logout_dialog.dart';
+import 'package:BisonsTechs_app/widgets/module_settings_tab.dart';
 import 'package:BisonsTechs_app/widgets/sales_drawer.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
 const _kPageBg = Color(0xFFF5F6FA);
@@ -41,80 +48,259 @@ const _kHeroBgEnd = Color(0xFFD6E4F0);
 const _kHeroBorder = Color(0xFFB8CFE0);
 const _kHeroIcon = Color(0xFFC5D8E8);
 
-class SalesDashboardScreen extends GetView<SalesController> {
+class SalesDashboardScreen extends StatefulWidget {
   const SalesDashboardScreen({super.key});
+
+  @override
+  State<SalesDashboardScreen> createState() => _SalesDashboardScreenState();
+}
+
+class _SalesDashboardScreenState extends State<SalesDashboardScreen>
+    with RouteAware, ReloadWhenVisible {
+  @override
+  void reloadOnOpen() {
+    if (Get.isRegistered<SalesController>()) {
+      Get.find<SalesController>().fetchDashboard();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => const _SalesDashboardView();
+}
+
+class _SalesDashboardView extends StatefulWidget {
+  const _SalesDashboardView();
+
+  @override
+  State<_SalesDashboardView> createState() => _SalesDashboardViewState();
+}
+
+class _SalesDashboardViewState extends State<_SalesDashboardView> {
+  int _tabIndex = 0;
+
+  static const _tabLabels = [
+    'Dashboard',
+    'Orders',
+    'Invoices',
+    'Reports',
+    'Settings',
+  ];
+
+  void _selectTab(int index) {
+    if (_tabIndex == index) return;
+    setState(() => _tabIndex = index);
+  }
+
+  List<DashboardBreadcrumbSegment> _breadcrumbSegments() {
+    final segments = <DashboardBreadcrumbSegment>[
+      DashboardBreadcrumbSegment(
+        label: 'Home',
+        onTap: () => Get.offAllNamed('/dashboard'),
+      ),
+      const DashboardBreadcrumbSegment(label: 'Sales'),
+    ];
+    if (_tabIndex > 0) {
+      segments.add(DashboardBreadcrumbSegment(label: _tabLabels[_tabIndex]));
+    }
+    return segments;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _SalesDashboardBody(
+      tabIndex: _tabIndex,
+      onSelectTab: _selectTab,
+      breadcrumbSegments: _breadcrumbSegments(),
+    );
+  }
+}
+
+class _SalesDashboardBody extends GetView<SalesController> {
+  final int tabIndex;
+  final ValueChanged<int> onSelectTab;
+  final List<DashboardBreadcrumbSegment> breadcrumbSegments;
+
+  const _SalesDashboardBody({
+    required this.tabIndex,
+    required this.onSelectTab,
+    required this.breadcrumbSegments,
+  });
 
   @override
   Widget build(BuildContext context) {
     Get.put(SalesController());
     final isMobile = ResponsiveUtils.isMobile(context);
     final isTablet = MediaQuery.of(context).size.width >= 600;
+    final bottomReserve =
+        isMobile ? DashboardGlassBottomNav.reservedHeight(context) : 100.0;
 
     return Scaffold(
       backgroundColor: _kPageBg,
+      extendBody: isMobile,
       appBar: _buildAppBar(isMobile),
       drawer: isMobile
           ? const SalesDrawer(currentRoute: '/warehouse/sales')
           : null,
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return _buildShimmer();
-        }
-        return RefreshIndicator(
-          color: kPrimary,
-          backgroundColor: _kCardBg,
-          onRefresh: controller.fetchDashboard,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeroCard(),
-                const SizedBox(height: 14),
-                _buildPeriodChips(),
-                const SizedBox(height: 16),
-                _buildKpiGrid(isTablet),
-                if (PermissionService.to.isAdmin ||
-                    PermissionService.to.hasSubPageAccess('sales', 'credits')) ...[
-                  const SizedBox(height: 16),
-                  _buildCreditsStrip(),
+      body: SizedBox.expand(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (isMobile)
+              _buildMobileTab(isTablet: isTablet, bottomReserve: bottomReserve)
+            else
+              _buildDashboardTab(isTablet: isTablet, bottomReserve: bottomReserve),
+            if (isMobile)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: DashboardGlassBottomNav(
+                items: [
+                  DashboardBottomNavItem(
+                    label: 'Dashboard',
+                    iconAsset: 'assets/icons/dashboard.svg',
+                    fallbackIcon: Icons.dashboard_outlined,
+                    selected: tabIndex == 0,
+                    onTap: () => onSelectTab(0),
+                  ),
+                  DashboardBottomNavItem(
+                    label: 'Orders',
+                    iconAsset: 'assets/icons/sales.svg',
+                    fallbackIcon: Icons.shopping_cart_outlined,
+                    selected: tabIndex == 1,
+                    onTap: () => onSelectTab(1),
+                  ),
+                  DashboardBottomNavItem(
+                    label: 'Invoices',
+                    iconAsset: 'assets/icons/purchase.svg',
+                    fallbackIcon: Icons.receipt_long_outlined,
+                    selected: tabIndex == 2,
+                    onTap: () => onSelectTab(2),
+                  ),
+                  DashboardBottomNavItem(
+                    label: 'Reports',
+                    iconAsset: 'assets/icons/reports.svg',
+                    fallbackIcon: Icons.assessment_outlined,
+                    selected: tabIndex == 3,
+                    onTap: () => onSelectTab(3),
+                  ),
+                  DashboardBottomNavItem(
+                    label: 'Settings',
+                    iconAsset: 'assets/icons/settings.svg',
+                    fallbackIcon: Icons.settings_outlined,
+                    selected: tabIndex == 4,
+                    onTap: () => onSelectTab(4),
+                  ),
                 ],
-                const SizedBox(height: 16),
-                _buildFinancialOverview(),
-                const SizedBox(height: 16),
-                _buildRevenueTrendCard(),
-                const SizedBox(height: 16),
-                _buildOrderStatusCard(),
-                const SizedBox(height: 16),
-                _buildComparisonCards(isTablet),
-                const SizedBox(height: 16),
-                _buildTopProductsAndCustomers(isTablet),
-                const SizedBox(height: 16),
-                _buildRecentActivity(),
-                const SizedBox(height: 16),
-                _buildRevenueBreakdown(),
-                const SizedBox(height: 16),
-                _buildQuickActions(),
-              ],
+              ),
             ),
-          ),
-        );
-      }),
+          ],
+        ),
+      ),
     );
   }
 
-  // ─── AppBar (identical structure to DashboardScreen) ─────────────────────
+  Widget _buildMobileTab({
+    required bool isTablet,
+    required double bottomReserve,
+  }) {
+    final pad = EdgeInsets.only(bottom: bottomReserve);
+    switch (tabIndex) {
+      case 1:
+        return Padding(
+          padding: pad,
+          child: const SalesOrdersScreen(embedded: true),
+        );
+      case 2:
+        return Padding(
+          padding: pad,
+          child: const SalesInvoiceScreen(embedded: true),
+        );
+      case 3:
+        return Padding(
+          padding: pad,
+          child: const SalesReportScreen(embedded: true),
+        );
+      case 4:
+        return Padding(
+          padding: pad,
+          child: ModuleSettingsTab(
+            onLogout: showModuleLogoutDialog,
+            embedded: true,
+          ),
+        );
+      default:
+        return _buildDashboardTab(isTablet: isTablet, bottomReserve: bottomReserve);
+    }
+  }
+
+  Widget _buildDashboardTab({
+    required bool isTablet,
+    required double bottomReserve,
+  }) {
+    return Obx(() {
+      if (controller.isLoading.value) {
+        return _buildShimmer(bottomReserve: bottomReserve);
+      }
+      return RefreshIndicator(
+        color: kPrimary,
+        backgroundColor: _kCardBg,
+        onRefresh: controller.fetchDashboard,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(16, 16, 16, bottomReserve),
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeroCard(),
+              const SizedBox(height: 14),
+              _buildPeriodChips(),
+              const SizedBox(height: 16),
+              _buildKpiGrid(isTablet),
+              if (PermissionService.to.isAdmin ||
+                  PermissionService.to.hasSubPageAccess('sales', 'credits')) ...[
+                const SizedBox(height: 16),
+                _buildCreditsStrip(),
+              ],
+              const SizedBox(height: 16),
+              _buildFinancialOverview(),
+              const SizedBox(height: 16),
+              _buildRevenueTrendCard(),
+              const SizedBox(height: 16),
+              _buildOrderStatusCard(),
+              const SizedBox(height: 16),
+              _buildComparisonCards(isTablet),
+              const SizedBox(height: 16),
+              _buildTopProductsAndCustomers(isTablet),
+              const SizedBox(height: 16),
+              _buildRecentActivity(),
+              const SizedBox(height: 16),
+              _buildRevenueBreakdown(),
+              const SizedBox(height: 16),
+              _buildQuickActions(),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  // ─── AppBar ─────────────────────────────────────────────────────────────
   PreferredSizeWidget _buildAppBar(bool isMobile) {
     return AppBar(
       backgroundColor: _kAppBarBg,
       elevation: 0,
       scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(0.5),
-        child: Container(height: 0.5, color: _kCardBorder),
-      ),
+      bottom: isMobile
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(44),
+              child: DashboardBreadcrumbBar(segments: breadcrumbSegments),
+            )
+          : PreferredSize(
+              preferredSize: const Size.fromHeight(0.5),
+              child: Container(height: 0.5, color: _kCardBorder),
+            ),
       leading: isMobile
           ? Builder(
               builder: (ctx) => IconButton(
@@ -127,88 +313,14 @@ class SalesDashboardScreen extends GetView<SalesController> {
               ),
             )
           : null,
-      title: Obx(() {
-        final logo = controller.businessLogo.value;
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            logo.isNotEmpty
-                ? Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: logo.startsWith('http')
-                          ? Image.network(
-                              logo,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  width: 30,
-                                  height: 30,
-                                  decoration: BoxDecoration(
-                                    color: kPrimary,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Icon(
-                                    Icons.trending_up_rounded,
-                                    size: 16,
-                                    color: Colors.white,
-                                  ),
-                                );
-                              },
-                            )
-                          : Image.file(
-                              File(logo),
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  width: 30,
-                                  height: 30,
-                                  decoration: BoxDecoration(
-                                    color: kPrimary,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Icon(
-                                    Icons.trending_up_rounded,
-                                    size: 16,
-                                    color: Colors.white,
-                                  ),
-                                );
-                              },
-                            ),
-                    ),
-                  )
-                : Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: kPrimary,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
-                      Icons.trending_up_rounded,
-                      size: 16,
-                      color: Colors.white,
-                    ),
-                  ),
-            const SizedBox(width: 8),
-            const Text(
-              'Sales',
-              style: TextStyle(
-                color: _kTextPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.3,
-              ),
-            ),
-          ],
-        );
-      }),
+      titleSpacing: isMobile ? 0 : NavigationToolbar.kMiddleSpacing,
+      title: const SizedBox.shrink(),
       actions: [
+        LocationSwitcher(compact: true, showManageLink: !isMobile),
+        FiscalYearSelect(
+          compact: true,
+          showManageLink: !isMobile,
+        ),
         IconButton(
           icon: const Icon(
             Icons.notifications_none_rounded,
@@ -216,6 +328,9 @@ class SalesDashboardScreen extends GetView<SalesController> {
             size: 22,
           ),
           onPressed: () => Get.to(() => const NotificationScreen()),
+          visualDensity: VisualDensity.compact,
+          padding: const EdgeInsets.all(8),
+          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
         ),
         const SizedBox(width: 4),
       ],
@@ -223,13 +338,13 @@ class SalesDashboardScreen extends GetView<SalesController> {
   }
 
   // ─── Shimmer ──────────────────────────────────────────────────────────────
-  Widget _buildShimmer() {
+  Widget _buildShimmer({double bottomReserve = 100}) {
     return Shimmer.fromColors(
       baseColor: const Color(0xFFEEEFF4),
       highlightColor: const Color(0xFFF8F9FC),
       period: const Duration(milliseconds: 1200),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+        padding: EdgeInsets.fromLTRB(16, 16, 16, bottomReserve),
         physics: const NeverScrollableScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,7 +378,7 @@ class SalesDashboardScreen extends GetView<SalesController> {
                 mainAxisSpacing: 10,
                 childAspectRatio: 1.55,
               ),
-              itemBuilder: (_, __) => _shimmerBox(radius: 14),
+              itemBuilder: (context, index) => _shimmerBox(radius: 14),
             ),
             const SizedBox(height: 16),
             _shimmerBox(height: 220, radius: 16),
@@ -295,8 +410,6 @@ class SalesDashboardScreen extends GetView<SalesController> {
     return Obx(() {
       final data = controller.dashboard.value;
       final fmt = Get.find<CurrencyController>().formatAmount;
-      final logo = controller.businessLogo.value;
-      final hasLogo = logo.isNotEmpty;
 
       final todayOrders = data?.orders.todayCount ?? 0;
       final todayRevenue = data?.orders.todayRevenue ?? 0.0;
@@ -314,7 +427,7 @@ class SalesDashboardScreen extends GetView<SalesController> {
           border: Border.all(color: _kHeroBorder),
           boxShadow: [
             BoxShadow(
-              color: kPrimary.withOpacity(0.10),
+              color: kPrimary.withValues(alpha: 0.10),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -324,33 +437,7 @@ class SalesDashboardScreen extends GetView<SalesController> {
           borderRadius: BorderRadius.circular(17),
           child: Stack(
             children: [
-              if (hasLogo)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: Opacity(
-                      opacity: 0.07,
-                      child: logo.startsWith('http')
-                          ? Image.network(
-                              logo,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                              alignment: Alignment.center,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const SizedBox.shrink(),
-                            )
-                          : Image.file(
-                              File(logo),
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                              alignment: Alignment.center,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const SizedBox.shrink(),
-                            ),
-                    ),
-                  ),
-                ),
+              const DashboardHeroWatermark(),
               Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -552,7 +639,7 @@ class SalesDashboardScreen extends GetView<SalesController> {
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           itemCount: SalesController.timePeriodLabels.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          separatorBuilder: (context, index) => const SizedBox(width: 8),
           itemBuilder: (_, i) {
             final period = SalesController.timePeriodLabels[i];
             final isActive = period == selected;
@@ -927,10 +1014,19 @@ class SalesDashboardScreen extends GetView<SalesController> {
       final orderTrend = data?.orders.trend ?? [];
       final posTrend = data?.pos.trend ?? [];
 
-      final allDates = <String>{};
-      for (final p in invoiceTrend) allDates.add(p.date);
-      for (final p in orderTrend) allDates.add(p.date);
-      for (final p in posTrend) allDates.add(p.date);
+     final allDates = <String>{};
+
+for (final p in invoiceTrend) {
+  allDates.add(p.date);
+}
+
+for (final p in orderTrend) {
+  allDates.add(p.date);
+}
+
+for (final p in posTrend) {
+  allDates.add(p.date);
+}
       final sorted = allDates.toList()..sort();
 
       final invoiceSpots = <FlSpot>[];
@@ -1065,7 +1161,7 @@ class SalesDashboardScreen extends GetView<SalesController> {
         isStrokeCapRound: true,
         dotData: FlDotData(
           show: true,
-          getDotPainter: (_, __, ___, ____) =>
+          getDotPainter: (context, index, data, spot) =>
               FlDotCirclePainter(radius: 3, color: color, strokeWidth: 0),
         ),
         belowBarData: BarAreaData(
@@ -1073,7 +1169,7 @@ class SalesDashboardScreen extends GetView<SalesController> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [color.withOpacity(0.15), color.withOpacity(0.0)],
+            colors: [color.withValues(alpha: 0.15), color.withValues(alpha: 0.0)],
           ),
         ),
       );
@@ -1150,8 +1246,9 @@ class SalesDashboardScreen extends GetView<SalesController> {
                           showTitles: true,
                           getTitlesWidget: (v, _) {
                             final i = v.toInt();
-                            if (i < 0 || i >= items.length)
+                            if (i < 0 || i >= items.length) {
                               return const SizedBox.shrink();
+                            }
                             final s = items[i].status;
                             return Padding(
                               padding: const EdgeInsets.only(top: 6),
@@ -1552,15 +1649,14 @@ class SalesDashboardScreen extends GetView<SalesController> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          if (activity.amount != null)
-                            Text(
-                              fmt(activity.amount),
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: _kTextPrimary,
-                              ),
+                          Text(
+                            fmt(activity.amount),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: _kTextPrimary,
                             ),
+                          ),
                           const SizedBox(height: 4),
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -1600,7 +1696,7 @@ class SalesDashboardScreen extends GetView<SalesController> {
   Widget _buildRevenueBreakdown() {
     return Obx(() {
       final data = controller.dashboard.value;
-      final items = data?.revenueBreakdown?.items ?? [];
+      final items = data?.revenueBreakdown.items ?? [];
 
       if (items.isEmpty) return const SizedBox.shrink();
 
@@ -1623,7 +1719,7 @@ class SalesDashboardScreen extends GetView<SalesController> {
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.10),
+                      color: color.withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     alignment: Alignment.center,
@@ -1790,7 +1886,7 @@ class _SectionCard extends StatelessWidget {
                   color: _kTextPrimary,
                 ),
               ),
-              if (trailing != null) trailing!,
+              if (trailing != null) trailing as Widget,
             ],
           ),
           const SizedBox(height: 14),

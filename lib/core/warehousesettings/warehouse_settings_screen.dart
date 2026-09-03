@@ -121,7 +121,7 @@ class SettingsScreen extends StatelessWidget {
                   title: 'Product Settings',
                   icon: Icons.inventory_2_outlined,
                   description:
-                      'Manage product-related settings like units, brands, tax rates',
+                      'Manage product-related settings like units and brands. Tax rates live in Tax Compliance.',
                   categories: productSettingCategories,
                   ctrl: ctrl,
                 ),
@@ -160,7 +160,9 @@ class _MessageBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
-      color: isSuccess ? kGreen.withOpacity(0.1) : kRed.withOpacity(0.1),
+      color: isSuccess
+          ? kGreen.withValues(alpha: 0.1)
+          : kRed.withValues(alpha: 0.1),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
@@ -261,6 +263,25 @@ class _SettingsTab extends StatelessWidget {
 
         const SizedBox(height: 12),
 
+        if (title == 'Product Settings')
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: ListTile(
+              tileColor: kWhite,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: kBorder),
+              ),
+              leading: const Icon(Icons.percent, color: kPrimary),
+              title: const Text('Tax rates live in Tax Compliance'),
+              subtitle: const Text(
+                'Country packs, inclusive/exclusive, exemptions',
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Get.toNamed('/tax'),
+            ),
+          ),
+
         // ─── Category Chips ──────────────────────────────────────
         SizedBox(
           height: 40,
@@ -268,7 +289,7 @@ class _SettingsTab extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: categories.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            separatorBuilder: (context, index) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
               final cat = categories[index];
               return Obx(() {
@@ -291,7 +312,7 @@ class _SettingsTab extends StatelessWidget {
                       boxShadow: isActive
                           ? [
                               BoxShadow(
-                                color: kPrimary.withOpacity(0.25),
+                                color: kPrimary.withValues(alpha: 0.25),
                                 blurRadius: 8,
                                 offset: const Offset(0, 3),
                               ),
@@ -389,7 +410,7 @@ class _SearchBar extends StatelessWidget {
           border: Border.all(color: kBorder),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
@@ -490,7 +511,7 @@ class _SettingsList extends StatelessWidget {
                 child: Icon(
                   _getCategoryIcon(ctrl.activeCategory.value),
                   size: 28,
-                  color: kTextGrey.withOpacity(0.45),
+                  color: kTextGrey.withValues(alpha: 0.45),
                 ),
               ),
               const SizedBox(height: 14),
@@ -522,7 +543,7 @@ class _SettingsList extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: kPrimaryLight,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: kPrimary.withOpacity(0.3)),
+                    border: Border.all(color: kPrimary.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -555,7 +576,7 @@ class _SettingsList extends StatelessWidget {
           border: Border.all(color: kBorder),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -596,7 +617,7 @@ class _SettingsList extends StatelessWidget {
                       vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: kPrimary.withOpacity(0.1),
+                      color: kPrimary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -616,7 +637,9 @@ class _SettingsList extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: kPrimaryLight,
                         borderRadius: BorderRadius.circular(7),
-                        border: Border.all(color: kPrimary.withOpacity(0.2)),
+                        border: Border.all(
+                          color: kPrimary.withValues(alpha: 0.2),
+                        ),
                       ),
                       child: const Icon(Icons.add, size: 15, color: kPrimary),
                     ),
@@ -630,7 +653,8 @@ class _SettingsList extends StatelessWidget {
               child: ListView.separated(
                 padding: EdgeInsets.zero,
                 itemCount: items.length,
-                separatorBuilder: (_, __) => Divider(height: 1, color: kBorder),
+                separatorBuilder: (context, index) =>
+                    Divider(height: 1, color: kBorder),
                 itemBuilder: (context, index) {
                   final item = items[index];
                   final showZone = ctrl.activeCategory.value == 'rackLocation';
@@ -713,7 +737,7 @@ class _SettingTile extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: kPrimary.withOpacity(0.1),
+                          color: kPrimary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -742,7 +766,7 @@ class _SettingTile extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: kGreen.withOpacity(0.1),
+              color: kGreen.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -788,10 +812,10 @@ class _ActionBtn extends StatelessWidget {
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: disabled ? Colors.grey[100] : color.withOpacity(0.09),
+          color: disabled ? Colors.grey[100] : color.withValues(alpha: 0.09),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: disabled ? kBorder : color.withOpacity(0.2),
+            color: disabled ? kBorder : color.withValues(alpha: 0.2),
           ),
         ),
         child: Icon(icon, size: 16, color: disabled ? Colors.grey[350] : color),
@@ -993,7 +1017,7 @@ void _showFormSheet(
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: kPrimary.withOpacity(0.1),
+                      color: kPrimary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -1051,7 +1075,7 @@ void _showFormSheet(
             const SizedBox(height: 20),
 
             // ── Name field ──
-            _FieldLabel('Name *'),
+            fieldLabel('Name *'),
             const SizedBox(height: 6),
             _InputField(
               controller: nameCtrl,
@@ -1068,7 +1092,7 @@ void _showFormSheet(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _FieldLabel('Symbol'),
+                        fieldLabel('Symbol'),
                         const SizedBox(height: 6),
                         _InputField(
                           controller: symbolCtrl,
@@ -1082,7 +1106,7 @@ void _showFormSheet(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _FieldLabel('Code'),
+                        fieldLabel('Code'),
                         const SizedBox(height: 6),
                         _InputField(
                           controller: codeCtrl,
@@ -1098,7 +1122,7 @@ void _showFormSheet(
 
             // ── Rack location zone ──
             if (isRackLocation) ...[
-              _FieldLabel('Zone'),
+              fieldLabel('Zone'),
               const SizedBox(height: 6),
               Obx(
                 () => Container(
@@ -1151,7 +1175,7 @@ void _showFormSheet(
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: isDefaultObs.value
-                          ? kPrimary.withOpacity(0.3)
+                          ? kPrimary.withValues(alpha: 0.3)
                           : kBorder,
                     ),
                   ),
@@ -1253,7 +1277,7 @@ void _showFormSheet(
                               bool success;
                               if (isEditing) {
                                 success = await ctrl.updateSetting(
-                                  item!.id,
+                                  item.id,
                                   payload,
                                 );
                               } else {
@@ -1270,7 +1294,9 @@ void _showFormSheet(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        disabledBackgroundColor: kPrimary.withOpacity(0.5),
+                        disabledBackgroundColor: kPrimary.withValues(
+                          alpha: 0.5,
+                        ),
                       ),
                       child: ctrl.isSaving.value
                           ? const SizedBox(
@@ -1302,10 +1328,7 @@ void _showFormSheet(
   );
 }
 
-// ============================================================
-// HELPERS
-// ============================================================
-Widget _FieldLabel(String label) => Text(
+Widget fieldLabel(String label) => Text(
   label,
   style: const TextStyle(
     fontSize: 13,

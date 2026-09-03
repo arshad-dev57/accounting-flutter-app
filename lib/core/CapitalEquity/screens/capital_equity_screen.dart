@@ -1,6 +1,6 @@
 // screens/capital_equity_screen.dart - COMPLETE PROFESSIONAL MOBILE DESIGN
 
-import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/widgets/expandable_stat_card.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/CapitalEquity/controller/equity_controller.dart';
@@ -8,7 +8,6 @@ import 'package:BisonsTechs_app/core/CapitalEquity/models/equity_model.dart';
 import 'package:BisonsTechs_app/core/chartofaccounts/screens/chart_of_account_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class CapitalEquityScreen extends StatelessWidget {
@@ -53,7 +52,7 @@ class CapitalEquityScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: kPrimary.withOpacity(0.4),
+              color: kPrimary.withValues(alpha: 0.4),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -120,7 +119,7 @@ class CapitalEquityScreen extends StatelessWidget {
                             '${controller.equityAccounts.length} accounts',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -138,13 +137,13 @@ class CapitalEquityScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 18,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -155,13 +154,13 @@ class CapitalEquityScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.download_outlined,
                         size: 18,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -181,7 +180,7 @@ class CapitalEquityScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
+                            color: Colors.black.withValues(alpha: 0.06),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -221,7 +220,7 @@ class CapitalEquityScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
+                          color: Colors.black.withValues(alpha: 0.06),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -271,43 +270,66 @@ class CapitalEquityScreen extends StatelessWidget {
   // ═══════════════════════════════════════════════════════════════
 
   Widget _buildSummaryCards(EquityController controller) {
-    return Obx(
-      () => Container(
+    return Obx(() {
+      final up = controller.isCapitalIncrease.value;
+      final earned = controller.periodEarnings.value;
+      final changeLabel = up ? 'Earned this period' : 'Decreased this period';
+      final changeColor = up ? kSuccess : kDanger;
+      return Container(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildProfessionalCard(
-              title: 'Total Equity',
-              amount: controller.formatAmount(controller.totalEquity.value),
-              color: kPrimary,
-              icon: Icons.account_balance_wallet,
-              bgColor: kPrimary.withOpacity(0.08),
-              borderColor: kPrimary.withOpacity(0.2),
+            Row(
+              children: [
+                _buildProfessionalCard(
+                  title: 'Your capital',
+                  amount: controller.formatAmount(controller.ownerCapital.value),
+                  color: kPrimary,
+                  icon: Icons.account_balance_wallet_outlined,
+                  bgColor: kPrimary.withValues(alpha: 0.08),
+                  borderColor: kPrimary.withValues(alpha: 0.2),
+                ),
+                const SizedBox(width: 8),
+                _buildProfessionalCard(
+                  title: changeLabel,
+                  amount: controller.formatAmount(earned),
+                  color: changeColor,
+                  icon: up
+                      ? Icons.trending_up_rounded
+                      : Icons.trending_down_rounded,
+                  bgColor: changeColor.withValues(alpha: 0.08),
+                  borderColor: changeColor.withValues(alpha: 0.2),
+                ),
+                const SizedBox(width: 8),
+                _buildProfessionalCard(
+                  title: 'Equity now',
+                  amount: controller.formatAmount(controller.equityNow.value),
+                  color: kPrimary,
+                  icon: Icons.pie_chart_outline_rounded,
+                  bgColor: kPrimary.withValues(alpha: 0.08),
+                  borderColor: kPrimary.withValues(alpha: 0.2),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            _buildProfessionalCard(
-              title: 'Capital',
-              amount: controller.formatAmount(controller.totalCapital.value),
-              color: kPrimary,
-              icon: Icons.account_balance,
-              bgColor: kPrimary.withOpacity(0.08),
-              borderColor: kPrimary.withOpacity(0.2),
-            ),
-            const SizedBox(width: 8),
-            _buildProfessionalCard(
-              title: 'Retained',
-              amount: controller.formatAmount(
-                controller.totalRetainedEarnings.value,
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                up
+                    ? 'Owner capital ${controller.formatAmount(controller.ownerCapital.value)} + ${controller.formatAmount(earned.abs())} this period = equity ${controller.formatAmount(controller.equityNow.value)}.'
+                    : 'Owner capital ${controller.formatAmount(controller.ownerCapital.value)} − ${controller.formatAmount(earned.abs())} this period = equity ${controller.formatAmount(controller.equityNow.value)}.',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: changeColor,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-              color: kSuccess,
-              icon: Icons.trending_up,
-              bgColor: kSuccess.withOpacity(0.08),
-              borderColor: kSuccess.withOpacity(0.2),
             ),
           ],
         ),
-      ),
-    );
+      );
+    });
   }
 
   Widget _buildProfessionalCard({
@@ -317,81 +339,17 @@ class CapitalEquityScreen extends StatelessWidget {
     required IconData icon,
     required Color bgColor,
     required Color borderColor,
-    bool isNumber = false,
   }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: kCardBg,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: borderColor, width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: bgColor,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(icon, size: 14, color: color),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: kSubText,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              amount,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: color,
-                letterSpacing: -0.5,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            Container(
-              height: 2,
-              width: 30,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [color, color.withOpacity(0.3)],
-                ),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return ExpandableStatCard(
+      title: title,
+      amount: amount,
+      color: color,
+      icon: icon,
+      bgColor: bgColor,
+      borderColor: borderColor,
     );
   }
+
 
   // ═══════════════════════════════════════════════════════════════
   // LIST VIEW WITH LAZY LOADING
@@ -409,7 +367,7 @@ class CapitalEquityScreen extends StatelessWidget {
               Icon(
                 Icons.account_balance_outlined,
                 size: 64,
-                color: kSubText.withOpacity(0.5),
+                color: kSubText.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               Text(
@@ -503,15 +461,15 @@ class CapitalEquityScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: typeColor.withOpacity(0.2), width: 1.5),
+        border: Border.all(color: typeColor.withValues(alpha: 0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
           BoxShadow(
-            color: typeColor.withOpacity(0.06),
+            color: typeColor.withValues(alpha: 0.06),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -535,15 +493,15 @@ class CapitalEquityScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            typeColor.withOpacity(0.15),
-                            typeColor.withOpacity(0.05),
+                            typeColor.withValues(alpha: 0.15),
+                            typeColor.withValues(alpha: 0.05),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: typeColor.withOpacity(0.2),
+                          color: typeColor.withValues(alpha: 0.2),
                           width: 1,
                         ),
                       ),
@@ -611,7 +569,7 @@ class CapitalEquityScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 14),
-                Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
+                Divider(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -632,7 +590,7 @@ class CapitalEquityScreen extends StatelessWidget {
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                          side: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -717,7 +675,7 @@ class CapitalEquityScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(

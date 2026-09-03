@@ -6,7 +6,6 @@ import 'package:universal_html/html.dart' as html;
 import 'package:get/get.dart';
 import 'package:BisonsTechs_app/Services/pdf_branding_service.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
-import 'dart:convert';
 import 'dart:io';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -30,13 +29,7 @@ class CustomerController extends GetxController {
 
   final ApiClient _api = Get.find<ApiClient>();
 
-  double _toDouble(dynamic value) {
-    if (value == null) return 0.0;
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    if (value is String) return double.tryParse(value) ?? 0.0;
-    return 0.0;
-  }
+
 
   String _formatAmount(double amount) {
     return '\$. ${amount.toStringAsFixed(2)}';
@@ -302,7 +295,7 @@ class CustomerController extends GetxController {
         // WEB: Download using HTML anchor tag
         final blob = html.Blob([bytes], 'application/pdf');
         final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
+        html.AnchorElement(href: url)
           ..setAttribute('download', fileName)
           ..click();
         html.Url.revokeObjectUrl(url);
@@ -531,8 +524,8 @@ class CustomerController extends GetxController {
                 ),
               ),
             )
-            .toList(),
-        pw.Divider(),
+            ,
+        pw.Divider(color: PdfColors.grey300),
         pw.Padding(
           padding: const pw.EdgeInsets.only(top: 8),
           child: pw.Row(
@@ -838,7 +831,7 @@ class CustomerController extends GetxController {
           bytes,
         ], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         final url = html.Url.createObjectUrlFromBlob(blob);
-        final anchor = html.AnchorElement(href: url)
+        html.AnchorElement(href: url)
           ..setAttribute('download', fileName)
           ..click();
         html.Url.revokeObjectUrl(url);
@@ -901,9 +894,6 @@ class CustomerController extends GetxController {
     );
   }
 
-  void _handleSessionExpired() {
-    AppSnackbar.error(kDanger, 'Session Expired', 'Please login again');
-  }
 }
 
 class Customer {

@@ -1,6 +1,7 @@
 // screens/general_ledger_screen.dart - COMPLETE UPDATED VERSION
 
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/widgets/expandable_stat_card.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
@@ -56,7 +57,10 @@ class GeneralLedgerScreen extends StatelessWidget {
             Expanded(
               child: NotificationListener<ScrollNotification>(
                 onNotification: (scrollInfo) {
-                  if (!controller.isLoadingMore.value &&
+                  if (scrollInfo.metrics.maxScrollExtent <= 0) return false;
+                  if (controller.hasNextPage.value &&
+                      !controller.isLoadingMore.value &&
+                      !controller.isLoading.value &&
                       scrollInfo.metrics.pixels >=
                           scrollInfo.metrics.maxScrollExtent - 200) {
                     controller.loadMoreData();
@@ -245,7 +249,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: kPrimary.withOpacity(0.08),
+                  color: kPrimary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -296,13 +300,8 @@ class GeneralLedgerScreen extends StatelessWidget {
   ) {
     return Obx(() {
       final summary = controller.getCurrentSummary();
-      final entries = controller.filteredLedgerEntries;
       final isAllAccounts = controller.isAllAccountsSelected;
-
-      double closingBalance = 0.0;
-      if (!isAllAccounts && entries.isNotEmpty) {
-        closingBalance = entries.last.balance;
-      }
+      final closingBalance = controller.selectedAccountClosingBalance;
 
       final cards = <Widget>[
         _buildMobileKpiCard(
@@ -331,7 +330,7 @@ class GeneralLedgerScreen extends StatelessWidget {
           ),
         _buildMobileKpiCard(
           'Entries',
-          '${entries.length}',
+          '${summary['entryCount']}',
           kPrimary,
           Icons.receipt,
         ),
@@ -344,7 +343,7 @@ class GeneralLedgerScreen extends StatelessWidget {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: cards.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (_, i) => cards[i],
           ),
         ),
@@ -358,62 +357,68 @@ class GeneralLedgerScreen extends StatelessWidget {
     Color color,
     IconData icon,
   ) {
-    return Container(
-      width: 132,
-      height: 52,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: kCardBg,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: kBorder.withOpacity(0.7)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(8),
+    return ExpandableStatWrap(
+      title: label,
+      value: value,
+      color: color,
+      icon: icon,
+      child: Container(
+        width: 132,
+        height: 52,
+        padding: const EdgeInsets.fromLTRB(10, 6, 22, 6),
+        decoration: BoxDecoration(
+          color: kCardBg,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: kBorder.withValues(alpha: 0.7)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 14, color: color),
             ),
-            child: Icon(icon, size: 14, color: color),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: kSubText,
-                    fontWeight: FontWeight.w500,
-                    height: 1.1,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    value,
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    label,
                     style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: color,
+                      fontSize: 10,
+                      color: kSubText,
+                      fontWeight: FontWeight.w500,
                       height: 1.1,
                     ),
                     maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 2),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      value,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: color,
+                        height: 1.1,
+                      ),
+                      maxLines: 1,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -428,62 +433,68 @@ class GeneralLedgerScreen extends StatelessWidget {
         ? 'OK'
         : _formatAmount(netDifference.abs());
 
-    return Container(
-      width: 140,
-      height: 52,
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: kCardBg,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: kBorder.withOpacity(0.7)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(8),
+    return ExpandableStatWrap(
+      title: 'Trial Balance',
+      value: '$statusText · $subtitle',
+      color: statusColor,
+      icon: statusIcon,
+      child: Container(
+        width: 140,
+        height: 52,
+        padding: const EdgeInsets.fromLTRB(10, 6, 22, 6),
+        decoration: BoxDecoration(
+          color: kCardBg,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: kBorder.withValues(alpha: 0.7)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(statusIcon, size: 14, color: statusColor),
             ),
-            child: Icon(statusIcon, size: 14, color: statusColor),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Trial Balance',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: kSubText,
-                    fontWeight: FontWeight.w500,
-                    height: 1.1,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    '$statusText · $subtitle',
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Trial Balance',
                     style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: statusColor,
+                      fontSize: 10,
+                      color: kSubText,
+                      fontWeight: FontWeight.w500,
                       height: 1.1,
                     ),
                     maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 2),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '$statusText · $subtitle',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: statusColor,
+                        height: 1.1,
+                      ),
+                      maxLines: 1,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -502,7 +513,7 @@ class GeneralLedgerScreen extends StatelessWidget {
               Icon(
                 Icons.account_balance,
                 size: 64,
-                color: kSubText.withOpacity(0.5),
+                color: kSubText.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               Text(
@@ -553,7 +564,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: _getAccountTypeColor(
                       _getAccountType(entry.accountName),
-                    ).withOpacity(0.1),
+                    ).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -579,7 +590,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        '${entry.accountCode}',
+                        '$entry.accountCode',
                         style: TextStyle(fontSize: 10, color: kSubText),
                       ),
                     ],
@@ -599,7 +610,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: kPrimary.withOpacity(0.1),
+                        color: kPrimary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -631,7 +642,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: kSuccess.withOpacity(0.1),
+                          color: kSuccess.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Column(
@@ -661,7 +672,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: kDanger.withOpacity(0.1),
+                          color: kDanger.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Column(
@@ -692,7 +703,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.1),
+                    color: kPrimary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -758,7 +769,7 @@ class GeneralLedgerScreen extends StatelessWidget {
             width: 240,
             height: 34,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(6),
             ),
             child: DropdownButtonHideUnderline(
@@ -791,7 +802,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       );
-                    }).toList(),
+                    }),
                   ],
                   onChanged: (value) {
                     if (value != null) controller.changeAccount(value);
@@ -814,10 +825,10 @@ class GeneralLedgerScreen extends StatelessWidget {
                 prefixIcon: Icon(
                   Icons.search,
                   size: 16,
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                 ),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.15),
+                fillColor: Colors.white.withValues(alpha: 0.15),
                 contentPadding: const EdgeInsets.symmetric(
                   vertical: 0,
                   horizontal: 12,
@@ -848,9 +859,9 @@ class GeneralLedgerScreen extends StatelessWidget {
         height: 34,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: Colors.white.withOpacity(0.4)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
         ),
         child: Row(
           children: [
@@ -870,14 +881,8 @@ class GeneralLedgerScreen extends StatelessWidget {
   Widget _buildWebKpiStrip(GeneralLedgerController controller) {
     return Obx(() {
       final summary = controller.getCurrentSummary();
-      final entries = controller.filteredLedgerEntries;
       final isAllAccounts = controller.isAllAccountsSelected;
-
-      // For single account - get closing balance from entries
-      double closingBalance = 0.0;
-      if (!isAllAccounts && entries.isNotEmpty) {
-        closingBalance = entries.last.balance;
-      }
+      final closingBalance = controller.selectedAccountClosingBalance;
 
       return Container(
         color: kCardBg,
@@ -918,7 +923,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                     _buildWebKpiDivider(),
                     _buildWebKpiTile(
                       'Total Entries',
-                      '${entries.length}',
+                      '${summary['entryCount']}',
                       kPrimary,
                       Icons.receipt,
                     ),
@@ -963,7 +968,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                 Expanded(
                   child: _buildWebKpiTile(
                     'Total Entries',
-                    '${entries.length}',
+                    '${summary['entryCount']}',
                     kPrimary,
                     Icons.receipt,
                   ),
@@ -982,44 +987,54 @@ class GeneralLedgerScreen extends StatelessWidget {
     Color color,
     IconData icon,
   ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-      child: Row(
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+    return ExpandableStatWrap(
+      title: label,
+      value: value,
+      color: color,
+      icon: icon,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 10, 28, 10),
+        child: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 14, color: color),
             ),
-            child: Icon(icon, size: 14, color: color),
-          ),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: kSubText,
-                  fontWeight: FontWeight.w500,
-                ),
+            const SizedBox(width: 10),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: kSubText,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: color,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: color,
-                ),
-              ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1034,59 +1049,67 @@ class GeneralLedgerScreen extends StatelessWidget {
         ? 'Assets = Liabilities + Equity'
         : 'Diff: ${_formatAmount(netDifference.abs())}';
 
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-      child: Row(
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+    return ExpandableStatWrap(
+      title: 'Trial Balance',
+      value: '$statusText\n$subtitle',
+      color: statusColor,
+      icon: statusIcon,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 10, 28, 10),
+        child: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(statusIcon, size: 16, color: statusColor),
             ),
-            child: Icon(statusIcon, size: 16, color: statusColor),
-          ),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Trial Balance',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: kSubText,
-                  fontWeight: FontWeight.w500,
-                ),
+            const SizedBox(width: 10),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Trial Balance',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: kSubText,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    statusText,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: statusColor,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: statusColor.withValues(alpha: 0.7),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 2),
-              Text(
-                statusText,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: statusColor,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: statusColor.withOpacity(0.7),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildWebKpiDivider() =>
-      Container(width: 1, height: 36, color: Colors.grey.withOpacity(0.15));
+      Container(width: 1, height: 36, color: Colors.grey.withValues(alpha: 0.15));
 
   Widget _buildWebToolbar(
     GeneralLedgerController controller,
@@ -1107,8 +1130,8 @@ class GeneralLedgerScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kBg,
         border: Border(
-          bottom: BorderSide(color: Colors.grey.withOpacity(0.15)),
-          top: BorderSide(color: Colors.grey.withOpacity(0.1)),
+          bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.15)),
+          top: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
         ),
       ),
       child: LayoutBuilder(
@@ -1195,10 +1218,10 @@ class GeneralLedgerScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? kPrimary.withOpacity(0.1) : Colors.transparent,
+          color: isSelected ? kPrimary.withValues(alpha: 0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
           border: isSelected
-              ? Border.all(color: kPrimary.withOpacity(0.3))
+              ? Border.all(color: kPrimary.withValues(alpha: 0.3))
               : null,
         ),
         child: Text(
@@ -1219,7 +1242,7 @@ class GeneralLedgerScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kBg,
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: Colors.grey.withOpacity(0.3)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -1231,7 +1254,7 @@ class GeneralLedgerScreen extends StatelessWidget {
               onTap: () => controller.toggleDebitFilter(),
             ),
           ),
-          Container(width: 1, height: 20, color: Colors.grey.withOpacity(0.3)),
+          Container(width: 1, height: 20, color: Colors.grey.withValues(alpha: 0.3)),
           Obx(
             () => _toggleButton(
               label: 'Credit',
@@ -1257,7 +1280,7 @@ class GeneralLedgerScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: isActive ? color.withOpacity(0.1) : Colors.transparent,
+          color: isActive ? color.withValues(alpha: 0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(4),
         ),
         child: Text(
@@ -1283,7 +1306,7 @@ class GeneralLedgerScreen extends StatelessWidget {
         height: 30,
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
           borderRadius: BorderRadius.circular(4),
         ),
         child: Row(
@@ -1309,7 +1332,7 @@ class GeneralLedgerScreen extends StatelessWidget {
         height: 30,
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
           borderRadius: BorderRadius.circular(4),
         ),
         child: Row(
@@ -1339,7 +1362,7 @@ class GeneralLedgerScreen extends StatelessWidget {
               Icon(
                 Icons.account_balance,
                 size: 48,
-                color: kSubText.withOpacity(0.4),
+                color: kSubText.withValues(alpha: 0.4),
               ),
               const SizedBox(height: 12),
               Text(
@@ -1379,16 +1402,41 @@ class GeneralLedgerScreen extends StatelessWidget {
               ],
             ),
           ),
-          Container(height: 1, color: Colors.grey.withOpacity(0.15)),
+          Container(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
           Expanded(
-            child: ListView.separated(
-              itemCount: entries.length,
-              separatorBuilder: (_, __) =>
-                  Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
-              itemBuilder: (context, index) {
-                final entry = entries[index];
-                return _buildWebTableRow(entry);
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (scrollInfo) {
+                if (scrollInfo.metrics.maxScrollExtent <= 0) return false;
+                if (controller.hasNextPage.value &&
+                    !controller.isLoadingMore.value &&
+                    !controller.isLoading.value &&
+                    scrollInfo.metrics.pixels >=
+                        scrollInfo.metrics.maxScrollExtent - 200) {
+                  controller.loadMoreData();
+                }
+                return false;
               },
+              child: ListView.separated(
+                itemCount: entries.length +
+                    (controller.isLoadingMore.value ? 1 : 0),
+                separatorBuilder: (_, _) =>
+                    Divider(height: 1, color: Colors.grey.withValues(alpha: 0.1)),
+                itemBuilder: (context, index) {
+                  if (index >= entries.length) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Center(
+                        child: LoadingAnimationWidget.discreteCircle(
+                          color: kPrimary,
+                          size: 28,
+                        ),
+                      ),
+                    );
+                  }
+                  final entry = entries[index];
+                  return _buildWebTableRow(entry);
+                },
+              ),
             ),
           ),
         ],
@@ -1419,7 +1467,7 @@ class GeneralLedgerScreen extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        hoverColor: kPrimary.withOpacity(0.03),
+        hoverColor: kPrimary.withValues(alpha: 0.03),
         child: Container(
           height: 52,
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -1440,7 +1488,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.08),
+                    color: kPrimary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -1461,7 +1509,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                       width: 26,
                       height: 26,
                       decoration: BoxDecoration(
-                        color: accountColor.withOpacity(0.1),
+                        color: accountColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Icon(accountIcon, size: 14, color: accountColor),
@@ -1544,8 +1592,8 @@ class GeneralLedgerScreen extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: balancePositive
-                        ? kSuccess.withOpacity(0.08)
-                        : kDanger.withOpacity(0.08),
+                        ? kSuccess.withValues(alpha: 0.08)
+                        : kDanger.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -1577,13 +1625,15 @@ class GeneralLedgerScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 24),
         decoration: BoxDecoration(
           color: kCardBg,
-          border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.15))),
+          border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.15))),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Showing ${controller.ledgerEntries.length} of ${controller.totalItems.value} records',
+              controller.totalItems.value > 0
+                  ? 'Showing ${controller.ledgerEntries.length} of ${controller.totalItems.value} records'
+                  : 'Showing ${controller.ledgerEntries.length} records',
               style: TextStyle(fontSize: 13, color: kSubText),
             ),
             Row(
@@ -1606,7 +1656,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                         border: Border.all(
                           color: controller.hasPrevPage.value
                               ? kPrimary
-                              : Colors.grey.withOpacity(0.3),
+                              : Colors.grey.withValues(alpha: 0.3),
                         ),
                         borderRadius: BorderRadius.circular(6),
                       ),
@@ -1641,7 +1691,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.1),
+                    color: kPrimary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -1672,7 +1722,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                         border: Border.all(
                           color: controller.hasNextPage.value
                               ? kPrimary
-                              : Colors.grey.withOpacity(0.3),
+                              : Colors.grey.withValues(alpha: 0.3),
                         ),
                         borderRadius: BorderRadius.circular(6),
                       ),
@@ -1757,7 +1807,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                   ),
                   value: controller.showOnlyDebit.value,
                   onChanged: (val) => controller.toggleDebitFilter(),
-                  activeColor: kSuccess,
+                  activeThumbColor: kSuccess,
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
@@ -1774,7 +1824,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                   ),
                   value: controller.showOnlyCredit.value,
                   onChanged: (val) => controller.toggleCreditFilter(),
-                  activeColor: kDanger,
+                  activeThumbColor: kDanger,
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
@@ -1802,7 +1852,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                         padding: EdgeInsets.symmetric(
                           vertical: isWeb ? 10 : 12,
                         ),
-                        side: BorderSide(color: Colors.grey.withOpacity(0.4)),
+                        side: BorderSide(color: Colors.grey.withValues(alpha: 0.4)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(6),
                         ),
@@ -1970,7 +2020,7 @@ class GeneralLedgerScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
@@ -1994,7 +2044,7 @@ class GeneralLedgerScreen extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               subtitle,
-              style: TextStyle(fontSize: 11, color: color.withOpacity(0.7)),
+              style: TextStyle(fontSize: 11, color: color.withValues(alpha: 0.7)),
             ),
           ],
         ),
@@ -2060,7 +2110,7 @@ class GeneralLedgerScreen extends StatelessWidget {
                     _pdfSummaryItem('Account', selectedAccount, accent),
                     _pdfSummaryItem(
                       'Total Entries',
-                      entries.length.toString(),
+                      '${summary['entryCount']}',
                       accent,
                     ),
                   ],
@@ -2434,16 +2484,20 @@ class GeneralLedgerScreen extends StatelessWidget {
   String _getAccountType(String accountName) {
     if (accountName.contains('Cash') ||
         accountName.contains('Bank') ||
-        accountName.contains('Receivable'))
+        accountName.contains('Receivable')) {
       return 'Assets';
-    if (accountName.contains('Payable') || accountName.contains('Loan'))
+    }
+    if (accountName.contains('Payable') || accountName.contains('Loan')) {
       return 'Liabilities';
-    if (accountName.contains('Revenue') || accountName.contains('Sales'))
+    }
+    if (accountName.contains('Revenue') || accountName.contains('Sales')) {
       return 'Income';
+    }
     if (accountName.contains('Expense') ||
         accountName.contains('Rent') ||
-        accountName.contains('Salary'))
+        accountName.contains('Salary')) {
       return 'Expenses';
+    }
     return 'Assets';
   }
 

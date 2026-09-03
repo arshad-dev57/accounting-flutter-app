@@ -1,5 +1,6 @@
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 
 class NotificationItem {
   final String id;
@@ -116,7 +117,7 @@ class NotificationController extends GetxController {
         unreadCount.value = response.data['count'] ?? 0;
       }
     } catch (e) {
-      print('Error loading unread count: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -146,7 +147,7 @@ class NotificationController extends GetxController {
         unreadCount.value--;
       }
     } catch (e) {
-      print('Error marking notification as read: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -173,7 +174,7 @@ class NotificationController extends GetxController {
 
       unreadCount.value = 0;
     } catch (e) {
-      print('Error marking all notifications as read: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -187,7 +188,7 @@ class NotificationController extends GetxController {
       // Update unread count if it was unread
       loadUnreadCount();
     } catch (e) {
-      print('Error deleting notification: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -196,8 +197,5 @@ class NotificationController extends GetxController {
     loadNotifications();
   }
 
-  void refresh() {
-    loadNotifications(refresh: true);
-    loadUnreadCount();
-  }
+
 }

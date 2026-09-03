@@ -154,8 +154,9 @@ class WarehouseInvoiceModel {
 
   String get displayStatus {
     if (netOutstanding < 0) return 'Credit Balance';
-    if (netOutstanding == 0 && (paidAmount > 0 || creditIssued > 0))
+    if (netOutstanding == 0 && (paidAmount > 0 || creditIssued > 0)) {
       return 'Paid';
+    }
     return paymentStatus;
   }
 
@@ -442,14 +443,11 @@ class WarehouseInvoiceController extends GetxController {
         'invoiceType': invoiceTypeFilter.value,
       };
       if (statusFilter.value != 'all') params['status'] = statusFilter.value;
-      if (paymentFilter.value != 'all')
+      if (paymentFilter.value != 'all') {
         params['paymentStatus'] = paymentFilter.value;
+      }
       if (searchFilter.value.isNotEmpty) params['search'] = searchFilter.value;
 
-      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      print('📤 REQUEST: /api/warehouse/invoices');
-      print('📤 PARAMS: $params');
-      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
       final response = await _api.get(
         '/api/warehouse/invoices',
@@ -457,22 +455,10 @@ class WarehouseInvoiceController extends GetxController {
         requiresAuth: true,
       );
 
-      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      print('📥 RESPONSE:');
-      print('📥 Success: ${response.success}');
-      print('📥 Status Code: ${response.statusCode}');
-      print('📥 Full Response Data:');
-      print(response.data);
-      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
       if (response.success && response.data != null) {
-        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        print('🔍 DATA KEYS: ${response.data?.keys}');
-        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
         final list = response.data['data'] as List? ?? [];
-        print('LIST LENGTH: ${list.length}');
-        print('FIRST ITEM: ${list.isNotEmpty ? list.first : 'empty'}');
 
         invoices.value = list
             .map(
@@ -502,9 +488,6 @@ class WarehouseInvoiceController extends GetxController {
         }
       }
     } catch (e) {
-      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      print('❌ ERROR: $e');
-      print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       Get.snackbar('Error', e.toString());
     } finally {
       isLoading.value = false;

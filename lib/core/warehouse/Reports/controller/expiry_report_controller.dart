@@ -77,9 +77,7 @@ class ExpiryReportController extends GetxController {
         // Also populate the full products list for compatibility
         products.value = productsWithExpiry;
       }
-    } catch (e) {
-      print('Error loading expiry data: $e');
-    } finally {
+    }  finally {
       isLoading.value = false;
     }
   }
@@ -151,7 +149,6 @@ class ExpiryReportController extends GetxController {
       AppSnackbar.success(kSuccess, 'Success', 'PDF exported successfully!');
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back();
-      print('PDF Export Error: $e');
       AppSnackbar.error(
         kDanger,
         'Error',
@@ -413,7 +410,7 @@ class ExpiryReportController extends GetxController {
                     ],
                   ),
                 );
-              }).toList(),
+              }),
 
               pw.SizedBox(height: 16),
 
@@ -577,7 +574,7 @@ class ExpiryReportController extends GetxController {
                       ],
                     ),
                   );
-                }).toList(),
+                }),
               ],
 
               branding.buildSignatureBlock(),

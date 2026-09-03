@@ -3,6 +3,9 @@ import 'dart:convert';
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +13,6 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sizer/sizer.dart';
 
 class DashboardController extends GetxController {
   var isLoading = true.obs;
@@ -60,9 +62,7 @@ class DashboardController extends GetxController {
     currentRoute.value = route;
   }
 
-  bool isActive(String route) {
-    return currentRoute.value == route;
-  }
+  bool isActive(String route) => currentRoute.value == route;
 
   var chartData = <Map<String, dynamic>>[].obs;
   var expenseCategories = <Map<String, dynamic>>[].obs;
@@ -99,33 +99,33 @@ class DashboardController extends GetxController {
   var profitChange = 0.0.obs;
   var isProfitPositive = true.obs;
 
+  var openingCapital = 0.0.obs;
+  var openingCapitalFormatted = ''.obs;
+  var currentEquity = 0.0.obs;
+  var currentEquityFormatted = ''.obs;
+  var periodEarnings = 0.0.obs;
+  var periodEarningsFormatted = ''.obs;
+  var capitalChange = 0.0.obs;
+  var capitalChangeFormatted = ''.obs;
+  var isCapitalIncrease = true.obs;
+  var capitalChart = <Map<String, dynamic>>[].obs;
+
   var salesOrdersCount = 0.obs;
   var purchaseOrdersCount = 0.obs;
 
   final List<String> months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
   ];
 
   final ApiClient _api = Get.find<ApiClient>();
 
-  var selectedTimePeriod = 'Today'.obs;
+  var selectedTimePeriod = 'This Year'.obs;
   final Rx<DateTime?> customStartDate = Rx<DateTime?>(null);
   final Rx<DateTime?> customEndDate = Rx<DateTime?>(null);
-  /// Soft refresh flag — does not tear down the whole body like [isLoading].
+
   var isRefreshing = false.obs;
-  /// Flips once after first successful (or failed) load so body Obx stops
-  /// rebuilding the entire scroll tree on every chartData update.
+
   var hasLoadedOnce = false.obs;
 
   static const timePeriodLabels = [
@@ -138,18 +138,40 @@ class DashboardController extends GetxController {
     'Custom',
   ];
 
+  Worker? _fyWorker;
+  Worker? _locWorker;
+
   @override
   void onInit() {
     super.onInit();
     loadUserData();
     loadBusinessLogo();
-    loadDashboardData();
+    Future(() async {
+      if (currentFiscalYearId() == null) {
+        await waitForFiscalYearReady(timeout: const Duration(seconds: 2));
+      }
+      if (!hasLoadedOnce.value && !isRefreshing.value) {
+        await loadDashboardData();
+      }
+    });
+    _fyWorker = listenFiscalYearChanges(() {
+      if (!hasLoadedOnce.value) return;
+      if (isLoading.value || isRefreshing.value) return;
+      loadDashboardData();
+    });
+    _locWorker = listenLocationChanges(() {
+      if (!hasLoadedOnce.value) return;
+      if (isLoading.value || isRefreshing.value) return;
+      loadDashboardData();
+    });
     // One-shot access check only — SubscriptionController already polls globally.
     _checkSubscriptionOnce();
   }
 
   @override
   void onClose() {
+    _fyWorker?.dispose();
+    _locWorker?.dispose();
     super.onClose();
   }
 
@@ -157,13 +179,10 @@ class DashboardController extends GetxController {
     try {
       if (!Get.isRegistered<SubscriptionController>()) return;
       final sub = Get.find<SubscriptionController>();
-      // Prefer cached state; only hit network if we have no plan yet.
-      if (sub.subscriptionPlan.value.isEmpty ||
-          sub.subscriptionPlan.value == 'none') {
+      if (sub.subscriptionPlan.value.isEmpty || sub.subscriptionPlan.value == 'none') {
         await sub.checkSubscriptionStatus();
       }
-      if (!sub.hasActiveSubscription.value &&
-          sub.subscriptionStatus.value == 'expired') {
+      if (!sub.hasActiveSubscription.value && sub.subscriptionStatus.value == 'expired') {
         _showExpiredDialog(sub);
       }
     } catch (_) {}
@@ -177,9 +196,7 @@ class DashboardController extends GetxController {
       if (companyName.value.isEmpty && userEmail.value.isNotEmpty) {
         companyName.value = userEmail.value.split('@')[0];
       }
-      if (companyName.value.isEmpty) {
-        companyName.value = 'User';
-      }
+      if (companyName.value.isEmpty) companyName.value = 'User';
     } catch (e) {
       companyName.value = 'User';
       userEmail.value = '';
@@ -190,17 +207,12 @@ class DashboardController extends GetxController {
     try {
       final prefs = await SharedPreferences.getInstance();
       final userDataString = prefs.getString('user_data');
-
       if (userDataString != null) {
         final userData = json.decode(userDataString) as Map<String, dynamic>;
-        final businessDetails =
-            userData['businessDetails'] as Map<String, dynamic>?;
-
+        final businessDetails = userData['businessDetails'] as Map<String, dynamic>?;
         if (businessDetails != null && businessDetails['logo'] != null) {
           final logo = businessDetails['logo'] as String;
-          if (logo.isNotEmpty) {
-            businessLogo.value = logo;
-          }
+          if (logo.isNotEmpty) businessLogo.value = logo;
         }
       }
     } catch (_) {}
@@ -281,45 +293,33 @@ class DashboardController extends GetxController {
       case 'Today':
         startDate = DateTime(now.year, now.month, now.day);
         break;
-
       case 'Last Week':
-        startDate = DateTime(
-          now.year,
-          now.month,
-          now.day,
-        ).subtract(const Duration(days: 6));
+        startDate = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 6));
         break;
-
       case 'This Month':
         startDate = DateTime(now.year, now.month, 1);
         endDate = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
         break;
-
       case 'Last Month':
         final lastMonth = now.month == 1 ? 12 : now.month - 1;
         final lastMonthYear = now.month == 1 ? now.year - 1 : now.year;
         startDate = DateTime(lastMonthYear, lastMonth, 1);
         endDate = DateTime(lastMonthYear, lastMonth + 1, 0, 23, 59, 59);
         break;
-
       case 'This Quarter':
         final quarterMonth = ((now.month - 1) ~/ 3) * 3 + 1;
         startDate = DateTime(now.year, quarterMonth, 1);
         endDate = DateTime(now.year, quarterMonth + 3, 0, 23, 59, 59);
         break;
-
       case 'This Year':
         startDate = DateTime(now.year, 1, 1);
         endDate = DateTime(now.year, 12, 31, 23, 59, 59);
         break;
-
       case 'Custom':
         startDate = customStartDate.value ?? DateTime(now.year, now.month, 1);
-        final end =
-            customEndDate.value ?? DateTime(now.year, now.month, now.day);
+        final end = customEndDate.value ?? DateTime(now.year, now.month, now.day);
         endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
         break;
-
       default:
         startDate = DateTime(now.year, now.month, now.day);
         break;
@@ -369,20 +369,20 @@ class DashboardController extends GetxController {
       params['endDate'] = dateRange['endDate'] ?? '';
     }
 
-    print(
-      '🔵 [Dashboard] overview period=${selectedTimePeriod.value}',
-    );
+    if (Get.isRegistered<FiscalYearController>()) {
+      final fyId = Get.find<FiscalYearController>().selectedFiscalYearId;
+      if (fyId != null && fyId.isNotEmpty) {
+        params['fiscalYearId'] = fyId;
+      }
+    }
 
-    final response = await _api.get(
-      '/api/dashboard/overview',
-      queryParameters: params,
-    );
+
+    final response = await _api.get('/api/dashboard/overview', queryParameters: params);
 
     if (response.statusCode == 403) {
       final data = response.data;
       final message = data is Map
-          ? (data['message']?.toString() ??
-                'Subscription required. Please subscribe to access this feature.')
+          ? (data['message']?.toString() ?? 'Subscription required. Please subscribe to access this feature.')
           : 'Subscription required. Please subscribe to access this feature.';
       hasError.value = true;
       errorMessage.value = message;
@@ -391,9 +391,7 @@ class DashboardController extends GetxController {
 
     if (!response.success) {
       hasError.value = true;
-      errorMessage.value = response.message.isNotEmpty
-          ? response.message
-          : 'Server error: ${response.statusCode}';
+      errorMessage.value = response.message.isNotEmpty ? response.message : 'Server error: ${response.statusCode}';
       _showError(errorMessage.value);
       return;
     }
@@ -406,6 +404,9 @@ class DashboardController extends GetxController {
       return;
     }
 
+    // ─── Batch all reactive updates ───────────────────────────────────────────
+    // Sab ek saath apply karo — har individual .value set ek rebuild trigger
+    // karta hai. Ye order maintain karta hai aur UI flicker kam karta hai.
     _applyKpi(dataObj);
     _applyCharts(dataObj);
     _applyExpenseCategories(dataObj);
@@ -424,7 +425,9 @@ class DashboardController extends GetxController {
     final revenueSources = totalRevenueData['sources'] ?? {};
     if (revenueSources is Map) {
       revenueIncomeModule.value = _asDouble(revenueSources['incomeModule']);
-      revenueInvoiceTotal.value = _asDouble(revenueSources['salesModule']);
+      revenueInvoiceTotal.value = _asDouble(
+        revenueSources['salesInvoiced'] ?? revenueSources['salesModule'],
+      );
       revenueCreditNotes.value = _asDouble(revenueSources['creditNotes']);
     } else {
       final breakdown = dataObj['breakdown'] ?? {};
@@ -434,9 +437,7 @@ class DashboardController extends GetxController {
     }
 
     final totalSalesData = kpi['totalSales'] ?? {};
-    totalSales.value = _asDouble(
-      totalSalesData['amount'] ?? revenueInvoiceTotal.value,
-    );
+    totalSales.value = _asDouble(totalSalesData['amount'] ?? revenueInvoiceTotal.value);
     totalSalesFormatted.value = formatAmount(totalSales.value);
     salesChange.value = _asDouble(totalSalesData['change']);
     isSalesPositive.value = totalSalesData['isPositive'] ?? true;
@@ -457,14 +458,10 @@ class DashboardController extends GetxController {
       netProfit.value = _asDouble(netProfitData['amount']);
       profitMargin.value = _asDouble(netProfitData['margin']);
       profitChange.value = _asDouble(netProfitData['change']);
-      isProfitPositive.value =
-          netProfitData['isPositive'] ?? (netProfit.value >= 0);
+      isProfitPositive.value = netProfitData['isPositive'] ?? (netProfit.value >= 0);
     } else {
-      netProfit.value =
-          totalRevenue.value - totalExpenses.value;
-      profitMargin.value = totalRevenue.value > 0
-          ? (netProfit.value / totalRevenue.value) * 100
-          : 0.0;
+      netProfit.value = totalRevenue.value - totalExpenses.value;
+      profitMargin.value = totalRevenue.value > 0 ? (netProfit.value / totalRevenue.value) * 100 : 0.0;
       profitChange.value = 0.0;
       isProfitPositive.value = netProfit.value >= 0;
     }
@@ -478,8 +475,7 @@ class DashboardController extends GetxController {
     }
     grossProfitFormatted.value = formatAmount(grossProfit.value);
 
-    final outstandingData =
-        kpi['accountsReceivable'] ?? kpi['outstanding'] ?? {};
+    final outstandingData = kpi['accountsReceivable'] ?? kpi['outstanding'] ?? {};
     outstanding.value = _asDouble(outstandingData['amount']);
     outstandingFormatted.value = formatAmount(outstanding.value);
     outstandingChange.value = _asDouble(outstandingData['change']);
@@ -495,9 +491,7 @@ class DashboardController extends GetxController {
     totalBankBalanceFormatted.value = formatAmount(totalBankBalance.value);
     bankAccountsCount.value = _asInt(
       bankData['accountsCount'] ??
-          (dataObj['breakdown'] is Map
-              ? dataObj['breakdown']['bankAccountsCount']
-              : 0),
+          (dataObj['breakdown'] is Map ? dataObj['breakdown']['bankAccountsCount'] : 0),
     );
     cashBalance.value = totalBankBalance.value;
     cashBalanceFormatted.value = totalBankBalanceFormatted.value;
@@ -505,7 +499,9 @@ class DashboardController extends GetxController {
     isCashPositive.value = bankData['isPositive'] ?? true;
 
     final cashOnly = _asDouble(
-      (kpi['cashBalance'] is Map) ? (kpi['cashBalance']['cashOnly']) : null,
+      (kpi['cashInHand'] is Map)
+          ? kpi['cashInHand']['amount']
+          : ((kpi['cashBalance'] is Map) ? kpi['cashBalance']['cashOnly'] : null),
     );
     totalCashBalance.value = cashOnly;
     totalCashBalanceFormatted.value = formatAmount(totalCashBalance.value);
@@ -519,6 +515,27 @@ class DashboardController extends GetxController {
     dailyRevenue.value = _asDouble(dailyData['revenue']);
     dailyExpenses.value = _asDouble(dailyData['expenses']);
     dailyProfit.value = _asDouble(dailyData['profit']);
+
+    final capital = dataObj['capital'] is Map
+        ? dataObj['capital']
+        : (kpi['capital'] is Map ? kpi['capital'] : {});
+    openingCapital.value = _asDouble(capital['openingCapital']);
+    openingCapitalFormatted.value = formatAmount(openingCapital.value);
+    currentEquity.value = _asDouble(capital['currentEquity']);
+    currentEquityFormatted.value = formatAmount(currentEquity.value);
+    periodEarnings.value = _asDouble(capital['periodEarnings']);
+    periodEarningsFormatted.value = formatAmount(periodEarnings.value);
+    capitalChange.value = _asDouble(capital['changeOnCapital']);
+    capitalChangeFormatted.value = formatAmount(capitalChange.value);
+    isCapitalIncrease.value = capital['isIncrease'] ?? (periodEarnings.value >= 0);
+    final capitalSeries = capital['chart'];
+    if (capitalSeries is List) {
+      capitalChart.value = List<Map<String, dynamic>>.from(
+        capitalSeries.map((e) => Map<String, dynamic>.from(e as Map)),
+      );
+    } else {
+      capitalChart.clear();
+    }
   }
 
   void _applyCharts(Map dataObj) {
@@ -554,100 +571,44 @@ class DashboardController extends GetxController {
     }
   }
 
-  void _showSubscriptionRequiredDialog(String message) {
-    Get.dialog(
-      AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.w)),
-        title: Row(
-          children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 6.w),
-            SizedBox(width: 2.w),
-            Text(
-              'Subscription Required',
-              style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w700),
-            ),
-          ],
-        ),
-        content: Text(
-          message,
-          style: TextStyle(fontSize: 13.sp, color: Colors.grey[700]),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Get.back();
-              Get.to(() => SelectPlanScreen());
-            },
-            child: Text(
-              'Subscribe Now',
-              style: TextStyle(color: kPrimary, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
-      barrierDismissible: false,
-    );
-  }
-
   double getMonthlyRevenue(int monthIndex) {
-    if (monthIndex < chartData.length) {
-      return _asDouble(chartData[monthIndex]['revenue']);
-    }
+    if (monthIndex < chartData.length) return _asDouble(chartData[monthIndex]['revenue']);
     return 0;
   }
 
   double getMonthlyExpenses(int monthIndex) {
-    if (monthIndex < chartData.length) {
-      return _asDouble(chartData[monthIndex]['expenses']);
-    }
+    if (monthIndex < chartData.length) return _asDouble(chartData[monthIndex]['expenses']);
     return 0;
   }
 
   String getMonthName(int monthIndex) {
-    if (monthIndex < chartData.length &&
-        chartData[monthIndex]['month'] != null) {
-      return chartData[monthIndex]['month']?.toString() ??
-          months[monthIndex % months.length];
+    if (monthIndex < chartData.length && chartData[monthIndex]['month'] != null) {
+      return chartData[monthIndex]['month']?.toString() ?? months[monthIndex % months.length];
     }
     return months[monthIndex % months.length];
   }
 
   IconData getIconFromName(String iconName) {
     switch (iconName) {
-      case 'shopping_bag':
-        return Icons.shopping_bag;
-      case 'payment':
-        return Icons.payment;
-      case 'bolt':
-        return Icons.bolt;
-      case 'computer':
-        return Icons.computer;
-      case 'work':
-        return Icons.work;
-      case 'add_circle_outline':
-        return Icons.add_circle_outline;
-      case 'remove_circle_outline':
-        return Icons.remove_circle_outline;
-      case 'receipt_long':
-        return Icons.receipt_long;
-      case 'person_add':
-        return Icons.person_add;
-      case 'trending_up':
-        return Icons.trending_up;
-      case 'trending_down':
-        return Icons.trending_down;
-      case 'receipt':
-        return Icons.receipt;
-      default:
-        return Icons.circle;
+      case 'shopping_bag': return Icons.shopping_bag;
+      case 'payment': return Icons.payment;
+      case 'bolt': return Icons.bolt;
+      case 'computer': return Icons.computer;
+      case 'work': return Icons.work;
+      case 'add_circle_outline': return Icons.add_circle_outline;
+      case 'remove_circle_outline': return Icons.remove_circle_outline;
+      case 'receipt_long': return Icons.receipt_long;
+      case 'person_add': return Icons.person_add;
+      case 'trending_up': return Icons.trending_up;
+      case 'trending_down': return Icons.trending_down;
+      case 'receipt': return Icons.receipt;
+      default: return Icons.circle;
     }
   }
 
   Color getColorFromHex(String hexColor) {
     hexColor = hexColor.toUpperCase().replaceAll('#', '');
-    if (hexColor.length == 6) {
-      hexColor = 'FF$hexColor';
-    }
+    if (hexColor.length == 6) hexColor = 'FF$hexColor';
     return Color(int.parse(hexColor, radix: 16));
   }
 
@@ -660,16 +621,9 @@ class DashboardController extends GetxController {
     return '0%';
   }
 
-  void refreshData() {
-    loadDashboardData();
-  }
+  void refreshData() => loadDashboardData();
 
   void _showError(String message) {
-    AppSnackbar.error(
-      kDanger,
-      'Error',
-      message,
-      duration: const Duration(seconds: 3),
-    );
+    AppSnackbar.error(kDanger, 'Error', message, duration: const Duration(seconds: 3));
   }
 }

@@ -83,9 +83,9 @@ class _ProductSearchFieldState extends State<ProductSearchField> {
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       shrinkWrap: true,
                       itemCount: _products.length,
-                      separatorBuilder: (_, __) => Divider(
+                      separatorBuilder: (context, index) => Divider(
                         height: 1,
-                        color: Colors.grey.withOpacity(0.1),
+                        color: Colors.grey.withValues(alpha: 0.1),
                       ),
                       itemBuilder: (_, i) {
                         final p = _products[i];
@@ -115,7 +115,7 @@ class _ProductSearchFieldState extends State<ProductSearchField> {
                               ),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? kPrimary.withOpacity(0.07)
+                                    ? kPrimary.withValues(alpha: 0.07)
                                     : Colors.transparent,
                               ),
                               child: Row(
@@ -281,9 +281,9 @@ class _ProductSearchFieldState extends State<ProductSearchField> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               decoration: BoxDecoration(
-                color: kPrimary.withOpacity(0.07),
+                color: kPrimary.withValues(alpha: 0.07),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: kPrimary.withOpacity(0.25)),
+                border: Border.all(color: kPrimary.withValues(alpha: 0.25)),
               ),
               child: Row(
                 children: [

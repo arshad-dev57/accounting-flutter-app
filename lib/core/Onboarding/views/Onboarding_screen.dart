@@ -18,7 +18,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   Timer? _timer;
 
   late AnimationController _fadeController;
-  late Animation<double> _fadeAnimation;
 
   final List<Map<String, String>> _slides = [
     {
@@ -45,7 +44,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   ];
 
   static const Color _primary = Color(0xFF014582);
-  static const Color _primaryLight = Color(0xFF0A6AB5);
 
   @override
   void initState() {
@@ -54,9 +52,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     _fadeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
-    );
-    _fadeAnimation = Tween<double>(begin: 1, end: 0).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeOut),
     );
 
     _startAutoScroll();
@@ -107,7 +102,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   fit: BoxFit.cover,
                   width: size.width,
                   height: size.height,
-                  errorBuilder: (_, __, ___) =>
+                  errorBuilder: (context, error, stackTrace) =>
                       Container(color: _primary),
                 );
               },
@@ -141,22 +136,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   // Logo (top left)
                   Align(
                     alignment: Alignment.topLeft,
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Image.asset(
-                        'assets/logo.png',
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const Icon(
-                          Icons.bolt_rounded,
-                          color: _primary,
-                          size: 22,
-                        ),
+                    child: Image.asset(
+                      'assets/logo.png',
+                      height: 56,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.bolt_rounded,
+                        color: _primary,
+                        size: 22,
                       ),
                     ),
                   ),
@@ -176,7 +163,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         decoration: BoxDecoration(
                           color: _currentPage == index
                               ? Colors.white
-                              : Colors.white.withOpacity(0.35),
+                              : Colors.white.withValues(alpha: 0.35),
                           borderRadius: BorderRadius.circular(3),
                         ),
                       ),
@@ -200,10 +187,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 MediaQuery.of(context).padding.bottom + 28,
               ),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withValues(alpha: 0.08),
                 border: Border(
                   top: BorderSide(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                     width: 1,
                   ),
                 ),
@@ -224,10 +211,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 5),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.25),
+                          color: Colors.white.withValues(alpha: 0.25),
                           width: 1,
                         ),
                       ),
@@ -280,7 +267,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       _slides[_currentPage]['subtitle']!,
                       key: ValueKey('sub_$_currentPage'),
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.65),
+                        color: Colors.white.withValues(alpha: 0.65),
                         fontSize: 15,
                         height: 1.5,
                         fontWeight: FontWeight.w400,
@@ -332,7 +319,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                           side: BorderSide(
-                            color: Colors.white.withOpacity(0.3),
+                            color: Colors.white.withValues(alpha: 0.3),
                             width: 1.5,
                           ),
                         ),

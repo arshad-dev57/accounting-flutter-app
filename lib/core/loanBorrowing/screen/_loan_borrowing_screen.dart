@@ -1,13 +1,11 @@
 // screens/loans_borrowings_screen.dart - COMPLETE PROFESSIONAL MOBILE DESIGN
 
-import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/widgets/expandable_stat_card.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
-import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/loanBorrowing/controller/loan_controller.dart';
 import 'package:BisonsTechs_app/core/loanBorrowing/models/loan_model.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class LoansBorrowingsScreen extends StatelessWidget {
@@ -51,7 +49,7 @@ class LoansBorrowingsScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: kPrimary.withOpacity(0.4),
+              color: kPrimary.withValues(alpha: 0.4),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -106,7 +104,7 @@ class LoansBorrowingsScreen extends StatelessWidget {
                             '${controller.loans.length} loans',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha: 0.7),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -123,13 +121,13 @@ class LoansBorrowingsScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 18,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -140,13 +138,13 @@ class LoansBorrowingsScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.download_outlined,
                         size: 18,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -166,7 +164,7 @@ class LoansBorrowingsScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
+                            color: Colors.black.withValues(alpha: 0.06),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -206,7 +204,7 @@ class LoansBorrowingsScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
+                          color: Colors.black.withValues(alpha: 0.06),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -266,8 +264,8 @@ class LoansBorrowingsScreen extends StatelessWidget {
               amount: controller.totalLoans.value.toString(),
               color: kPrimary,
               icon: Icons.credit_card,
-              bgColor: kPrimary.withOpacity(0.08),
-              borderColor: kPrimary.withOpacity(0.2),
+              bgColor: kPrimary.withValues(alpha: 0.08),
+              borderColor: kPrimary.withValues(alpha: 0.2),
               isNumber: true,
             ),
             const SizedBox(width: 8),
@@ -278,8 +276,8 @@ class LoansBorrowingsScreen extends StatelessWidget {
               ),
               color: kDanger,
               icon: Icons.payment,
-              bgColor: kDanger.withOpacity(0.08),
-              borderColor: kDanger.withOpacity(0.2),
+              bgColor: kDanger.withValues(alpha: 0.08),
+              borderColor: kDanger.withValues(alpha: 0.2),
             ),
             const SizedBox(width: 8),
             _buildProfessionalCard(
@@ -287,8 +285,8 @@ class LoansBorrowingsScreen extends StatelessWidget {
               amount: controller.formatAmount(controller.totalEMI.value),
               color: kWarning,
               icon: Icons.calendar_month,
-              bgColor: kWarning.withOpacity(0.08),
-              borderColor: kWarning.withOpacity(0.2),
+              bgColor: kWarning.withValues(alpha: 0.08),
+              borderColor: kWarning.withValues(alpha: 0.2),
             ),
           ],
         ),
@@ -305,79 +303,16 @@ class LoansBorrowingsScreen extends StatelessWidget {
     required Color borderColor,
     bool isNumber = false,
   }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: kCardBg,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: borderColor, width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: bgColor,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(icon, size: 14, color: color),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: kSubText,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.3,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              amount,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: color,
-                letterSpacing: -0.5,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            Container(
-              height: 2,
-              width: 30,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [color, color.withOpacity(0.3)],
-                ),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return ExpandableStatCard(
+      title: title,
+      amount: amount,
+      color: color,
+      icon: icon,
+      bgColor: bgColor,
+      borderColor: borderColor,
     );
   }
+
 
   // ═══════════════════════════════════════════════════════════════
   // LIST VIEW WITH LAZY LOADING
@@ -395,7 +330,7 @@ class LoansBorrowingsScreen extends StatelessWidget {
               Icon(
                 Icons.credit_card_outlined,
                 size: 64,
-                color: kSubText.withOpacity(0.5),
+                color: kSubText.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               Text(
@@ -498,15 +433,15 @@ class LoansBorrowingsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: statusColor.withOpacity(0.2), width: 1.5),
+        border: Border.all(color: statusColor.withValues(alpha: 0.2), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
           BoxShadow(
-            color: statusColor.withOpacity(0.06),
+            color: statusColor.withValues(alpha: 0.06),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -530,15 +465,15 @@ class LoansBorrowingsScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            typeColor.withOpacity(0.15),
-                            typeColor.withOpacity(0.05),
+                            typeColor.withValues(alpha: 0.15),
+                            typeColor.withValues(alpha: 0.05),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: typeColor.withOpacity(0.2),
+                          color: typeColor.withValues(alpha: 0.2),
                           width: 1,
                         ),
                       ),
@@ -661,7 +596,7 @@ class LoansBorrowingsScreen extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: kDanger.withOpacity(0.07),
+                      color: kDanger.withValues(alpha: 0.07),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -685,7 +620,7 @@ class LoansBorrowingsScreen extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: 14),
-                Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
+                Divider(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -706,7 +641,7 @@ class LoansBorrowingsScreen extends StatelessWidget {
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                          side: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -733,7 +668,7 @@ class LoansBorrowingsScreen extends StatelessWidget {
                             ),
                           ),
                           style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: kPrimary.withOpacity(0.3)),
+                            side: BorderSide(color: kPrimary.withValues(alpha: 0.3)),
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -788,9 +723,9 @@ class LoansBorrowingsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -819,7 +754,7 @@ class LoansBorrowingsScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(

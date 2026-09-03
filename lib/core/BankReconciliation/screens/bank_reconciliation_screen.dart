@@ -69,7 +69,7 @@ class BankReconciliationScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -81,7 +81,7 @@ class BankReconciliationScreen extends StatelessWidget {
             Icon(
               Icons.account_balance,
               size: 15.w,
-              color: kPrimary.withOpacity(0.5),
+              color: kPrimary.withValues(alpha: 0.5),
             ),
             SizedBox(height: 2.h),
             Text(
@@ -97,7 +97,7 @@ class BankReconciliationScreen extends StatelessWidget {
               width: 80.w,
               child: Obx(
                 () => DropdownButtonFormField<String>(
-                  value: controller.selectedAccountId.value.isEmpty
+                  initialValue: controller.selectedAccountId.value.isEmpty
                       ? null
                       : controller.selectedAccountId.value,
                   decoration: InputDecoration(
@@ -177,7 +177,7 @@ class BankReconciliationScreen extends StatelessWidget {
         color: kCardBg,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -211,8 +211,8 @@ class BankReconciliationScreen extends StatelessWidget {
             padding: EdgeInsets.all(3.w),
             decoration: BoxDecoration(
               color: controller.isBalanced.value
-                  ? kSuccess.withOpacity(0.1)
-                  : kDanger.withOpacity(0.1),
+                  ? kSuccess.withValues(alpha: 0.1)
+                  : kDanger.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -241,8 +241,8 @@ class BankReconciliationScreen extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: controller.isBalanced.value
-                        ? kSuccess.withOpacity(0.2)
-                        : kDanger.withOpacity(0.2),
+                        ? kSuccess.withValues(alpha: 0.2)
+                        : kDanger.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -314,7 +314,7 @@ class BankReconciliationScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -426,7 +426,7 @@ class BankReconciliationScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -438,7 +438,7 @@ class BankReconciliationScreen extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(4.w),
             decoration: BoxDecoration(
-              color: kPrimary.withOpacity(0.05),
+              color: kPrimary.withValues(alpha: 0.05),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
@@ -512,7 +512,7 @@ class BankReconciliationScreen extends StatelessWidget {
       margin: EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.5.h),
       padding: EdgeInsets.all(3.w),
       decoration: BoxDecoration(
-        color: isChecked ? color.withOpacity(0.05) : Colors.transparent,
+        color: isChecked ? color.withValues(alpha: 0.05) : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isChecked ? color : kBorder,

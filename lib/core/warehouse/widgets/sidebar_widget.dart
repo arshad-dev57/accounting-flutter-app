@@ -1,5 +1,6 @@
 // lib/core/warehouse/widgets/sidebar_widget.dart
 
+import 'package:BisonsTechs_app/Services/auth_logout_service.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
 import 'package:BisonsTechs_app/core/warehouse/dashboard/warehouse_dashboard_controller.dart';
@@ -36,7 +37,7 @@ class WarehouseSidebar extends StatelessWidget {
                       icon: Icons.arrow_back_rounded,
                       size: 18,
                       bgColor: Colors.grey[100]!,
-                      hoverColor: kPrimary.withOpacity(0.1),
+                      hoverColor: kPrimary.withValues(alpha: 0.1),
                       iconColor: Colors.black87,
                       hoverIconColor: kPrimary,
                     ),
@@ -44,44 +45,22 @@ class WarehouseSidebar extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
 
-                // Logo Row
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: kPrimary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.warehouse,
-                        color: kPrimary,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          'BisonsTechs',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                        Text(
-                          'Warehouse',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Image.asset(
+                    'assets/logo.png',
+                    height: 48,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Warehouse',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
@@ -186,7 +165,7 @@ class WarehouseSidebar extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.1),
+                          color: Colors.green.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
@@ -262,7 +241,7 @@ class WarehouseSidebar extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
+                  color: Colors.red.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -351,13 +330,13 @@ class WarehouseSidebar extends StatelessWidget {
 
   void _logout(BuildContext context) async {
     try {
+      await AuthLogoutService.clearPushSession();
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
       Get.delete<WarehouseDashboardController>(force: true);
       Get.offAll(() => const LoginScreen());
       AppSnackbar.success(kSuccess, 'Success', 'Logged out successfully');
     } catch (e) {
-      print('Logout error: $e');
       Get.offAll(() => const LoginScreen());
     }
   }
@@ -470,9 +449,9 @@ class _HoverableMenuItemState extends State<_HoverableMenuItem> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: isSelected
-                ? kPrimary.withOpacity(0.06)
+                ? kPrimary.withValues(alpha: 0.06)
                 : _isHovered
-                ? kPrimary.withOpacity(0.05)
+                ? kPrimary.withValues(alpha: 0.05)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(6),
           ),

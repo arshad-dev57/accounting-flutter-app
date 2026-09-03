@@ -90,12 +90,10 @@ class ChartOfAccountController extends GetxController {
             data['data']?['issues']?['hasIssues'] ?? false;
 
         if (hasIncorrectCashAccounts.value) {
-          final count = data['data']?['issues']?['incorrectCashAccounts'] ?? 0;
-          print('⚠️ $count cash/bank account(s) have incorrect type');
         }
       }
     } catch (e) {
-      print('Error fetching account type stats: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -171,12 +169,6 @@ class ChartOfAccountController extends GetxController {
         queryParams['search'] = searchQuery.value;
       }
 
-      // 🔥 ADD: Debug logging
-      print(
-        '📊 Fetching accounts - Filter: ${selectedFilter.value}, Page: ${currentPage.value}, Limit: ${queryParams['limit']}',
-      );
-      print('📊 Query params: $queryParams');
-
       final response = await _api.get(
         '/api/chart-of-accounts',
         queryParameters: queryParams,
@@ -201,9 +193,6 @@ class ChartOfAccountController extends GetxController {
           hasPrevPage.value = data['pagination']['hasPrev'] ?? false;
 
           // 🔥 ADD: Debug logging for pagination
-          print(
-            '📊 Total items: ${totalItems.value}, Total pages: ${totalPages.value}, Has next: ${hasNextPage.value}',
-          );
         }
 
         if (resetPage && data['summary'] != null) {
@@ -225,7 +214,6 @@ class ChartOfAccountController extends GetxController {
         );
       }
     } catch (e) {
-      print('❌ Error fetching accounts: $e');
       AppSnackbar.error(Colors.red, 'Error', 'Failed to load accounts: $e');
     } finally {
       isLoading(false);
@@ -649,7 +637,6 @@ class ChartOfAccountController extends GetxController {
       }
       return false;
     } catch (e) {
-      print('Error checking opening balance: $e');
       return false;
     }
   }
@@ -665,7 +652,6 @@ class ChartOfAccountController extends GetxController {
       }
       return {};
     } catch (e) {
-      print('Error getting opening balance details: $e');
       return {};
     }
   }

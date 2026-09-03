@@ -96,13 +96,12 @@ bool processFile(File file) {
 
 void main() {
   final libDir = Directory('lib');
-  var count = 0;
+  int count = 0;
   for (final entity in libDir.listSync(recursive: true)) {
     if (entity is! File || !entity.path.endsWith('.dart')) continue;
     if (processFile(entity)) {
-      print(entity.path);
       count++;
     }
+    stdout.writeln('Updated $count files');
   }
-  print('Updated $count files');
 }

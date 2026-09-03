@@ -10,13 +10,36 @@ import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class ChangePasswordScreen extends StatelessWidget {
-  const ChangePasswordScreen({super.key});
+  final bool isForgotFlow;
+
+  const ChangePasswordScreen({super.key, this.isForgotFlow = false});
+
+  String get _title => isForgotFlow ? 'Reset Password' : 'Change Password';
+  String get _subtitle => isForgotFlow
+      ? 'Create a new password for your account'
+      : 'Secure your account with a new password';
+  String get _heroSubtitle => isForgotFlow
+      ? 'Create your new password after OTP verification.'
+      : 'Update your password to keep your\naccount secure.';
 
   @override
   Widget build(BuildContext context) {
-    final ChangePasswordController controller = Get.put(
-      ChangePasswordController(),
-    );
+    ChangePasswordController controller;
+    if (Get.isRegistered<ChangePasswordController>()) {
+      final existing = Get.find<ChangePasswordController>();
+      if (existing.isForgotFlow != isForgotFlow) {
+        Get.delete<ChangePasswordController>(force: true);
+        controller = Get.put(
+          ChangePasswordController(isForgotFlow: isForgotFlow),
+        );
+      } else {
+        controller = existing;
+      }
+    } else {
+      controller = Get.put(
+        ChangePasswordController(isForgotFlow: isForgotFlow),
+      );
+    }
 
     return Scaffold(
       backgroundColor: kBg,
@@ -60,7 +83,7 @@ class ChangePasswordScreen extends StatelessWidget {
                       ),
                     );
                   },
-                  errorBuilder: (context, _, __) => Container(
+                  errorBuilder: (context, error, stackTrace) => Container(
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
@@ -79,7 +102,7 @@ class ChangePasswordScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                Container(color: const Color(0xFF0A7FA8).withOpacity(0.25)),
+                Container(color: const Color(0xFF0A7FA8).withValues(alpha: 0.25)),
 
                 // Branding content pinned to bottom-left
                 Positioned(
@@ -90,37 +113,25 @@ class ChangePasswordScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1AB4F5),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.account_balance,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Text(
-                            'BisonsTechs',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 1.8,
-                            ),
-                          ),
-                        ],
+                      Container(
+                        height: 96,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Image.asset(
+                          'assets/logo.png',
+                          fit: BoxFit.contain,
+                        ),
                       ),
                       const SizedBox(height: 20),
-                      const Text(
-                        'Change Password',
-                        style: TextStyle(
+                      Text(
+                        _title,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 26,
                           fontWeight: FontWeight.w700,
@@ -129,9 +140,9 @@ class ChangePasswordScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Update your password to keep your\naccount secure.',
+                        _heroSubtitle,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.75),
+                          color: Colors.white.withValues(alpha: 0.75),
                           fontSize: 13.5,
                           height: 1.6,
                         ),
@@ -223,9 +234,9 @@ class ChangePasswordScreen extends StatelessWidget {
       children: [
         Image.asset(
           'assets/logo.png',
-          height: 72,
+          height: 110,
           fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) => const Icon(
+          errorBuilder: (context, error, stackTrace) => const Icon(
             Icons.account_balance_rounded,
             size: 56,
             color: kPrimary,
@@ -233,7 +244,7 @@ class ChangePasswordScreen extends StatelessWidget {
         ),
         const SizedBox(height: 24),
         Text(
-          'Change Password',
+          _title,
           style: const TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w800,
@@ -243,7 +254,7 @@ class ChangePasswordScreen extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Secure your account with a new password',
+          _subtitle,
           style: TextStyle(fontSize: 14, color: Colors.grey[600]),
         ),
       ],
@@ -256,7 +267,7 @@ class ChangePasswordScreen extends StatelessWidget {
   PreferredSizeWidget _buildMobileAppBar(BuildContext context) {
     return AppBar(
       title: Text(
-        'Change Password',
+        _title,
         style: TextStyle(
           fontSize: ResponsiveUtils.getHeadingFontSize(context),
           fontWeight: FontWeight.w800,
@@ -291,7 +302,7 @@ class ChangePasswordScreen extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: kPrimary.withOpacity(0.3),
+            color: kPrimary.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -300,28 +311,23 @@ class ChangePasswordScreen extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            width: ResponsiveUtils.isTablet(context) ? 88 : 72,
-            height: ResponsiveUtils.isTablet(context) ? 88 : 72,
-            padding: EdgeInsets.all(
-              ResponsiveUtils.isTablet(context) ? 14 : 12,
+            height: ResponsiveUtils.isTablet(context) ? 72 : 56,
+            padding: EdgeInsets.symmetric(
+              horizontal: ResponsiveUtils.isTablet(context) ? 16 : 12,
+              vertical: ResponsiveUtils.isTablet(context) ? 10 : 8,
             ),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Colors.white,
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Image.asset(
               'assets/logo.png',
               fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => Icon(
-                Icons.account_balance_rounded,
-                color: kPrimary,
-                size: ResponsiveUtils.isTablet(context) ? 40 : 32,
-              ),
             ),
           ),
           SizedBox(height: ResponsiveUtils.isTablet(context) ? 20 : 16),
           Text(
-            'Change Password',
+            _title,
             style: TextStyle(
               fontSize: ResponsiveUtils.isTablet(context) ? 22 : 18,
               fontWeight: FontWeight.w800,
@@ -331,10 +337,10 @@ class ChangePasswordScreen extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Text(
-            'Secure your account with a new password',
+            _subtitle,
             style: TextStyle(
               fontSize: ResponsiveUtils.isTablet(context) ? 14 : 12,
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
             ),
             textAlign: TextAlign.center,
           ),
@@ -356,7 +362,7 @@ class ChangePasswordScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(isWeb ? 20 : 16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -365,20 +371,20 @@ class ChangePasswordScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Old Password
-          _buildPasswordField(
-            label: 'Current Password',
-            hint: 'Enter your current password',
-            icon: Mdi.lock_outline,
-            controller: controller.oldPasswordController,
-            error: controller.oldPasswordError,
-            isVisible: controller.isOldPasswordVisible,
-            onToggle: controller.toggleOldPasswordVisibility,
-            onChanged: (_) => controller.clearOldPasswordError(),
-            context: context,
-          ),
-
-          SizedBox(height: isWeb ? 20 : 16),
+          if (!isForgotFlow) ...[
+            _buildPasswordField(
+              label: 'Current Password',
+              hint: 'Enter your current password',
+              icon: Mdi.lock_outline,
+              controller: controller.oldPasswordController,
+              error: controller.oldPasswordError,
+              isVisible: controller.isOldPasswordVisible,
+              onToggle: controller.toggleOldPasswordVisibility,
+              onChanged: (_) => controller.clearOldPasswordError(),
+              context: context,
+            ),
+            SizedBox(height: isWeb ? 20 : 16),
+          ],
 
           // New Password
           _buildPasswordField(
@@ -468,7 +474,7 @@ class ChangePasswordScreen extends StatelessWidget {
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(isWeb ? 12 : 10),
-                borderSide: BorderSide(color: kBorder.withOpacity(0.5)),
+                borderSide: BorderSide(color: kBorder.withValues(alpha: 0.5)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(isWeb ? 12 : 10),
@@ -526,9 +532,9 @@ class ChangePasswordScreen extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(isWeb ? 16 : 14),
       decoration: BoxDecoration(
-        color: kBg.withOpacity(0.5),
+        color: kBg.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(isWeb ? 12 : 10),
-        border: Border.all(color: kBorder.withOpacity(0.5)),
+        border: Border.all(color: kBorder.withValues(alpha: 0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -549,7 +555,8 @@ class ChangePasswordScreen extends StatelessWidget {
           ),
           SizedBox(height: isWeb ? 12 : 10),
           _buildRequirementItem('Minimum 6 characters', context),
-          _buildRequirementItem('Cannot be same as current password', context),
+          if (!isForgotFlow)
+            _buildRequirementItem('Cannot be same as current password', context),
           _buildRequirementItem(
             'Should be different from previous passwords',
             context,
@@ -608,8 +615,8 @@ class ChangePasswordScreen extends StatelessWidget {
                     size: ResponsiveUtils.isWeb(context) ? 32 : 40,
                   ),
                 )
-              : Text(
-                  'Change Password',
+                : Text(
+                  isForgotFlow ? 'Reset Password' : 'Change Password',
                   style: TextStyle(
                     fontSize: isWeb ? 15 : 14,
                     fontWeight: FontWeight.w600,
@@ -631,7 +638,7 @@ class ChangePasswordScreen extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.85),
+            color: Colors.white.withValues(alpha: 0.85),
             fontSize: 13,
             fontWeight: FontWeight.w500,
           ),

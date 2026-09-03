@@ -1,6 +1,8 @@
 // controllers/journal_entry_controller.dart
 
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
@@ -44,16 +46,26 @@ class JournalEntryController extends GetxController {
 
   final ApiClient _api = Get.find<ApiClient>();
 
+  Worker? _fyWorker;
+  Worker? _locWorker;
+
   @override
   void onInit() {
     super.onInit();
-    fetchJournalEntries();
     fetchAccountsForDropdown();
     _setupScrollListener();
+    Future(() async {
+      await waitForFiscalYearReady();
+      fetchJournalEntries();
+    });
+    _fyWorker = listenFiscalYearChanges(fetchJournalEntries);
+    _locWorker = listenLocationChanges(_resetAndReload);
   }
 
   @override
   void onClose() {
+    _fyWorker?.dispose();
+    _locWorker?.dispose();
     scrollController.dispose();
     super.onClose();
   }
@@ -77,6 +89,7 @@ class JournalEntryController extends GetxController {
     fetchJournalEntries();
   }
 
+  @override
   void refresh() => _resetAndReload();
 
   double _toDouble(dynamic value) {
@@ -122,6 +135,7 @@ class JournalEntryController extends GetxController {
       if (searchQuery.value.isNotEmpty) {
         params['search'] = searchQuery.value;
       }
+      putFiscalYearId(params);
 
       final response = await _api.get(
         '/api/journal-entries',
@@ -163,7 +177,7 @@ class JournalEntryController extends GetxController {
         );
       }
     } catch (e) {
-      print('❌ Error fetching journal entries: $e');
+      debugPrint('Error: $e');
     } finally {
       isLoading.value = false;
     }
@@ -192,6 +206,7 @@ class JournalEntryController extends GetxController {
         params['startDate'] = selectedDateRange.value!.start.toIso8601String();
         params['endDate'] = selectedDateRange.value!.end.toIso8601String();
       }
+      putFiscalYearId(params);
 
       final response = await _api.get(
         '/api/journal-entries',
@@ -210,7 +225,7 @@ class JournalEntryController extends GetxController {
         hasMore.value = currentPage.value < totalPages.value;
       }
     } catch (e) {
-      print('❌ Error loading more entries: $e');
+      debugPrint('Error: $e');
     } finally {
       isLoadingMore.value = false;
     }
@@ -233,6 +248,11 @@ class JournalEntryController extends GetxController {
       'reference': reference,
       'lines': lines,
     };
+
+    final locationId = currentLocationId();
+    if (locationId != null && locationId.isNotEmpty) {
+      body['locationId'] = locationId;
+    }
 
     // ✅ API call — no isLoading wrapper here
     final response = await _api.post('/api/journal-entries', body: body);
@@ -334,7 +354,7 @@ class JournalEntryController extends GetxController {
                     decoration: BoxDecoration(
                       color: kBg,
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: Colors.grey.withOpacity(0.1)),
+                      border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -360,8 +380,8 @@ class JournalEntryController extends GetxController {
                               ),
                               decoration: BoxDecoration(
                                 color: update.change >= 0
-                                    ? kSuccess.withOpacity(0.1)
-                                    : kDanger.withOpacity(0.1),
+                                    ? kSuccess.withValues(alpha: 0.1)
+                                    : kDanger.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(

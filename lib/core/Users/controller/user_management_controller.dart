@@ -15,6 +15,9 @@ class User {
   final String? managerId;
   final UserRole? userRole;
   final List<UserPermission> permissions;
+  final List<String> locationIds;
+  final List<AssignedLocation> locations;
+  final bool isLocationAdmin;
 
   User({
     required this.id,
@@ -29,6 +32,9 @@ class User {
     this.managerId,
     this.userRole,
     this.permissions = const [],
+    this.locationIds = const [],
+    this.locations = const [],
+    this.isLocationAdmin = false,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -51,10 +57,67 @@ class User {
               ?.map((p) => UserPermission.fromJson(p))
               .toList() ??
           [],
+      locationIds: _parseLocationIds(json),
+      locations: _parseAssignedLocations(json),
+      isLocationAdmin: json['isLocationAdmin'] == true,
     );
   }
 
+  static List<String> _parseLocationIds(Map<String, dynamic> json) {
+    final ids = <String>{};
+    final rawIds = json['locationIds'];
+    if (rawIds is List) {
+      for (final id in rawIds) {
+        final s = id?.toString() ?? '';
+        if (s.isNotEmpty) ids.add(s);
+      }
+    }
+    final rawLocs = json['locations'];
+    if (rawLocs is List) {
+      for (final loc in rawLocs) {
+        if (loc is Map && loc['id'] != null) {
+          ids.add(loc['id'].toString());
+        }
+      }
+    }
+    return ids.toList();
+  }
+
+  static List<AssignedLocation> _parseAssignedLocations(
+    Map<String, dynamic> json,
+  ) {
+    final raw = json['locations'];
+    if (raw is! List) return const [];
+    return raw
+        .whereType<Map>()
+        .map((e) => AssignedLocation.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+  }
+
   String get fullName => '$firstName $lastName';
+}
+
+class AssignedLocation {
+  final String id;
+  final String name;
+  final String? code;
+  final String? type;
+
+  AssignedLocation({
+    required this.id,
+    required this.name,
+    this.code,
+    this.type,
+  });
+
+  factory AssignedLocation.fromJson(Map<String, dynamic> json) {
+    return AssignedLocation(
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      code: json['code']?.toString(),
+      type: json['type']?.toString(),
+    );
+  }
 }
 
 class UserRole {
@@ -211,6 +274,7 @@ class UserManagementController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxBool hasError = false.obs;
   final RxString errorMessage = ''.obs;
+  final RxBool lastInviteEmailSent = false.obs;
 
   final RxList<User> users = <User>[].obs;
   final RxList<Role> roles = <Role>[].obs;
@@ -478,6 +542,11 @@ class UserManagementController extends GetxController {
           icon: Icons.dashboard,
         ),
         SubPagePermission(
+          page: 'products',
+          displayName: 'Products',
+          icon: Icons.inventory_2,
+        ),
+        SubPagePermission(
           page: 'purchase-orders',
           displayName: 'Purchase Orders',
           icon: Icons.receipt,
@@ -506,6 +575,24 @@ class UserManagementController extends GetxController {
           page: 'purchase-returns',
           displayName: 'Purchase Returns',
           icon: Icons.assignment_return,
+        ),
+      ],
+    ),
+    ModuleConfig(
+      module: 'pos',
+      displayName: 'POS',
+      description: 'Point of sale register and management',
+      icon: Icons.point_of_sale,
+      subPages: [
+        SubPagePermission(
+          page: 'register',
+          displayName: 'Register',
+          icon: Icons.point_of_sale,
+        ),
+        SubPagePermission(
+          page: 'management',
+          displayName: 'Management',
+          icon: Icons.settings,
         ),
       ],
     ),
@@ -576,7 +663,7 @@ class UserManagementController extends GetxController {
         roles.value = data.map((item) => Role.fromJson(item)).toList();
       }
     } catch (e) {
-      print('Error loading roles: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -591,6 +678,7 @@ class UserManagementController extends GetxController {
     String? roleId,
     String? managerId,
     List<UserPermission>? permissions,
+    List<String>? locationIds,
   }) async {
     try {
       isLoading.value = true;
@@ -603,23 +691,32 @@ class UserManagementController extends GetxController {
           'lastName': lastName,
           'email': email,
           'password': password,
-          if (phone != null) 'phone': phone,
-          if (country != null) 'country': country,
-          if (role != null) 'role': role,
-          if (roleId != null) 'roleId': roleId,
-          if (managerId != null) 'managerId': managerId,
+          'phone': ?phone,
+          'country': ?country,
+          'role': ?role,
+          'roleId': ?roleId,
+          'managerId': ?managerId,
           if (permissions != null)
             'permissions': permissions.map((p) => p.toJson()).toList(),
+          'locationIds': ?locationIds,
         },
       );
 
       if (response.success) {
+        lastInviteEmailSent.value = response.data is Map &&
+            response.data['emailSent'] == true;
+        errorMessage.value = '';
         await loadUsers();
         return true;
       }
+      lastInviteEmailSent.value = false;
+      errorMessage.value = (response.message).trim().isNotEmpty
+          ? response.message.trim()
+          : 'Failed to create user';
       return false;
     } catch (e) {
-      print('Error creating user: $e');
+      lastInviteEmailSent.value = false;
+      errorMessage.value = 'Failed to create user';
       return false;
     } finally {
       isLoading.value = false;
@@ -638,6 +735,7 @@ class UserManagementController extends GetxController {
     String? managerId,
     bool? isActive,
     List<UserPermission>? permissions,
+    List<String>? locationIds,
   }) async {
     try {
       isLoading.value = true;
@@ -646,27 +744,32 @@ class UserManagementController extends GetxController {
         '/api/admin/users/$id',
         requiresAuth: true,
         body: {
-          if (firstName != null) 'firstName': firstName,
-          if (lastName != null) 'lastName': lastName,
-          if (email != null) 'email': email,
-          if (phone != null) 'phone': phone,
-          if (country != null) 'country': country,
-          if (role != null) 'role': role,
-          if (roleId != null) 'roleId': roleId,
-          if (managerId != null) 'managerId': managerId,
-          if (isActive != null) 'isActive': isActive,
-          if (permissions != null)
-            'permissions': permissions.map((p) => p.toJson()).toList(),
+        'firstName': ?firstName,
+'lastName': ?lastName,
+'email': ?email,
+'phone': ?phone,
+'country': ?country,
+'role': ?role,
+'roleId': ?roleId,
+'managerId': ?managerId,
+'isActive': ?isActive,
+if (permissions != null)
+  'permissions': permissions.map((p) => p.toJson()).toList(),
+'locationIds': ?locationIds,
         },
       );
 
       if (response.success) {
+        errorMessage.value = '';
         await loadUsers();
         return true;
       }
+      errorMessage.value = (response.message).trim().isNotEmpty
+          ? response.message.trim()
+          : 'Failed to update user';
       return false;
     } catch (e) {
-      print('Error updating user: $e');
+      errorMessage.value = 'Failed to update user';
       return false;
     } finally {
       isLoading.value = false;
@@ -688,7 +791,6 @@ class UserManagementController extends GetxController {
       }
       return false;
     } catch (e) {
-      print('Error deleting user: $e');
       return false;
     } finally {
       isLoading.value = false;
@@ -714,7 +816,6 @@ class UserManagementController extends GetxController {
       }
       return false;
     } catch (e) {
-      print('Error updating permissions: $e');
       return false;
     } finally {
       isLoading.value = false;
@@ -760,10 +861,7 @@ class UserManagementController extends GetxController {
     roleFilter.value = role;
   }
 
-  void refresh() {
-    loadUsers();
-    loadRoles();
-  }
+
 
   // Initialize module permissions for a user
   void initializeModulePermissions(User user) {

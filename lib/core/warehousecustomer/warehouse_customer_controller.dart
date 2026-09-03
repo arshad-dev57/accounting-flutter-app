@@ -63,14 +63,12 @@ class WarehouseCustomerController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    print('🟢 [CustomerController] onInit called');
     fetchCustomers();
     fetchStats();
   }
 
   @override
   void onClose() {
-    print('🟢 [CustomerController] onClose called');
     nameController.dispose();
     emailController.dispose();
     phoneController.dispose();
@@ -92,7 +90,6 @@ class WarehouseCustomerController extends GetxController {
   // ═══════════════════════════════════════════════════════════════
 
   Future<void> fetchCustomers({bool resetPage = false}) async {
-    print('🔵 [CustomerController] fetchCustomers called');
     if (resetPage) currentPage.value = 1;
 
     try {
@@ -120,9 +117,6 @@ class WarehouseCustomerController extends GetxController {
       final query = params.entries
           .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
           .join('&');
-      print(
-        '🔵 [CustomerController] API Request: GET /api/warehouse/customers?$query',
-      );
 
       final response = await _api.get(
         '/api/warehouse/customers?$query',
@@ -166,13 +160,10 @@ class WarehouseCustomerController extends GetxController {
           hasMore.value = pagination['hasNext'] == true;
         }
 
-        print('✅ [CustomerController] Fetched ${customers.length} customers');
       } else {
-        print('❌ [CustomerController] Failed to fetch customers');
-        Get.snackbar('Error', response.message ?? 'Failed to load customers');
+        Get.snackbar('Error', response.message);
       }
     } catch (e) {
-      print('❌ [CustomerController] fetchCustomers error: $e');
       Get.snackbar('Error', e.toString());
     } finally {
       isLoading.value = false;
@@ -278,7 +269,7 @@ class WarehouseCustomerController extends GetxController {
         }
       }
     } catch (e) {
-      print('❌ [CustomerController] fetchMoreCustomers error: $e');
+      debugPrint('Error: $e');
     } finally {
       isLoadingMore.value = false;
     }
@@ -312,7 +303,7 @@ class WarehouseCustomerController extends GetxController {
         );
       }
     } catch (e) {
-      print('❌ [CustomerController] fetchStats error: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -381,7 +372,6 @@ class WarehouseCustomerController extends GetxController {
         'preferences': {},
       };
 
-      print('🔵 [CustomerController] Creating customer...');
       final response = await _api.post(
         '/api/warehouse/customers',
         body: payload,
@@ -389,7 +379,6 @@ class WarehouseCustomerController extends GetxController {
       );
 
       if (response.success) {
-        print('✅ [CustomerController] Customer created successfully');
         Get.snackbar('Success', 'Customer created successfully');
         closeCreateForm();
         await fetchCustomers(resetPage: true);
@@ -397,11 +386,9 @@ class WarehouseCustomerController extends GetxController {
         return true;
       }
 
-      print('❌ [CustomerController] Failed to create customer');
-      Get.snackbar('Error', response.message ?? 'Failed to create customer');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [CustomerController] createCustomer error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -444,7 +431,6 @@ class WarehouseCustomerController extends GetxController {
         'preferences': {},
       };
 
-      print('🔵 [CustomerController] Updating customer...');
       final response = await _api.put(
         '/api/warehouse/customers/$id',
         body: payload,
@@ -452,7 +438,6 @@ class WarehouseCustomerController extends GetxController {
       );
 
       if (response.success) {
-        print('✅ [CustomerController] Customer updated successfully');
         Get.snackbar('Success', 'Customer updated successfully');
         closeCreateForm();
         await fetchCustomers(resetPage: true);
@@ -460,11 +445,9 @@ class WarehouseCustomerController extends GetxController {
         return true;
       }
 
-      print('❌ [CustomerController] Failed to update customer');
-      Get.snackbar('Error', response.message ?? 'Failed to update customer');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [CustomerController] updateCustomer error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -489,10 +472,9 @@ class WarehouseCustomerController extends GetxController {
         return true;
       }
 
-      Get.snackbar('Error', response.message ?? 'Failed to update status');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [CustomerController] updateCustomerStatus error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -516,10 +498,9 @@ class WarehouseCustomerController extends GetxController {
         return true;
       }
 
-      Get.snackbar('Error', response.message ?? 'Failed to delete customer');
+      Get.snackbar('Error', response.message);
       return false;
     } catch (e) {
-      print('❌ [CustomerController] deleteCustomer error: $e');
       Get.snackbar('Error', e.toString());
       return false;
     } finally {
@@ -542,7 +523,6 @@ class WarehouseCustomerController extends GetxController {
       }
       return null;
     } catch (e) {
-      print('❌ [CustomerController] getCustomerById error: $e');
       return null;
     }
   }
@@ -567,7 +547,6 @@ class WarehouseCustomerController extends GetxController {
       }
       return [];
     } catch (e) {
-      print('❌ [CustomerController] searchCustomersApi error: $e');
       return [];
     }
   }
@@ -596,7 +575,6 @@ class WarehouseCustomerController extends GetxController {
       }
       return [];
     } catch (e) {
-      print('❌ [CustomerController] getCustomerOrders error: $e');
       return [];
     }
   }

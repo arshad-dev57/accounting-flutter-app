@@ -6,11 +6,15 @@ import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
+import 'package:BisonsTechs_app/core/settings/controller/pdf_report_settings_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:BisonsTechs_app/Services/auth_logout_service.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
+import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:BisonsTechs_app/Utils/signature_dialog.dart';
 
@@ -97,7 +101,9 @@ class AuthController extends GetxController {
     super.onInit();
     _initControllers();
     _setupListeners();
-    _fiscalYearController = Get.put(FiscalYearController());
+    _fiscalYearController = Get.isRegistered<FiscalYearController>()
+        ? Get.find<FiscalYearController>()
+        : Get.put(FiscalYearController(), permanent: true);
     checkLoginStatus();
   }
 
@@ -196,26 +202,33 @@ class AuthController extends GetxController {
     return {'startDate': startDate, 'endDate': endDate};
   }
 
-  // Create initial fiscal year after registration
+  // Create initial fiscal year after registration only if backend did not
   Future<void> _createInitialFiscalYear() async {
     if (selectedFiscalYear.value.isEmpty) return;
 
     try {
+      await _fiscalYearController.fetchFiscalYears();
+      if (_fiscalYearController.fiscalYears.isNotEmpty) {
+        return;
+      }
+
       final dates = _calculateFiscalYearDates(selectedFiscalYear.value);
-      final currentYear = DateTime.now().year;
+      final startYear = dates['startDate']!.year;
+      final endYear = dates['endDate']!.year;
+      final name =
+          startYear == endYear ? 'FY $startYear' : 'FY $startYear-$endYear';
 
       final success = await _fiscalYearController.createFiscalYear(
-        name: 'FY $currentYear',
+        name: name,
         startDate: dates['startDate']!,
         endDate: dates['endDate']!,
         periodType: selectedFiscalYear.value,
       );
 
       if (success) {
-        print('✅ Initial fiscal year created successfully');
       }
     } catch (e) {
-      print('❌ Failed to create initial fiscal year: $e');
+      debugPrint('Error creating initial fiscal year: $e');
     }
   }
 
@@ -264,7 +277,6 @@ class AuthController extends GetxController {
   }
 
   Future<bool> register() async {
-    print("🚀 Register function started at step: ${currentStep.value}");
 
     if (currentStep.value == 0) {
       if (firstNameController.text.trim().isEmpty) {
@@ -345,16 +357,16 @@ class AuthController extends GetxController {
 
       try {
         // ─── BUILD BUSINESS DETAILS ──────────────────────────────
-        final businessDetails = {
-          'logo': logoController.text.trim(),
-          'fiscalYear': selectedFiscalYear.value,
-          'taxRegistrationNumber': taxRegistrationController.text.trim(),
-          'signature': signatureController.text.trim(),
-          'industry': industryController.text.trim(),
-          'businessType': selectedBusinessType.value,
-        };
-
+      
         // ─── API REQUEST ──────────────────────────────────────────
+        final dates = _calculateFiscalYearDates(selectedFiscalYear.value);
+        final currentYear = DateTime.now().year;
+        final startYear = dates['startDate']!.year;
+        final endYear = dates['endDate']!.year;
+        final fyName = startYear == endYear
+            ? 'FY $startYear'
+            : 'FY $startYear-$endYear';
+
         final Map<String, String> fields = {
           'firstName': firstNameController.text.trim(),
           'lastName': lastNameController.text.trim(),
@@ -365,6 +377,10 @@ class AuthController extends GetxController {
           'address': addressController.text.trim(),
           'organizationName': organizationNameController.text.trim(),
           'fiscalYear': selectedFiscalYear.value,
+          'fiscalYearStartDate': dates['startDate']!.toIso8601String(),
+          'fiscalYearEndDate': dates['endDate']!.toIso8601String(),
+          'fiscalYearName':
+              selectedFiscalYear.value.isNotEmpty ? fyName : 'FY $currentYear',
           'taxRegistrationNumber': taxRegistrationController.text.trim(),
           'industry': industryController.text.trim(),
           'businessType': selectedBusinessType.value,
@@ -390,36 +406,21 @@ class AuthController extends GetxController {
         final data = response.data;
 
         if (response.success) {
-          print("✅ Registration successful");
 
-          await _saveAuthData(data['token'], data['user']);
+          await _saveAuthData(
+            data['token']?.toString() ?? '',
+            Map<String, dynamic>.from(data['user'] as Map),
+            refreshToken: data['refreshToken']?.toString(),
+            companyOwner: true,
+            pdfReportSettings: data['pdfReportSettings'],
+          );
 
-          // Save selected currency
           await Get.find<CurrencyController>().setCurrency(
             selectedCurrencyCode.value,
           );
-
-          // Save company details
-          final prefs = await SharedPreferences.getInstance();
-          if (data['user']['organizationName'] != null &&
-              data['user']['organizationName'].isNotEmpty) {
-            await prefs.setString(
-              'company_name',
-              data['user']['organizationName'],
-            );
-          }
-          if (data['user']['address'] != null &&
-              data['user']['address'].isNotEmpty) {
-            await prefs.setString('company_address', data['user']['address']);
-          }
-
-          // Save business details
-          if (data['user']['businessDetails'] != null) {
-            await prefs.setString(
-              'business_details',
-              json.encode(data['user']['businessDetails']),
-            );
-          }
+          await Get.find<CurrencyController>().updateFromUserData(
+            Map<String, dynamic>.from(data['user'] as Map),
+          );
 
           final subscriptionController = Get.find<SubscriptionController>();
           subscriptionController.updateFromUserData(data['user']);
@@ -435,7 +436,7 @@ class AuthController extends GetxController {
           );
 
           if (subscriptionController.hasAccess) {
-            Get.offAllNamed('/dashboard');
+            subscriptionController.goToAppHome();
           } else {
             Get.offAll(() => const SelectPlanScreen());
           }
@@ -450,7 +451,6 @@ class AuthController extends GetxController {
           return false;
         }
       } catch (e) {
-        print('❌ Registration error: $e');
         AppSnackbar.error(kDanger, 'Error', 'error. Please try again.');
         return false;
       } finally {
@@ -482,7 +482,12 @@ class AuthController extends GetxController {
       final data = response.data;
 
       if (response.success) {
-        await _saveAuthData(data['token'], data['user']);
+        await _saveAuthData(
+          data['token']?.toString() ?? '',
+          Map<String, dynamic>.from(data['user'] as Map),
+          refreshToken: data['refreshToken']?.toString(),
+          companyOwner: true,
+        );
 
         final subscriptionController = Get.find<SubscriptionController>();
         subscriptionController.updateFromUserData(data['user']);
@@ -490,7 +495,7 @@ class AuthController extends GetxController {
         AppSnackbar.success(kSuccess, 'Success', 'Login successful!');
 
         if (subscriptionController.hasAccess) {
-          Get.offAllNamed('/dashboard');
+          subscriptionController.goToAppHome();
         } else {
           Get.offAll(() => const SelectPlanScreen());
         }
@@ -501,7 +506,6 @@ class AuthController extends GetxController {
         return false;
       }
     } catch (e) {
-      print('Login error: $e');
       AppSnackbar.error(kDanger, 'Error', 'error. Please try again.');
       return false;
     } finally {
@@ -522,21 +526,106 @@ class AuthController extends GetxController {
 
   Future<void> _saveAuthData(
     String token,
-    Map<String, dynamic> userData,
-  ) async {
+    Map<String, dynamic> userData, {
+    String? refreshToken,
+    bool companyOwner = false,
+    dynamic pdfReportSettings,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
-    await _api.setToken(token);
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      await _api.setBothTokens(token, refreshToken);
+    } else if (token.isNotEmpty) {
+      await _api.setToken(token);
+    }
+
+    // Company owner (self-register) always has full admin access.
+    final roleRaw = userData['role']?.toString().trim() ?? '';
+    final role = roleRaw.isNotEmpty
+        ? roleRaw
+        : (companyOwner ? 'admin' : 'user');
+    userData['role'] = role;
+
     await prefs.setString('user_data', json.encode(userData));
     user.value = userData;
     isLoggedIn.value = true;
+
+    final permissionService = Get.isRegistered<PermissionService>()
+        ? Get.find<PermissionService>()
+        : Get.put(PermissionService(), permanent: true);
+
+    final permissionsList = userData['permissions'] as List<dynamic>?;
+    final userPermissions = permissionsList
+            ?.map((p) {
+              if (p is Map<String, dynamic>) {
+                return UserPermission(
+                  id: p['id']?.toString() ?? '',
+                  page: p['page']?.toString() ?? '',
+                  canView: p['canView'] ?? true,
+                  canCreate: p['canCreate'] ?? false,
+                  canEdit: p['canEdit'] ?? false,
+                  canDelete: p['canDelete'] ?? false,
+                );
+              }
+              return UserPermission(id: '', page: p.toString(), canView: true);
+            })
+            .toList() ??
+        [];
+
+    await permissionService.saveUserData(
+      UserData(
+        id: userData['_id']?.toString() ?? userData['id']?.toString() ?? '',
+        firstName: userData['firstName']?.toString() ?? '',
+        lastName: userData['lastName']?.toString() ?? '',
+        email: userData['email']?.toString() ?? '',
+        role: role,
+        permissions: userPermissions,
+      ),
+    );
+
+    final orgName = userData['organizationName']?.toString() ?? '';
+    await prefs.setString('company_name', orgName);
+
+    final address = userData['address']?.toString() ?? '';
+    if (address.isNotEmpty) {
+      await prefs.setString('company_address', address);
+    }
+
+    final firstName = userData['firstName']?.toString() ?? '';
+    final lastName = userData['lastName']?.toString() ?? '';
+    final fullName = '$firstName $lastName'.trim();
+    if (fullName.isNotEmpty) {
+      await prefs.setString('user_name', fullName);
+    }
+
+    final userEmail = userData['email']?.toString() ?? '';
+    if (userEmail.isNotEmpty) {
+      await prefs.setString('user_email', userEmail);
+    }
+
+    if (userData['businessDetails'] != null) {
+      await prefs.setString(
+        'business_details',
+        json.encode(userData['businessDetails']),
+      );
+    }
+
+    await PdfReportSettingsController.persistFromLogin(
+      pdfReportSettings ?? userData['pdfReportSettings'],
+    );
+
+    await hydrateLocationsAfterAuth(userData);
   }
 
   Future<void> _clearAuthData() async {
     final prefs = await SharedPreferences.getInstance();
     await _api.clearToken();
     await prefs.remove('user_data');
+    await prefs.remove('user');
     user.value = null;
     isLoggedIn.value = false;
+    if (Get.isRegistered<PermissionService>()) {
+      await PermissionService.to.clearUserData();
+    }
   }
 
   Future<void> getCurrentUser() async {
@@ -559,11 +648,12 @@ class AuthController extends GetxController {
         await _clearAuthData();
       }
     } catch (e) {
-      print('Get user error: $e');
+      debugPrint('Error getting current user: $e');
     }
   }
 
   Future<void> logout() async {
+    await AuthLogoutService.clearPushSession();
     await _clearAuthData();
     Get.offAllNamed('/login');
     AppSnackbar.success(

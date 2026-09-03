@@ -8,13 +8,14 @@ import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/changepassword/screen/otp_screen.dart';
-import 'package:BisonsTechs_app/core/dashboard/Screens/dashbaord_screen.dart';
 import 'package:BisonsTechs_app/core/loginOtp/screen/login_otp_screen.dart';
 import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:BisonsTechs_app/core/settings/controller/pdf_report_settings_controller.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
-import 'package:BisonsTechs_app/Services/notification_Service.dart';
+import 'package:BisonsTechs_app/Services/notification_service.dart';
+import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -32,14 +33,22 @@ class LoginController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    ensureFreshControllers();
+  }
+
+  /// Get.offAll can dispose the previous Login route while this controller
+  /// is still reused. Always bind a live pair of text controllers.
+  void ensureFreshControllers() {
     emailController = TextEditingController();
     passwordController = TextEditingController();
+    emailError.value = '';
+    passwordError.value = '';
   }
 
   @override
   void onClose() {
-    emailController.dispose();
-    passwordController.dispose();
+    // Text controllers are owned for the life of the login UI. Get.offAll can
+    // close this controller while a new LoginScreen still holds the instance.
     super.onClose();
   }
 
@@ -88,8 +97,6 @@ class LoginController extends GetxController {
     isLoading.value = true;
 
     try {
-      print('🔍 [LOGIN] Starting login request');
-      print('🔍 [LOGIN] Email: ${emailController.text.trim()}');
 
       final response = await _api.post(
         '/api/users/login',
@@ -100,20 +107,11 @@ class LoginController extends GetxController {
         requiresAuth: false,
       );
 
-      print('🔍 [LOGIN] API Response received');
-      print('🔍 [LOGIN] Response statusCode: ${response.statusCode}');
-      print('🔍 [LOGIN] Response success: ${response.success}');
-      print('🔍 [LOGIN] Response message: ${response.message}');
-      print('🔍 [LOGIN] Response data: ${response.data}');
-      print(
-        '🔍 [LOGIN] Response isFiscalYearError: ${response.isFiscalYearError}',
-      );
 
       final data = response.data;
 
       // ✅ FIX: Check if data is null before accessing
       if (data == null) {
-        print('❌ [LOGIN] Data is null');
         AppSnackbar.error(
           kDanger,
           'Error',
@@ -123,12 +121,9 @@ class LoginController extends GetxController {
       }
 
       if (response.success) {
-        print('✅ [LOGIN] Login successful');
-        print('🔍 [LOGIN] Data keys: ${data.keys.toList()}');
 
         // ✅ Check if requiresOtp exists
         if (data['requiresOtp'] == true) {
-          print('🔍 [LOGIN] OTP required');
           Get.to(
             () => LoginOtpScreen(
               email: data['email'] ?? emailController.text.trim(),
@@ -149,51 +144,31 @@ class LoginController extends GetxController {
         // ✅ Notification Service Setup (mobile only)
         if (!kIsWeb) {
           try {
-            print('🔔🔔🔔 [LoginController] NOTIFICATION SETUP START 🔔🔔🔔');
             final userData = data['user'] as Map<String, dynamic>?;
             if (userData != null && userData['_id'] != null) {
               final userId = userData['_id'].toString();
-              print(
-                '🔔 [LoginController] Setting up notification service for user: $userId',
-              );
 
-              print(
-                '🔔 [LoginController] Calling NotificationService.login()...',
-              );
-              await NotificationService.instance.login(userId);
+              await NotificationService.instance.login(userId, token: data['token']?.toString());
 
-              print(
-                '🔔 [LoginController] Calling verifyDeviceRegistration()...',
-              );
-              await NotificationService.instance.verifyDeviceRegistration();
-
-              print('✅ [LoginController] Notification service setup completed');
-              print('🔔🔔🔔 [LoginController] NOTIFICATION SETUP END 🔔🔔🔔');
             } else {
-              print(
-                '⚠️ [LoginController] User data or user ID is null, skipping notification setup',
-              );
             }
           } catch (e) {
-            print('❌ [LoginController] Notification service setup error: $e');
-            print('❌ [LoginController] Error type: ${e.runtimeType}');
             // Don't block login on notification error
           }
         } else {
-          print(
-            '🔔 [LoginController] Running on web, skipping notification setup',
-          );
         }
 
         if (subscriptionController.hasAccess) {
-          Get.offAllNamed('/dashboard');
+          final fy = Get.isRegistered<FiscalYearController>()
+              ? Get.find<FiscalYearController>()
+              : Get.put(FiscalYearController(), permanent: true);
+          await fy.ensureFiscalYearsLoaded(force: true);
+          subscriptionController.goToAppHome();
         } else {
           Get.offAll(() => const SelectPlanScreen());
         }
         return true;
       } else {
-        print('❌ [LOGIN] Login failed');
-        print('❌ [LOGIN] Error message: ${data['message']}');
         AppSnackbar.error(
           kDanger,
           'Error',
@@ -202,8 +177,6 @@ class LoginController extends GetxController {
         return false;
       }
     } catch (e) {
-      print('❌ [LOGIN] Exception caught: $e');
-      print('❌ [LOGIN] Exception type: ${e.runtimeType}');
       AppSnackbar.error(
         kDanger,
         'Error',
@@ -235,7 +208,6 @@ class LoginController extends GetxController {
             symbol.isNotEmpty) {
           // Currency exists in user data, update controller
           await currencyController.updateFromUserData(userData);
-          print('✅ Currency updated from user data: $code ($symbol)');
           return;
         }
       }
@@ -245,14 +217,12 @@ class LoginController extends GetxController {
       final savedCode = prefs.getString('app_currency_code');
       if (savedCode != null && savedCode.isNotEmpty) {
         await currencyController.loadFromPrefs();
-        print('✅ Currency loaded from preferences: $savedCode');
       } else {
         // Use default currency
         await currencyController.loadFromPrefs();
-        print('✅ Using default currency');
       }
     } catch (e) {
-      print('❌ Error updating currency: $e');
+      debugPrint('Error: $e');
     }
   }
 
@@ -269,6 +239,11 @@ class LoginController extends GetxController {
       if (data['user'] != null) {
         final userData = data['user'] as Map<String, dynamic>;
         await prefs.setString('user_data', json.encode(userData));
+
+        final userId = userData['_id']?.toString() ?? userData['id']?.toString() ?? '';
+        if (userId.isNotEmpty) {
+          await prefs.setString('auth_user_id', userId);
+        }
 
         // ✅ Save user data in format expected by PermissionService
         final permissionService = Get.find<PermissionService>();
@@ -290,16 +265,17 @@ class LoginController extends GetxController {
             [];
 
         final userDataForPermissions = UserData(
-          id: userData['_id']?.toString() ?? '',
+          id: userData['_id']?.toString() ?? userData['id']?.toString() ?? '',
           firstName: userData['firstName']?.toString() ?? '',
           lastName: userData['lastName']?.toString() ?? '',
           email: userData['email']?.toString() ?? '',
-          role: userData['role']?.toString() ?? 'user',
+          role: (userData['role']?.toString().trim().isNotEmpty ?? false)
+              ? userData['role'].toString()
+              : 'user',
           permissions: userPermissions,
         );
 
         await permissionService.saveUserData(userDataForPermissions);
-        print('✅ [LOGIN] User data saved for PermissionService');
 
         // ✅ Load currency from user data
         await _updateCurrencyFromUser(userData);
@@ -330,9 +306,11 @@ class LoginController extends GetxController {
         await PdfReportSettingsController.persistFromLogin(
           data['pdfReportSettings'] ?? userData['pdfReportSettings'],
         );
+
+        await hydrateLocationsAfterAuth(userData);
       }
     } catch (e) {
-      print('Error saving user data: $e');
+      debugPrint('Error: $e');
     }
   }
 

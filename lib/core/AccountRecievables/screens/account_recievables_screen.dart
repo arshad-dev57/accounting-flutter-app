@@ -1,7 +1,7 @@
 import 'package:BisonsTechs_app/Utils/currency_utils.dart';
+import 'package:BisonsTechs_app/widgets/expandable_stat_card.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
-import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/AccountRecievables/controllers/account_recievables_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -107,7 +107,7 @@ class AccountsReceivableScreen extends StatelessWidget {
                             '${controller.displayCustomers.length} customers',
                             style: TextStyle(
                               fontSize: 11,
-                              color: Colors.white.withOpacity(0.55),
+                              color: Colors.white.withValues(alpha: 0.55),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -121,13 +121,13 @@ class AccountsReceivableScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.refresh_rounded,
                         size: 18,
-                        color: Colors.white.withOpacity(0.65),
+                        color: Colors.white.withValues(alpha: 0.65),
                       ),
                     ),
                   ),
@@ -138,13 +138,13 @@ class AccountsReceivableScreen extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
                         Icons.download_outlined,
                         size: 18,
-                        color: Colors.white.withOpacity(0.65),
+                        color: Colors.white.withValues(alpha: 0.65),
                       ),
                     ),
                   ),
@@ -164,7 +164,7 @@ class AccountsReceivableScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.white.withOpacity(0.06),
+                            color: Colors.white.withValues(alpha: 0.06),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -203,7 +203,7 @@ class AccountsReceivableScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.white.withOpacity(0.06),
+                          color: Colors.white.withValues(alpha: 0.06),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),
@@ -302,52 +302,11 @@ class AccountsReceivableScreen extends StatelessWidget {
     required IconData icon,
     required Color accentColor,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: kCardBg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: accentColor.withOpacity(0.18), width: 1.2),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 18, color: accentColor),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 9,
-                    color: kSubText,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: accentColor,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return ExpandableStatTile(
+      label: label,
+      value: value,
+      icon: icon,
+      accentColor: accentColor,
     );
   }
 
@@ -365,7 +324,7 @@ class AccountsReceivableScreen extends StatelessWidget {
               Icon(
                 Icons.people_outline,
                 size: 64,
-                color: kSubText.withOpacity(0.5),
+                color: kSubText.withValues(alpha: 0.5),
               ),
               const SizedBox(height: 16),
               Text(
@@ -408,15 +367,18 @@ class AccountsReceivableScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kCardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: statusColor.withOpacity(0.2), width: 1.5),
+        border: Border.all(
+          color: statusColor.withValues(alpha: 0.2),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
           BoxShadow(
-            color: statusColor.withOpacity(0.06),
+            color: statusColor.withValues(alpha: 0.06),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -441,10 +403,10 @@ class AccountsReceivableScreen extends StatelessWidget {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: kPrimary.withOpacity(0.12),
+                        color: kPrimary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: kPrimary.withOpacity(0.2),
+                          color: kPrimary.withValues(alpha: 0.2),
                           width: 1,
                         ),
                       ),
@@ -515,9 +477,11 @@ class AccountsReceivableScreen extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: kDanger.withOpacity(0.1),
+                        color: kDanger.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: kDanger.withOpacity(0.2)),
+                        border: Border.all(
+                          color: kDanger.withValues(alpha: 0.2),
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -569,7 +533,9 @@ class AccountsReceivableScreen extends StatelessWidget {
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+                          side: BorderSide(
+                            color: Colors.grey.withValues(alpha: 0.3),
+                          ),
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(6),
@@ -615,7 +581,7 @@ class AccountsReceivableScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
@@ -703,16 +669,16 @@ class AccountsReceivableScreen extends StatelessWidget {
               decoration: InputDecoration(
                 hintText: 'Search customers...',
                 hintStyle: TextStyle(
-                  color: Colors.black.withOpacity(0.45),
+                  color: Colors.black.withValues(alpha: 0.45),
                   fontSize: 13,
                 ),
                 prefixIcon: Icon(
                   Icons.search,
                   size: 16,
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withValues(alpha: 0.5),
                 ),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.3),
+                fillColor: Colors.white.withValues(alpha: 0.3),
                 contentPadding: const EdgeInsets.symmetric(
                   vertical: 0,
                   horizontal: 12,
@@ -729,7 +695,7 @@ class AccountsReceivableScreen extends StatelessWidget {
             width: 130,
             height: 34,
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: DropdownButtonHideUnderline(
@@ -739,7 +705,7 @@ class AccountsReceivableScreen extends StatelessWidget {
                   icon: Icon(
                     Icons.arrow_drop_down,
                     size: 20,
-                    color: Colors.black.withOpacity(0.6),
+                    color: Colors.black.withValues(alpha: 0.6),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   isExpanded: true,
@@ -780,19 +746,19 @@ class AccountsReceivableScreen extends StatelessWidget {
         height: 34,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.1),
+          color: Colors.black.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.black.withOpacity(0.15)),
+          border: Border.all(color: Colors.black.withValues(alpha: 0.15)),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 15, color: Colors.black.withOpacity(0.65)),
+            Icon(icon, size: 15, color: Colors.black.withValues(alpha: 0.65)),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
                 fontSize: 13,
-                color: Colors.black.withOpacity(0.75),
+                color: Colors.black.withValues(alpha: 0.75),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -879,7 +845,7 @@ class AccountsReceivableScreen extends StatelessWidget {
             width: 34,
             height: 34,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, size: 16, color: color),
@@ -913,8 +879,11 @@ class AccountsReceivableScreen extends StatelessWidget {
     );
   }
 
-  Widget _kpiDivider() =>
-      Container(width: 1, height: 36, color: Colors.grey.withOpacity(0.15));
+  Widget _kpiDivider() => Container(
+    width: 1,
+    height: 36,
+    color: Colors.grey.withValues(alpha: 0.15),
+  );
 
   Widget _buildWebToolbar(
     AccountsReceivableController controller,
@@ -926,8 +895,8 @@ class AccountsReceivableScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: kBg,
         border: Border(
-          bottom: BorderSide(color: Colors.grey.withOpacity(0.15)),
-          top: BorderSide(color: Colors.grey.withOpacity(0.1)),
+          bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.15)),
+          top: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
         ),
       ),
       child: Row(
@@ -945,7 +914,7 @@ class AccountsReceivableScreen extends StatelessWidget {
             () => Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: kPrimary.withOpacity(0.1),
+                color: kPrimary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -980,7 +949,7 @@ Widget _buildWebCustomersTable(
             Icon(
               Icons.people_outline,
               size: 48,
-              color: kSubText.withOpacity(0.4),
+              color: kSubText.withValues(alpha: 0.4),
             ),
             const SizedBox(height: 12),
             Text(
@@ -1029,12 +998,12 @@ Widget _buildWebCustomersTable(
             ],
           ),
         ),
-        Container(height: 1, color: Colors.grey.withOpacity(0.15)),
+        Container(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
         Expanded(
           child: ListView.separated(
             itemCount: customers.length,
-            separatorBuilder: (_, __) =>
-                Divider(height: 1, color: Colors.grey.withOpacity(0.1)),
+            separatorBuilder: (_, _) =>
+                Divider(height: 1, color: Colors.grey.withValues(alpha: 0.1)),
             itemBuilder: (context, index) =>
                 _buildWebTableRow(customers[index], controller, context),
           ),
@@ -1075,7 +1044,7 @@ Widget _buildWebTableRow(
     color: Colors.transparent,
     child: InkWell(
       onTap: () => _showCustomerDetails(customer, controller, context),
-      hoverColor: kPrimary.withOpacity(0.03),
+      hoverColor: kPrimary.withValues(alpha: 0.03),
       child: Container(
         height: 52,
         padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -1086,7 +1055,7 @@ Widget _buildWebTableRow(
               width: 28,
               height: 28,
               decoration: BoxDecoration(
-                color: kPrimary.withOpacity(0.1),
+                color: kPrimary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Center(
@@ -1148,7 +1117,7 @@ Widget _buildWebTableRow(
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.08),
+                    color: kPrimary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -1195,7 +1164,7 @@ Widget _buildWebTableRow(
                 alignment: Alignment.centerRight,
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                 decoration: BoxDecoration(
-                  color: kDanger.withOpacity(0.08),
+                  color: kDanger.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -1224,7 +1193,7 @@ Widget _buildWebTableRow(
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: kDanger.withOpacity(0.1),
+                          color: kDanger.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(3),
                         ),
                         child: Text(
@@ -1243,7 +1212,7 @@ Widget _buildWebTableRow(
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: kWarning.withOpacity(0.1),
+                          color: kWarning.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(3),
                         ),
                         child: Text(
@@ -1295,7 +1264,7 @@ Widget _webIconBtn(IconData icon, Color color, VoidCallback onTap) {
   return InkWell(
     onTap: onTap,
     borderRadius: BorderRadius.circular(4),
-    child: Container(
+    child: SizedBox(
       width: 28,
       height: 28,
       child: Icon(icon, size: 15, color: color),
@@ -1322,8 +1291,10 @@ Widget _buildWebTableFooter(
     height: 52,
     padding: const EdgeInsets.symmetric(horizontal: 24),
     decoration: BoxDecoration(
-      color: kPrimary.withOpacity(0.04),
-      border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.15))),
+      color: kPrimary.withValues(alpha: 0.04),
+      border: Border(
+        top: BorderSide(color: Colors.grey.withValues(alpha: 0.15)),
+      ),
     ),
     child: Row(
       children: [
@@ -1374,7 +1345,7 @@ Widget _buildWebTableFooter(
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
             decoration: BoxDecoration(
-              color: kDanger.withOpacity(0.08),
+              color: kDanger.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
@@ -1442,7 +1413,7 @@ void _showCustomerDetails(
                   width: isWeb ? 44 : 50,
                   height: isWeb ? 44 : 50,
                   decoration: BoxDecoration(
-                    color: kPrimary.withOpacity(0.1),
+                    color: kPrimary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Center(
@@ -1487,7 +1458,7 @@ void _showCustomerDetails(
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
+                    color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(5),
                   ),
                   child: Text(
@@ -1509,7 +1480,7 @@ void _showCustomerDetails(
               ],
             ),
             const SizedBox(height: 14),
-            Divider(height: 1, color: Colors.grey.withOpacity(0.15)),
+            Divider(height: 1, color: Colors.grey.withValues(alpha: 0.15)),
             const SizedBox(height: 14),
             Flexible(
               child: SingleChildScrollView(
@@ -1532,7 +1503,10 @@ void _showCustomerDetails(
                       isWeb,
                       valueColor: kSuccess,
                     ),
-                    Divider(height: 20, color: Colors.grey.withOpacity(0.15)),
+                    Divider(
+                      height: 20,
+                      color: Colors.grey.withValues(alpha: 0.15),
+                    ),
                     _buildDetailRow(
                       'Outstanding',
                       _formatAmount(customer.outstandingAmount),
@@ -1630,74 +1604,6 @@ Widget _buildDetailRow(
               fontSize: isWeb ? 13 : 14,
               fontWeight: FontWeight.w600,
               color: valueColor ?? kText,
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-Widget _buildInvoiceItem(Invoice invoice, bool isWeb) {
-  final statusColor = invoice.status == 'Paid'
-      ? kSuccess
-      : invoice.status == 'Overdue'
-      ? kDanger
-      : kWarning;
-  final outstanding = invoice.amount - invoice.paidAmount;
-
-  return Container(
-    margin: EdgeInsets.only(bottom: isWeb ? 8 : 6),
-    padding: EdgeInsets.all(isWeb ? 12 : 10),
-    decoration: BoxDecoration(
-      color: kBg,
-      borderRadius: BorderRadius.circular(isWeb ? 10 : 8),
-    ),
-    child: Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                invoice.id,
-                style: TextStyle(
-                  fontSize: isWeb ? 12 : 11,
-                  fontWeight: FontWeight.w600,
-                  color: kText,
-                ),
-              ),
-              Text(
-                DateFormat('dd MMM yyyy').format(invoice.date),
-                style: TextStyle(fontSize: isWeb ? 10 : 9, color: kSubText),
-              ),
-            ],
-          ),
-        ),
-        Text(
-          _formatAmount(outstanding),
-          style: TextStyle(
-            fontSize: isWeb ? 13 : 11,
-            fontWeight: FontWeight.w700,
-            color: statusColor,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: isWeb ? 8 : 6,
-            vertical: isWeb ? 4 : 2,
-          ),
-          decoration: BoxDecoration(
-            color: statusColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(isWeb ? 6 : 4),
-          ),
-          child: Text(
-            invoice.status,
-            style: TextStyle(
-              fontSize: isWeb ? 10 : 9,
-              color: statusColor,
-              fontWeight: FontWeight.w600,
             ),
           ),
         ),
