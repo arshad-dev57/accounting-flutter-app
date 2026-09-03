@@ -27,6 +27,7 @@ class LoginController extends GetxController {
   var isPasswordVisible = false.obs;
   var emailError = ''.obs;
   var passwordError = ''.obs;
+  var acceptedTerms = false.obs;
 
   final ApiClient _api = Get.find<ApiClient>();
 
@@ -43,6 +44,7 @@ class LoginController extends GetxController {
     passwordController = TextEditingController();
     emailError.value = '';
     passwordError.value = '';
+    acceptedTerms.value = false;
   }
 
   @override
@@ -86,6 +88,15 @@ class LoginController extends GetxController {
       isValid = false;
     } else {
       passwordError.value = '';
+    }
+
+    if (!acceptedTerms.value) {
+      AppSnackbar.error(
+        kDanger,
+        'Error',
+        'Please accept the Terms of Service to continue',
+      );
+      isValid = false;
     }
 
     return isValid;

@@ -3,6 +3,7 @@
 import 'dart:io';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/Register/controller/registercontroller.dart';
+import 'package:BisonsTechs_app/widgets/terms_agreement_row.dart';
 import 'package:country_picker_pro/country_picker_pro.dart';
 import 'package:flutter/material.dart';
 import 'package:intl_phone_field_continued/intl_phone_field.dart';
@@ -302,8 +303,6 @@ class RegistrationScreen extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 14),
-        _termsCheckbox(auth),
         const SizedBox(height: 22),
         _primaryButton(
           label: 'Continue',
@@ -538,6 +537,8 @@ class RegistrationScreen extends StatelessWidget {
             }),
           ],
         ),
+        const SizedBox(height: 14),
+        _termsCheckbox(auth),
         const SizedBox(height: 24),
         _primaryButton(
           label: 'Create Account',
@@ -1120,58 +1121,9 @@ class RegistrationScreen extends StatelessWidget {
 
   Widget _termsCheckbox(AuthController auth) {
     return Obx(
-      () => GestureDetector(
-        onTap: () => auth.agreeToTerms.value = !auth.agreeToTerms.value,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Transform.scale(
-              scale: 1.0,
-              child: Checkbox(
-                value: auth.agreeToTerms.value,
-                onChanged: (v) => auth.agreeToTerms.value = v ?? false,
-                activeColor: kPrimary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                side: BorderSide(color: Colors.blue.shade100, width: 1.5),
-              ),
-            ),
-            const SizedBox(width: 4),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: RichText(
-                  text: TextSpan(
-                    text: 'I agree to the ',
-                    style: TextStyle(
-                      color: Colors.grey.shade500,
-                      fontSize: 12.5,
-                      height: 1.5,
-                    ),
-                    children: [
-                      TextSpan(
-                        text: 'Terms of Service',
-                        style: TextStyle(
-                          color: kPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const TextSpan(text: ' and '),
-                      TextSpan(
-                        text: 'Privacy Policy',
-                        style: TextStyle(
-                          color: kPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+      () => TermsAgreementRow(
+        value: auth.agreeToTerms.value,
+        onChanged: (v) => auth.agreeToTerms.value = v,
       ),
     );
   }
