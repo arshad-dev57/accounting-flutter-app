@@ -318,15 +318,6 @@ class AuthController extends GetxController {
         AppSnackbar.error(kDanger, 'Error', 'Please enter valid email');
         return false;
       }
-
-      if (!agreeToTerms.value) {
-        AppSnackbar.error(
-          kDanger,
-          'Error',
-          'Please agree to terms and conditions',
-        );
-        return false;
-      }
       currentStep.value = 2;
       return true;
     }
@@ -350,6 +341,14 @@ class AuthController extends GetxController {
       }
       if (passwordController.text != confirmPasswordController.text) {
         AppSnackbar.error(kDanger, 'Error', 'Passwords do not match');
+        return false;
+      }
+      if (!agreeToTerms.value) {
+        AppSnackbar.error(
+          kDanger,
+          'Error',
+          'Please agree to the Terms of Service',
+        );
         return false;
       }
 

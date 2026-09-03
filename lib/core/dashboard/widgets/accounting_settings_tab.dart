@@ -3,6 +3,7 @@ import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/dashboard/controllers/dashboard_controller.dart';
 import 'package:BisonsTechs_app/core/dashboard/utils/accounting_route_navigator.dart';
 import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
+import 'package:BisonsTechs_app/widgets/module_delete_account_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -128,6 +129,8 @@ class AccountingSettingsTab extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         _SignOutButton(onLogout: onLogout),
+        const SizedBox(height: 12),
+        const _DeleteAccountButton(),
       ],
     );
 
@@ -355,6 +358,45 @@ class _SignOutButton extends StatelessWidget {
               SizedBox(width: 8),
               Text(
                 'Sign out',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFFEF4444),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DeleteAccountButton extends StatelessWidget {
+  const _DeleteAccountButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: showDeleteAccountDialog,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFFECACA)),
+          ),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.delete_forever_rounded, color: Color(0xFFEF4444), size: 18),
+              SizedBox(width: 8),
+              Text(
+                'Delete account',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,

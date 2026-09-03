@@ -24,6 +24,9 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
   @override
   void initState() {
     super.initState();
+    if (Get.isRegistered<LoginOtpController>()) {
+      Get.delete<LoginOtpController>(force: true);
+    }
     controller = Get.put(LoginOtpController(email: widget.email));
     _keyboardFocusNode = FocusNode();
   }
@@ -38,7 +41,8 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
     if (event is KeyDownEvent &&
         (event.logicalKey == LogicalKeyboardKey.enter ||
             event.logicalKey == LogicalKeyboardKey.numpadEnter)) {
-      if (!controller.isLoading.value) {
+      if (!controller.isLoading.value &&
+          controller.expirySeconds.value > 0) {
         controller.verifyOtp();
       }
     }
@@ -166,7 +170,7 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
                           ),
                           _featurePill(
                             Icons.timer_outlined,
-                            'Expires in 10 min',
+                            'Expires in 1 min',
                           ),
                           _featurePill(
                             Icons.verified_user_outlined,
@@ -432,7 +436,8 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
             width: double.infinity,
             height: 54,
             child: ElevatedButton(
-              onPressed: controller.isLoading.value
+              onPressed: controller.isLoading.value ||
+                      controller.expirySeconds.value == 0
                   ? null
                   : () => controller.verifyOtp(),
               style: ElevatedButton.styleFrom(

@@ -3,6 +3,7 @@
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/core/Register/Views/register_screen.dart';
+import 'package:BisonsTechs_app/widgets/terms_agreement_row.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -41,7 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (event is KeyDownEvent &&
         (event.logicalKey == LogicalKeyboardKey.enter ||
             event.logicalKey == LogicalKeyboardKey.numpadEnter)) {
-      if (!controller.isLoading.value) {
+      if (!controller.isLoading.value && controller.acceptedTerms.value) {
         controller.login();
       }
     }
@@ -339,6 +340,15 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
 
+        const SizedBox(height: 16),
+
+        Obx(
+          () => TermsAgreementRow(
+            value: controller.acceptedTerms.value,
+            onChanged: (v) => controller.acceptedTerms.value = v,
+          ),
+        ),
+
         const SizedBox(height: 24),
 
         // Sign In button
@@ -347,7 +357,8 @@ class _LoginScreenState extends State<LoginScreen> {
             width: double.infinity,
             height: 54, // Large button
             child: ElevatedButton(
-              onPressed: controller.isLoading.value
+              onPressed: (controller.isLoading.value ||
+                      !controller.acceptedTerms.value)
                   ? null
                   : () async => await controller.login(),
               style: ElevatedButton.styleFrom(

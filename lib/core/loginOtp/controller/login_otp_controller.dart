@@ -31,32 +31,27 @@ class LoginOtpController extends GetxController {
   var isResending = false.obs;
   var otpError = ''.obs;
 
-  // OTP expiry countdown (5 minutes = 300 seconds)
-  var expirySeconds = 300.obs;
-  // Resend cooldown (60 seconds after each send)
-  var resendCooldown = 0.obs;
+  static const int otpTtlSeconds = 60;
+  var expirySeconds = otpTtlSeconds.obs;
 
   Timer? _expiryTimer;
-  Timer? _resendTimer;
 
   @override
   void onInit() {
     super.onInit();
     _startExpiryTimer();
-    _startResendCooldown();
   }
 
   @override
   void onClose() {
     _expiryTimer?.cancel();
-    _resendTimer?.cancel();
     pinController.dispose();
     pinFocusNode.dispose();
     super.onClose();
   }
 
   void _startExpiryTimer() {
-    expirySeconds.value = 300;
+    expirySeconds.value = otpTtlSeconds;
     _expiryTimer?.cancel();
     _expiryTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (expirySeconds.value > 0) {
@@ -68,18 +63,6 @@ class LoginOtpController extends GetxController {
     });
   }
 
-  void _startResendCooldown() {
-    resendCooldown.value = 60;
-    _resendTimer?.cancel();
-    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (resendCooldown.value > 0) {
-        resendCooldown.value--;
-      } else {
-        timer.cancel();
-      }
-    });
-  }
-
   String get expiryTimerText {
     final m = expirySeconds.value ~/ 60;
     final s = expirySeconds.value % 60;
@@ -87,14 +70,14 @@ class LoginOtpController extends GetxController {
   }
 
   String get resendButtonText {
-    if (resendCooldown.value > 0) {
-      final s = resendCooldown.value;
+    if (expirySeconds.value > 0) {
+      final s = expirySeconds.value;
       return 'Resend in 00:${s.toString().padLeft(2, '0')}';
     }
     return 'Resend Code';
   }
 
-  bool get canResend => resendCooldown.value == 0 && !isResending.value;
+  bool get canResend => expirySeconds.value == 0 && !isResending.value;
 
   void clearPin() {
     pinController.clear();
@@ -207,8 +190,11 @@ class LoginOtpController extends GetxController {
         );
         clearPin();
         _startExpiryTimer();
-        _startResendCooldown();
       } else {
+        final remaining = response.data?['retryAfterSeconds'];
+        if (remaining is int && remaining > 0) {
+          expirySeconds.value = remaining;
+        }
         final msg =
             response.data?['message'] ?? 'Failed to resend. Please try again.';
         AppSnackbar.error(kDanger, 'Error', msg);

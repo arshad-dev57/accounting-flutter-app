@@ -3,6 +3,7 @@ import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/companyprofile/controller/profile_controller.dart';
 import 'package:BisonsTechs_app/core/dashboard/utils/module_settings_routes.dart';
 import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
+import 'package:BisonsTechs_app/widgets/module_delete_account_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
@@ -135,6 +136,8 @@ class ModuleSettingsTab extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         _SignOutButton(onLogout: onLogout),
+        const SizedBox(height: 12),
+        const _DeleteAccountButton(),
       ],
     );
 
@@ -328,6 +331,38 @@ class _SettingsItem extends StatelessWidget {
                 color: Colors.grey.shade400,
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DeleteAccountButton extends StatelessWidget {
+  const _DeleteAccountButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: showDeleteAccountDialog,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFFEE2E2)),
+          ),
+          alignment: Alignment.center,
+          child: const Text(
+            'Delete account',
+            style: TextStyle(
+              color: Color(0xFFEF4444),
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+            ),
           ),
         ),
       ),
