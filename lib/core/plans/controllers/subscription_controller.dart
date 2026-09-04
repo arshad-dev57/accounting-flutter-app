@@ -1,4 +1,5 @@
 import 'package:BisonsTechs_app/Services/subscription_service.dart';
+import 'package:BisonsTechs_app/config/store_compliance.dart';
 import 'package:BisonsTechs_app/core/plans/models/company_billing.dart';
 import 'package:BisonsTechs_app/core/plans/utils/subscription_pricing.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
@@ -8,11 +9,13 @@ import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async';
 
 class SubscriptionController extends GetxController {
   final SubscriptionService _subscriptionService = SubscriptionService();
 
   var isLoading = false.obs;
+  var isCheckingStatus = false.obs;
   var hasActiveSubscription = false.obs;
   var subscriptionPlan = ''.obs;
   var subscriptionStatus = ''.obs;
@@ -32,7 +35,8 @@ class SubscriptionController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _loadFromPrefs().then((_) => checkSubscriptionStatus());
+    // Prefs are for UI labels only. Access is always re-checked via API on splash/login.
+    _loadFromPrefs();
     loadPlans();
   }
 
@@ -50,27 +54,38 @@ class SubscriptionController extends GetxController {
   }
 
   // ─── Check subscription status from backend ─────────────────────
-  Future<void> checkSubscriptionStatus() async {
+  /// Live API check. Returns true when the server responded successfully.
+  Future<bool> checkSubscriptionStatus() async {
     if (justSubscribed.value) {
-      return;
+      return hasAccess;
     }
 
     try {
-      isLoading.value = true;
+      isCheckingStatus.value = true;
 
       final response = await _subscriptionService.checkSubscription();
 
       if (response['success'] == true) {
         final data = response['data'];
-        _applySubscriptionData(data);
-        await _refreshCapacityQuietly();
+        if (data is Map<String, dynamic>) {
+          _applySubscriptionData(data);
+        }
         await _saveSubscriptionStatus();
         _showTrialExpiryWarning();
+        // Refresh capacity in background — don't block splash / plans UI.
+        unawaited(_refreshCapacityQuietly());
+        return true;
       }
+
+      hasActiveSubscription.value = false;
+      await _saveSubscriptionStatus();
+      return false;
     } catch (e) {
       debugPrint('Error checking subscription status: $e');
+      hasActiveSubscription.value = false;
+      return false;
     } finally {
-      isLoading.value = false;
+      isCheckingStatus.value = false;
     }
   }
 
@@ -96,7 +111,9 @@ class SubscriptionController extends GetxController {
     if (sub['endDate'] != null) {
       subscriptionEndDate.value = DateTime.parse(sub['endDate']);
     }
-    if (sub['productTier'] != null) {
+    if (data['productTier'] != null) {
+      productTier.value = data['productTier'].toString();
+    } else if (sub['productTier'] != null) {
       productTier.value = sub['productTier'].toString();
     }
   }
@@ -155,15 +172,23 @@ class SubscriptionController extends GetxController {
   // ─── Load available plans from backend ──────────────────────────
   Future<void> loadPlans() async {
     try {
-      isLoading.value = true;
+      // Do not touch [isLoading] — splash / plan screen use that for status checks.
       final response = await _subscriptionService.getPlans();
-      if (response['success'] == true) {
-        plans.value = List<Map<String, dynamic>>.from(response['data'] as List);
-      }
+      if (response['success'] != true) return;
+
+      final data = response['data'];
+      final raw = data is List
+          ? data
+          : (data is Map && data['plans'] is List)
+              ? data['plans'] as List
+              : const <dynamic>[];
+
+      plans.value = raw
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
     } catch (e) {
       debugPrint('Error loading plans: $e');
-    } finally {
-      isLoading.value = false;
     }
   }
 
@@ -227,6 +252,9 @@ class SubscriptionController extends GetxController {
     int licensedBranches = 1,
     bool isUpgrade = false,
   }) async {
+    if (await StoreCompliance.redirectPaidCheckoutIfRequired()) {
+      return false;
+    }
     try {
       isLoading.value = true;
       justSubscribed.value = true;
@@ -235,6 +263,8 @@ class SubscriptionController extends GetxController {
           ? await _subscriptionService.upgradeSubscription(
               licensedUsers: licensedUsers,
               licensedBranches: licensedBranches,
+              productTier: productTier,
+              billingCycle: plan,
             )
           : await _subscriptionService.subscribeDirect(
               plan: plan,
@@ -258,15 +288,23 @@ class SubscriptionController extends GetxController {
         isTrialActive.value = false;
         trialDaysRemaining.value = 0;
 
-        if (data['endDate'] != null) {
-          subscriptionEndDate.value = DateTime.parse(data['endDate']);
+        final cap = data['capacity'];
+        final capMap = cap is Map ? Map<String, dynamic>.from(cap) : null;
+        final endRaw = data['endDate'] ?? capMap?['subscriptionEndDate'];
+        if (endRaw != null) {
+          final parsed = DateTime.tryParse(endRaw.toString());
+          if (parsed != null) subscriptionEndDate.value = parsed;
         }
-        if (data['productTier'] != null) {
-          this.productTier.value = data['productTier'].toString();
+        final nextTier = data['productTier'] ?? capMap?['productTier'];
+        if (nextTier != null) {
+          this.productTier.value = nextTier.toString();
+        } else {
+          this.productTier.value = productTier;
         }
-        await _refreshCapacityQuietly();
+        unawaited(_refreshCapacityQuietly());
 
         await _saveSubscriptionStatus();
+        justSubscribed.value = false;
 
         AppSnackbar.success(
           kSuccess,
@@ -308,7 +346,15 @@ class SubscriptionController extends GetxController {
 
       if (response['success'] == true) {
         justSubscribed.value = false;
-        await checkSubscriptionStatus();
+        hasActiveSubscription.value = false;
+        subscriptionPlan.value = 'none';
+        subscriptionStatus.value = 'expired';
+        isTrialActive.value = false;
+        trialDaysRemaining.value = 0;
+        subscriptionDaysRemaining.value = 0;
+        productTier.value = tierErpPos;
+        capacitySnapshot.value = null;
+        await _saveSubscriptionStatus();
 
         AppSnackbar.success(
           kSuccess,
@@ -339,6 +385,9 @@ class SubscriptionController extends GetxController {
     required int licensedUsers,
     required int licensedBranches,
   }) async {
+    if (await StoreCompliance.redirectPaidCheckoutIfRequired()) {
+      return false;
+    }
     try {
       isLoading.value = true;
       final response = await _subscriptionService.upgradeSubscription(

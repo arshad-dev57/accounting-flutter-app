@@ -21,11 +21,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
   static const Color _textSecondary = Color(0xFF8E8E9A);
   static const Color _divider = Color(0xFFF0F0F5);
 
+  late final ProfileController _controller;
+
   @override
-  Widget build(BuildContext context) {
-    final ProfileController controller = Get.isRegistered<ProfileController>()
+  void initState() {
+    super.initState();
+    _controller = Get.isRegistered<ProfileController>()
         ? Get.find<ProfileController>()
         : Get.put(ProfileController(), permanent: true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _controller.loadProfile();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = _controller;
 
     return Scaffold(
       backgroundColor: _bg,
@@ -1022,7 +1033,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           color: kPrimary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(Icons.settings_rounded, color: kPrimary, size: 18),
+        child: Icon(Icons.edit_rounded, color: kPrimary, size: 18),
       ),
     );
   }

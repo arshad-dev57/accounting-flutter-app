@@ -5,6 +5,7 @@ import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/core/companyprofile/controller/profile_controller.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'package:BisonsTechs_app/core/settings/controller/pdf_report_settings_controller.dart';
@@ -613,6 +614,7 @@ class AuthController extends GetxController {
     );
 
     await hydrateLocationsAfterAuth(userData);
+    ProfileController.hydrateAfterAuth(userData);
   }
 
   Future<void> _clearAuthData() async {

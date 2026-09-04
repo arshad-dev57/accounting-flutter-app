@@ -190,6 +190,58 @@ class ProfileController extends GetxController {
     _setText(businessTypeController, businessType.value);
   }
 
+  void clearSession() {
+    organizationName.value = '';
+    personName.value = '';
+    firstName.value = '';
+    lastName.value = '';
+    address.value = '';
+    email.value = '';
+    contactNo.value = '';
+    phone.value = '';
+    websiteLink.value = '';
+    country.value = '';
+    businessLogo.value = '';
+    fiscalYear.value = '';
+    taxRegistrationNumber.value = '';
+    signature.value = '';
+    industry.value = '';
+    businessType.value = '';
+    _syncControllersFromObs();
+  }
+
+  static void hydrateAfterAuth(Map<String, dynamic> user) {
+    if (!Get.isRegistered<ProfileController>()) return;
+    final profile = Get.find<ProfileController>();
+    profile.applyFromUser(user);
+    profile.loadProfile();
+  }
+
+  void applyFromUser(Map<String, dynamic> user) {
+    organizationName.value = user['organizationName']?.toString() ?? '';
+    firstName.value = user['firstName']?.toString() ?? '';
+    lastName.value = user['lastName']?.toString() ?? '';
+    personName.value = '${firstName.value} ${lastName.value}'.trim();
+    address.value = user['address']?.toString() ?? '';
+    email.value = user['email']?.toString() ?? '';
+    contactNo.value = user['contactNo']?.toString() ?? '';
+    phone.value = user['phone']?.toString() ?? '';
+    websiteLink.value = user['websiteLink']?.toString() ?? '';
+    country.value = user['country']?.toString() ?? '';
+
+    final businessDetails = user['businessDetails'];
+    final bd = businessDetails is Map
+        ? Map<String, dynamic>.from(businessDetails)
+        : <String, dynamic>{};
+    businessLogo.value = bd['logo']?.toString() ?? '';
+    fiscalYear.value = bd['fiscalYear']?.toString() ?? '';
+    taxRegistrationNumber.value = bd['taxRegistrationNumber']?.toString() ?? '';
+    signature.value = bd['signature']?.toString() ?? '';
+    industry.value = bd['industry']?.toString() ?? '';
+    businessType.value = bd['businessType']?.toString() ?? '';
+    _syncControllersFromObs();
+  }
+
   // ════════════════════════════════════════════════════════════════
   // LOAD PROFILE
   // ════════════════════════════════════════════════════════════════

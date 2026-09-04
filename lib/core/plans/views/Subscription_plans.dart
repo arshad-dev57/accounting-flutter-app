@@ -36,7 +36,9 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
     _subCtrl = Get.isRegistered<SubscriptionController>()
         ? Get.find<SubscriptionController>()
         : Get.put(SubscriptionController(), permanent: true);
-    _subCtrl.checkSubscriptionStatus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _subCtrl.checkSubscriptionStatus();
+    });
   }
 
   Future<void> _withLoading(
@@ -47,36 +49,46 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
     if (_isProcessing) return;
     setState(() => _isProcessing = true);
 
-    Get.dialog(
-      Center(
-        child: Material(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                LoadingAnimationWidget.waveDots(color: kPrimary, size: 42),
-                const SizedBox(height: 14),
-                Text(
-                  message,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: kTextLight,
+    OverlayEntry? entry;
+    var ok = false;
+    try {
+      final overlay = Overlay.of(context, rootOverlay: true);
+      entry = OverlayEntry(
+        builder: (_) => Stack(
+          children: [
+            const ModalBarrier(dismissible: false, color: Color(0x66000000)),
+            Center(
+              child: Material(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      LoadingAnimationWidget.waveDots(color: kPrimary, size: 42),
+                      const SizedBox(height: 14),
+                      Text(
+                        message,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: kTextLight,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
-      ),
-      barrierDismissible: false,
-    );
-
-    final ok = await action();
-    if (Get.isDialogOpen ?? false) Get.back();
+      );
+      overlay.insert(entry);
+      ok = await action();
+    } finally {
+      entry?.remove();
+    }
 
     if (ok && mounted) {
       final tier = productTier ?? _pendingProductTier ?? _subCtrl.productTier.value;
@@ -169,7 +181,9 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
   }
 
   String get _statusLine {
-    if (_subCtrl.isLoading.value && !_subCtrl.hasAccess && _subCtrl.subscriptionPlan.isEmpty) {
+    if (_subCtrl.isCheckingStatus.value &&
+        !_subCtrl.hasAccess &&
+        _subCtrl.subscriptionPlan.isEmpty) {
       return 'Loading your subscription…';
     }
     if (_subCtrl.onTrial) {
@@ -192,7 +206,8 @@ class _SelectPlanScreenState extends State<SelectPlanScreen> {
       body: SafeArea(
         child: Obx(() {
           if (!PermissionService.to.isAdmin) {
-            if (_subCtrl.isLoading.value && _subCtrl.subscriptionPlan.value.isEmpty) {
+            if (_subCtrl.isCheckingStatus.value &&
+                _subCtrl.subscriptionPlan.value.isEmpty) {
               return const Center(child: CircularProgressIndicator(color: kPrimary));
             }
             if (_subCtrl.hasAccess) {

@@ -1,4 +1,5 @@
 import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/config/store_compliance.dart';
 import 'package:BisonsTechs_app/core/plans/services/subscription_limit_helper.dart';
 import 'package:BisonsTechs_app/core/plans/utils/subscription_pricing.dart';
 import 'package:flutter/material.dart';
@@ -114,6 +115,9 @@ class _PricingSectionState extends State<PricingSection> {
   }
 
   String _subscribeLabel(ProductTier tier) {
+    if (StoreCompliance.blocksInAppDigitalPurchase) {
+      return 'Subscribe on website';
+    }
     if (widget.isTrial) {
       return tier == tierPos ? 'Subscribe to POS' : 'Subscribe to ERP + POS';
     }
@@ -130,6 +134,7 @@ class _PricingSectionState extends State<PricingSection> {
 
   Future<void> _handleSubscribe(ProductTier tier) async {
     if (widget.processing) return;
+    if (await StoreCompliance.redirectPaidCheckoutIfRequired()) return;
     setState(() {
       _productTier = tier;
       _error = null;

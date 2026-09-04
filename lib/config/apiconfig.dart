@@ -1,9 +1,24 @@
-class Apiconfig {
- //  final String baseUrl = "https://account-backend-five.vercel.app";
-  // final String baseUrl = "http://192.168.18.8:5000";
- // final String baseUrl = "http://localhost:5000";
-  final String baseUrl = 'https://accountbackend-production-eaf5.up.railway.app';
+import 'package:flutter/foundation.dart';
 
-  /// Web ERP — POS desktop downloads & billing management.
-  final String webAppUrl = 'https://app.bisonstechs.com';
+class Apiconfig {
+  static const String _fromEnv = String.fromEnvironment('API_BASE_URL');
+  static const String _webFromEnv = String.fromEnvironment('WEB_APP_URL');
+
+  static const String productionApiUrl =
+      'https://accountbackend-production-eaf5.up.railway.app';
+  static const String productionWebAppUrl = 'https://app.bisonstechs.com';
+  static const String localApiUrl = 'http://localhost:5000';
+
+  /// Release / store builds always hit production unless `--dart-define` overrides.
+  /// Debug keeps localhost so local backend still works.
+  String get baseUrl {
+    if (_fromEnv.isNotEmpty) return _fromEnv;
+    if (kReleaseMode) return productionApiUrl;
+    return localApiUrl;
+  }
+
+  String get webAppUrl {
+    if (_webFromEnv.isNotEmpty) return _webFromEnv;
+    return productionWebAppUrl;
+  }
 }

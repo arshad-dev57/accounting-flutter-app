@@ -40,11 +40,16 @@ class CategoriesController extends GetxController {
       isLoading.value = true;
       final response = await _api.get('/api/warehouse/categories');
       if (response.success && response.data['success'] == true) {
-        categories.value = List<Map<String, dynamic>>.from(
-          response.data['data'] ?? [],
-        );
+        final raw = response.data['data'];
+        final list = raw is List ? raw : <dynamic>[];
+        categories.value = list
+            .whereType<Map>()
+            .map((c) => Map<String, dynamic>.from(c))
+            .toList();
         _applyFilter();
         _updateKpi();
+      } else {
+        debugPrint('Categories fetch failed: ${response.message}');
       }
     } catch (e) {
       debugPrint('Error: $e');

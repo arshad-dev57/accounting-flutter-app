@@ -377,6 +377,8 @@ class _DeleteAccountButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (!PermissionService.to.isAdmin) return const SizedBox.shrink();
+
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(16),

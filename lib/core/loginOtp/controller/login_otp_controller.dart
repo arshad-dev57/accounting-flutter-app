@@ -2,7 +2,6 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
@@ -13,6 +12,7 @@ import 'package:BisonsTechs_app/Services/notification_service.dart';
 import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:BisonsTechs_app/core/settings/controller/pdf_report_settings_controller.dart';
+import 'package:BisonsTechs_app/core/companyprofile/controller/profile_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -129,25 +129,14 @@ class LoginOtpController extends GetxController {
 
         AppSnackbar.success(kSuccess, 'Success', 'Login successful!');
 
-        // ✅ Notification Service Setup (mobile only)
-        if (!kIsWeb) {
-          try {
-            final userData = data['user'] as Map<String, dynamic>?;
-            if (userData != null && userData['id'] != null) {
-              final userId = userData['id'].toString();
-
-              await NotificationService.instance.login(
-                userId,
-                token: data['token']?.toString(),
-              );
-
-            } else {
-            }
-          } catch (e) {
-            // Don't block login on notification error
+        try {
+          final userData = data['user'] as Map<String, dynamic>?;
+          final userId =
+              userData?['id']?.toString() ?? userData?['_id']?.toString() ?? '';
+          if (userId.isNotEmpty) {
+            await NotificationService.instance.login(userId);
           }
-        } else {
-        }
+        } catch (_) {}
 
         if (subscriptionController.hasAccess) {
           subscriptionController.goToAppHome();
@@ -290,6 +279,9 @@ class LoginOtpController extends GetxController {
         );
 
         await hydrateLocationsAfterAuth(user);
+        if (user is Map) {
+          ProfileController.hydrateAfterAuth(Map<String, dynamic>.from(user));
+        }
       } else {
       }
     } catch (e) {

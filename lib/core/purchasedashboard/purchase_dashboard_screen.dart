@@ -11,7 +11,6 @@ import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/core/purchasedashboard/purchase_report_screen.dart';
 import 'package:BisonsTechs_app/core/purchaseInvoice/purchase_invoice_screen.dart';
 import 'package:BisonsTechs_app/core/warehouse/purchases/screen/purchase_order_screen.dart';
-import 'package:BisonsTechs_app/widgets/dashboard_mobile_chrome.dart';
 import 'package:BisonsTechs_app/widgets/module_logout_dialog.dart';
 import 'package:BisonsTechs_app/widgets/module_settings_tab.dart';
 import 'package:BisonsTechs_app/core/purchasedashboard/purchase_drawer.dart';

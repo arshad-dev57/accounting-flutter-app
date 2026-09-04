@@ -164,7 +164,7 @@ class DashboardController extends GetxController {
       if (isLoading.value || isRefreshing.value) return;
       loadDashboardData();
     });
-    // One-shot access check only — SubscriptionController already polls globally.
+    // One-shot access check only — no background subscription polling.
     _checkSubscriptionOnce();
   }
 

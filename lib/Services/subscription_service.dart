@@ -29,9 +29,9 @@ class SubscriptionService {
     try {
       final headers = await _getHeaders();
       final response = await http.get(
-        Uri.parse('$baseUrl/api/subscription/plans'),
-        headers: headers,
-      );
+            Uri.parse('$baseUrl/api/subscription/plans'),
+            headers: headers,
+          );
       return json.decode(response.body) as Map<String, dynamic>;
     } catch (e) {
       return {'success': false, 'message': e.toString()};
@@ -48,9 +48,9 @@ class SubscriptionService {
     try {
       final headers = await _getHeaders();
       final response = await http.get(
-        Uri.parse('$baseUrl/api/subscription/status'),
-        headers: headers,
-      );
+            Uri.parse('$baseUrl/api/subscription/status'),
+            headers: headers,
+          );
       return json.decode(response.body) as Map<String, dynamic>;
     } catch (e) {
       return {'success': false, 'message': e.toString()};
@@ -65,9 +65,9 @@ class SubscriptionService {
     try {
       final headers = await _getHeaders();
       final response = await http.get(
-        Uri.parse('$baseUrl/api/subscription/capacity'),
-        headers: headers,
-      );
+            Uri.parse('$baseUrl/api/subscription/capacity'),
+            headers: headers,
+          );
       return json.decode(response.body) as Map<String, dynamic>;
     } catch (e) {
       return {'success': false, 'message': e.toString()};
@@ -81,6 +81,8 @@ class SubscriptionService {
   Future<Map<String, dynamic>> upgradeSubscription({
     required int licensedUsers,
     required int licensedBranches,
+    String? productTier,
+    String? billingCycle,
   }) async {
     try {
       final headers = await _getHeaders();
@@ -90,6 +92,8 @@ class SubscriptionService {
         body: json.encode({
           'licensedUsers': licensedUsers,
           'licensedBranches': licensedBranches,
+          if (productTier != null) 'productTier': productTier,
+          if (billingCycle != null) 'billingCycle': billingCycle,
         }),
       );
 

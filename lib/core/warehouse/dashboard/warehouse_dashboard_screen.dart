@@ -9,7 +9,6 @@ import 'package:BisonsTechs_app/core/warehouse/dashboard/warehouse_dashboard_con
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/core/warehouse/Reports/screen/reports_screen.dart';
 import 'package:BisonsTechs_app/core/warehouse/Stock_in/screen/stock_in_screen.dart';
-import 'package:BisonsTechs_app/widgets/dashboard_mobile_chrome.dart';
 import 'package:BisonsTechs_app/widgets/module_logout_dialog.dart';
 import 'package:BisonsTechs_app/widgets/module_settings_tab.dart';
 import 'package:BisonsTechs_app/widgets/module_shortcuts_tab.dart';

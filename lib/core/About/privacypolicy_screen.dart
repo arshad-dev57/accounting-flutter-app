@@ -60,7 +60,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
             title: '3. Data Storage and Security',
             icon: Icons.security,
             content:
-                '• All your data is encrypted using industry-standard encryption (AES-256)\n• Data is stored on secure cloud servers with regular backups\n• We implement firewalls and intrusion detection systems\n• Access to your data is restricted to authorized personnel only\n• We conduct regular security audits and penetration testing',
+                'Your data is transmitted over HTTPS and stored on secure cloud servers. Access is limited to authorized personnel. We take reasonable technical and organizational measures to protect your information.',
           ),
           _buildSection(
             title: '4. Data Sharing and Disclosure',
@@ -72,7 +72,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
             title: '5. Third-Party Services',
             icon: Icons.apps,
             content:
-                'The App may integrate with third-party services such as:\n\n• Payment processors for subscription billing\n• Cloud storage providers for backups\n• Analytics services to improve the App\n\nThese services have their own privacy policies, and we encourage you to review them.',
+                'The App uses third-party services that may process data on our behalf, including:\n\n• Hosting and database providers for the BisonsTechs backend\n• OneSignal for push notifications\n• Payment processing on bisonstechs.com (Stripe) when you subscribe on the web\n\nThese providers have their own privacy policies.',
           ),
           _buildSection(
             title: '6. Your Rights and Choices',
@@ -114,7 +114,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
             title: '12. Contact Us',
             icon: Icons.contact_support,
             content:
-                'If you have questions about this Privacy Policy or our data practices, please contact us:\n\n📧 privacy@BisonsTechs.com\n📞 +92 300 1234567\n📍 Zoltech Solutions, Lahore, Pakistan',
+                'If you have questions about this Privacy Policy or our data practices, please contact us:\n\n📧 support@bisonstechs.com\n📞 +92 325 3411482\n🌐 https://bisonstechs.com',
           ),
           _buildDataProtectionBadge(),
           const SizedBox(height: 20),
@@ -154,7 +154,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   title: '3. Data Storage and Security',
                   icon: Icons.security,
                   content:
-                      '• All your data is encrypted using industry-standard encryption (AES-256)\n• Data is stored on secure cloud servers with regular backups\n• We implement firewalls and intrusion detection systems\n• Access to your data is restricted to authorized personnel only\n• We conduct regular security audits and penetration testing\n• Multi-factor authentication is available for enhanced security',
+                      'Your data is transmitted over HTTPS and stored on secure cloud servers. Access is limited to authorized personnel. We take reasonable technical and organizational measures to protect your information.',
                 ),
                 const SizedBox(height: 24),
                 _buildWebSection(
@@ -168,7 +168,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   title: '5. Third-Party Services',
                   icon: Icons.apps,
                   content:
-                      'The Platform may integrate with third-party services such as:\n\n• Payment processors for subscription billing (Stripe, PayPal)\n• Cloud storage providers for backups (AWS, Google Cloud)\n• Analytics services to improve the Platform (Google Analytics)\n• Customer support tools (Zendesk)\n\nThese services have their own privacy policies, and we encourage you to review them.',
+                      'The Platform uses third-party services that may process data on our behalf, including:\n\n• Hosting and database providers for the BisonsTechs backend\n• OneSignal for push notifications\n• Payment processing on bisonstechs.com (Stripe) when you subscribe on the web\n\nThese providers have their own privacy policies.',
                 ),
                 const SizedBox(height: 24),
                 _buildWebSection(
@@ -217,7 +217,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                   title: '12. Contact Us',
                   icon: Icons.contact_support,
                   content:
-                      'If you have questions about this Privacy Policy or our data practices, please contact us:\n\n📧 privacy@BisonsTechs.com\n📞 +92 300 1234567\n📍 Zoltech Solutions, Lahore, Pakistan\n🕒 Response Time: Within 48 hours',
+                      'If you have questions about this Privacy Policy or our data practices, please contact us:\n\n📧 support@bisonstechs.com\n📞 +92 325 3411482\n🌐 https://bisonstechs.com',
                 ),
                 const SizedBox(height: 30),
                 _buildWebDataProtectionBadge(),
@@ -275,7 +275,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Effective Date: April 28, 2026 | Last Updated: April 28, 2026',
+                      'Effective Date: September 4, 2026 | Last Updated: September 4, 2026',
                       style: TextStyle(fontSize: 13, color: Colors.white70),
                     ),
                   ],
@@ -471,7 +471,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
           const Icon(Icons.update, color: kPrimary, size: 16),
           const SizedBox(width: 8),
           Text(
-            'Effective Date: April 28, 2026 | Last Updated: April 28, 2026',
+            'Effective Date: September 4, 2026 | Last Updated: September 4, 2026',
             style: TextStyle(
               fontSize: 12,
               color: kPrimary,
