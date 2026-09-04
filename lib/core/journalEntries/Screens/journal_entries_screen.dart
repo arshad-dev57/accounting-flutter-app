@@ -1526,8 +1526,6 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
 
     setState(() => _isSubmitting = true);
 
-    if (mounted) Navigator.pop(context);
-
     try {
       await widget.controller.createJournalEntry(
         date: _selectedDate,
@@ -1535,9 +1533,9 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
         reference: _reference,
         lines: linesData,
       );
+      if (mounted) Navigator.pop(context);
     } catch (e) {
-      // Error snackbar controller ne already show kar diya.
-      // Dialog already closed hai.
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
@@ -1547,7 +1545,9 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
     final totalCredit = _lines.fold(0.0, (sum, l) => sum + l.credit);
     final isBalanced = (totalDebit - totalCredit).abs() < 0.01;
 
-    return Container(
+    return PopScope(
+      canPop: !_isSubmitting,
+      child: Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -1867,6 +1867,7 @@ class _AddJournalEntryDialogState extends State<AddJournalEntryDialog> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

@@ -33,9 +33,9 @@ class LocationController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    // Only restore selection / cached list for UI. Live refresh happens on splash / screens.
     Future(() async {
       await _hydrateStoredSelection();
-      await ensureLocationsLoaded();
     });
   }
 

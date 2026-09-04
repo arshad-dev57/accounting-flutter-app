@@ -1,12 +1,10 @@
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/Services/auth_logout_service.dart';
-import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 void showDeleteAccountDialog() {
   Get.dialog(
@@ -45,17 +43,13 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
         return;
       }
 
-      await AuthLogoutService.clearPushSession();
-      await PermissionService.to.clearUserData();
-      await api.clearToken();
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
+      await AuthLogoutService.clearLocalSession();
 
       Get.offAll(() => const LoginScreen());
       AppSnackbar.success(
         kSuccess,
-        'Account deleted',
-        'Your account has been permanently deleted.',
+        'Company deleted',
+        'Your company, users, and all data have been permanently deleted.',
       );
     } catch (_) {
       AppSnackbar.error(
@@ -72,11 +66,11 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: const Text(
-        'Delete account',
+        'Delete company',
         style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
       ),
       content: const Text(
-        'This will permanently delete your account and you will not be able to log in again. This cannot be undone.',
+        'This will permanently delete your company, all users, and all data. Nobody from this company will be able to log in again. This cannot be undone.',
       ),
       actions: [
         TextButton(

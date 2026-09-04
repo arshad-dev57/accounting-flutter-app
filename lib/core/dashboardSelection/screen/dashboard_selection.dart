@@ -26,8 +26,11 @@ import 'package:BisonsTechs_app/core/plans/views/pos_active_screen.dart';
 import 'package:BisonsTechs_app/core/settings/screens/currency_screen.dart';
 import 'package:BisonsTechs_app/core/settings/screens/pdf_report_settings_screen.dart';
 import 'package:BisonsTechs_app/core/support/screens/support_tickets_screen.dart';
+import 'package:BisonsTechs_app/widgets/module_logout_dialog.dart';
+import 'package:BisonsTechs_app/widgets/module_settings_tab.dart';
 import 'package:BisonsTechs_app/core/tax/tax_screen.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_query.dart';
+import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -238,16 +241,21 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
   void initState() {
     super.initState();
     // Keep one shared instance — avoids dispose race that falsely shows "Server Down"
-    _profileCtrl = Get.isRegistered<ProfileController>()
+    final profileAlreadyLive = Get.isRegistered<ProfileController>();
+    _profileCtrl = profileAlreadyLive
         ? Get.find<ProfileController>()
         : Get.put(ProfileController(), permanent: true);
+    if (profileAlreadyLive) {
+      _profileCtrl.loadProfile();
+    }
     _supportCtrl = Get.isRegistered<SupportController>()
         ? Get.find<SupportController>()
         : Get.put(SupportController());
     _loadBusinessLogo();
     PermissionService.to.loadUserData();
-    // Load FY here so Accounting dashboard does not wait on first open.
+    // Load FY + locations here (not on splash) so boot stays light.
     ensureFiscalYearController()?.ensureFiscalYearsLoaded();
+    ensureLocationController()?.ensureLocationsLoaded();
 
     // POS-only plans cannot use ERP hub — send them to the POS page.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1134,6 +1142,15 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
               onTap: () => Get.to(() => const TaxComplianceScreen()),
             );
           }),
+          _SidebarItemWidget(
+            icon: Icons.settings_outlined,
+            label: 'Settings',
+            index: 7,
+            selectedIndex: _selectedIndex,
+            collapsed: collapsed,
+            showArrow: true,
+            onTap: _openSettings,
+          ),
           const Spacer(),
           if (!collapsed)
             Padding(
@@ -1218,10 +1235,11 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                   title: 'Settings',
                   icon: Mdi.cog,
                   currentRoute: '',
-                  items: const [
-                    ('Currency', Mdi.currency_usd, '__currency'),
-                    ('PDF Reports', Mdi.file_pdf_box, '__pdf_report'),
-                  ],
+                  items: const [],
+                  onHeaderTap: () {
+                    Navigator.pop(context);
+                    _openSettings();
+                  },
                 ),
                 _NavSection(
                   title: 'My Account',
@@ -1361,6 +1379,13 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
             color: const Color(0xFF7C3AED),
             onTap: _navigateToUsers,
           ),
+        _HomeProduct(
+          title: 'Settings',
+          subtitle: 'Profile, currency & app preferences',
+          icon: Icons.settings_outlined,
+          color: const Color(0xFF475569),
+          onTap: _openSettings,
+        ),
       ];
 
       return Column(
@@ -1552,6 +1577,15 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
   void _navigateToSales() => Get.offAllNamed('/warehouse/sales');
   void _navigateToPurchase() => Get.offAllNamed('/purchase/dashboard');
   void _navigateToUsers() => Get.to(() => const UserListScreen());
+
+  void _openSettings() {
+    Get.to(
+      () => ModuleSettingsTab(
+        onLogout: showModuleLogoutDialog,
+        embedded: false,
+      ),
+    );
+  }
 }
 
 class _HomeProduct {
@@ -2647,6 +2681,7 @@ class _NavSection extends StatefulWidget {
   final String currentRoute;
   final List<(String, String, String)> items;
   final List<String>? modules;
+  final VoidCallback? onHeaderTap;
 
   const _NavSection({
     required this.title,
@@ -2654,6 +2689,7 @@ class _NavSection extends StatefulWidget {
     required this.currentRoute,
     required this.items,
     this.modules,
+    this.onHeaderTap,
   });
 
   @override
@@ -2699,10 +2735,18 @@ class _NavSectionState extends State<_NavSection> {
 
   @override
   Widget build(BuildContext context) {
+    final headerOnly = widget.items.isEmpty && widget.onHeaderTap != null;
+
     return Column(
       children: [
         InkWell(
-          onTap: () => setState(() => _expanded = !_expanded),
+          onTap: () {
+            if (headerOnly) {
+              widget.onHeaderTap!();
+              return;
+            }
+            setState(() => _expanded = !_expanded);
+          },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
@@ -2726,9 +2770,11 @@ class _NavSectionState extends State<_NavSection> {
                   ),
                 ),
                 Icon(
-                  _expanded
-                      ? Icons.keyboard_arrow_up_rounded
-                      : Icons.keyboard_arrow_down_rounded,
+                  headerOnly
+                      ? Icons.chevron_right_rounded
+                      : _expanded
+                          ? Icons.keyboard_arrow_up_rounded
+                          : Icons.keyboard_arrow_down_rounded,
                   size: 18,
                   color: Colors.grey.shade400,
                 ),
@@ -2736,26 +2782,27 @@ class _NavSectionState extends State<_NavSection> {
             ),
           ),
         ),
-        AnimatedCrossFade(
-          duration: const Duration(milliseconds: 200),
-          crossFadeState: _expanded
-              ? CrossFadeState.showFirst
-              : CrossFadeState.showSecond,
-          firstChild: Column(
-            children: _filteredItems.map((item) {
-              return _NavItem(
-                label: item.$1,
-                icon: item.$2,
-                isActive: _isActive(item.$3),
-                onTap: () {
-                  Navigator.pop(context);
-                  _navigate(item.$3, item.$1);
-                },
-              );
-            }).toList(),
+        if (!headerOnly)
+          AnimatedCrossFade(
+            duration: const Duration(milliseconds: 200),
+            crossFadeState: _expanded
+                ? CrossFadeState.showFirst
+                : CrossFadeState.showSecond,
+            firstChild: Column(
+              children: _filteredItems.map((item) {
+                return _NavItem(
+                  label: item.$1,
+                  icon: item.$2,
+                  isActive: _isActive(item.$3),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _navigate(item.$3, item.$1);
+                  },
+                );
+              }).toList(),
+            ),
+            secondChild: const SizedBox.shrink(),
           ),
-          secondChild: const SizedBox.shrink(),
-        ),
       ],
     );
   }

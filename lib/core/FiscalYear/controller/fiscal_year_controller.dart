@@ -30,10 +30,9 @@ class FiscalYearController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Hydrate selection + load only once a token exists (avoids empty 401 race).
+    // Only restore selected id from disk. Live list load happens on splash / screens.
     Future(() async {
       await _hydrateStoredSelection();
-      await ensureFiscalYearsLoaded();
     });
   }
 

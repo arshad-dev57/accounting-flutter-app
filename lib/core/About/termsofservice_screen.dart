@@ -9,40 +9,30 @@ class TermsOfServiceScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isWeb = ResponsiveUtils.isWeb(context);
-
     return Scaffold(
       backgroundColor: const Color(0xFFF5F8FC),
-      // ✅ AppBar for mobile - this fixes the missing app bar issue
-      appBar: isWeb
-          ? null
-          : AppBar(
-              title: const Text(
-                'Terms of Service',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-              backgroundColor: kPrimary,
-              elevation: 0,
-              centerTitle: false,
-              leading: IconButton(
-                icon: const Icon(
-                  Icons.arrow_back_ios,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                onPressed: () => Get.back(),
-              ),
-            ),
-      body: isWeb
-          ? _buildWebSection(
-              title: 'Terms of Service',
-              content: 'Terms of Service',
-            )
-          : _buildMobileLayout(context),
+      appBar: AppBar(
+        title: const Text(
+          'Terms of Service',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: kPrimary,
+        elevation: 0,
+        centerTitle: false,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: Colors.white,
+            size: 20,
+          ),
+          onPressed: () => Get.back(),
+        ),
+      ),
+      body: _buildMobileLayout(context),
     );
   }
 
@@ -75,7 +65,7 @@ class TermsOfServiceScreen extends StatelessWidget {
           _buildSection(
             title: '4. Subscription and Billing',
             content:
-                '• The App offers a 30-day free trial period\n• After the trial, a subscription is required to continue using the service\n• Subscription fees are billed in advance on a monthly or yearly basis\n• All payments are non-refundable except as required by law',
+                '• The App offers a 14-day free trial\n• Paid subscriptions are billed on bisonstechs.com, not through the App Store or Google Play in this version of the App\n• After the trial, an active subscription is required to continue using paid features\n• Website billing terms and refunds are described at https://bisonstechs.com/terms/',
           ),
           _buildSection(
             title: '5. User Responsibilities',
@@ -90,12 +80,12 @@ class TermsOfServiceScreen extends StatelessWidget {
           _buildSection(
             title: '7. Intellectual Property',
             content:
-                'The App, including its code, design, logo, and content, is owned by Zoltech Solutions and is protected by copyright and intellectual property laws.',
+                'The App, including its code, design, logo, and content, is owned by BisonsTechs and is protected by copyright and intellectual property laws.',
           ),
           _buildSection(
             title: '8. Limitation of Liability',
             content:
-                'To the maximum extent permitted by law, Zoltech Solutions shall not be liable for any indirect, incidental, or consequential damages arising from your use of the App.',
+                'To the maximum extent permitted by law, BisonsTechs shall not be liable for any indirect, incidental, or consequential damages arising from your use of the App.',
           ),
           _buildSection(
             title: '9. Termination',
@@ -110,7 +100,7 @@ class TermsOfServiceScreen extends StatelessWidget {
           _buildSection(
             title: '11. Contact Information',
             content:
-                'For questions about these Terms of Service, please contact us at:\n📧 legal@BisonsTechs.com\n📞 +92 300 1234567',
+                'For questions about these Terms of Service, please contact us at:\n📧 support@bisonstechs.com\n📞 +92 325 3411482\n🌐 https://bisonstechs.com',
           ),
           _buildAcknowledgement(),
           const SizedBox(height: 20),
@@ -120,56 +110,6 @@ class TermsOfServiceScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildWebSection({required String title, required String content}) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 4,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: kPrimary,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1A1A2E),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            content,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF7A8FA6),
-              height: 1.6,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-
-  
   Widget _buildLastUpdated() {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -184,7 +124,7 @@ class TermsOfServiceScreen extends StatelessWidget {
           const Icon(Icons.update, color: kPrimary, size: 16),
           const SizedBox(width: 8),
           Text(
-            'Last Updated: April 28, 2026',
+            'Last Updated: September 4, 2026',
             style: TextStyle(
               fontSize: 12,
               color: kPrimary,

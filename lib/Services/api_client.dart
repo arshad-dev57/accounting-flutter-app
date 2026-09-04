@@ -1,4 +1,3 @@
-// lib/Services/api_client.dart
 
 import 'dart:async';
 import 'dart:convert';
@@ -7,6 +6,7 @@ import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controlle
 import 'package:BisonsTechs_app/core/FiscalYear/utils/fiscal_year_dates.dart';
 import 'package:BisonsTechs_app/core/warehouse/locations/controller/location_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
+import 'package:BisonsTechs_app/Services/network_connectivity.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
@@ -122,13 +122,11 @@ class ApiClient extends GetxService {
     }
 
     try {
-      final response = await http
-          .post(
+      final response = await http.post(
             Uri.parse('$baseUrl/api/users/refresh-token'),
             headers: {'Content-Type': 'application/json'},
             body: json.encode({'refreshToken': refreshToken}),
-          )
-          .timeout(const Duration(seconds: 15));
+          );
 
       final decodedData = json.decode(response.body);
 
@@ -165,6 +163,22 @@ class ApiClient extends GetxService {
     }
   }
 
+  ApiResponse _offlineResponse() {
+    NetworkConnectivity.notifyOffline();
+    return ApiResponse(
+      statusCode: 503,
+      data: {'message': NetworkConnectivity.offlineMessage},
+      success: false,
+      message: NetworkConnectivity.offlineMessage,
+    );
+  }
+
+  Future<ApiResponse?> _guardOnline() async {
+    final online = await NetworkConnectivity.hasConnection();
+    if (online) return null;
+    return _offlineResponse();
+  }
+
   Future<ApiResponse> _executeRequest(
     String method,
     String endpoint, {
@@ -173,6 +187,9 @@ class ApiClient extends GetxService {
     bool requiresAuth = true,
     int retryCount = 0,
   }) async {
+    final offline = await _guardOnline();
+    if (offline != null) return offline;
+
     if (!requiresAuth) {
       return _makeRequest(
         method,
@@ -212,7 +229,16 @@ class ApiClient extends GetxService {
         if (_isRefreshing) {
           final completer = Completer<String>();
           _pendingRequests.add(completer);
-          await completer.future;
+          try {
+            await completer.future.timeout(const Duration(seconds: 15));
+          } catch (_) {
+            return ApiResponse(
+              statusCode: 401,
+              data: null,
+              success: false,
+              message: 'Session expired. Please login again.',
+            );
+          }
           return _makeRequest(
             method,
             endpoint,
@@ -228,7 +254,7 @@ class ApiClient extends GetxService {
           if (refreshResponse.success) {
             final newToken = await getToken() ?? '';
             for (var completer in _pendingRequests) {
-              completer.complete(newToken);
+              if (!completer.isCompleted) completer.complete(newToken);
             }
             _pendingRequests.clear();
 
@@ -242,7 +268,9 @@ class ApiClient extends GetxService {
           } else {
             await clearToken();
             for (var completer in _pendingRequests) {
-              completer.completeError('Session expired');
+              if (!completer.isCompleted) {
+                completer.completeError('Session expired');
+              }
             }
             _pendingRequests.clear();
 
@@ -273,13 +301,10 @@ class ApiClient extends GetxService {
       final headers = await _getHeaders(requiresAuth);
       Uri uri = Uri.parse('$baseUrl$endpoint');
 
-      // Keep any query already on the endpoint (e.g. /api/sales/invoices?page=1)
       var params = <String, dynamic>{
         ...uri.queryParameters,
         ...?queryParameters,
       };
-
-      // Attach selected fiscal year on whitelisted GETs (mirrors Next.js interceptor)
       if (method.toUpperCase() == 'GET' && shouldAttachFiscalYear(endpoint)) {
         if (!params.containsKey('fiscalYearId') ||
             params['fiscalYearId'] == null ||
@@ -360,6 +385,15 @@ class ApiClient extends GetxService {
 
       return _processResponse(response);
     } catch (e) {
+      if (NetworkConnectivity.looksLikeNetworkError(e)) {
+        NetworkConnectivity.notifyOffline();
+        return ApiResponse(
+          statusCode: 503,
+          data: {'message': NetworkConnectivity.offlineMessage},
+          success: false,
+          message: NetworkConnectivity.offlineMessage,
+        );
+      }
       return ApiResponse(
         statusCode: 500,
         data: null,
@@ -392,13 +426,9 @@ class ApiClient extends GetxService {
   ApiResponse _processResponse(http.Response response) {
     try {
       final decodedData = json.decode(response.body);
-
-      // Handle 403 errors (Fiscal year or Subscription)
       if (response.statusCode == 403) {
         final message = decodedData['message'] ?? '';
         final code = decodedData['code'] ?? '';
-
-        // Handle subscription expiry/required errors
         if (code == 'SUBSCRIPTION_REQUIRED') {
           // Show warning toast
           AppSnackbar.error(
@@ -418,8 +448,6 @@ class ApiClient extends GetxService {
             message: message,
           );
         }
-
-        // Handle fiscal year errors
         if (message.toLowerCase().contains('fiscal year') ||
             message.toLowerCase().contains('closed')) {
           return ApiResponse(
@@ -544,8 +572,6 @@ class ApiClient extends GetxService {
       requiresAuth,
     );
   }
-
-  // Multipart PUT request
   Future<ApiResponse> putMultipart(
     String endpoint, {
     required Map<String, String> fields,
@@ -571,6 +597,9 @@ class ApiClient extends GetxService {
     Map<String, List<String>>? multiFilePaths,
     bool requiresAuth,
   ) async {
+    final offline = await _guardOnline();
+    if (offline != null) return offline;
+
     try {
       Uri uri = Uri.parse('$baseUrl$endpoint');
       var request = http.MultipartRequest(method, uri);
@@ -616,6 +645,15 @@ class ApiClient extends GetxService {
 
       return _processResponse(response);
     } catch (e) {
+      if (NetworkConnectivity.looksLikeNetworkError(e)) {
+        NetworkConnectivity.notifyOffline();
+        return ApiResponse(
+          statusCode: 503,
+          data: {'message': NetworkConnectivity.offlineMessage},
+          success: false,
+          message: NetworkConnectivity.offlineMessage,
+        );
+      }
       return ApiResponse(
         statusCode: 500,
         data: null,

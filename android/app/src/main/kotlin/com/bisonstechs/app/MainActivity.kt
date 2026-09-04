@@ -1,4 +1,4 @@
-package com.example.BisonsTechs_app
+package com.bisonstechs.app
 
 import io.flutter.embedding.android.FlutterActivity
 

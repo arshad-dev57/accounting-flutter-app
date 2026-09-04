@@ -15,19 +15,28 @@ class LocationScopeController extends GetxController {
 
   bool shouldShow(String route) {
     if (route.isEmpty || route == '/') return false;
-    const hidden = [
-      '/login',
-      '/register',
-      '/onboarding',
+
+    final r = route.toLowerCase();
+
+    // Named routes + unnamed Get.to(() => Widget) routes like /LoginScreen
+    const hiddenFragments = [
+      'login',
+      'register',
+      'registration',
+      'onboarding',
+      'splash',
+      'forgot',
+      'reset-password',
+      'resetpassword',
+      'otp',
+      'selectplan',
+      'subscription',
       '/plans',
-      '/forgot-password',
-      '/reset-password',
-      '/otp',
-      '/login-otp',
     ];
-    for (final path in hidden) {
-      if (route == path || route.startsWith('$path/')) return false;
+    for (final fragment in hiddenFragments) {
+      if (r.contains(fragment)) return false;
     }
+
     if (_routeHasOwnLocationHeader(route)) return false;
     return true;
   }

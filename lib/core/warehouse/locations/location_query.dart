@@ -71,6 +71,7 @@ const List<String> kLocationQueryExcludedPaths = [
   '/api/profile',
   '/api/chart-of-accounts',
   '/api/bank-accounts',
+  '/api/warehouse/categories',
 ];
 
 bool shouldAttachLocationId(String endpoint) {

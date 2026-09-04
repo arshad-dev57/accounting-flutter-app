@@ -1,7 +1,6 @@
 // lib/core/login/controller/login_controller.dart
 
 import 'dart:convert';
-import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/Utils/currency_controller.dart';
@@ -14,6 +13,7 @@ import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:BisonsTechs_app/core/settings/controller/pdf_report_settings_controller.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/Services/notification_service.dart';
+import 'package:BisonsTechs_app/core/companyprofile/controller/profile_controller.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
 import 'package:flutter/material.dart';
@@ -152,22 +152,14 @@ class LoginController extends GetxController {
         // ✅ FIX: Update currency after login
         await _updateCurrencyFromUser(data['user']);
 
-        // ✅ Notification Service Setup (mobile only)
-        if (!kIsWeb) {
-          try {
-            final userData = data['user'] as Map<String, dynamic>?;
-            if (userData != null && userData['_id'] != null) {
-              final userId = userData['_id'].toString();
-
-              await NotificationService.instance.login(userId, token: data['token']?.toString());
-
-            } else {
-            }
-          } catch (e) {
-            // Don't block login on notification error
+        try {
+          final userData = data['user'] as Map<String, dynamic>?;
+          final userId =
+              userData?['_id']?.toString() ?? userData?['id']?.toString() ?? '';
+          if (userId.isNotEmpty) {
+            await NotificationService.instance.login(userId);
           }
-        } else {
-        }
+        } catch (_) {}
 
         if (subscriptionController.hasAccess) {
           final fy = Get.isRegistered<FiscalYearController>()
@@ -319,6 +311,7 @@ class LoginController extends GetxController {
         );
 
         await hydrateLocationsAfterAuth(userData);
+        ProfileController.hydrateAfterAuth(userData);
       }
     } catch (e) {
       debugPrint('Error: $e');

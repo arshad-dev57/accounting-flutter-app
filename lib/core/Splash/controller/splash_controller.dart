@@ -1,10 +1,9 @@
 // lib/core/Splash/controller/splash_controller.dart
 
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'dart:convert';
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 
-import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
-import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/Onboarding/views/Onboarding_screen.dart';
 import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
@@ -19,57 +18,50 @@ class SplashController extends GetxController {
   }
 
   void checkToken() async {
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      await Future.delayed(const Duration(milliseconds: 800));
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('auth_token');
-    bool? hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      final hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
 
-    if (token != null && token.isNotEmpty) {
-      final fy = Get.isRegistered<FiscalYearController>()
-          ? Get.find<FiscalYearController>()
-          : Get.put(FiscalYearController(), permanent: true);
-      // Force so we always hydrate FY before dashboard (avoids empty first paint).
-      await fy.ensureFiscalYearsLoaded(force: true);
-
-      // Prefer companyId from user blob if present
-      try {
-        final raw = prefs.getString('user') ?? prefs.getString('user_data');
-        if (raw != null && raw.isNotEmpty) {
-          final map = jsonDecode(raw) as Map<String, dynamic>;
-          final companyId = map['companyId']?.toString();
-          if (companyId != null && companyId.isNotEmpty) {
-            final loc = ensureLocationController();
-            await loc?.ensureLocationsLoaded(force: true);
-          }
+      if (token == null || token.isEmpty) {
+        if (kIsWeb) {
+          Get.offAllNamed('/login');
+        } else if (hasSeenOnboarding) {
+          Get.offAllNamed('/login');
         } else {
-          final loc = ensureLocationController();
-          await loc?.ensureLocationsLoaded(force: true);
+          Get.offAll(() => const OnboardingScreen());
         }
-      } catch (_) {
-        final loc = ensureLocationController();
-        await loc?.ensureLocationsLoaded(force: true);
+        return;
       }
 
       final sub = Get.isRegistered<SubscriptionController>()
           ? Get.find<SubscriptionController>()
           : Get.put(SubscriptionController(), permanent: true);
-      await sub.checkSubscriptionStatus();
+
+      // Splash only: live subscription check → route. FY / locations load later on screens.
+      final statusOk = await sub.checkSubscriptionStatus();
+
+      if (!statusOk) {
+        AppSnackbar.error(
+          kDanger,
+          'Connection issue',
+          'Could not verify your plan. Please login again.',
+        );
+        Get.offAllNamed('/login');
+        return;
+      }
 
       if (!sub.hasAccess) {
         Get.offAll(() => const SelectPlanScreen());
       } else {
+        // POS-only → PosActiveScreen; ERP → dashboard (via goToAppHome).
         sub.goToAppHome();
       }
-      return;
-    }
-
-    if (kIsWeb) {
+    } catch (e) {
+      debugPrint('Splash navigation error: $e');
       Get.offAllNamed('/login');
-    } else if (hasSeenOnboarding) {
-      Get.offAllNamed('/login');
-    } else {
-      Get.offAll(() => const OnboardingScreen());
     }
   }
 }

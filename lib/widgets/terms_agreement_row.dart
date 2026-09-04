@@ -1,18 +1,24 @@
 import 'package:BisonsTechs_app/Utils/colors.dart';
-import 'package:BisonsTechs_app/core/About/privacypolicy_screen.dart';
-import 'package:BisonsTechs_app/core/About/termsofservice_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class TermsAgreementRow extends StatelessWidget {
   final bool value;
   final ValueChanged<bool> onChanged;
+
+  static const _termsUrl = 'https://bisonstechs.com/terms/';
+  static const _privacyUrl = 'https://bisonstechs.com/privacy/';
 
   const TermsAgreementRow({
     super.key,
     required this.value,
     required this.onChanged,
   });
+
+  Future<void> _openUrl(String url) async {
+    final uri = Uri.parse(url);
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +53,7 @@ class TermsAgreementRow extends StatelessWidget {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () => Get.to(() => const TermsOfServiceScreen()),
+                  onTap: () => _openUrl(_termsUrl),
                   child: Text(
                     'Terms of Service',
                     style: TextStyle(
@@ -67,7 +73,7 @@ class TermsAgreementRow extends StatelessWidget {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () => Get.to(() => const PrivacyPolicyScreen()),
+                  onTap: () => _openUrl(_privacyUrl),
                   child: Text(
                     'Privacy Policy',
                     style: TextStyle(

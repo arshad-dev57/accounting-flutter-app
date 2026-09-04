@@ -62,14 +62,11 @@ import 'package:BisonsTechs_app/core/Users/screen/user_list_screen.dart';
 import 'package:BisonsTechs_app/core/Users/screen/user_form_screen.dart';
 import 'package:BisonsTechs_app/core/Users/screen/enhanced_access_management_screen.dart';
 
-import 'dart:convert';
-
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:get/get.dart';
-import 'package:sizer/sizer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sizer/sizer.dart';
 
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/Services/notification_service.dart';
@@ -107,26 +104,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!kIsWeb) {
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        await NotificationService.instance.init();
+    // OneSignal push (no backend SSE). Re-login if a session is already stored.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await NotificationService.instance.init();
+      try {
         final prefs = await SharedPreferences.getInstance();
-        String? userId = prefs.getString('auth_user_id');
-        if (userId == null || userId.isEmpty) {
-          final raw = prefs.getString('user_data');
-          if (raw != null && raw.isNotEmpty) {
-            try {
-              final user = json.decode(raw) as Map<String, dynamic>;
-              userId = user['_id']?.toString() ?? user['id']?.toString();
-            } catch (_) {}
-          }
-        }
+        final userId = prefs.getString('auth_user_id');
         if (userId != null && userId.isNotEmpty) {
-          final token = prefs.getString('auth_token');
-          await NotificationService.instance.login(userId, token: token);
+          await NotificationService.instance.login(userId);
         }
-      });
-    }
+      } catch (_) {}
+    });
 
     return Sizer(
       builder: (context, orientation, deviceType) {
@@ -141,8 +129,10 @@ class MyApp extends StatelessWidget {
               : ThemeMode.light,
           routingCallback: (routing) {
             if (Get.isRegistered<LocationScopeController>()) {
+              final current = (routing?.current ?? '').trim();
+              final fallback = Get.currentRoute.trim();
               Get.find<LocationScopeController>().setRoute(
-                routing?.current ?? '',
+                current.isNotEmpty ? current : fallback,
               );
             }
           },

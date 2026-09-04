@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:BisonsTechs_app/config/apiconfig.dart';
 import 'package:http/http.dart' as http;
 
-/// Sends a notification through own backend API (no OneSignal).
+/// Sends a notification through own backend (inbox + OneSignal push).
 class NotificationApi {
   static Future<Map<String, dynamic>> sendToUser({
     required String authToken,

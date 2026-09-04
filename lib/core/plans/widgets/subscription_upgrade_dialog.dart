@@ -1,6 +1,7 @@
 import 'package:BisonsTechs_app/Services/subscription_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
+import 'package:BisonsTechs_app/config/store_compliance.dart';
 import 'package:BisonsTechs_app/core/plans/utils/subscription_pricing.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -80,6 +81,7 @@ class _SubscriptionUpgradeDialogState extends State<_SubscriptionUpgradeDialog> 
   }
 
   Future<void> _confirmUpgrade() async {
+    if (await StoreCompliance.redirectPaidCheckoutIfRequired()) return;
     setState(() {
       _processing = true;
       _error = null;

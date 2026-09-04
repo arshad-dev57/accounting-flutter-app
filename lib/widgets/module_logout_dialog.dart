@@ -1,9 +1,7 @@
 import 'package:BisonsTechs_app/Services/auth_logout_service.dart';
-import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 void showModuleLogoutDialog() {
   Get.dialog(
@@ -18,10 +16,7 @@ void showModuleLogoutDialog() {
         TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
         ElevatedButton(
           onPressed: () async {
-            await AuthLogoutService.clearPushSession();
-            await PermissionService.to.clearUserData();
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.clear();
+            await AuthLogoutService.clearLocalSession();
             Get.offAll(() => const LoginScreen());
           },
           style: ElevatedButton.styleFrom(
