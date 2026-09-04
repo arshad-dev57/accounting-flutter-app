@@ -3,24 +3,24 @@ import 'package:BisonsTechs_app/config/apiconfig.dart';
 import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// Store review / account-ban guardrails.
-///
-/// Apple 3.1.1 and Google Play Billing: digital subscriptions sold or
-/// unlocked from the iOS/Android binary must go through the store.
-/// This app bills on the website, so release store builds must not
-/// activate a paid plan from an in-app button.
+/// Store billing rules.
+/// Android: Google Play Billing (required for digital subscriptions).
+/// iOS release: no website checkout button (StoreKit not wired yet).
 class StoreCompliance {
   StoreCompliance._();
 
-  static bool get isMobileStoreBinary =>
-      !kIsWeb &&
-      (defaultTargetPlatform == TargetPlatform.iOS ||
-          defaultTargetPlatform == TargetPlatform.android);
+  static const playPackageName = 'com.bisonstechs.app';
+
+  static bool get usesPlayBilling =>
+      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
+  static bool get mustChargeViaPlay => usesPlayBilling && kReleaseMode;
 
   static bool get blocksInAppDigitalPurchase =>
-      kReleaseMode && isMobileStoreBinary;
+      kReleaseMode &&
+      !kIsWeb &&
+      defaultTargetPlatform == TargetPlatform.iOS;
 
-  /// Returns `true` when the caller must stop (web checkout was opened).
   static Future<bool> redirectPaidCheckoutIfRequired() async {
     if (!blocksInAppDigitalPurchase) return false;
 
@@ -33,5 +33,12 @@ class StoreCompliance {
           : 'Open ${Apiconfig().webAppUrl} in a browser to subscribe, then log in here.',
     );
     return true;
+  }
+
+  static Future<void> openPlaySubscriptionManagement() async {
+    final uri = Uri.parse(
+      'https://play.google.com/store/account/subscriptions?package=$playPackageName',
+    );
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 }

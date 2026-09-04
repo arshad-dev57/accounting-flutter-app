@@ -199,10 +199,39 @@ class SubscriptionService {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // 5️⃣ CANCEL SUBSCRIPTION
-  // POST /api/subscription/cancel
-  // ═══════════════════════════════════════════════════════════════════
+  Future<Map<String, dynamic>> verifyGooglePlayPurchase({
+    required String purchaseToken,
+    required String productId,
+    String packageName = 'com.bisonstechs.app',
+  }) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/subscription/google-play/verify'),
+        headers: headers,
+        body: json.encode({
+          'purchaseToken': purchaseToken,
+          'productId': productId,
+          'packageName': packageName,
+        }),
+      );
+      final data = json.decode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {
+          'success': true,
+          'data': data['data'] ?? data,
+          'message': data['message'] ?? 'Subscription activated',
+        };
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'Google Play verification failed',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    }
+  }
+
   Future<Map<String, dynamic>> cancelSubscription() async {
     try {
       final headers = await _getHeaders();

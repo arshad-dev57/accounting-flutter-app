@@ -62,12 +62,14 @@ import 'package:BisonsTechs_app/core/Users/screen/user_list_screen.dart';
 import 'package:BisonsTechs_app/core/Users/screen/user_form_screen.dart';
 import 'package:BisonsTechs_app/core/Users/screen/enhanced_access_management_screen.dart';
 
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sizer/sizer.dart';
 
+import 'package:BisonsTechs_app/Services/play_billing_service.dart';
 import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/Services/notification_service.dart';
 import 'package:BisonsTechs_app/Services/permission_service.dart';
@@ -95,6 +97,10 @@ void main() {
   Get.put(LocationScopeController(), permanent: true);
   Get.put(LocationReloadBinder(), permanent: true);
   Get.put(PermissionService(), permanent: true);
+
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+    PlayBillingService.instance.init();
+  }
 
   runApp(const MyApp());
 }

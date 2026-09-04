@@ -1,6 +1,8 @@
+import 'package:BisonsTechs_app/Services/play_billing_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/config/store_compliance.dart';
 import 'package:BisonsTechs_app/core/plans/services/subscription_limit_helper.dart';
+import 'package:BisonsTechs_app/core/plans/utils/play_product_ids.dart';
 import 'package:BisonsTechs_app/core/plans/utils/subscription_pricing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -59,6 +61,11 @@ class _PricingSectionState extends State<PricingSection> {
   void initState() {
     super.initState();
     _loadCapacity();
+    if (StoreCompliance.usesPlayBilling) {
+      PlayBillingService.instance.init().then((_) {
+        if (mounted) setState(() {});
+      });
+    }
   }
 
   Future<void> _loadCapacity() async {
@@ -108,6 +115,9 @@ class _PricingSectionState extends State<PricingSection> {
   bool _isCurrentSelection(ProductTier tier) {
     final c = _capacity;
     if (!widget.isPaid || c == null) return false;
+    if (StoreCompliance.usesPlayBilling) {
+      return tier == c.productTier && _billingCycle == c.billingCycle;
+    }
     return tier == c.productTier &&
         _billingCycle == c.billingCycle &&
         _users == c.licensedUsers &&
@@ -115,6 +125,10 @@ class _PricingSectionState extends State<PricingSection> {
   }
 
   String _subscribeLabel(ProductTier tier) {
+    if (StoreCompliance.usesPlayBilling) {
+      if (widget.isPaid && _isCurrentSelection(tier)) return 'Current selection';
+      return 'Subscribe with Google Play';
+    }
     if (StoreCompliance.blocksInAppDigitalPurchase) {
       return 'Subscribe on website';
     }
@@ -140,7 +154,11 @@ class _PricingSectionState extends State<PricingSection> {
       _error = null;
     });
 
-    final quote = calculatePrice(tier, _billingCycle, _users, _branches);
+    final users = StoreCompliance.usesPlayBilling ? 1 : _users;
+    final branches = StoreCompliance.usesPlayBilling
+        ? 1
+        : (tier == tierPos ? 1 : _branches);
+    final quote = calculatePrice(tier, _billingCycle, users, branches);
     final c = _capacity;
     final sameTierUpgrade = c?.isPaid == true &&
         tier == c!.productTier &&
@@ -150,8 +168,8 @@ class _PricingSectionState extends State<PricingSection> {
       billingCycle: _billingCycle,
       amount: quote.amount,
       productTier: tier,
-      licensedUsers: _users,
-      licensedBranches: tier == tierPos ? 1 : _branches,
+      licensedUsers: users,
+      licensedBranches: branches,
       isUpgrade: sameTierUpgrade,
     );
   }
@@ -379,37 +397,48 @@ class _PricingSectionState extends State<PricingSection> {
     );
   }
 
+  String _playOrUsd(ProductTier tier, String fallbackUsd) {
+    if (!StoreCompliance.usesPlayBilling) return fallbackUsd;
+    final id = PlayProductIds.fromSelection(tier, _billingCycle);
+    return PlayBillingService.instance.localizedPrice(id) ?? fallbackUsd;
+  }
+
   Widget _posCard() {
     final rate = _billingCycle == 'yearly'
         ? posPricing.yearlyPerUser
         : posPricing.monthlyPerUser;
     final selected = _productTier == tierPos;
+    final play = StoreCompliance.usesPlayBilling;
 
     return _tierCard(
       selected: selected,
       popular: false,
       title: posPricing.label,
-      subtitle: 'Per user · Desktop register app',
-      price: formatUsd(rate),
-      priceSuffix: '/ user / $_cycleLabel',
+      subtitle: play
+          ? '1 user · billed through Google Play'
+          : 'Per user · Desktop register app',
+      price: _playOrUsd(tierPos, formatUsd(rate)),
+      priceSuffix: play ? ' / $_cycleLabel' : '/ user / $_cycleLabel',
       features: posPricing.features,
-      extra: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Users',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 6),
-          _numberField(
-            value: _users,
-            onChanged: (v) => setState(() {
-              _productTier = tierPos;
-              _users = v;
-            }),
-          ),
-        ],
-      ),
+      extra: play
+          ? null
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Users',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 6),
+                _numberField(
+                  value: _users,
+                  onChanged: (v) => setState(() {
+                    _productTier = tierPos;
+                    _users = v;
+                  }),
+                ),
+              ],
+            ),
       buttonLabel: _subscribeLabel(tierPos),
       onSubscribe: _isCurrentSelection(tierPos) || widget.processing
           ? null
@@ -421,12 +450,13 @@ class _PricingSectionState extends State<PricingSection> {
     final rate = _billingCycle == 'yearly'
         ? erpPosPricing.yearlyBase
         : erpPosPricing.monthlyBase;
+    final play = StoreCompliance.usesPlayBilling;
     final selected = _productTier == tierErpPos;
     final quote = calculatePrice(
       tierErpPos,
       _billingCycle,
-      _users,
-      _branches,
+      play ? 1 : _users,
+      play ? 1 : _branches,
     );
 
     return _tierCard(
@@ -434,12 +464,15 @@ class _PricingSectionState extends State<PricingSection> {
       popular: true,
       title: erpPosPricing.label,
       subtitle: '1 user + 1 branch included',
-      price: formatUsd(rate),
-      priceSuffix: '/ $_cycleLabel base',
-      note:
-          '+ each extra user doubles price · + each extra branch doubles price',
+      price: _playOrUsd(tierErpPos, formatUsd(rate)),
+      priceSuffix: play ? ' / $_cycleLabel' : '/ $_cycleLabel base',
+      note: play
+          ? 'Billed through Google Play. Extra seats coming as Play add-ons.'
+          : '+ each extra user doubles price · + each extra branch doubles price',
       features: erpPosPricing.features,
-      extra: Column(
+      extra: play
+          ? null
+          : Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -527,7 +560,7 @@ class _PricingSectionState extends State<PricingSection> {
     required String priceSuffix,
     String? note,
     required List<String> features,
-    required Widget extra,
+    Widget? extra,
     required String buttonLabel,
     required VoidCallback? onSubscribe,
   }) {
@@ -659,7 +692,7 @@ class _PricingSectionState extends State<PricingSection> {
                 ),
               ),
               const SizedBox(height: 12),
-              extra,
+              if (extra != null) extra,
               const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,

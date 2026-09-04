@@ -81,6 +81,13 @@ class _SubscriptionUpgradeDialogState extends State<_SubscriptionUpgradeDialog> 
   }
 
   Future<void> _confirmUpgrade() async {
+    if (StoreCompliance.mustChargeViaPlay) {
+      AppSnackbar.info(
+        'Google Play',
+        'Extra users and branches are not separate Play products yet. Change POS / ERP from the subscription screen.',
+      );
+      return;
+    }
     if (await StoreCompliance.redirectPaidCheckoutIfRequired()) return;
     setState(() {
       _processing = true;

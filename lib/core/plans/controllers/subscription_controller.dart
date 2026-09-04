@@ -1,6 +1,8 @@
+import 'package:BisonsTechs_app/Services/play_billing_service.dart';
 import 'package:BisonsTechs_app/Services/subscription_service.dart';
 import 'package:BisonsTechs_app/config/store_compliance.dart';
 import 'package:BisonsTechs_app/core/plans/models/company_billing.dart';
+import 'package:BisonsTechs_app/core/plans/utils/play_product_ids.dart';
 import 'package:BisonsTechs_app/core/plans/utils/subscription_pricing.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:BisonsTechs_app/core/plans/views/pos_active_screen.dart';
@@ -252,6 +254,12 @@ class SubscriptionController extends GetxController {
     int licensedBranches = 1,
     bool isUpgrade = false,
   }) async {
+    if (StoreCompliance.mustChargeViaPlay) {
+      return _subscribeWithPlay(
+        plan: plan,
+        productTier: productTier,
+      );
+    }
     if (await StoreCompliance.redirectPaidCheckoutIfRequired()) {
       return false;
     }
@@ -338,8 +346,88 @@ class SubscriptionController extends GetxController {
     }
   }
 
+  Future<bool> _subscribeWithPlay({
+    required String plan,
+    required String productTier,
+  }) async {
+    try {
+      isLoading.value = true;
+      justSubscribed.value = true;
+      final productId = PlayProductIds.fromSelection(productTier, plan);
+      final play = await PlayBillingService.instance.buy(productId);
+      if (play.canceled) {
+        justSubscribed.value = false;
+        isLoading.value = false;
+        return false;
+      }
+      if (!play.success ||
+          play.purchaseToken == null ||
+          play.productId == null) {
+        justSubscribed.value = false;
+        isLoading.value = false;
+        AppSnackbar.error(
+          kDanger,
+          'Purchase failed',
+          play.message ?? 'Google Play purchase did not complete.',
+        );
+        return false;
+      }
+
+      final response = await _subscriptionService.verifyGooglePlayPurchase(
+        purchaseToken: play.purchaseToken!,
+        productId: play.productId!,
+      );
+
+      if (response['success'] == true) {
+        final data = response['data'] as Map<String, dynamic>? ?? {};
+        hasActiveSubscription.value = true;
+        subscriptionPlan.value = plan;
+        subscriptionStatus.value = 'active';
+        subscriptionDaysRemaining.value =
+            data['subscriptionDaysRemaining'] ?? 0;
+        isTrialActive.value = false;
+        trialDaysRemaining.value = 0;
+        final parsed = PlayProductIds.parse(play.productId!);
+        this.productTier.value = parsed.tier;
+        unawaited(_refreshCapacityQuietly());
+        await _saveSubscriptionStatus();
+        justSubscribed.value = false;
+        AppSnackbar.success(
+          kSuccess,
+          'Subscribed',
+          'Your Google Play subscription is now active.',
+        );
+        isLoading.value = false;
+        return true;
+      }
+
+      justSubscribed.value = false;
+      isLoading.value = false;
+      AppSnackbar.error(
+        kDanger,
+        'Verification failed',
+        response['message'] ??
+            'Payment succeeded but we could not activate the plan. Contact support.',
+      );
+      return false;
+    } catch (e) {
+      justSubscribed.value = false;
+      isLoading.value = false;
+      AppSnackbar.error(kDanger, 'Error', 'Google Play purchase failed.');
+      return false;
+    }
+  }
+
   // ─── Cancel active subscription ──────────────────────────────────
   Future<void> cancelSubscription() async {
+    if (StoreCompliance.usesPlayBilling) {
+      await StoreCompliance.openPlaySubscriptionManagement();
+      AppSnackbar.info(
+        'Manage in Google Play',
+        'Cancel or change auto-renew from Google Play. Access continues until the current period ends.',
+      );
+      return;
+    }
     try {
       isLoading.value = true;
       final response = await _subscriptionService.cancelSubscription();
@@ -385,6 +473,13 @@ class SubscriptionController extends GetxController {
     required int licensedUsers,
     required int licensedBranches,
   }) async {
+    if (StoreCompliance.mustChargeViaPlay) {
+      AppSnackbar.info(
+        'Google Play',
+        'Extra users and branches are not separate Play products yet. Change POS / ERP plan from the subscription screen.',
+      );
+      return false;
+    }
     if (await StoreCompliance.redirectPaidCheckoutIfRequired()) {
       return false;
     }
