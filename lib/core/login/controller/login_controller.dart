@@ -113,7 +113,7 @@ class LoginController extends GetxController {
         '/api/users/login',
         body: {
           'email': emailController.text.trim(),
-          'password': passwordController.text,
+          'password': passwordController.text.trim(),
         },
         requiresAuth: false,
       );

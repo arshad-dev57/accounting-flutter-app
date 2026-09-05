@@ -1,11 +1,9 @@
+import 'package:BisonsTechs_app/Services/api_client.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/responsive_utils.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class FeedbackScreen extends StatefulWidget {
@@ -23,6 +21,13 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   bool _isSubmitting = false;
   bool _anonymous = false;
 
+  @override
+  void dispose() {
+    _feedbackController.dispose();
+    _suggestionController.dispose();
+    super.dispose();
+  }
+
   Future<void> _submitFeedback() async {
     if (_feedbackController.text.trim().isEmpty &&
         _suggestionController.text.trim().isEmpty) {
@@ -38,28 +43,24 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
-
-      final response = await http.post(
-        Uri.parse('https://your-api.com/api/feedback/submit'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: json.encode({
+      final api = Get.find<ApiClient>();
+      final response = await api.post(
+        '/api/feedback/submit',
+        body: {
           'rating': _rating,
           'feedback': _feedbackController.text.trim(),
           'suggestion': _suggestionController.text.trim(),
           'anonymous': _anonymous,
-        }),
+        },
       );
 
-      if (response.statusCode == 200) {
+      if (response.success) {
         AppSnackbar.success(
           Colors.green,
           'Thank You!',
-          'Your feedback has been submitted',
+          response.message.isNotEmpty
+              ? response.message
+              : 'Your feedback has been submitted',
         );
 
         _feedbackController.clear();
@@ -68,7 +69,13 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
         Future.delayed(const Duration(seconds: 2), () => Get.back());
       } else {
-        throw Exception('Failed to submit');
+        AppSnackbar.error(
+          Colors.red,
+          'Error',
+          response.message.isNotEmpty
+              ? response.message
+              : 'Failed to submit feedback. Please try again.',
+        );
       }
     } catch (e) {
       AppSnackbar.error(
@@ -77,7 +84,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         'Failed to submit feedback. Please try again.',
       );
     } finally {
-      setState(() => _isSubmitting = false);
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 

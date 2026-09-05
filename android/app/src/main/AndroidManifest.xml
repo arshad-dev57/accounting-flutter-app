@@ -3,25 +3,10 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.CAMERA"/>
-<<<<<<< HEAD
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-=======
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <uses-permission
-        android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32"/>
-    <uses-permission
-        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28"/>
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
-
-    <uses-feature
-        android:name="android.hardware.camera"
-        android:required="false"/>
->>>>>>> 1f7ba80c1e1ed60008d5dde1426966206c39a105
 
     <application
         android:label="@string/app_name"
@@ -47,20 +32,10 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-<<<<<<< HEAD
-
-        <!-- Don't delete the meta-data below.
-             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
-=======
->>>>>>> 1f7ba80c1e1ed60008d5dde1426966206c39a105
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
-<<<<<<< HEAD
-
-=======
->>>>>>> 1f7ba80c1e1ed60008d5dde1426966206c39a105
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
