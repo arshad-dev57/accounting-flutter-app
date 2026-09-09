@@ -1,0 +1,861 @@
+// screens/add_employee_screen.dart - ADD/EDIT EMPLOYEE FORM
+
+import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+class AddEmployeeScreen extends StatefulWidget {
+  final Map<String, dynamic>? employee;
+  const AddEmployeeScreen({super.key, this.employee});
+
+  @override
+  State<AddEmployeeScreen> createState() => _AddEmployeeScreenState();
+}
+
+class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
+  final _formKey = GlobalKey<FormState>();
+  bool _isEditing = false;
+
+  // Controllers
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _employeeIdController = TextEditingController();
+  final _joiningDateController = TextEditingController();
+  final _salaryController = TextEditingController();
+
+  // Dropdown selections
+  String? _selectedDepartment;
+  String? _selectedDesignation;
+  String? _selectedOffice;
+  String? _selectedShift;
+  String? _selectedEmploymentType;
+  String? _selectedEmployeeType;
+  String? _selectedStatus;
+
+  // Date picker
+  DateTime _joiningDate = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _isEditing = widget.employee != null;
+    if (_isEditing) {
+      _loadEmployeeData();
+    }
+  }
+
+  void _loadEmployeeData() {
+    final emp = widget.employee!;
+    _nameController.text = emp['name'] ?? '';
+    _emailController.text = emp['email'] ?? '';
+    _phoneController.text = emp['phone'] ?? '';
+    _employeeIdController.text = emp['employeeId'] ?? '';
+    _selectedDepartment = emp['department'];
+    _selectedDesignation = emp['designation'];
+    _selectedOffice = emp['office'];
+    _selectedShift = emp['shift'];
+    _selectedEmploymentType = emp['employmentType'];
+    _selectedEmployeeType = emp['employeeType'];
+    _selectedStatus = emp['status'];
+    _salaryController.text = (emp['salary'] ?? 0).toString();
+    if (emp['joiningDate'] != null) {
+      _joiningDate = DateTime.parse(emp['joiningDate']);
+      _joiningDateController.text = DateFormat('dd MMM yyyy').format(_joiningDate);
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _employeeIdController.dispose();
+    _joiningDateController.dispose();
+    _salaryController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: kBgLight,
+      body: Column(
+        children: [
+          _buildTopHeader(context),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildProfilePhotoSection(),
+                    const SizedBox(height: 20),
+                    _buildPersonalInfoSection(),
+                    const SizedBox(height: 20),
+                    _buildCompanyInfoSection(),
+                    const SizedBox(height: 20),
+                    _buildEmploymentSection(),
+                    const SizedBox(height: 20),
+                    _buildSalarySection(),
+                    const SizedBox(height: 24),
+                    _buildActionButtons(),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // TOP HEADER
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildTopHeader(BuildContext context) {
+    return Container(
+      color: kPrimary,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () => Navigator.of(context).pop(),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _isEditing ? 'Edit Employee' : 'Add Employee',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    Text(
+                      _isEditing ? 'Update employee information' : 'Create a new employee',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (_isEditing)
+                GestureDetector(
+                  onTap: () {
+                    // Delete employee
+                    _showDeleteConfirmation();
+                  },
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.delete_outline,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // PROFILE PHOTO SECTION
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildProfilePhotoSection() {
+    return Center(
+      child: Column(
+        children: [
+          Stack(
+            children: [
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: kPrimary.withValues(alpha: 0.3),
+                    width: 3,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: kPrimary.withValues(alpha: 0.1),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipOval(
+                  child: _isEditing && widget.employee!['image'] != null
+                      ? Image.network(
+                          widget.employee!['image'],
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return _buildAvatarPlaceholder();
+                          },
+                        )
+                      : _buildAvatarPlaceholder(),
+                ),
+              ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: kPrimary,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _isEditing ? 'Change Photo' : 'Upload Photo',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: kPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'JPG, PNG or GIF • Max 2MB',
+            style: TextStyle(
+              fontSize: 10,
+              color: kSubText,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvatarPlaceholder() {
+    return Container(
+      color: kPrimary.withValues(alpha: 0.1),
+      child: Icon(
+        Icons.person,
+        size: 50,
+        color: kPrimary.withValues(alpha: 0.5),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // PERSONAL INFO SECTION
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildPersonalInfoSection() {
+    return _buildSection(
+      title: 'Personal Information',
+      icon: Icons.person_outline_rounded,
+      children: [
+        _buildTextField(
+          controller: _nameController,
+          label: 'Full Name *',
+          hint: 'Enter full name',
+          icon: Icons.person_outline_rounded,
+          validator: (value) =>
+              value?.isEmpty ?? true ? 'Please enter full name' : null,
+        ),
+        const SizedBox(height: 14),
+        _buildTextField(
+          controller: _emailController,
+          label: 'Email Address *',
+          hint: 'employee@company.com',
+          icon: Icons.email_outlined,
+          keyboardType: TextInputType.emailAddress,
+          validator: (value) {
+            if (value?.isEmpty ?? true) return 'Please enter email';
+            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value!)) {
+              return 'Please enter a valid email';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 14),
+        _buildTextField(
+          controller: _phoneController,
+          label: 'Phone Number *',
+          hint: '0300-1234567',
+          icon: Icons.phone_outlined,
+          keyboardType: TextInputType.phone,
+          validator: (value) =>
+              value?.isEmpty ?? true ? 'Please enter phone number' : null,
+        ),
+        const SizedBox(height: 14),
+        _buildTextField(
+          controller: _employeeIdController,
+          label: 'Employee ID',
+          hint: 'EMP-001',
+          icon: Icons.badge_outlined,
+          enabled: false,
+          suffix: _isEditing
+              ? Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: kSuccess.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    'Auto',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      color: kSuccess,
+                    ),
+                  ),
+                )
+              : null,
+        ),
+      ],
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // COMPANY INFO SECTION
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildCompanyInfoSection() {
+    return _buildSection(
+      title: 'Company Information',
+      icon: Icons.business_center_outlined,
+      children: [
+        _buildDropdownField(
+          label: 'Department *',
+          hint: 'Select department',
+          value: _selectedDepartment,
+          items: const ['Sales', 'IT', 'HR', 'Finance', 'Marketing', 'Operations'],
+          onChanged: (value) => setState(() => _selectedDepartment = value),
+          validator: (value) => value == null ? 'Please select department' : null,
+        ),
+        const SizedBox(height: 14),
+        _buildDropdownField(
+          label: 'Designation *',
+          hint: 'Select designation',
+          value: _selectedDesignation,
+          items: const [
+            'Manager',
+            'Sr. Executive',
+            'Executive',
+            'Software Engineer',
+            'Sales Executive',
+            'Accountant',
+            'HR Executive',
+            'Intern'
+          ],
+          onChanged: (value) => setState(() => _selectedDesignation = value),
+          validator: (value) => value == null ? 'Please select designation' : null,
+        ),
+        const SizedBox(height: 14),
+        _buildDropdownField(
+          label: 'Branch / Office *',
+          hint: 'Select office',
+          value: _selectedOffice,
+          items: const ['Head Office', 'North Branch', 'South Branch', 'East Branch'],
+          onChanged: (value) => setState(() => _selectedOffice = value),
+          validator: (value) => value == null ? 'Please select office' : null,
+        ),
+        const SizedBox(height: 14),
+        _buildDatePickerField(
+          label: 'Joining Date *',
+          date: _joiningDate,
+          controller: _joiningDateController,
+          onChanged: (date) {
+            setState(() {
+              _joiningDate = date;
+              _joiningDateController.text = DateFormat('dd MMM yyyy').format(date);
+            });
+          },
+          validator: (value) =>
+              value?.isEmpty ?? true ? 'Please select joining date' : null,
+        ),
+        const SizedBox(height: 14),
+        _buildDropdownField(
+          label: 'Assigned Shift *',
+          hint: 'Select shift',
+          value: _selectedShift,
+          items: const ['Regular Shift (9-6)', 'Morning Shift (8-4)', 'Evening Shift (2-10)'],
+          onChanged: (value) => setState(() => _selectedShift = value),
+          validator: (value) => value == null ? 'Please select shift' : null,
+        ),
+      ],
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // EMPLOYMENT SECTION
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildEmploymentSection() {
+    return _buildSection(
+      title: 'Employment Details',
+      icon: Icons.work_outline_rounded,
+      children: [
+        _buildDropdownField(
+          label: 'Employment Type *',
+          hint: 'Select type',
+          value: _selectedEmploymentType,
+          items: const ['Full Time', 'Part Time', 'Contract', 'Internship', 'Probation'],
+          onChanged: (value) => setState(() => _selectedEmploymentType = value),
+          validator: (value) => value == null ? 'Please select employment type' : null,
+        ),
+        const SizedBox(height: 14),
+        _buildDropdownField(
+          label: 'Employee Type *',
+          hint: 'Select employee type',
+          value: _selectedEmployeeType,
+          items: const ['Office Employee', 'Field Employee', 'Salesman', 'Delivery Staff'],
+          onChanged: (value) => setState(() => _selectedEmployeeType = value),
+          validator: (value) => value == null ? 'Please select employee type' : null,
+        ),
+        const SizedBox(height: 14),
+        _buildDropdownField(
+          label: 'Status *',
+          hint: 'Select status',
+          value: _selectedStatus,
+          items: const ['Active', 'Inactive', 'On Leave', 'Terminated'],
+          onChanged: (value) => setState(() => _selectedStatus = value),
+          validator: (value) => value == null ? 'Please select status' : null,
+        ),
+      ],
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // SALARY SECTION
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildSalarySection() {
+    return _buildSection(
+      title: 'Salary Information',
+      icon: Icons.attach_money_rounded,
+      children: [
+        _buildTextField(
+          controller: _salaryController,
+          label: 'Basic Salary *',
+          hint: '0.00',
+          icon: Icons.currency_rupee_rounded,
+          prefixText: 'PKR ',
+          keyboardType: TextInputType.number,
+          validator: (value) {
+            if (value?.isEmpty ?? true) return 'Please enter salary';
+            if (double.tryParse(value!) == null) return 'Please enter valid amount';
+            return null;
+          },
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: kPrimary.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: kPrimary.withValues(alpha: 0.1),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.info_outline_rounded,
+                size: 16,
+                color: kPrimary,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Additional allowances and deductions can be configured in Payroll Settings',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: kSubText,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // ACTION BUTTONS
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildActionButtons() {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: kPrimary,
+              side: const BorderSide(color: kPrimary),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: kText,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          flex: 2,
+          child: ElevatedButton(
+            onPressed: _saveEmployee,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kPrimary,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              _isEditing ? 'Update Employee' : 'Save Employee',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // HELPER WIDGETS
+  // ═══════════════════════════════════════════════════════════════
+
+  Widget _buildSection({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: kPrimary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, size: 16, color: kPrimary),
+              ),
+               SizedBox(width: 10),
+              Text(
+                title,
+                style:  TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: kText,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                width: 4,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: kPrimary,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    TextInputType? keyboardType,
+    FormFieldValidator<String>? validator,
+    bool enabled = true,
+    Widget? suffix,
+    String? prefixText,
+    int maxLines = 1,
+  }) {
+    return TextFormField(
+      controller: controller,
+      enabled: enabled,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      style: TextStyle(
+        fontSize: 13,
+        color: enabled ? Colors.black87 : kSubText,
+      ),
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        prefixIcon: Icon(icon, size: 18, color: kSubText),
+        prefixText: prefixText,
+        suffix: suffix,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: kPrimary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: kDanger),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        isDense: true,
+        labelStyle: TextStyle(
+          fontSize: 12,
+          color: enabled ? kSubText : Colors.grey.shade400,
+        ),
+        hintStyle: TextStyle(fontSize: 13, color: Colors.grey.shade400),
+        errorStyle: const TextStyle(fontSize: 10),
+      ),
+      validator: validator,
+    );
+  }
+
+  Widget _buildDropdownField({
+    required String label,
+    required String hint,
+    required String? value,
+    required List<String> items,
+    required void Function(String?) onChanged,
+    FormFieldValidator<String>? validator,
+  }) {
+    return DropdownButtonFormField<String>(
+      initialValue: value,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        prefixIcon: const Icon(Icons.arrow_drop_down_circle_outlined, size: 18),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: kPrimary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: kDanger),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        isDense: true,
+        labelStyle:  TextStyle(fontSize: 12, color: kSubText),
+        hintStyle: TextStyle(fontSize: 13, color: Colors.grey.shade400),
+        errorStyle: const TextStyle(fontSize: 10),
+      ),
+      style: const TextStyle(
+        fontSize: 13,
+        color: Colors.black87,
+      ),
+      icon: Icon(Icons.arrow_drop_down, size: 20, color: kSubText),
+      items: items.map((item) {
+        return DropdownMenuItem<String>(
+          value: item,
+          child: Text(
+            item,
+            overflow: TextOverflow.ellipsis,
+          ),
+        );
+      }).toList(),
+      onChanged: onChanged,
+      validator: validator,
+    );
+  }
+
+  Widget _buildDatePickerField({
+    required String label,
+    required DateTime date,
+    required TextEditingController controller,
+    required void Function(DateTime) onChanged,
+    FormFieldValidator<String>? validator,
+  }) {
+    return GestureDetector(
+      onTap: () async {
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: date,
+          firstDate: DateTime(2000),
+          lastDate: DateTime.now(),
+        );
+        if (picked != null) onChanged(picked);
+      },
+      child: TextFormField(
+        controller: controller,
+        enabled: false,
+        style: const TextStyle(
+          fontSize: 13,
+          color: Colors.black87,
+        ),
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: const Icon(Icons.calendar_today_rounded, size: 18),
+          suffixIcon: const Icon(Icons.arrow_drop_down, size: 20),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: kPrimary, width: 2),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: kDanger),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          isDense: true,
+          labelStyle:  TextStyle(fontSize: 12, color: kSubText),
+          errorStyle: const TextStyle(fontSize: 10),
+        ),
+        validator: validator,
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // ACTIONS
+  // ═══════════════════════════════════════════════════════════════
+
+  void _saveEmployee() {
+    if (_formKey.currentState!.validate()) {
+      // Save employee logic
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Employee saved successfully!'),
+          backgroundColor: kSuccess,
+        ),
+      );
+      Navigator.of(context).pop(true);
+    }
+  }
+
+  void _showDeleteConfirmation() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Delete Employee'),
+        content: const Text(
+          'Are you sure you want to delete this employee?\nThis action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: kSubText),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context, true);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Employee deleted!'),
+                  backgroundColor: kDanger,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: kDanger,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

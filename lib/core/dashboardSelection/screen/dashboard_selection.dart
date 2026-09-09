@@ -19,6 +19,8 @@ import 'package:BisonsTechs_app/core/Users/screen/user_list_screen.dart';
 import 'package:BisonsTechs_app/core/changepassword/screen/change_password_screen.dart';
 import 'package:BisonsTechs_app/core/companyprofile/controller/profile_controller.dart';
 import 'package:BisonsTechs_app/core/companyprofile/screen/company_profile_screen.dart';
+import 'package:BisonsTechs_app/core/HR/screens/employee_dashboard_screen.dart';
+import 'package:BisonsTechs_app/core/HR/screens/hr_dashboard_screen.dart';
 import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
 import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
@@ -1114,6 +1116,26 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                     showArrow: true,
                     onTap: _navigateToPurchase,
                   ),
+                if (erp)
+                  _SidebarItemWidget(
+                    icon: Icons.groups_outlined,
+                    label: 'HR Admin',
+                    index: 11,
+                    selectedIndex: _selectedIndex,
+                    collapsed: collapsed,
+                    showArrow: true,
+                    onTap: _navigateToHrDashboard,
+                  ),
+                if (erp)
+                  _SidebarItemWidget(
+                    icon: Icons.badge_outlined,
+                    label: 'Employee',
+                    index: 12,
+                    selectedIndex: _selectedIndex,
+                    collapsed: collapsed,
+                    showArrow: true,
+                    onTap: _navigateToEmployeeDashboard,
+                  ),
                 if (erp && perms.canAccessModule('users'))
                   _SidebarItemWidget(
                     iconAsset: 'assets/icons/users.svg',
@@ -1146,8 +1168,8 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
             icon: Icons.settings_outlined,
             label: 'Settings',
             index: 7,
-            selectedIndex: _selectedIndex,
-            collapsed: collapsed,
+            selectedIndex: _selectedIndex,            collapsed: collapsed,
+            
             showArrow: true,
             onTap: _openSettings,
           ),
@@ -1211,12 +1233,16 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                     'sales',
                     'purchases',
                     'accounting',
+                    'accounting',
+                    'accounting',
                   ],
                   items: const [
                     ('Warehouse', Mdi.warehouse, '__warehouse'),
                     ('Accounting', Mdi.account_balance, '__accounting'),
                     ('Sales', Mdi.cart_outline, '__sales'),
                     ('Purchases', Mdi.cart_plus, '__purchase'),
+                    ('HR Admin', Mdi.account_tie, '__hr'),
+                    ('Employee', Mdi.badge_account_horizontal, '__employee'),
                     ('Tax Compliance', Mdi.percent, '__tax'),
                   ],
                 ),
@@ -1370,6 +1396,22 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
             icon: Icons.shopping_cart_outlined,
             color: const Color(0xFFF59E0B),
             onTap: _navigateToPurchase,
+          ),
+        if (erp)
+          _HomeProduct(
+            title: 'HR Admin',
+            subtitle: 'HR desk, payroll & attendance',
+            icon: Icons.groups_outlined,
+            color: const Color(0xFF0F766E),
+            onTap: _navigateToHrDashboard,
+          ),
+        if (erp)
+          _HomeProduct(
+            title: 'Employee',
+            subtitle: 'Self-service home & check-in',
+            icon: Icons.badge_outlined,
+            color: const Color(0xFF2563EB),
+            onTap: _navigateToEmployeeDashboard,
           ),
         if (erp && perms.canAccessModule('users'))
           _HomeProduct(
@@ -1576,6 +1618,9 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
   void _navigateToAccounting() => Get.offAllNamed('/accounting/dashboard');
   void _navigateToSales() => Get.offAllNamed('/warehouse/sales');
   void _navigateToPurchase() => Get.offAllNamed('/purchase/dashboard');
+  void _navigateToHrDashboard() => Get.offAllNamed('/hr/dashboard');
+  void _navigateToEmployeeDashboard() =>
+      Get.offAllNamed('/hr/employee-dashboard');
   void _navigateToUsers() => Get.to(() => const UserListScreen());
 
   void _openSettings() {
@@ -2820,6 +2865,12 @@ class _NavSectionState extends State<_NavSection> {
         break;
       case '__purchase':
         Get.offAllNamed('/purchase/dashboard');
+        break;
+      case '__hr':
+        Get.offAllNamed('/hr/dashboard');
+        break;
+      case '__employee':
+        Get.offAllNamed('/hr/employee-dashboard');
         break;
       case '__tax':
         Get.to(() => const TaxComplianceScreen());

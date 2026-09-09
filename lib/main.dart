@@ -17,6 +17,8 @@ import 'package:BisonsTechs_app/core/Splash/screen/splash_screen.dart';
 import 'package:BisonsTechs_app/core/dashboard/Screens/dashbaord_screen.dart';
 import 'package:BisonsTechs_app/core/dashboard/controllers/dashboard_controller.dart';
 import 'package:BisonsTechs_app/core/dashboardSelection/screen/dashboard_selection.dart';
+import 'package:BisonsTechs_app/core/HR/screens/employee_dashboard_screen.dart';
+import 'package:BisonsTechs_app/core/HR/screens/hr_dashboard_screen.dart';
 import 'package:BisonsTechs_app/core/goodsRecieving/goods_receiving_controller.dart';
 import 'package:BisonsTechs_app/core/goodsRecieving/goods_receiving_screen.dart';
 import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
@@ -180,6 +182,14 @@ class MyApp extends StatelessWidget {
               binding: BindingsBuilder(() {
                 Get.lazyPut(() => PurchaseController(), fenix: true);
               }),
+            ),
+            GetPage(
+              name: '/hr/dashboard',
+              page: () => const HRDashboardScreen(),
+            ),
+            GetPage(
+              name: '/hr/employee-dashboard',
+              page: () => const EmployeeDashboardScreen(),
             ),
             GetPage(
               name: '/sales-invoices',
