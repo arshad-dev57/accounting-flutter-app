@@ -8,12 +8,41 @@ import 'package:BisonsTechs_app/core/HR/screens/employees_list_screen.dart';
 import 'package:BisonsTechs_app/core/HR/screens/leave_management_screen.dart';
 import 'package:BisonsTechs_app/core/HR/screens/live_employee_tracking_screen.dart';
 import 'package:BisonsTechs_app/core/HR/screens/notifications_center_screen.dart';
+import 'package:BisonsTechs_app/core/HR/services/hr_api_service.dart';
 import 'package:BisonsTechs_app/widgets/hr_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class HRDashboardScreen extends StatelessWidget {
+class HRDashboardScreen extends StatefulWidget {
   const HRDashboardScreen({super.key});
+
+  @override
+  State<HRDashboardScreen> createState() => _HRDashboardScreenState();
+}
+
+class _HRDashboardScreenState extends State<HRDashboardScreen> {
+  Map<String, dynamic> _stats = {
+    'totalEmployees': 0,
+    'present': 0,
+    'late': 0,
+    'absent': 0,
+    'onLeave': 0,
+    'fieldStaff': 0,
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    try {
+      final data = await HrApiService.instance.dashboard();
+      if (!mounted) return;
+      setState(() => _stats = data);
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -319,7 +348,7 @@ class HRDashboardScreen extends StatelessWidget {
         children: [
           _statItem(
             'Total Employees',
-            '125',
+            '${_stats['totalEmployees'] ?? 0}',
             Icons.people_rounded,
             kPrimary,
             Colors.blue.shade50,
@@ -327,7 +356,7 @@ class HRDashboardScreen extends StatelessWidget {
           ),
           _statItem(
             'Present',
-            '96',
+            '${_stats['present'] ?? 0}',
             Icons.check_circle_rounded,
             kSuccess,
             Colors.green.shade50,
@@ -335,7 +364,7 @@ class HRDashboardScreen extends StatelessWidget {
           ),
           _statItem(
             'Late',
-            '12',
+            '${_stats['late'] ?? 0}',
             Icons.warning_rounded,
             kWarning,
             Colors.orange.shade50,
@@ -343,7 +372,7 @@ class HRDashboardScreen extends StatelessWidget {
           ),
           _statItem(
             'Absent',
-            '7',
+            '${_stats['absent'] ?? 0}',
             Icons.person_off_rounded,
             kDanger,
             Colors.red.shade50,
@@ -351,7 +380,7 @@ class HRDashboardScreen extends StatelessWidget {
           ),
           _statItem(
             'On Leave',
-            '5',
+            '${_stats['onLeave'] ?? 0}',
             Icons.beach_access_rounded,
             Colors.purple,
             Colors.purple.shade50,
@@ -359,7 +388,7 @@ class HRDashboardScreen extends StatelessWidget {
           ),
           _statItem(
             'Field Staff',
-            '24',
+            '${_stats['fieldStaff'] ?? 0}',
             Icons.location_on_rounded,
             Colors.teal,
             Colors.teal.shade50,

@@ -8,6 +8,7 @@ import 'package:BisonsTechs_app/core/HR/screens/hr_settings_screen.dart';
 import 'package:BisonsTechs_app/core/HR/screens/leave_management_screen.dart';
 import 'package:BisonsTechs_app/core/HR/screens/live_employee_tracking_screen.dart';
 import 'package:BisonsTechs_app/core/HR/screens/notifications_center_screen.dart';
+import 'package:BisonsTechs_app/core/HR/screens/manager_my_team_screen.dart';
 import 'package:BisonsTechs_app/core/HR/screens/office_management_screen.dart';
 import 'package:BisonsTechs_app/core/HR/screens/organization_chart_screen.dart';
 import 'package:BisonsTechs_app/core/HR/screens/overtime_management_screen.dart';
@@ -70,6 +71,13 @@ class HRDrawer extends StatelessWidget {
                   icon: Icons.apartment_rounded,
                   label: 'Offices',
                   screen: const OfficeManagementScreen(),
+                ),
+                _item(
+                  context,
+                  id: 'my_team',
+                  icon: Icons.groups_rounded,
+                  label: 'My Team',
+                  screen: const ManagerMyTeamScreen(),
                 ),
                 _item(
                   context,

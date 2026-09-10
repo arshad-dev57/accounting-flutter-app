@@ -4,7 +4,7 @@ import 'dart:async';
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/config/maps_config.dart';
-import 'package:BisonsTechs_app/core/HR/services/hr_tracking_api.dart';
+import 'package:BisonsTechs_app/core/HR/services/hr_api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
@@ -26,165 +26,13 @@ class _LiveEmployeeTrackingScreenState
   GoogleMapController? _mapController;
   Timer? _pollTimer;
 
-  // Sample employee location data (fallback until live pings arrive)
-  final List<Map<String, dynamic>> _employees = [
-    {
-      'id': 'EMP-001',
-      'name': 'Ahmed Khan',
-      'department': 'Sales',
-      'designation': 'Sales Manager',
-      'status': 'WORKING',
-      'location': 'Clifton, Karachi',
-      'latitude': 24.8607,
-      'longitude': 67.0011,
-      'lastUpdated': DateTime.now().subtract(const Duration(minutes: 2)),
-      'checkIn': '09:03 AM',
-      'workingHours': '5h 21m',
-      'type': 'Office',
-      'image': null,
-    },
-    {
-      'id': 'EMP-002',
-      'name': 'Sara Ali',
-      'department': 'IT',
-      'designation': 'Software Engineer',
-      'status': 'WORKING',
-      'location': 'Head Office, Karachi',
-      'latitude': 24.8607,
-      'longitude': 67.0015,
-      'lastUpdated': DateTime.now().subtract(const Duration(minutes: 1)),
-      'checkIn': '09:25 AM',
-      'workingHours': '4h 50m',
-      'type': 'Office',
-      'image': null,
-    },
-    {
-      'id': 'EMP-003',
-      'name': 'Usman Raza',
-      'department': 'Sales',
-      'designation': 'Field Salesman',
-      'status': 'FIELD_WORK',
-      'location': 'DHA, Lahore',
-      'latitude': 31.5204,
-      'longitude': 74.3587,
-      'lastUpdated': DateTime.now().subtract(const Duration(minutes: 5)),
-      'checkIn': '08:45 AM',
-      'workingHours': '5h 30m',
-      'type': 'Field',
-      'image': null,
-    },
-    {
-      'id': 'EMP-004',
-      'name': 'Fatima Noor',
-      'department': 'HR',
-      'designation': 'HR Executive',
-      'status': 'ON_BREAK',
-      'location': 'Head Office, Karachi',
-      'latitude': 24.8607,
-      'longitude': 67.0013,
-      'lastUpdated': DateTime.now().subtract(const Duration(minutes: 3)),
-      'checkIn': '08:50 AM',
-      'workingHours': '3h 15m',
-      'type': 'Office',
-      'image': null,
-    },
-    {
-      'id': 'EMP-005',
-      'name': 'Ali Raza',
-      'department': 'Finance',
-      'designation': 'Accountant',
-      'status': 'ABSENT',
-      'location': 'Home, Karachi',
-      'latitude': 24.8500,
-      'longitude': 67.0100,
-      'lastUpdated': DateTime.now().subtract(const Duration(hours: 2)),
-      'checkIn': null,
-      'workingHours': '0h 00m',
-      'type': 'Office',
-      'image': null,
-    },
-    {
-      'id': 'EMP-006',
-      'name': 'Zain Ahmed',
-      'department': 'Operations',
-      'designation': 'Delivery Staff',
-      'status': 'FIELD_WORK',
-      'location': 'Gulshan, Karachi',
-      'latitude': 24.8800,
-      'longitude': 67.0300,
-      'lastUpdated': DateTime.now().subtract(const Duration(minutes: 4)),
-      'checkIn': '07:30 AM',
-      'workingHours': '7h 45m',
-      'type': 'Delivery',
-      'image': null,
-    },
-    {
-      'id': 'EMP-007',
-      'name': 'Ayesha Malik',
-      'department': 'Marketing',
-      'designation': 'Marketing Manager',
-      'status': 'LEAVE',
-      'location': 'Home, Lahore',
-      'latitude': 31.5300,
-      'longitude': 74.3500,
-      'lastUpdated': DateTime.now().subtract(const Duration(hours: 3)),
-      'checkIn': null,
-      'workingHours': '0h 00m',
-      'type': 'Office',
-      'image': null,
-    },
-    {
-      'id': 'EMP-008',
-      'name': 'Bilal Sheikh',
-      'department': 'Sales',
-      'designation': 'Sales Executive',
-      'status': 'OUTSIDE_OFFICE',
-      'location': 'North Branch, Lahore',
-      'latitude': 31.5100,
-      'longitude': 74.3600,
-      'lastUpdated': DateTime.now().subtract(const Duration(minutes: 6)),
-      'checkIn': '09:00 AM',
-      'workingHours': '5h 15m',
-      'type': 'Office',
-      'image': null,
-    },
-    {
-      'id': 'EMP-009',
-      'name': 'Hamza Ali',
-      'department': 'Sales',
-      'designation': 'Field Salesman',
-      'status': 'FIELD_WORK',
-      'location': 'Johar Town, Lahore',
-      'latitude': 31.5000,
-      'longitude': 74.3400,
-      'lastUpdated': DateTime.now().subtract(const Duration(minutes: 8)),
-      'checkIn': '08:30 AM',
-      'workingHours': '6h 45m',
-      'type': 'Field',
-      'image': null,
-    },
-    {
-      'id': 'EMP-010',
-      'name': 'Nadia Khan',
-      'department': 'IT',
-      'designation': 'Sr. Developer',
-      'status': 'WORKING',
-      'location': 'Head Office, Karachi',
-      'latitude': 24.8609,
-      'longitude': 67.0017,
-      'lastUpdated': DateTime.now().subtract(const Duration(minutes: 1)),
-      'checkIn': '08:55 AM',
-      'workingHours': '5h 20m',
-      'type': 'Office',
-      'image': null,
-    },
-  ];
+  List<Map<String, dynamic>> _employees = [];
 
   @override
   void initState() {
     super.initState();
     _loadLiveFeed();
-    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) => _loadLiveFeed());
+    _pollTimer = Timer.periodic(const Duration(seconds: 30), (_) => _loadLiveFeed());
   }
 
   @override
@@ -196,42 +44,42 @@ class _LiveEmployeeTrackingScreenState
 
   Future<void> _loadLiveFeed() async {
     try {
-      final live = await HrTrackingApi.instance.fetchLive();
+      final live = await HrApiService.instance.liveTracking();
       if (!mounted) return;
-      if (live.isEmpty) {
-        setState(() {
-          _isMapLoading = false;
-          _usingLiveFeed = false;
-        });
-        return;
-      }
-
       setState(() {
         _usingLiveFeed = true;
         _isMapLoading = false;
         _employees
           ..clear()
           ..addAll(live.map((e) {
-            final status = e['status']?.toString() ?? 'WORKING';
+            final status = e['status']?.toString() ?? 'offline';
+            final checkInRaw = e['checkIn'];
+            String? checkInLabel;
+            if (checkInRaw != null) {
+              final parsed = DateTime.tryParse(checkInRaw.toString());
+              checkInLabel = parsed != null
+                  ? DateFormat('hh:mm a').format(parsed.toLocal())
+                  : checkInRaw.toString();
+            }
             return {
               'id': e['employeeId']?.toString() ?? '',
               'name': e['employeeName']?.toString() ?? 'Employee',
-              'department': e['matchedOffice']?.toString() ?? '',
-              'designation': e['status']?.toString() ?? '',
-              'status': status == 'CheckedIn'
+              'department': e['department']?.toString() ?? '',
+              'designation': e['designation']?.toString() ?? '',
+              'status': status == 'working'
                   ? 'WORKING'
-                  : status == 'InsideGeofence'
-                      ? 'WORKING'
-                      : status == 'Outside'
-                          ? 'OUTSIDE_OFFICE'
-                          : 'WORKING',
+                  : status == 'field'
+                      ? 'FIELD_WORK'
+                      : status == 'offline'
+                          ? 'OFFLINE'
+                          : 'OUTSIDE_OFFICE',
               'location': e['locationLabel']?.toString() ?? '',
               'latitude': (e['latitude'] as num?)?.toDouble() ?? 0,
               'longitude': (e['longitude'] as num?)?.toDouble() ?? 0,
               'lastUpdated': DateTime.tryParse(e['lastPingAt']?.toString() ?? '') ??
                   DateTime.now(),
-              'checkIn': status == 'CheckedIn' ? 'Auto' : null,
-              'workingHours': e['moving'] == true ? 'Moving' : 'Stationary',
+              'checkIn': checkInLabel,
+              'workingHours': e['attendanceStatus']?.toString() ?? '',
               'type': e['insideGeofence'] == true ? 'Office' : 'Field',
               'image': null,
             };

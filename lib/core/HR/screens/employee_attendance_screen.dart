@@ -1,7 +1,10 @@
 // screens/employee_attendance_screen.dart - EMPLOYEE ATTENDANCE (Mobile)
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/HR/services/hr_api_service.dart';
+import 'package:BisonsTechs_app/core/HR/services/location_tracking_service.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 class EmployeeAttendanceScreen extends StatefulWidget {
@@ -25,11 +28,11 @@ class _EmployeeAttendanceScreenState extends State<EmployeeAttendanceScreen>
   late AnimationController _pulseController;
   bool isInsideGeofence = true;
 
-  // Sample data
-  final String _shiftStart = '09:00 AM';
-  final String _shiftEnd = '06:00 PM';
-  final String _officeName = 'Head Office';
-  final String _employeeName = 'Ahmed Khan';
+  String _officeName = '';
+  String _employeeName = 'Employee';
+  String _shiftStart = '';
+  String _shiftEnd = '';
+  bool _busy = false;
 
   @override
   void initState() {
@@ -38,6 +41,37 @@ class _EmployeeAttendanceScreenState extends State<EmployeeAttendanceScreen>
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
+    _loadToday();
+  }
+
+  Future<void> _loadToday() async {
+    try {
+      final data = await HrApiService.instance.myAttendance();
+      if (!mounted) return;
+      final emp = data['employee'] as Map<String, dynamic>? ?? {};
+      final att = data['attendance'] as Map<String, dynamic>?;
+      setState(() {
+        _employeeName = emp['name']?.toString() ?? 'Employee';
+        _officeName = emp['office']?.toString() ?? '';
+        _shiftStart = emp['shift']?.toString() ?? '';
+        _shiftEnd = '';
+        if (att == null) {
+          _currentStatus = 'NOT_CHECKED_IN';
+          _checkInTime = null;
+          _checkOutTime = null;
+        } else if (att['isCheckedIn'] == true) {
+          _currentStatus = 'WORKING';
+          _checkInTime = DateTime.tryParse(att['checkIn']?.toString() ?? '');
+          _checkOutTime = null;
+        } else if (att['checkOut'] != null) {
+          _currentStatus = 'CHECKED_OUT';
+          _checkInTime = DateTime.tryParse(att['checkIn']?.toString() ?? '');
+          _checkOutTime = DateTime.tryParse(att['checkOut']?.toString() ?? '');
+        } else {
+          _currentStatus = 'NOT_CHECKED_IN';
+        }
+      });
+    } catch (_) {}
   }
 
   @override
@@ -863,13 +897,29 @@ class _EmployeeAttendanceScreenState extends State<EmployeeAttendanceScreen>
   // ACTION HANDLERS
   // ═══════════════════════════════════════════════════════════════
 
-  void _handleCheckIn() {
-    setState(() {
-      _currentStatus = 'WORKING';
-      _checkInTime = DateTime.now();
-      totalWorkingDuration = Duration.zero;
-      _showSnackbar('✅ Checked in successfully!', kSuccess);
-    });
+  Future<void> _handleCheckIn() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final tracking = Get.isRegistered<LocationTrackingService>()
+          ? Get.find<LocationTrackingService>()
+          : Get.put(LocationTrackingService(), permanent: true);
+      final pos = await tracking.currentPosition();
+      if (pos == null) {
+        _showSnackbar('Could not read GPS. Enable location and try again.', kDanger);
+        return;
+      }
+      await HrApiService.instance.checkIn(
+        latitude: pos.latitude,
+        longitude: pos.longitude,
+      );
+      await _loadToday();
+      _showSnackbar('Checked in successfully!', kSuccess);
+    } catch (e) {
+      _showSnackbar(e.toString().replaceFirst('Exception: ', ''), kDanger);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   void _handleStartBreak() {
@@ -898,16 +948,29 @@ class _EmployeeAttendanceScreenState extends State<EmployeeAttendanceScreen>
     }
   }
 
-  void _handleCheckOut() {
-    setState(() {
-      _currentStatus = 'CHECKED_OUT';
-      _checkOutTime = DateTime.now();
-      // Calculate total working hours
-      if (_checkInTime != null) {
-        totalWorkingDuration = _checkOutTime!.difference(_checkInTime!);
+  Future<void> _handleCheckOut() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final tracking = Get.isRegistered<LocationTrackingService>()
+          ? Get.find<LocationTrackingService>()
+          : Get.put(LocationTrackingService(), permanent: true);
+      final pos = await tracking.currentPosition();
+      if (pos == null) {
+        _showSnackbar('Could not read GPS. Enable location and try again.', kDanger);
+        return;
       }
-      _showSnackbar('🚪 Checked out successfully!', kDanger);
-    });
+      await HrApiService.instance.checkOut(
+        latitude: pos.latitude,
+        longitude: pos.longitude,
+      );
+      await _loadToday();
+      _showSnackbar('Checked out successfully!', kDanger);
+    } catch (e) {
+      _showSnackbar(e.toString().replaceFirst('Exception: ', ''), kDanger);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════

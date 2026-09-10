@@ -1,6 +1,7 @@
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/HR/screens/add_employee_screen.dart';
 import 'package:BisonsTechs_app/core/HR/screens/employee_profile_screen.dart';
+import 'package:BisonsTechs_app/core/HR/services/hr_api_service.dart';
 import 'package:BisonsTechs_app/widgets/hr_drawer.dart';
 import 'package:flutter/material.dart';
 
@@ -15,57 +16,36 @@ class EmployeesListScreen extends StatefulWidget {
 class _EmployeesListScreenState extends State<EmployeesListScreen> {
   String _query = '';
   String _filter = 'All';
+  bool _loading = true;
+  String? _error;
+  List<Map<String, dynamic>> _employees = [];
 
-  final List<Map<String, dynamic>> _employees = [
-    {
-      'id': 'EMP-001',
-      'name': 'Ahmed Khan',
-      'designation': 'CTO',
-      'department': 'IT',
-      'status': 'Active',
-      'office': 'Head Office',
-    },
-    {
-      'id': 'EMP-002',
-      'name': 'Sara Ali',
-      'designation': 'Software Engineer',
-      'department': 'IT',
-      'status': 'Active',
-      'office': 'Head Office',
-    },
-    {
-      'id': 'EMP-003',
-      'name': 'Ali Raza',
-      'designation': 'VP Sales',
-      'department': 'Sales',
-      'status': 'Active',
-      'office': 'North Branch',
-    },
-    {
-      'id': 'EMP-004',
-      'name': 'Fatima Noor',
-      'designation': 'HR Manager',
-      'department': 'HR',
-      'status': 'Active',
-      'office': 'Head Office',
-    },
-    {
-      'id': 'EMP-005',
-      'name': 'Usman Sheikh',
-      'designation': 'Sales Manager',
-      'department': 'Sales',
-      'status': 'On Leave',
-      'office': 'South Branch',
-    },
-    {
-      'id': 'EMP-006',
-      'name': 'Nadia Khan',
-      'designation': 'Senior Software Engineer',
-      'department': 'IT',
-      'status': 'Inactive',
-      'office': 'Head Office',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadEmployees();
+  }
+
+  Future<void> _loadEmployees() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final rows = await HrApiService.instance.employees();
+      if (!mounted) return;
+      setState(() {
+        _employees = rows;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = e.toString().replaceFirst('Exception: ', '');
+      });
+    }
+  }
 
   List<Map<String, dynamic>> get _filtered {
     return _employees.where((emp) {
@@ -123,7 +103,33 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: ListView.separated(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : _error != null
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(_error!, textAlign: TextAlign.center),
+                              const SizedBox(height: 12),
+                              TextButton(
+                                onPressed: _loadEmployees,
+                                child: const Text('Retry'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : _filtered.isEmpty
+                        ? Center(
+                            child: Text(
+                              'No employees yet. Tap + to create one.',
+                              style: TextStyle(color: kSubText),
+                            ),
+                          )
+                        : ListView.separated(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
               itemCount: _filtered.length,
               separatorBuilder: (_, _) => const SizedBox(height: 8),
@@ -136,7 +142,12 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => HRNav.go(context, const AddEmployeeScreen()),
+        onPressed: () async {
+          final created = await Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AddEmployeeScreen()),
+          );
+          if (created == true) _loadEmployees();
+        },
         backgroundColor: kPrimary,
         child: const Icon(Icons.person_add_rounded, color: Colors.white),
       ),
@@ -211,7 +222,8 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
   }
 
   Widget _employeeCard(Map<String, dynamic> emp) {
-    final status = emp['status'] as String;
+    final status = emp['status']?.toString() ?? 'Active';
+    final name = emp['name']?.toString() ?? 'Employee';
     final statusColor = status == 'Active'
         ? kSuccess
         : status == 'On Leave'
@@ -221,7 +233,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
     return GestureDetector(
       onTap: () => HRNav.go(
         context,
-        EmployeeProfileScreen(employeeId: emp['id'] as String),
+        EmployeeProfileScreen(employeeId: emp['id']?.toString()),
       ),
       child: Container(
         padding: const EdgeInsets.all(14),
@@ -241,7 +253,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
             CircleAvatar(
               backgroundColor: kPrimary.withValues(alpha: 0.12),
               child: Text(
-                emp['name'].toString().substring(0, 1),
+                name.isNotEmpty ? name.substring(0, 1) : 'E',
                 style: const TextStyle(
                   color: kPrimary,
                   fontWeight: FontWeight.w800,
@@ -254,7 +266,7 @@ class _EmployeesListScreenState extends State<EmployeesListScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    emp['name'] as String,
+                    name,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,

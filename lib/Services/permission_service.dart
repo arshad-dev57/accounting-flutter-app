@@ -150,6 +150,11 @@ class PermissionService extends GetxController {
         role == 'company_admin';
   }
 
+  bool get isEmployee {
+    final role = user.value?.role.toLowerCase().trim() ?? '';
+    return role == 'employee';
+  }
+
   /// Admin / owner always sees every module. Staff still needs page permissions.
   bool canAccessModule(String module) {
     if (isAdmin) return true;

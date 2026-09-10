@@ -1,6 +1,7 @@
 // screens/office_management_screen.dart - OFFICE/BRANCH MANAGEMENT
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/HR/services/hr_api_service.dart';
 import 'package:flutter/material.dart';
 
 class OfficeManagementScreen extends StatefulWidget {
@@ -11,49 +12,36 @@ class OfficeManagementScreen extends StatefulWidget {
 }
 
 class _OfficeManagementScreenState extends State<OfficeManagementScreen> {
-  // Sample office data
-  final List<Map<String, dynamic>> _offices = [
-    {
-      'id': 'OFF-001',
-      'name': 'Head Office',
-      'address': 'Karachi, Pakistan',
-      'latitude': 24.8607,
-      'longitude': 67.0011,
-      'radius': 200,
-      'employeeCount': 45,
-      'status': 'Active',
-    },
-    {
-      'id': 'OFF-002',
-      'name': 'North Branch',
-      'address': 'Lahore, Pakistan',
-      'latitude': 31.5204,
-      'longitude': 74.3587,
-      'radius': 300,
-      'employeeCount': 28,
-      'status': 'Active',
-    },
-    {
-      'id': 'OFF-003',
-      'name': 'South Branch',
-      'address': 'Karachi, Pakistan',
-      'latitude': 24.8607,
-      'longitude': 67.0011,
-      'radius': 500,
-      'employeeCount': 12,
-      'status': 'Active',
-    },
-    {
-      'id': 'OFF-004',
-      'name': 'East Branch',
-      'address': 'Islamabad, Pakistan',
-      'latitude': 33.6844,
-      'longitude': 73.0479,
-      'radius': 200,
-      'employeeCount': 8,
-      'status': 'Inactive',
-    },
-  ];
+  bool _loading = true;
+  String? _error;
+  List<Map<String, dynamic>> _offices = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOffices();
+  }
+
+  Future<void> _loadOffices() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final rows = await HrApiService.instance.offices();
+      if (!mounted) return;
+      setState(() {
+        _offices = rows;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = e.toString().replaceFirst('Exception: ', '');
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -284,6 +272,29 @@ class _OfficeManagementScreenState extends State<OfficeManagementScreen> {
   // ═══════════════════════════════════════════════════════════════
 
   Widget _buildOfficeList() {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(_error!, textAlign: TextAlign.center),
+            TextButton(onPressed: _loadOffices, child: const Text('Retry')),
+          ],
+        ),
+      );
+    }
+    if (_offices.isEmpty) {
+      return Center(
+        child: Text(
+          'No offices yet. Add one to enable geofence attendance.',
+          style: TextStyle(color: kSubText),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
     return ListView.builder(
       padding: const EdgeInsets.only(bottom: 16),
       itemCount: _offices.length,
@@ -840,13 +851,39 @@ class _OfficeManagementScreenState extends State<OfficeManagementScreen> {
                         Expanded(
                           flex: 2,
                           child: ElevatedButton(
-                            onPressed: () {
-                              if (formKey.currentState!.validate()) {
-                                Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(
+                            onPressed: () async {
+                              if (!formKey.currentState!.validate()) return;
+                              try {
+                                await HrApiService.instance.createOffice({
+                                  'name': nameController.text.trim(),
+                                  'address': addressController.text.trim(),
+                                  'latitude': double.tryParse(
+                                        latitudeController.text.trim(),
+                                      ) ??
+                                      0,
+                                  'longitude': double.tryParse(
+                                        longitudeController.text.trim(),
+                                      ) ??
+                                      0,
+                                  'radius': int.tryParse(selectedRadius) ?? 150,
+                                });
+                                if (context.mounted) Navigator.pop(context);
+                                await _loadOffices();
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(this.context).showSnackBar(
                                   const SnackBar(
                                     content: Text('Office created successfully!'),
                                     backgroundColor: kSuccess,
+                                  ),
+                                );
+                              } catch (e) {
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      e.toString().replaceFirst('Exception: ', ''),
+                                    ),
+                                    backgroundColor: kDanger,
                                   ),
                                 );
                               }

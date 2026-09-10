@@ -1,7 +1,17 @@
 // screens/employee_dashboard_screen.dart - EMPLOYEE DASHBOARD (Mobile Home)
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/HR/screens/employee_self_service_screens.dart';
+import 'package:BisonsTechs_app/core/HR/services/hr_api_service.dart';
 import 'package:BisonsTechs_app/core/HR/services/location_tracking_service.dart';
+import 'package:BisonsTechs_app/core/HR/utils/hr_role.dart';
+import 'package:BisonsTechs_app/Services/auth_logout_service.dart';
+import 'package:BisonsTechs_app/core/HR/screens/employee_attendance_screen.dart';
+import 'package:BisonsTechs_app/core/HR/screens/employee_profile_screen.dart';
+import 'package:BisonsTechs_app/core/HR/screens/employee_my_hr_hub_screen.dart';
+import 'package:BisonsTechs_app/core/HR/screens/employee_payslip_screen.dart';
+import 'package:BisonsTechs_app/core/HR/screens/notifications_center_screen.dart';
+import 'package:BisonsTechs_app/core/HR/utils/employee_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -20,95 +30,30 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
   late AnimationController _pulseController;
   late LocationTrackingService _tracking;
 
-  // Employee Data
-  final Map<String, dynamic> _employeeData = {
-    'name': 'Ahmed Khan',
-    'designation': 'Senior Software Engineer',
-    'department': 'IT',
-    'employeeId': 'EMP-001',
+  Map<String, dynamic> _employeeData = {
+    'name': 'Employee',
+    'designation': '',
+    'department': '',
+    'employeeId': '',
     'profileImage': null,
-    'shift': '09:00 AM - 06:00 PM',
-    'office': 'Head Office',
+    'shift': '',
+    'office': '',
     'isCheckedIn': false,
     'checkInTime': '',
     'workingHours': '0h 00m',
   };
 
-  // Today's Stats
   final Map<String, dynamic> _todayStats = {
-    'present': 96,
-    'late': 12,
-    'absent': 7,
-    'onLeave': 5,
-    'onBreak': 5,
-    'working': 91,
+    'present': 0,
+    'late': 0,
+    'absent': 0,
+    'onLeave': 0,
+    'onBreak': 0,
+    'working': 0,
   };
 
-  // Notifications
-  final List<Map<String, dynamic>> _notifications = [
-    {
-      'id': 'N-001',
-      'title': 'Attendance Marked',
-      'message': 'Auto check-in at Head Office',
-      'time': DateTime.now().subtract(const Duration(minutes: 5)),
-      'type': 'success',
-      'icon': Icons.fingerprint_rounded,
-      'color': kSuccess,
-      'isRead': false,
-    },
-    {
-      'id': 'N-002',
-      'title': 'Leave Approved',
-      'message': 'Your leave request for 10-11 Sep has been approved',
-      'time': DateTime.now().subtract(const Duration(hours: 2)),
-      'type': 'info',
-      'icon': Icons.beach_access_rounded,
-      'color': Colors.blue,
-      'isRead': false,
-    },
-    {
-      'id': 'N-003',
-      'title': 'Payroll Generated',
-      'message': 'Your payslip for September 2026 is ready',
-      'time': DateTime.now().subtract(const Duration(days: 1)),
-      'type': 'info',
-      'icon': Icons.attach_money_rounded,
-      'color': kSuccess,
-      'isRead': true,
-    },
-    {
-      'id': 'N-004',
-      'title': 'Holiday Tomorrow',
-      'message': 'Independence Day holiday - 14th August',
-      'time': DateTime.now().subtract(const Duration(days: 2)),
-      'type': 'warning',
-      'icon': Icons.celebration_rounded,
-      'color': kWarning,
-      'isRead': true,
-    },
-  ];
-
-  // Upcoming Events
-  final List<Map<String, dynamic>> _upcomingEvents = [
-    {
-      'title': 'Independence Day',
-      'date': DateTime(2026, 8, 14),
-      'type': 'Holiday',
-      'color': Colors.green,
-    },
-    {
-      'title': 'Quarterly Review',
-      'date': DateTime(2026, 8, 20),
-      'type': 'Meeting',
-      'color': Colors.blue,
-    },
-    {
-      'title': 'Eid-ul-Adha',
-      'date': DateTime(2026, 8, 29),
-      'type': 'Holiday',
-      'color': Colors.purple,
-    },
-  ];
+  List<Map<String, dynamic>> _notifications = [];
+  List<Map<String, dynamic>> _upcomingEvents = [];
 
   // Quick Actions
   final List<Map<String, dynamic>> _quickActions = [
@@ -143,10 +88,10 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
       'route': '/reports',
     },
     {
-      'title': 'Help',
-      'icon': Icons.help_rounded,
+      'title': 'My HR',
+      'icon': Icons.badge_rounded,
       'color': Colors.teal,
-      'route': '/help',
+      'route': '/myhr',
     },
   ];
 
@@ -161,15 +106,78 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
     _tracking = Get.isRegistered<LocationTrackingService>()
         ? Get.find<LocationTrackingService>()
         : Get.put(LocationTrackingService(), permanent: true);
-    _tracking.initProfile(
-      employeeId: _employeeData['employeeId'] as String,
-      employeeName: _employeeData['name'] as String,
-      officeName: _employeeData['office'] as String?,
-    );
-    // Auto-start GPS tracking for live attendance
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _tracking.startTracking();
-    });
+    _loadMe();
+  }
+
+  Future<void> _loadMe({bool startTracking = false}) async {
+    try {
+      final me = await HrApiService.instance.me();
+      if (!mounted) return;
+      final office = me['officeDetails'] as Map<String, dynamic>?;
+      final attendance = me['attendance'] as Map<String, dynamic>?;
+      final checkedIn = attendance?['isCheckedIn'] == true;
+      final checkIn = attendance?['checkIn']?.toString() ?? '';
+      setState(() {
+        _employeeData = {
+          'name': me['name']?.toString() ?? 'Employee',
+          'designation': me['designation']?.toString() ?? '',
+          'department': me['department']?.toString() ?? '',
+          'employeeId': me['employeeCode']?.toString() ??
+              me['employeeId']?.toString() ??
+              '',
+          'profileImage': null,
+          'shift': me['shift']?.toString() ?? '',
+          'office': me['office']?.toString() ?? '',
+          'isCheckedIn': checkedIn,
+          'checkInTime': checkIn,
+          'workingHours': _formatMinutes(attendance?['workingMinutes']),
+        };
+        if (checkedIn) {
+          _notifications = [
+            {
+              'id': 'att-today',
+              'title': 'Attendance Marked',
+              'message': 'Checked in${me['office'] != null ? ' at ${me['office']}' : ''}',
+              'time': DateTime.tryParse(checkIn) ?? DateTime.now(),
+              'type': 'success',
+              'icon': Icons.fingerprint_rounded,
+              'color': kSuccess,
+              'isRead': false,
+            }
+          ];
+        }
+      });
+      await _tracking.initProfile(
+        employeeId: _employeeData['employeeId'] as String,
+        employeeName: _employeeData['name'] as String,
+        officeName: _employeeData['office'] as String?,
+        officeLat: (office?['latitude'] as num?)?.toDouble(),
+        officeLng: (office?['longitude'] as num?)?.toDouble(),
+        officeRadius: (office?['radiusMeters'] as num?)?.toDouble() ??
+            (office?['radius'] as num?)?.toDouble(),
+        isFieldEmployee:
+            (me['employeeType']?.toString().toLowerCase().contains('field') ??
+                false),
+        checkedIn: checkedIn,
+        checkInTimeIso: checkIn,
+      );
+      if (startTracking || await _tracking.isTrackingPreferred()) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _tracking.startTracking();
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      _tracking.lastMessage.value =
+          e.toString().replaceFirst('Exception: ', '');
+    }
+  }
+
+  String _formatMinutes(dynamic minutes) {
+    final m = minutes is num ? minutes.toInt() : int.tryParse('$minutes') ?? 0;
+    final h = m ~/ 60;
+    final rest = m % 60;
+    return '${h}h ${rest.toString().padLeft(2, '0')}m';
   }
 
   @override
@@ -227,24 +235,36 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
                       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                     ),
                     builder: (ctx) {
+                      final employeeOnly = isEmployeeRole();
                       return SafeArea(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
+                            if (!employeeOnly) ...[
+                              ListTile(
+                                leading: const Icon(Icons.apps_rounded),
+                                title: const Text('All Dashboards'),
+                                onTap: () {
+                                  Navigator.pop(ctx);
+                                  Get.offAllNamed('/dashboard');
+                                },
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.groups_outlined),
+                                title: const Text('HR Admin Dashboard'),
+                                onTap: () {
+                                  Navigator.pop(ctx);
+                                  Get.offAllNamed('/hr/dashboard');
+                                },
+                              ),
+                            ],
                             ListTile(
-                              leading: const Icon(Icons.apps_rounded),
-                              title: const Text('All Dashboards'),
-                              onTap: () {
+                              leading: const Icon(Icons.logout_rounded),
+                              title: const Text('Logout'),
+                              onTap: () async {
                                 Navigator.pop(ctx);
-                                Get.offAllNamed('/dashboard');
-                              },
-                            ),
-                            ListTile(
-                              leading: const Icon(Icons.groups_outlined),
-                              title: const Text('HR Admin Dashboard'),
-                              onTap: () {
-                                Navigator.pop(ctx);
-                                Get.offAllNamed('/hr/dashboard');
+                                await AuthLogoutService.clearLocalSession();
+                                Get.offAllNamed('/login');
                               },
                             ),
                           ],
@@ -297,9 +317,7 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
               Stack(
                 children: [
                   GestureDetector(
-                    onTap: () {
-                      // Navigate to notifications
-                    },
+                    onTap: _openNotifications,
                     child: Container(
                       width: 40,
                       height: 40,
@@ -350,7 +368,9 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
   // ═══════════════════════════════════════════════════════════════
 
   Widget _buildWelcomeSection() {
-    return Container(
+    return GestureDetector(
+      onTap: _openProfile,
+      child: Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -437,12 +457,18 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
           ),
         ],
       ),
+    ),
     );
   }
 
   Widget _buildWelcomeAvatarPlaceholder() {
-    final name = _employeeData['name'] as String;
-    final initials = name.split(' ').map((e) => e[0]).join('').toUpperCase();
+    final name = _employeeData['name']?.toString() ?? 'E';
+    final initials = name
+        .split(' ')
+        .where((e) => e.isNotEmpty)
+        .map((e) => e[0])
+        .join()
+        .toUpperCase();
     return Container(
       color: kPrimary.withValues(alpha: 0.1),
       child: Center(
@@ -492,8 +518,8 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
                   child: Text(
                     tracking
                         ? (inside
-                            ? 'Inside office geofence · auto attendance armed'
-                            : 'Live GPS tracking on (foreground + background pings)')
+                            ? 'Inside office · live location on · attendance uses office radius'
+                            : 'Live location on — HR can see you even outside the office')
                         : 'Location tracking is off',
                     style: TextStyle(
                       fontSize: 12,
@@ -505,11 +531,11 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
                 Switch.adaptive(
                   value: tracking,
                   activeThumbColor: kPrimary,
-                  onChanged: (v) async {
+                  onChanged: (v) {
                     if (v) {
-                      await _tracking.startTracking();
+                      _tracking.startTracking();
                     } else {
-                      await _tracking.stopTracking();
+                      _tracking.stopTracking();
                     }
                   },
                 ),
@@ -522,7 +548,7 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
                 style: TextStyle(fontSize: 11, color: kSubText),
               ),
             ],
-            if (_tracking.lastLat.value != 0) ...[
+            if (tracking && _tracking.lastLat.value != 0) ...[
               const SizedBox(height: 4),
               Text(
                 'Last point: ${_tracking.lastLat.value.toStringAsFixed(5)}, ${_tracking.lastLng.value.toStringAsFixed(5)}',
@@ -543,7 +569,9 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
           ? _tracking.checkInTime.value
           : (_employeeData['checkInTime'] as String? ?? '');
 
-      return Container(
+      return GestureDetector(
+        onTap: _openAttendance,
+        child: Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -654,19 +682,20 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
               _statusItem(
                 Icons.schedule_rounded,
                 'Shift',
-                _employeeData['shift'] as String,
+                _employeeData['shift']?.toString() ?? '',
                 kPrimary,
               ),
               _statusItem(
                 Icons.location_on_rounded,
                 'Office',
-                _employeeData['office'] as String,
+                _employeeData['office']?.toString() ?? '',
                 Colors.blue,
               ),
             ],
           ),
         ],
       ),
+    ),
     );
     });
   }
@@ -831,9 +860,7 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
                 ),
               ),
               GestureDetector(
-                onTap: () {
-                  // View all events
-                },
+                onTap: _openLeaves,
                 child: Text(
                   'View All',
                   style: TextStyle(
@@ -846,6 +873,12 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
             ],
           ),
           const SizedBox(height: 12),
+          if (_upcomingEvents.isEmpty)
+            Text(
+              'No upcoming events. Apply leave or check attendance from the tabs below.',
+              style: TextStyle(fontSize: 12, color: kSubText),
+            ),
+          if (_upcomingEvents.isNotEmpty)
           ..._upcomingEvents.map((event) {
             final daysUntil = event['date'].difference(DateTime.now()).inDays;
             return Container(
@@ -1109,9 +1142,7 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
             const SizedBox(height: 4),
             Center(
               child: GestureDetector(
-                onTap: () {
-                  // View all notifications
-                },
+                onTap: _openNotifications,
                 child: Text(
                   'View ${_notifications.length - 3} more notifications',
                   style: TextStyle(
@@ -1151,15 +1182,9 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _navItem(Icons.home_rounded, 'Home', true, () {}),
-              _navItem(Icons.calendar_today_rounded, 'Attendance', false, () {
-                // Navigate to attendance
-              }),
-              _navItem(Icons.beach_access_rounded, 'Leaves', false, () {
-                // Navigate to leaves
-              }),
-              _navItem(Icons.person_rounded, 'Profile', false, () {
-                // Navigate to profile
-              }),
+              _navItem(Icons.calendar_today_rounded, 'Attendance', false, _openAttendance),
+              _navItem(Icons.beach_access_rounded, 'Leaves', false, _openLeaves),
+              _navItem(Icons.person_rounded, 'Profile', false, _openProfile),
             ],
           ),
         ),
@@ -1216,28 +1241,68 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
     setState(() {
       _isRefreshing = true;
     });
-    await Future.delayed(const Duration(seconds: 2));
+    await _loadMe();
+    if (!mounted) return;
     setState(() {
       _isRefreshing = false;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('✅ Dashboard refreshed!'),
-        backgroundColor: kSuccess,
-        behavior: SnackBarBehavior.floating,
-      ),
+  }
+
+  Future<void> _openAttendance() async {
+    await openEmployeeScreen(context,  EmployeeAttendanceScreen());
+    if (mounted) _loadMe();
+  }
+
+  Future<void> _openProfile() {
+    return openEmployeeScreen(context,  EmployeeProfileScreen());
+  }
+
+  Future<void> _openLeaves() {
+    return openEmployeeScreen(context,  EmployeeLeavesScreen());
+  }
+
+  Future<void> _openPayslip() {
+    return openEmployeeScreen(context,  EmployeePayslipScreen());
+  }
+
+  Future<void> _openReports() {
+    return openEmployeeScreen(context,  EmployeePayslipScreen());
+  }
+
+  Future<void> _openMyHr() {
+    return openEmployeeScreen(context,  EmployeeMyHrHubScreen());
+  }
+
+  Future<void> _openNotifications() {
+    return openEmployeeScreen(
+      context,
+      NotificationsCenterScreen(items: List<Map<String, dynamic>>.from(_notifications)),
     );
   }
 
   void _handleQuickAction(Map<String, dynamic> action) {
-    final route = action['route'] as String;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('🔗 Navigating to ${action['title']}...'),
-        backgroundColor: kPrimary,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-    // Navigation logic would go here
+    switch (action['route'] as String) {
+      case '/attendance':
+        _openAttendance();
+        return;
+      case '/leave':
+        _openLeaves();
+        return;
+      case '/profile':
+        _openProfile();
+        return;
+      case '/payslip':
+        _openPayslip();
+        return;
+      case '/reports':
+        _openReports();
+        return;
+      case '/help':
+        _openMyHr();
+        return;
+      case '/myhr':
+        _openMyHr();
+        return;
+    }
   }
 }

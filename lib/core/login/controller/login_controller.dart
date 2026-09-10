@@ -16,6 +16,7 @@ import 'package:BisonsTechs_app/Services/notification_service.dart';
 import 'package:BisonsTechs_app/core/companyprofile/controller/profile_controller.dart';
 import 'package:BisonsTechs_app/core/FiscalYear/controller/fiscal_year_controller.dart';
 import 'package:BisonsTechs_app/core/warehouse/locations/location_query.dart';
+import 'package:BisonsTechs_app/core/HR/utils/hr_role.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -152,8 +153,8 @@ class LoginController extends GetxController {
         // ✅ FIX: Update currency after login
         await _updateCurrencyFromUser(data['user']);
 
+        final userData = data['user'] as Map<String, dynamic>?;
         try {
-          final userData = data['user'] as Map<String, dynamic>?;
           final userId =
               userData?['_id']?.toString() ?? userData?['id']?.toString() ?? '';
           if (userId.isNotEmpty) {
@@ -162,10 +163,13 @@ class LoginController extends GetxController {
         } catch (_) {}
 
         if (subscriptionController.hasAccess) {
-          final fy = Get.isRegistered<FiscalYearController>()
-              ? Get.find<FiscalYearController>()
-              : Get.put(FiscalYearController(), permanent: true);
-          await fy.ensureFiscalYearsLoaded(force: true);
+          final role = userData?['role']?.toString();
+          if (!isEmployeeRole(role)) {
+            final fy = Get.isRegistered<FiscalYearController>()
+                ? Get.find<FiscalYearController>()
+                : Get.put(FiscalYearController(), permanent: true);
+            await fy.ensureFiscalYearsLoaded(force: true);
+          }
           subscriptionController.goToAppHome();
         } else {
           Get.offAll(() => const SelectPlanScreen());

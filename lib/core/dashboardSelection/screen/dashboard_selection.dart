@@ -21,6 +21,7 @@ import 'package:BisonsTechs_app/core/companyprofile/controller/profile_controlle
 import 'package:BisonsTechs_app/core/companyprofile/screen/company_profile_screen.dart';
 import 'package:BisonsTechs_app/core/HR/screens/employee_dashboard_screen.dart';
 import 'package:BisonsTechs_app/core/HR/screens/hr_dashboard_screen.dart';
+import 'package:BisonsTechs_app/core/HR/utils/hr_role.dart';
 import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
 import 'package:BisonsTechs_app/core/plans/controllers/subscription_controller.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
@@ -255,13 +256,16 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
         : Get.put(SupportController());
     _loadBusinessLogo();
     PermissionService.to.loadUserData();
-    // Load FY + locations here (not on splash) so boot stays light.
-    ensureFiscalYearController()?.ensureFiscalYearsLoaded();
-    ensureLocationController()?.ensureLocationsLoaded();
-
-    // POS-only plans cannot use ERP hub — send them to the POS page.
+    if (!isEmployeeRole()) {
+      ensureFiscalYearController()?.ensureFiscalYearsLoaded();
+      ensureLocationController()?.ensureLocationsLoaded();
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      if (isEmployeeRole()) {
+        Get.offAllNamed('/hr/employee-dashboard');
+        return;
+      }
       if (!Get.isRegistered<SubscriptionController>()) return;
       final sub = Get.find<SubscriptionController>();
       if (sub.isPosOnly) {

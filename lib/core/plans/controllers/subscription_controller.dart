@@ -6,6 +6,7 @@ import 'package:BisonsTechs_app/core/plans/utils/play_product_ids.dart';
 import 'package:BisonsTechs_app/core/plans/utils/subscription_pricing.dart';
 import 'package:BisonsTechs_app/core/plans/views/Subscription_plans.dart';
 import 'package:BisonsTechs_app/core/plans/views/pos_active_screen.dart';
+import 'package:BisonsTechs_app/core/HR/utils/hr_role.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:flutter/material.dart';
@@ -591,11 +592,27 @@ class SubscriptionController extends GetxController {
       }
       return;
     }
+    if (isEmployeeRole()) {
+      if (offAll) {
+        Get.offAllNamed('/hr/employee-dashboard');
+      } else {
+        Get.toNamed('/hr/employee-dashboard');
+      }
+      return;
+    }
     if (isPosOnly) {
       if (offAll) {
         Get.offAll(() => const PosActiveScreen());
       } else {
         Get.to(() => const PosActiveScreen());
+      }
+      return;
+    }
+    if (isEmployeeRole()) {
+      if (offAll) {
+        Get.offAllNamed('/hr/employee-dashboard');
+      } else {
+        Get.toNamed('/hr/employee-dashboard');
       }
       return;
     }

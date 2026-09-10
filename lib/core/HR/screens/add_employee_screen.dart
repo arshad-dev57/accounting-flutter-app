@@ -1,6 +1,7 @@
 // screens/add_employee_screen.dart - ADD/EDIT EMPLOYEE FORM
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/HR/services/hr_api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -23,6 +24,9 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
   final _employeeIdController = TextEditingController();
   final _joiningDateController = TextEditingController();
   final _salaryController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  bool _showPassword = false;
 
   // Dropdown selections
   String? _selectedDepartment;
@@ -32,6 +36,8 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
   String? _selectedEmploymentType;
   String? _selectedEmployeeType;
   String? _selectedStatus;
+  bool _saving = false;
+  List<Map<String, dynamic>> _offices = [];
 
   // Date picker
   DateTime _joiningDate = DateTime.now();
@@ -42,7 +48,18 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     _isEditing = widget.employee != null;
     if (_isEditing) {
       _loadEmployeeData();
+    } else {
+      _selectedStatus = 'Active';
     }
+    _loadOffices();
+  }
+
+  Future<void> _loadOffices() async {
+    try {
+      final rows = await HrApiService.instance.offices();
+      if (!mounted) return;
+      setState(() => _offices = rows.where((o) => o['isActive'] != false).toList());
+    } catch (_) {}
   }
 
   void _loadEmployeeData() {
@@ -53,7 +70,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     _employeeIdController.text = emp['employeeId'] ?? '';
     _selectedDepartment = emp['department'];
     _selectedDesignation = emp['designation'];
-    _selectedOffice = emp['office'];
+    _selectedOffice = emp['officeId']?.toString() ?? emp['office']?.toString();
     _selectedShift = emp['shift'];
     _selectedEmploymentType = emp['employmentType'];
     _selectedEmployeeType = emp['employeeType'];
@@ -73,6 +90,8 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     _employeeIdController.dispose();
     _joiningDateController.dispose();
     _salaryController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -182,10 +201,6 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
       ),
     );
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // PROFILE PHOTO SECTION
-  // ═══════════════════════════════════════════════════════════════
 
   Widget _buildProfilePhotoSection() {
     return Center(
@@ -308,6 +323,41 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
             return null;
           },
         ),
+        if (!_isEditing) ...[
+          const SizedBox(height: 14),
+          _buildTextField(
+            controller: _passwordController,
+            label: 'Password *',
+            hint: 'HR will share this with the employee',
+            icon: Icons.lock_outline,
+            obscureText: !_showPassword,
+            suffixIcon: IconButton(
+              icon: Icon(
+                _showPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                size: 18,
+                color: kSubText,
+              ),
+              onPressed: () => setState(() => _showPassword = !_showPassword),
+            ),
+            validator: (value) {
+              if (value?.isEmpty ?? true) return 'Please set a password';
+              if (value!.length < 6) return 'Password must be at least 6 characters';
+              return null;
+            },
+          ),
+          const SizedBox(height: 14),
+          _buildTextField(
+            controller: _confirmPasswordController,
+            label: 'Confirm password *',
+            hint: 'Re-enter password',
+            icon: Icons.lock_outline,
+            obscureText: !_showPassword,
+            validator: (value) {
+              if (value != _passwordController.text) return 'Passwords do not match';
+              return null;
+            },
+          ),
+        ],
         const SizedBox(height: 14),
         _buildTextField(
           controller: _phoneController,
@@ -385,9 +435,19 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
         const SizedBox(height: 14),
         _buildDropdownField(
           label: 'Branch / Office *',
-          hint: 'Select office',
-          value: _selectedOffice,
-          items: const ['Head Office', 'North Branch', 'South Branch', 'East Branch'],
+          hint: _offices.isEmpty ? 'Create an office first' : 'Select office',
+          value: _offices.any((o) => o['id']?.toString() == _selectedOffice)
+              ? _selectedOffice
+              : null,
+          items: _offices
+              .map((o) => o['id']?.toString() ?? '')
+              .where((id) => id.isNotEmpty)
+              .toList(),
+          itemLabels: {
+            for (final o in _offices)
+              if ((o['id']?.toString() ?? '').isNotEmpty)
+                o['id'].toString(): o['name']?.toString() ?? 'Office',
+          },
           onChanged: (value) => setState(() => _selectedOffice = value),
           validator: (value) => value == null ? 'Please select office' : null,
         ),
@@ -547,7 +607,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
         Expanded(
           flex: 2,
           child: ElevatedButton(
-            onPressed: _saveEmployee,
+            onPressed: _saving ? null : _saveEmployee,
             style: ElevatedButton.styleFrom(
               backgroundColor: kPrimary,
               elevation: 0,
@@ -557,7 +617,11 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
               ),
             ),
             child: Text(
-              _isEditing ? 'Update Employee' : 'Save Employee',
+              _saving
+                  ? 'Saving...'
+                  : _isEditing
+                      ? 'Update Employee'
+                      : 'Save Employee',
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
@@ -640,13 +704,16 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     TextInputType? keyboardType,
     FormFieldValidator<String>? validator,
     bool enabled = true,
+    bool obscureText = false,
     Widget? suffix,
+    Widget? suffixIcon,
     String? prefixText,
     int maxLines = 1,
   }) {
     return TextFormField(
       controller: controller,
       enabled: enabled,
+      obscureText: obscureText,
       keyboardType: keyboardType,
       maxLines: maxLines,
       style: TextStyle(
@@ -659,6 +726,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
         prefixIcon: Icon(icon, size: 18, color: kSubText),
         prefixText: prefixText,
         suffix: suffix,
+        suffixIcon: suffixIcon,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
@@ -693,11 +761,12 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     required String hint,
     required String? value,
     required List<String> items,
+    Map<String, String>? itemLabels,
     required void Function(String?) onChanged,
     FormFieldValidator<String>? validator,
   }) {
     return DropdownButtonFormField<String>(
-      initialValue: value,
+      initialValue: items.contains(value) ? value : null,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
@@ -733,7 +802,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
         return DropdownMenuItem<String>(
           value: item,
           child: Text(
-            item,
+            itemLabels?[item] ?? item,
             overflow: TextOverflow.ellipsis,
           ),
         );
@@ -801,16 +870,70 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
   // ACTIONS
   // ═══════════════════════════════════════════════════════════════
 
-  void _saveEmployee() {
-    if (_formKey.currentState!.validate()) {
-      // Save employee logic
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Employee saved successfully!'),
-          backgroundColor: kSuccess,
+  Future<void> _saveEmployee() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_saving) return;
+    setState(() => _saving = true);
+    try {
+      final payload = {
+        'name': _nameController.text.trim(),
+        'email': _emailController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        'department': _selectedDepartment,
+        'designation': _selectedDesignation,
+        'officeId': _selectedOffice,
+        'shift': _selectedShift,
+        'employmentType': _selectedEmploymentType,
+        'employeeType': _selectedEmployeeType,
+        'status': _selectedStatus,
+        'salary': double.tryParse(_salaryController.text.trim()) ?? 0,
+        'joiningDate': _joiningDate.toIso8601String(),
+        if (!_isEditing) 'password': _passwordController.text.trim(),
+      };
+      if (_isEditing && widget.employee?['id'] != null) {
+        await HrApiService.instance.updateEmployee(
+          widget.employee!['id'].toString(),
+          payload,
+        );
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Employee updated'),
+            backgroundColor: kSuccess,
+          ),
+        );
+        Navigator.of(context).pop(true);
+        return;
+      }
+      await HrApiService.instance.createEmployee(payload);
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Employee created'),
+          content: Text(
+            'Employee created. Share the email and the password you set. They will land on the employee dashboard only.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('OK'),
+            ),
+          ],
         ),
       );
+      if (!mounted) return;
       Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: kDanger,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
   }
 

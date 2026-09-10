@@ -2,6 +2,7 @@
 
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 
+import 'package:BisonsTechs_app/Services/permission_service.dart';
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/Utils/toast_utils.dart';
 import 'package:BisonsTechs_app/core/Onboarding/views/Onboarding_screen.dart';
@@ -56,7 +57,9 @@ class SplashController extends GetxController {
       if (!sub.hasAccess) {
         Get.offAll(() => const SelectPlanScreen());
       } else {
-        // POS-only → PosActiveScreen; ERP → dashboard (via goToAppHome).
+        if (Get.isRegistered<PermissionService>()) {
+          await PermissionService.to.loadUserData();
+        }
         sub.goToAppHome();
       }
     } catch (e) {

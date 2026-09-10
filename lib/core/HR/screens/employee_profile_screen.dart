@@ -1,6 +1,10 @@
 // screens/employee_profile_screen.dart - EMPLOYEE PROFILE & SELF-SERVICE
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/HR/screens/employee_payslip_screen.dart';
+import 'package:BisonsTechs_app/core/HR/screens/notifications_center_screen.dart';
+import 'package:BisonsTechs_app/core/HR/services/hr_api_service.dart';
+import 'package:BisonsTechs_app/core/HR/utils/employee_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -19,118 +23,88 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen>
   bool _isEditing = false;
   bool _isDarkMode = false;
 
-  // Employee Data
-  final Map<String, dynamic> _employeeData = {
-    'id': 'EMP-001',
-    'name': 'Ahmed Khan',
-    'email': 'ahmed.khan@company.com',
-    'phone': '+92 300 1234567',
-    'designation': 'Senior Software Engineer',
-    'department': 'IT',
-    'office': 'Head Office',
-    'joiningDate': DateTime(2024, 1, 15),
-    'employeeType': 'Full Time',
+  Map<String, dynamic> _employeeData = {
+    'id': '',
+    'name': 'Employee',
+    'email': '',
+    'phone': '',
+    'designation': '',
+    'department': '',
+    'office': '',
+    'joiningDate': DateTime.now(),
+    'employeeType': '',
     'status': 'Active',
-    'shift': 'Regular Shift (9-6)',
-    'basicSalary': 120000,
+    'shift': '',
+    'basicSalary': 0,
     'profileImage': null,
-    'dateOfBirth': DateTime(1992, 5, 10),
-    'gender': 'Male',
-    'bloodGroup': 'B+',
-    'emergencyContact': '+92 300 7654321',
-    'emergencyName': 'Fatima Khan',
-    'relationship': 'Spouse',
-    'address': 'House #12, Street 5, Clifton, Karachi',
-    'city': 'Karachi',
+    'dateOfBirth': DateTime.now(),
+    'gender': '',
+    'bloodGroup': '',
+    'emergencyContact': '',
+    'emergencyName': '',
+    'relationship': '',
+    'address': '',
+    'city': '',
     'country': 'Pakistan',
-    'about': 'Passionate software engineer with 8+ years of experience in building scalable enterprise applications. Specialized in Flutter, React Native, and Node.js.',
+    'about': '',
   };
 
-  // Leave Balance Data
-  final List<Map<String, dynamic>> _leaveBalance = [
-    {'type': 'Casual Leave', 'used': 4, 'total': 12, 'color': Colors.blue},
-    {'type': 'Sick Leave', 'used': 2, 'total': 8, 'color': Colors.orange},
-    {'type': 'Annual Leave', 'used': 8, 'total': 15, 'color': Colors.green},
-    {'type': 'Emergency Leave', 'used': 1, 'total': 3, 'color': Colors.purple},
-  ];
-
-  // Attendance Summary
-  final Map<String, dynamic> _attendanceSummary = {
-    'present': 18,
-    'late': 2,
+  final List<Map<String, dynamic>> _leaveBalance = [];
+  Map<String, dynamic> _attendanceSummary = {
+    'present': 0,
+    'late': 0,
     'absent': 0,
-    'leave': 2,
-    'holiday': 4,
-    'weeklyOff': 4,
-    'overtime': 12.5,
-    'workingHours': 142,
+    'leave': 0,
+    'holiday': 0,
+    'weeklyOff': 0,
+    'overtime': 0,
+    'workingHours': 0,
   };
-
-  // Documents
-  final List<Map<String, dynamic>> _documents = [
-    {
-      'name': 'CV/Resume',
-      'type': 'PDF',
-      'size': '2.4 MB',
-      'date': DateTime(2026, 8, 10),
-      'icon': Icons.description_rounded,
-      'color': Colors.red,
-    },
-    {
-      'name': 'Offer Letter',
-      'type': 'PDF',
-      'size': '1.8 MB',
-      'date': DateTime(2026, 1, 15),
-      'icon': Icons.assignment_rounded,
-      'color': Colors.blue,
-    },
-    {
-      'name': 'ID Card',
-      'type': 'PNG',
-      'size': '856 KB',
-      'date': DateTime(2026, 1, 20),
-      'icon': Icons.credit_card_rounded,
-      'color': Colors.green,
-    },
-    {
-      'name': 'Payroll Slip - Sep 2026',
-      'type': 'PDF',
-      'size': '1.2 MB',
-      'date': DateTime(2026, 9, 30),
-      'icon': Icons.receipt_long_rounded,
-      'color': Colors.purple,
-    },
-  ];
-
-  // Achievements
-  final List<Map<String, dynamic>> _achievements = [
-    {
-      'title': 'Employee of the Month',
-      'date': DateTime(2026, 8, 1),
-      'description': 'Outstanding performance and dedication',
-      'icon': Icons.emoji_events_rounded,
-      'color': Colors.amber,
-    },
-    {
-      'title': 'Best Team Player',
-      'date': DateTime(2026, 6, 15),
-      'description': 'Exceptional collaboration skills',
-      'icon': Icons.people_rounded,
-      'color': Colors.blue,
-    },
-    {
-      'title': 'Innovation Award',
-      'date': DateTime(2026, 4, 10),
-      'description': 'Introduced new process improvements',
-      'icon': Icons.lightbulb_rounded,
-      'color': Colors.orange,
-    },
-  ];
+  final List<Map<String, dynamic>> _documents = [];
+  final List<Map<String, dynamic>> _achievements = [];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final id = widget.employeeId;
+      final data = (id == null || id.isEmpty)
+          ? await HrApiService.instance.me()
+          : await HrApiService.instance.employeeById(id);
+      if (!mounted) return;
+      final joining = DateTime.tryParse(data['joiningDate']?.toString() ?? '');
+      setState(() {
+        _employeeData = {
+          ..._employeeData,
+          'id': data['employeeCode'] ?? data['id'] ?? '',
+          'name': data['name'] ?? 'Employee',
+          'email': data['email'] ?? '',
+          'phone': data['phone'] ?? '',
+          'designation': data['designation'] ?? '',
+          'department': data['department'] ?? '',
+          'office': data['office'] ?? '',
+          'joiningDate': joining ?? DateTime.now(),
+          'employeeType': data['employmentType'] ?? '',
+          'status': data['status'] ?? 'Active',
+          'shift': data['shift'] ?? '',
+          'basicSalary': data['salary'] ?? 0,
+        };
+        final att = data['attendance'] as Map<String, dynamic>?;
+        if (att != null) {
+          _attendanceSummary = {
+            ..._attendanceSummary,
+            'present': att['statusKey'] == 'present' || att['statusKey'] == 'late' ? 1 : 0,
+            'late': att['statusKey'] == 'late' ? 1 : 0,
+            'workingHours': ((att['workingMinutes'] as num?)?.toInt() ?? 0) / 60,
+          };
+        }
+      });
+    } catch (_) {}
   }
 
   @override
@@ -240,8 +214,7 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen>
               ),
               GestureDetector(
                 onTap: () {
-                  // Refresh
-                  setState(() {});
+                  _loadProfile();
                 },
                 child: Container(
                   width: 36,
@@ -1412,9 +1385,9 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen>
                     ),
                     _quickActionItem(
                       Icons.receipt_long_rounded,
-                      'Request\nPayslip',
+                      'View\nPayslip',
                       Colors.purple,
-                      () {},
+                      () => openEmployeeScreen(context, const EmployeePayslipScreen()),
                     ),
                     _quickActionItem(
                       Icons.print_rounded,
@@ -1520,6 +1493,10 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen>
               'Manage notification preferences',
               () {
                 Navigator.pop(context);
+                openEmployeeScreen(
+                  context,
+                  const NotificationsCenterScreen(items: []),
+                );
               },
             ),
             _settingsMenuItem(

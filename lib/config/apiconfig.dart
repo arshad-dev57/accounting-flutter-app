@@ -7,7 +7,7 @@ class Apiconfig {
       'https://accountbackend-production-eaf5.up.railway.app';
   static const String productionWebAppUrl =
       'https://app.bisonstechs.com';
-  static const String localApiUrl = 'http://localhost:5000';
+  static const String localApiUrl = 'http://192.168.18.8:5000';
 
   String get baseUrl {
     if (_fromEnv.isNotEmpty) {
@@ -24,7 +24,7 @@ class Apiconfig {
       return _webFromEnv;
     }
     if (kDebugMode) {
-      return 'http://localhost:3000';
+      return 'http://192.168.18.8:3000';
     }
     return productionWebAppUrl;
   }

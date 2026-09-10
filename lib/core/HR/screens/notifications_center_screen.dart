@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class NotificationsCenterScreen extends StatefulWidget {
-  const NotificationsCenterScreen({super.key});
+  const NotificationsCenterScreen({super.key, this.items});
+
+  final List<Map<String, dynamic>>? items;
 
   @override
   State<NotificationsCenterScreen> createState() =>
@@ -11,7 +13,9 @@ class NotificationsCenterScreen extends StatefulWidget {
 }
 
 class _NotificationsCenterScreenState extends State<NotificationsCenterScreen> {
-  final List<Map<String, dynamic>> _notifications = [
+  late final List<Map<String, dynamic>> _notifications = [
+    if (widget.items != null) ...widget.items!,
+    if (widget.items == null) ...[
     {
       'title': 'Leave Request',
       'message': 'Ahmed Khan applied for casual leave (10-11 Sep)',
@@ -44,6 +48,7 @@ class _NotificationsCenterScreenState extends State<NotificationsCenterScreen> {
       'color': kPrimary,
       'isRead': true,
     },
+    ],
   ];
 
   @override
@@ -114,7 +119,11 @@ class _NotificationsCenterScreenState extends State<NotificationsCenterScreen> {
             ),
           ),
           Expanded(
-            child: ListView.separated(
+            child: _notifications.isEmpty
+                ? const Center(
+                    child: Text('No notifications yet'),
+                  )
+                : ListView.separated(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
               itemCount: _notifications.length,
               separatorBuilder: (_, _) => const SizedBox(height: 8),
