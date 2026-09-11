@@ -2,6 +2,7 @@
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/HR/services/hr_api_service.dart';
+import 'package:BisonsTechs_app/widgets/hr_drawer.dart';
 import 'package:flutter/material.dart';
 
 class OfficeManagementScreen extends StatefulWidget {
@@ -14,7 +15,19 @@ class OfficeManagementScreen extends StatefulWidget {
 class _OfficeManagementScreenState extends State<OfficeManagementScreen> {
   bool _loading = true;
   String? _error;
+  String _query = '';
+  String _filter = 'All';
   List<Map<String, dynamic>> _offices = [];
+
+  List<Map<String, dynamic>> get _filtered {
+    return _offices.where((o) {
+      final name = '${o['name']}'.toLowerCase();
+      final status = '${o['status']}';
+      final matchesFilter = _filter == 'All' || status == _filter;
+      final matchesQuery = _query.isEmpty || name.contains(_query.toLowerCase());
+      return matchesFilter && matchesQuery;
+    }).toList();
+  }
 
   @override
   void initState() {
@@ -47,6 +60,7 @@ class _OfficeManagementScreenState extends State<OfficeManagementScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kBgLight,
+      drawer: const HRDrawer(currentItem: 'offices'),
       body: Column(
         children: [
           _buildTopHeader(context),
@@ -130,9 +144,7 @@ class _OfficeManagementScreenState extends State<OfficeManagementScreen> {
                 ),
               ),
               GestureDetector(
-                onTap: () {
-                  // Refresh
-                },
+                onTap: _loadOffices,
                 child: Container(
                   width: 36,
                   height: 36,
@@ -163,66 +175,35 @@ class _OfficeManagementScreenState extends State<OfficeManagementScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         children: [
-          // Search Bar
           Container(
             height: 44,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 6, offset: const Offset(0, 2))],
             ),
             child: TextField(
-              style: const TextStyle(
-                fontSize: 13,
-                color: Colors.black87,
-              ),
+              style: const TextStyle(fontSize: 13, color: Colors.black87),
+              onChanged: (v) => setState(() => _query = v),
               decoration: InputDecoration(
                 hintText: 'Search offices...',
-                hintStyle: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey.shade400,
-                ),
-                prefixIcon: Icon(
-                  Icons.search,
-                  size: 18,
-                  color: Colors.grey.shade400,
-                ),
-                suffixIcon: GestureDetector(
-                  onTap: () {
-                    // Clear search
-                  },
-                  child: Icon(
-                    Icons.close,
-                    size: 16,
-                    color: Colors.grey.shade400,
-                  ),
-                ),
+                hintStyle: TextStyle(fontSize: 13, color: Colors.grey.shade400),
+                prefixIcon: Icon(Icons.search, size: 18, color: Colors.grey.shade400),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 10),
               ),
             ),
           ),
           const SizedBox(height: 10),
-          // Filter Chips
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _filterChip('All Offices', true),
+                _filterChip('All', _filter == 'All'),
                 const SizedBox(width: 6),
-                _filterChip('Active', false),
+                _filterChip('Active', _filter == 'Active'),
                 const SizedBox(width: 6),
-                _filterChip('Inactive', false),
-                const SizedBox(width: 6),
-                _filterChip('Head Office', false),
-                const SizedBox(width: 6),
-                _filterChip('Branches', false),
+                _filterChip('Inactive', _filter == 'Inactive'),
               ],
             ),
           ),
@@ -233,9 +214,7 @@ class _OfficeManagementScreenState extends State<OfficeManagementScreen> {
 
   Widget _filterChip(String label, bool isSelected) {
     return GestureDetector(
-      onTap: () {
-        // Filter logic
-      },
+      onTap: () => setState(() => _filter = label),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
@@ -286,10 +265,13 @@ class _OfficeManagementScreenState extends State<OfficeManagementScreen> {
         ),
       );
     }
-    if (_offices.isEmpty) {
+    final list = _filtered;
+    if (list.isEmpty) {
       return Center(
         child: Text(
-          'No offices yet. Add one to enable geofence attendance.',
+          _query.isNotEmpty || _filter != 'All'
+              ? 'No matching offices'
+              : 'No offices yet. Add one to enable geofence attendance.',
           style: TextStyle(color: kSubText),
           textAlign: TextAlign.center,
         ),
@@ -297,9 +279,9 @@ class _OfficeManagementScreenState extends State<OfficeManagementScreen> {
     }
     return ListView.builder(
       padding: const EdgeInsets.only(bottom: 16),
-      itemCount: _offices.length,
+      itemCount: list.length,
       itemBuilder: (context, index) {
-        final office = _offices[index];
+        final office = list[index];
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: _buildOfficeCard(office, context),
@@ -1132,14 +1114,30 @@ class _OfficeManagementScreenState extends State<OfficeManagementScreen> {
                         Expanded(
                           flex: 2,
                           child: ElevatedButton(
-                            onPressed: () {
-                              if (formKey.currentState!.validate()) {
-                                Navigator.pop(context);
+                            onPressed: () async {
+                              if (!formKey.currentState!.validate()) return;
+                              try {
+                                await HrApiService.instance.updateOffice(
+                                  '${office['id']}',
+                                  {
+                                    'name': nameController.text.trim(),
+                                    'address': addressController.text.trim(),
+                                    'latitude': double.tryParse(latitudeController.text.trim()) ?? 0,
+                                    'longitude': double.tryParse(longitudeController.text.trim()) ?? 0,
+                                    'radius': int.tryParse(selectedRadius) ?? 150,
+                                    'status': selectedStatus,
+                                  },
+                                );
+                                if (context.mounted) Navigator.pop(context);
+                                await _loadOffices();
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(this.context).showSnackBar(
+                                  const SnackBar(content: Text('Office updated successfully!'), backgroundColor: kSuccess),
+                                );
+                              } catch (e) {
+                                if (!context.mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Office updated successfully!'),
-                                    backgroundColor: kSuccess,
-                                  ),
+                                  SnackBar(content: Text(e.toString().replaceFirst('Exception: ', '')), backgroundColor: kDanger),
                                 );
                               }
                             },
@@ -1147,17 +1145,11 @@ class _OfficeManagementScreenState extends State<OfficeManagementScreen> {
                               backgroundColor: kPrimary,
                               elevation: 0,
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
                             child: const Text(
                               'Update Office',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white),
                             ),
                           ),
                         ),

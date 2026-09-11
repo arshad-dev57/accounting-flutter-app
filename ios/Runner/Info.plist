@@ -7,11 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-<<<<<<< HEAD
-	<string>Accounting Software</string>
-=======
 	<string>BisonsTechs</string>
->>>>>>> a262757fb1ca8153179f6607eae57593f33b205b
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -19,11 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-<<<<<<< HEAD
-	<string>accounting_app</string>
-=======
 	<string>BisonsTechs</string>
->>>>>>> a262757fb1ca8153179f6607eae57593f33b205b
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -108,5 +100,7 @@
 	<string>Background location keeps attendance tracking active while you work.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>Background location keeps attendance tracking active while you work.</string>
+	<key>GMSApiKey</key>
+	<string>AIzaSyC0KGqBPA7MxhoWW_XRWD06k9nVr1ez-vE</string>
 </dict>
 </plist>

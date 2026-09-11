@@ -16,6 +16,8 @@ class LocationTrackingService extends GetxService {
   final checkInTime = ''.obs;
   final insideGeofence = false.obs;
   final statusLabel = 'Idle'.obs;
+  final distanceMeters = 0.obs;
+  final officeLabel = ''.obs;
 
   StreamSubscription<Position>? _positionSub;
   Timer? _localWatchTimer;
@@ -38,7 +40,7 @@ class LocationTrackingService extends GetxService {
   double? _lastMoveLng;
 
   static const _prefKey = 'hr_location_tracking_enabled';
-  static const _dwell = Duration(seconds: 75);
+  static const _dwell = Duration(seconds: 20);
   static const _heartbeatEvery = Duration(minutes: 2);
   static const _liveMoveEvery = Duration(seconds: 90);
   static const _liveMoveMeters = 80.0;
@@ -61,6 +63,9 @@ class LocationTrackingService extends GetxService {
     _officeLat = officeLat;
     _officeLng = officeLng;
     _officeRadius = officeRadius ?? 150;
+    if (officeName != null && officeName.isNotEmpty) {
+      officeLabel.value = officeName;
+    }
     _isFieldEmployee = isFieldEmployee;
     isCheckedIn.value = checkedIn;
     checkInTime.value = checkInTimeIso ?? '';
@@ -135,8 +140,8 @@ class LocationTrackingService extends GetxService {
     _resetGeofenceState();
     statusLabel.value = 'Sharing live location';
     lastMessage.value = _officeLat == null
-        ? 'Live location is on. HR can see you. Assign an office for auto attendance.'
-        : 'Live location is on. Office radius is only for check-in / check-out.';
+        ? 'Live location on. Attendance uses any office zone created on web.'
+        : 'Live location on. Stay inside ${_officeName ?? 'office'} (~${_officeRadius.toInt()}m) to check in.';
 
     unawaited(_maybeRequestBackgroundPermission());
 
@@ -236,7 +241,9 @@ class LocationTrackingService extends GetxService {
     lastLat.value = pos.latitude;
     lastLng.value = pos.longitude;
 
-    final inside = _isInside(pos.latitude, pos.longitude);
+    final meters = _distanceToOffice(pos.latitude, pos.longitude);
+    if (meters != null) distanceMeters.value = meters.round();
+    final inside = _isInside(pos.latitude, pos.longitude, pos.accuracy);
     insideGeofence.value = inside;
     statusLabel.value = inside
         ? 'Inside office'
@@ -248,10 +255,18 @@ class LocationTrackingService extends GetxService {
       _pendingSince = now;
     }
 
-    final dwellReady = _officeLat != null &&
-        _pendingSince != null &&
+    final dwellReady = _pendingSince != null &&
         now.difference(_pendingSince!) >= _dwell &&
         _stableInside != inside;
+
+    // Already sitting inside office: check in even if GPS first event is "move".
+    if (inside && !isCheckedIn.value) {
+      if (dwellReady || _stableInside == null) {
+        _stableInside = true;
+        await _sendEvent('enter', pos);
+        return;
+      }
+    }
 
     if (dwellReady) {
       _stableInside = inside;
@@ -271,32 +286,40 @@ class LocationTrackingService extends GetxService {
     if (moved &&
         (_lastMoveAt == null ||
             now.difference(_lastMoveAt!) >= _liveMoveEvery)) {
-      await _sendEvent('move', pos);
+      await _sendEvent(inside && !isCheckedIn.value ? 'enter' : 'move', pos);
       return;
     }
 
     if (_lastHeartbeatAt == null ||
         now.difference(_lastHeartbeatAt!) >= _heartbeatEvery) {
-      await _sendEvent('heartbeat', pos);
+      await _sendEvent(inside && !isCheckedIn.value ? 'enter' : 'heartbeat', pos);
     }
   }
 
-  bool _isInside(double lat, double lng) {
-    if (_officeLat == null || _officeLng == null) return false;
-    final meters = Geolocator.distanceBetween(
-      lat,
-      lng,
-      _officeLat!,
-      _officeLng!,
-    );
-    return meters <= _officeRadius;
+  double? _distanceToOffice(double lat, double lng) {
+    if (_officeLat == null || _officeLng == null) return null;
+    return Geolocator.distanceBetween(lat, lng, _officeLat!, _officeLng!);
+  }
+
+  bool _isInside(double lat, double lng, [double accuracy = 0]) {
+    if (_officeLat == null || _officeLng == null) {
+      // Backend still matches any company office zone.
+      return insideGeofence.value;
+    }
+    final meters = _distanceToOffice(lat, lng) ?? double.infinity;
+    final buffer = accuracy.isFinite && accuracy > 0
+        ? accuracy.clamp(40, 120)
+        : 60.0;
+    return meters <= _officeRadius + buffer;
   }
 
   Future<void> _sendEvent(String event, Position pos) async {
     if (!isTracking.value && event != 'stop') return;
     final now = DateTime.now();
     if (event == 'enter' || event == 'exit') {
-      if (_lastEventAt != null &&
+      final skipCooldown = event == 'enter' && !isCheckedIn.value;
+      if (!skipCooldown &&
+          _lastEventAt != null &&
           now.difference(_lastEventAt!) < _eventCooldown) {
         return;
       }
@@ -324,6 +347,10 @@ class LocationTrackingService extends GetxService {
       if (tracked != null) {
         insideGeofence.value = tracked['insideGeofence'] == true;
         statusLabel.value = tracked['status']?.toString() ?? statusLabel.value;
+        final dist = tracked['distanceMeters'];
+        if (dist is num) distanceMeters.value = dist.round();
+        final name = tracked['officeName']?.toString();
+        if (name != null && name.isNotEmpty) officeLabel.value = name;
       }
       if (attendance != null && attendance['checkIn'] != null) {
         isCheckedIn.value = attendance['isCheckedIn'] == true;

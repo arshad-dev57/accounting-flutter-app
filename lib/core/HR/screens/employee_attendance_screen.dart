@@ -912,6 +912,7 @@ class _EmployeeAttendanceScreenState extends State<EmployeeAttendanceScreen>
       await HrApiService.instance.checkIn(
         latitude: pos.latitude,
         longitude: pos.longitude,
+        accuracy: pos.accuracy,
       );
       await _loadToday();
       _showSnackbar('Checked in successfully!', kSuccess);

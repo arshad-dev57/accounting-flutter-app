@@ -32,7 +32,8 @@ android {
 
     defaultConfig {
         applicationId = "com.bisonstechs.app"
-        minSdk = flutter.minSdkVersion
+        // Google Maps / Play Services need API 21+; pin explicitly for HR tracking.
+        minSdk = maxOf(21, flutter.minSdkVersion)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -62,6 +63,8 @@ android {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+    implementation("com.google.android.gms:play-services-maps:19.0.0")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
 }
 
 flutter {

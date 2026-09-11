@@ -1,21 +1,10 @@
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/HR/screens/add_employee_screen.dart';
-import 'package:BisonsTechs_app/core/HR/screens/employee_attendance_screen.dart';
 import 'package:BisonsTechs_app/core/HR/screens/employees_list_screen.dart';
-import 'package:BisonsTechs_app/core/HR/screens/holiday_management_screen.dart';
-import 'package:BisonsTechs_app/core/HR/screens/hr_reports_analytics_screen.dart';
-import 'package:BisonsTechs_app/core/HR/screens/hr_settings_screen.dart';
-import 'package:BisonsTechs_app/core/HR/screens/leave_management_screen.dart';
+import 'package:BisonsTechs_app/core/HR/screens/hr_admin_modules.dart';
 import 'package:BisonsTechs_app/core/HR/screens/live_employee_tracking_screen.dart';
-import 'package:BisonsTechs_app/core/HR/screens/notifications_center_screen.dart';
 import 'package:BisonsTechs_app/core/HR/screens/manager_my_team_screen.dart';
 import 'package:BisonsTechs_app/core/HR/screens/office_management_screen.dart';
-import 'package:BisonsTechs_app/core/HR/screens/organization_chart_screen.dart';
-import 'package:BisonsTechs_app/core/HR/screens/overtime_management_screen.dart';
-import 'package:BisonsTechs_app/core/HR/screens/payroll_generation_screen.dart';
-import 'package:BisonsTechs_app/core/HR/screens/performance_reviews_screen.dart';
-import 'package:BisonsTechs_app/core/HR/screens/shift_management_screen.dart';
-import 'package:BisonsTechs_app/core/HR/screens/task_management_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -29,6 +18,206 @@ class HRNav {
   }
 }
 
+class _NavItem {
+  final String id;
+  final String label;
+  final IconData icon;
+  final Widget Function()? builder;
+
+  const _NavItem({
+    required this.id,
+    required this.label,
+    required this.icon,
+    this.builder,
+  });
+}
+
+class _NavSection {
+  final String label;
+  final List<_NavItem> items;
+  const _NavSection(this.label, this.items);
+}
+
+final _hrSections = [
+  _NavSection('MAIN', [
+    _NavItem(id: 'dashboard', label: 'Dashboard', icon: Icons.home_rounded),
+    _NavItem(
+      id: 'employees',
+      label: 'Employees',
+      icon: Icons.people_rounded,
+      builder: () => const EmployeesListScreen(),
+    ),
+    _NavItem(
+      id: 'add_employee',
+      label: 'Add Employee',
+      icon: Icons.person_add_rounded,
+      builder: () => const AddEmployeeScreen(),
+    ),
+    _NavItem(
+      id: 'offices',
+      label: 'Offices',
+      icon: Icons.apartment_rounded,
+      builder: () => const OfficeManagementScreen(),
+    ),
+    _NavItem(
+      id: 'departments',
+      label: 'Departments',
+      icon: Icons.account_tree_rounded,
+      builder: () => const DepartmentsAdminScreen(),
+    ),
+    _NavItem(
+      id: 'my_team',
+      label: 'My Team',
+      icon: Icons.groups_rounded,
+      builder: () => const ManagerMyTeamScreen(),
+    ),
+  ]),
+  _NavSection('TIME & ATTENDANCE', [
+    _NavItem(
+      id: 'attendance',
+      label: 'Attendance',
+      icon: Icons.fingerprint_rounded,
+      builder: () => const AdminAttendanceRegisterScreen(),
+    ),
+    _NavItem(
+      id: 'shifts',
+      label: 'Shifts',
+      icon: Icons.schedule_rounded,
+      builder: () => const ShiftsAdminScreen(),
+    ),
+    _NavItem(
+      id: 'calendar',
+      label: 'Calendar View',
+      icon: Icons.calendar_month_rounded,
+      builder: () => const CalendarAdminScreen(),
+    ),
+    _NavItem(
+      id: 'leave',
+      label: 'Leave Management',
+      icon: Icons.flight_takeoff_rounded,
+      builder: () => const LeaveManagementAdminScreen(),
+    ),
+    _NavItem(
+      id: 'leave_policies',
+      label: 'Leave Policies',
+      icon: Icons.policy_rounded,
+      builder: () => const LeavePoliciesAdminScreen(),
+    ),
+    _NavItem(
+      id: 'holidays',
+      label: 'Holidays',
+      icon: Icons.celebration_rounded,
+      builder: () => const HolidaysAdminScreen(),
+    ),
+    _NavItem(
+      id: 'overtime',
+      label: 'Overtime',
+      icon: Icons.more_time_rounded,
+      builder: () => const OvertimeAdminScreen(),
+    ),
+    _NavItem(
+      id: 'shift_plans',
+      label: 'Shift Plans',
+      icon: Icons.playlist_add_check_rounded,
+      builder: () => const ShiftPlansAdminScreen(),
+    ),
+    _NavItem(
+      id: 'roster',
+      label: 'Roster',
+      icon: Icons.calendar_view_week_rounded,
+      builder: () => const RosterAdminScreen(),
+    ),
+    _NavItem(
+      id: 'live_tracking',
+      label: 'Live Tracking',
+      icon: Icons.map_rounded,
+      builder: () => const LiveEmployeeTrackingScreen(),
+    ),
+  ]),
+  _NavSection('WORKFORCE', [
+    _NavItem(
+      id: 'payroll',
+      label: 'Office Payroll',
+      icon: Icons.payments_rounded,
+      builder: () => const SalaryBuildScreen(),
+    ),
+    _NavItem(
+      id: 'sales_payroll',
+      label: 'Sales Payroll',
+      icon: Icons.point_of_sale_rounded,
+      builder: () => const SalesPayrollScreen(),
+    ),
+    _NavItem(
+      id: 'loans',
+      label: 'Loans & Advances',
+      icon: Icons.account_balance_rounded,
+      builder: () => const LoansAdminScreen(),
+    ),
+    _NavItem(
+      id: 'bonuses',
+      label: 'Bonuses',
+      icon: Icons.emoji_events_rounded,
+      builder: () => const BonusesAdminScreen(),
+    ),
+    _NavItem(
+      id: 'lifecycle',
+      label: 'Lifecycle',
+      icon: Icons.timeline_rounded,
+      builder: () => const LifecycleAdminScreen(),
+    ),
+    _NavItem(
+      id: 'documents',
+      label: 'Documents',
+      icon: Icons.folder_open_rounded,
+      builder: () => const DocumentsAdminScreen(),
+    ),
+    _NavItem(
+      id: 'approvals',
+      label: 'Approvals',
+      icon: Icons.inbox_rounded,
+      builder: () => const ApprovalsAdminScreen(),
+    ),
+    _NavItem(
+      id: 'tasks',
+      label: 'Task Management',
+      icon: Icons.task_alt_rounded,
+      builder: () => const TasksAdminScreen(),
+    ),
+    _NavItem(
+      id: 'performance',
+      label: 'Performance Reviews',
+      icon: Icons.rate_review_rounded,
+      builder: () => const PerformanceAdminScreen(),
+    ),
+    _NavItem(
+      id: 'org_chart',
+      label: 'Organization Chart',
+      icon: Icons.device_hub_rounded,
+      builder: () => const OrgChartAdminScreen(),
+    ),
+  ]),
+  _NavSection('INSIGHTS & SETTINGS', [
+    _NavItem(
+      id: 'reports',
+      label: 'Reports & Analytics',
+      icon: Icons.bar_chart_rounded,
+      builder: () => const ReportsAdminScreen(),
+    ),
+    _NavItem(
+      id: 'notifications',
+      label: 'Notifications',
+      icon: Icons.notifications_rounded,
+      builder: () => const NotificationsAdminScreen(),
+    ),
+    _NavItem(
+      id: 'settings',
+      label: 'HR Settings',
+      icon: Icons.settings_rounded,
+      builder: () => const HrSettingsAdminScreen(),
+    ),
+  ]),
+];
+
 class HRDrawer extends StatelessWidget {
   final String currentItem;
 
@@ -37,154 +226,45 @@ class HRDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFF1A1A2E),
       child: Column(
         children: [
           _buildHeader(),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
               children: [
-                _item(
-                  context,
-                  id: 'dashboard',
-                  icon: Icons.home_rounded,
-                  label: 'Dashboard',
-                ),
-                _item(
-                  context,
-                  id: 'employees',
-                  icon: Icons.people_rounded,
-                  label: 'Employees',
-                  screen: const EmployeesListScreen(),
-                ),
-                _item(
-                  context,
-                  id: 'add_employee',
-                  icon: Icons.person_add_rounded,
-                  label: 'Add Employee',
-                  screen: const AddEmployeeScreen(),
-                ),
-                _item(
-                  context,
-                  id: 'offices',
-                  icon: Icons.apartment_rounded,
-                  label: 'Offices',
-                  screen: const OfficeManagementScreen(),
-                ),
-                _item(
-                  context,
-                  id: 'my_team',
-                  icon: Icons.groups_rounded,
-                  label: 'My Team',
-                  screen: const ManagerMyTeamScreen(),
-                ),
-                _item(
-                  context,
-                  id: 'shifts',
-                  icon: Icons.schedule_rounded,
-                  label: 'Shifts',
-                  screen: const ShiftManagementScreen(),
-                ),
-                _item(
-                  context,
-                  id: 'attendance',
-                  icon: Icons.fingerprint_rounded,
-                  label: 'Attendance',
-                  screen: const EmployeeAttendanceScreen(),
-                ),
-                _item(
-                  context,
-                  id: 'live_tracking',
-                  icon: Icons.map_rounded,
-                  label: 'Live Tracking',
-                  screen: const LiveEmployeeTrackingScreen(),
-                ),
-                _item(
-                  context,
-                  id: 'leave',
-                  icon: Icons.beach_access_rounded,
-                  label: 'Leave Management',
-                  screen: const LeaveManagementScreen(),
-                ),
-                _item(
-                  context,
-                  id: 'holidays',
-                  icon: Icons.celebration_rounded,
-                  label: 'Holidays',
-                  screen: const HolidayManagementScreen(),
-                ),
-                _item(
-                  context,
-                  id: 'overtime',
-                  icon: Icons.more_time_rounded,
-                  label: 'Overtime',
-                  screen: const OvertimeManagementScreen(),
-                ),
-                _item(
-                  context,
-                  id: 'payroll',
-                  icon: Icons.payments_rounded,
-                  label: 'Payroll',
-                  screen: const PayrollGenerationScreen(),
-                ),
-                _item(
-                  context,
-                  id: 'reports',
-                  icon: Icons.bar_chart_rounded,
-                  label: 'Reports',
-                  screen: const HRReportsAnalyticsScreen(),
-                ),
-                _item(
-                  context,
-                  id: 'organization',
-                  icon: Icons.account_tree_rounded,
-                  label: 'Organization',
-                  screen: const OrganizationChartScreen(),
-                ),
-                _item(
-                  context,
-                  id: 'performance',
-                  icon: Icons.rate_review_rounded,
-                  label: 'Performance',
-                  screen: const PerformanceReviewsScreen(),
-                ),
-                _item(
-                  context,
-                  id: 'tasks',
-                  icon: Icons.task_alt_rounded,
-                  label: 'Task Management',
-                  screen: const TaskManagementScreen(),
-                ),
-                _item(
-                  context,
-                  id: 'notifications',
-                  icon: Icons.notifications_rounded,
-                  label: 'Notifications',
-                  screen: const NotificationsCenterScreen(),
-                ),
-                _item(
-                  context,
-                  id: 'settings',
-                  icon: Icons.settings_rounded,
-                  label: 'Settings',
-                  screen: const HRSettingsScreen(),
-                ),
+                for (final section in _hrSections) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 14, 8, 6),
+                    child: Text(
+                      section.label,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8,
+                        color: Colors.white.withValues(alpha: 0.35),
+                      ),
+                    ),
+                  ),
+                  ...section.items.map((item) => _item(context, item)),
+                ],
               ],
             ),
           ),
-          const Divider(height: 1),
+          Divider(height: 1, color: Colors.white.withValues(alpha: 0.08)),
           SafeArea(
             top: false,
             child: Column(
               children: [
                 ListTile(
-                  leading: Icon(Icons.apps_rounded, color: Colors.grey.shade700),
+                  leading: Icon(Icons.apps_rounded, color: Colors.white.withValues(alpha: 0.7)),
                   title: Text(
                     'All Dashboards',
                     style: TextStyle(
-                      color: Colors.grey.shade800,
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontWeight: FontWeight.w600,
+                      fontSize: 13,
                     ),
                   ),
                   onTap: () {
@@ -193,22 +273,31 @@ class HRDrawer extends StatelessWidget {
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.badge_outlined, color: kPrimary),
+                  leading: const Icon(Icons.badge_outlined, color: Colors.white),
                   title: const Text(
                     'Employee Dashboard',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
                   ),
                   onTap: () {
                     Navigator.of(context).pop();
                     Get.offAllNamed('/hr/employee-dashboard');
                   },
                 ),
-                _item(
-                  context,
-                  id: 'logout',
-                  icon: Icons.logout_rounded,
-                  label: 'Logout',
-                  isLogout: true,
+                ListTile(
+                  leading: const Icon(Icons.logout_rounded, color: kDanger),
+                  title: const Text(
+                    'Logout',
+                    style: TextStyle(
+                      color: kDanger,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                  onTap: () => _confirmLogout(context),
                 ),
               ],
             ),
@@ -234,12 +323,9 @@ class HRDrawer extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.25),
-                  ),
                 ),
                 child: const Icon(
-                  Icons.admin_panel_settings_rounded,
+                  Icons.groups_rounded,
                   color: Colors.white,
                   size: 26,
                 ),
@@ -250,7 +336,7 @@ class HRDrawer extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'HR Admin',
+                      'HR Management',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
@@ -276,42 +362,37 @@ class HRDrawer extends StatelessWidget {
     );
   }
 
-  Widget _item(
-    BuildContext context, {
-    required String id,
-    required IconData icon,
-    required String label,
-    Widget? screen,
-    bool isLogout = false,
-  }) {
-    final selected = currentItem == id;
-    final color = isLogout ? kDanger : (selected ? kPrimary : kText);
-
+  Widget _item(BuildContext context, _NavItem item) {
+    final selected = currentItem == item.id;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: 2),
       child: ListTile(
         selected: selected,
-        selectedTileColor: kPrimary.withValues(alpha: 0.08),
+        selectedTileColor: Colors.white.withValues(alpha: 0.1),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        leading: Icon(icon, color: color, size: 22),
+        leading: Icon(
+          item.icon,
+          color: selected ? Colors.white : Colors.white.withValues(alpha: 0.55),
+          size: 20,
+        ),
         title: Text(
-          label,
+          item.label,
           style: TextStyle(
             fontSize: 13,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-            color: color,
+            color: selected ? Colors.white : Colors.white.withValues(alpha: 0.8),
           ),
         ),
         dense: true,
         onTap: () {
-          if (isLogout) {
-            _confirmLogout(context);
-            return;
-          }
           final navigator = Navigator.of(context);
           navigator.pop();
-          if (screen != null) {
-            navigator.push(MaterialPageRoute(builder: (_) => screen));
+          if (item.id == 'dashboard') {
+            Get.offAllNamed('/hr/dashboard');
+            return;
+          }
+          if (item.builder != null) {
+            navigator.push(MaterialPageRoute(builder: (_) => item.builder!()));
           }
         },
       ),

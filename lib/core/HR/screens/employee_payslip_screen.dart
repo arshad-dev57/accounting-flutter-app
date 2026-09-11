@@ -332,6 +332,9 @@ class EmployeePayslipDetailScreen extends StatelessWidget {
   Map<String, dynamic> get _ded =>
       _b['deductions'] is Map ? Map<String, dynamic>.from(_b['deductions'] as Map) : {};
 
+  bool get _isOnProbation => _b['isOnProbation'] == true;
+  double get _proRata => (_b['proRata'] as num?)?.toDouble() ?? 1.0;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -391,10 +394,16 @@ class EmployeePayslipDetailScreen extends StatelessWidget {
                   children: [
                     _row('Department', '${slip['department'] ?? '—'}'),
                     _row('Designation', '${slip['designation'] ?? '—'}'),
+                    _row('Pay basis', '${slip['payBasis'] ?? 'Monthly'}'),
                     _row('Attendance', '${_b['presentDays'] ?? 0}/${_b['workingDays'] ?? 0} days'),
                     _row('Paid leave / Unpaid', '${_b['paidLeaveDays'] ?? 0} / ${_b['unpaidLeaveDays'] ?? 0}'),
                     _row('Late days', '${_b['lateDays'] ?? 0}'),
+                    if (_isOnProbation) _row('Probation', 'On probation — PF waived'),
+                    if (_proRata < 0.99) _row('Pro-rata', '${(_proRata * 100).round()}% of month'),
                     _row('Status', '${slip['status'] ?? ''}'),
+                    if (slip['payDate'] != null) _row('Pay date', '${slip['payDate']}'.substring(0, 10)),
+                    if (slip['bankAccount'] != null && '${slip['bankAccount']}'.isNotEmpty)
+                      _row('Bank account', '${slip['bankName'] ?? ''} — ${slip['bankAccount']}'),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -405,16 +414,18 @@ class EmployeePayslipDetailScreen extends StatelessWidget {
                   ['Medical allowance', _n(_earn['medicalAllowance'])],
                   ['Overtime', _n(_earn['overtime'] ?? slip['overtime'])],
                   ['Bonus / incentive', _n(_earn['bonus'])],
+                  ['Commission', _n(_earn['commission'])],
                   ['Gross earnings', _n(_earn['gross'] ?? slip['base'])],
                 ]),
                 const SizedBox(height: 12),
                 _section('Deductions', [
                   ['Unpaid / absent days', _n(_ded['unpaidLeave'])],
                   ['Late arrival', _n(_ded['late'])],
-                  ['Income tax', _n(_ded['tax'])],
-                  ['EOBI', _n(_ded['eobi'])],
+                  ['Income tax (FBR slab)', _n(_ded['incomeTax'] ?? _ded['tax'])],
+                  ['EOBI employee', _n(_ded['eobi'])],
                   ['Provident fund', _n(_ded['providentFund'])],
                   ['Loan / advance', _n(_ded['loan'])],
+                  ['Other deduction', _n(_ded['otherCut'])],
                   ['Total deductions', _n(_ded['total'] ?? slip['deductions'])],
                 ], negative: true),
                 const SizedBox(height: 12),

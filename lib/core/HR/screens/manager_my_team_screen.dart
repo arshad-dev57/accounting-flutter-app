@@ -1,5 +1,6 @@
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/HR/services/hr_api_service.dart';
+import 'package:BisonsTechs_app/widgets/hr_drawer.dart';
 import 'package:flutter/material.dart';
 
 class ManagerMyTeamScreen extends StatefulWidget {
@@ -36,6 +37,7 @@ class _ManagerMyTeamScreenState extends State<ManagerMyTeamScreen> {
     final approvals = _data['approvals'] as Map<String, dynamic>? ?? {};
     return Scaffold(
       backgroundColor: kBgLight,
+      drawer: const HRDrawer(currentItem: 'my_team'),
       appBar: AppBar(
         backgroundColor: kPrimary,
         title: const Text('My Team', style: TextStyle(fontWeight: FontWeight.w800)),

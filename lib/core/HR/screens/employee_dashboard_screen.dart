@@ -114,6 +114,20 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
       final me = await HrApiService.instance.me();
       if (!mounted) return;
       final office = me['officeDetails'] as Map<String, dynamic>?;
+      Map<String, dynamic>? officeMap = office;
+      if (officeMap == null ||
+          officeMap['latitude'] == null ||
+          officeMap['longitude'] == null) {
+        try {
+          final offices = await HrApiService.instance.offices();
+          if (offices.isNotEmpty) {
+            officeMap = offices.firstWhere(
+              (o) => o['id']?.toString() == me['officeId']?.toString(),
+              orElse: () => offices.first,
+            );
+          }
+        } catch (_) {}
+      }
       final attendance = me['attendance'] as Map<String, dynamic>?;
       final checkedIn = attendance?['isCheckedIn'] == true;
       final checkIn = attendance?['checkIn']?.toString() ?? '';
@@ -127,7 +141,9 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
               '',
           'profileImage': null,
           'shift': me['shift']?.toString() ?? '',
-          'office': me['office']?.toString() ?? '',
+          'office': me['office']?.toString().isNotEmpty == true
+              ? me['office'].toString()
+              : (officeMap?['name']?.toString() ?? ''),
           'isCheckedIn': checkedIn,
           'checkInTime': checkIn,
           'workingHours': _formatMinutes(attendance?['workingMinutes']),
@@ -151,10 +167,11 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
         employeeId: _employeeData['employeeId'] as String,
         employeeName: _employeeData['name'] as String,
         officeName: _employeeData['office'] as String?,
-        officeLat: (office?['latitude'] as num?)?.toDouble(),
-        officeLng: (office?['longitude'] as num?)?.toDouble(),
-        officeRadius: (office?['radiusMeters'] as num?)?.toDouble() ??
-            (office?['radius'] as num?)?.toDouble(),
+        officeLat: (officeMap?['latitude'] as num?)?.toDouble(),
+        officeLng: (officeMap?['longitude'] as num?)?.toDouble(),
+        officeRadius: (officeMap?['radiusMeters'] as num?)?.toDouble() ??
+            (officeMap?['radius'] as num?)?.toDouble() ??
+            (officeMap?['geofenceRadius'] as num?)?.toDouble(),
         isFieldEmployee:
             (me['employeeType']?.toString().toLowerCase().contains('field') ??
                 false),
@@ -518,9 +535,11 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
                   child: Text(
                     tracking
                         ? (inside
-                            ? 'Inside office · live location on · attendance uses office radius'
-                            : 'Live location on — HR can see you even outside the office')
-                        : 'Location tracking is off',
+                            ? 'Inside office zone · auto attendance on'
+                            : (_tracking.distanceMeters.value > 0
+                                ? 'Outside zone · ${_tracking.distanceMeters.value}m from pin · HR can still see you'
+                                : 'Live location on — waiting for GPS / office zone'))
+                        : 'Location tracking is off — attendance cannot auto mark',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -564,10 +583,22 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
   Widget _buildCurrentStatus() {
     return Obx(() {
       final isCheckedIn =
-          _tracking.isCheckedIn.value || (_employeeData['isCheckedIn'] as bool);
+          _tracking.isCheckedIn.value || _employeeData['isCheckedIn'] == true;
       final checkInTime = _tracking.checkInTime.value.isNotEmpty
           ? _tracking.checkInTime.value
           : (_employeeData['checkInTime'] as String? ?? '');
+      final inside = _tracking.insideGeofence.value;
+      final dist = _tracking.distanceMeters.value;
+      final officeName = _tracking.officeLabel.value.isNotEmpty
+          ? _tracking.officeLabel.value
+          : (_employeeData['office']?.toString() ?? '');
+      final geoHint = !isCheckedIn
+          ? (inside
+              ? 'Inside ${officeName.isEmpty ? "office zone" : officeName} — checking you in…'
+              : dist > 0
+                  ? 'You are ${dist}m from ${officeName.isEmpty ? "the office pin" : officeName}. Attendance only marks inside the zone.'
+                  : 'Turn on location tracking. Phone GPS must be inside the office circle.')
+          : 'Checked in at $checkInTime';
 
       return GestureDetector(
         onTap: _openAttendance,
@@ -632,9 +663,7 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      isCheckedIn
-                          ? 'Checked in at $checkInTime'
-                          : 'Stay inside office geofence ~2 min for auto attendance',
+                      geoHint,
                       style: TextStyle(
                         fontSize: 11,
                         color: kSubText,
@@ -688,11 +717,29 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
               _statusItem(
                 Icons.location_on_rounded,
                 'Office',
-                _employeeData['office']?.toString() ?? '',
+                officeName.isNotEmpty
+                    ? officeName
+                    : (_employeeData['office']?.toString() ?? ''),
                 Colors.blue,
               ),
             ],
           ),
+          if (!isCheckedIn) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _checkInNow,
+                icon: const Icon(Icons.login_rounded, size: 18),
+                label: const Text('Check in now'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kPrimary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     ),
@@ -1246,6 +1293,34 @@ class _EmployeeDashboardScreenState extends State<EmployeeDashboardScreen>
     setState(() {
       _isRefreshing = false;
     });
+  }
+
+  Future<void> _checkInNow() async {
+    try {
+      if (!_tracking.isTracking.value) {
+        await _tracking.startTracking();
+      }
+      final pos = await _tracking.currentPosition();
+      if (pos == null) {
+        _tracking.lastMessage.value =
+            'Could not read GPS. Enable location and try Check in again.';
+        return;
+      }
+      final data = await HrApiService.instance.checkIn(
+        latitude: pos.latitude,
+        longitude: pos.longitude,
+        accuracy: pos.accuracy,
+      );
+      final attendance = data['attendance'] as Map<String, dynamic>?;
+      _tracking.isCheckedIn.value = true;
+      _tracking.checkInTime.value =
+          attendance?['checkIn']?.toString() ?? DateTime.now().toIso8601String();
+      _tracking.lastMessage.value = data['message']?.toString() ?? 'Checked in';
+      await _loadMe();
+    } catch (e) {
+      _tracking.lastMessage.value =
+          e.toString().replaceFirst('Exception: ', '');
+    }
   }
 
   Future<void> _openAttendance() async {

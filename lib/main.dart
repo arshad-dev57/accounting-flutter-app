@@ -68,6 +68,8 @@ import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:get/get.dart';
+import 'package:google_maps_flutter_android/google_maps_flutter_android.dart';
+import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sizer/sizer.dart';
 
@@ -86,9 +88,21 @@ class ThemeController extends GetxController {
   var isDarkMode = false.obs;
 }
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   usePathUrlStrategy();
+
+  // Android Google Maps: use latest renderer so HR live tracking map renders properly.
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+    final mapsImplementation = GoogleMapsFlutterPlatform.instance;
+    if (mapsImplementation is GoogleMapsFlutterAndroid) {
+      try {
+        await mapsImplementation.initializeWithRenderer(AndroidMapRenderer.latest);
+      } catch (_) {
+        // Renderer already initialized on hot restart — safe to ignore.
+      }
+    }
+  }
 
   Get.put(ApiClient(), permanent: true);
   Get.put(SubscriptionController(), permanent: true);

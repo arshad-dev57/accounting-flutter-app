@@ -2,6 +2,7 @@
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/HR/services/hr_api_service.dart';
+import 'package:BisonsTechs_app/widgets/hr_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -28,6 +29,21 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
   final _confirmPasswordController = TextEditingController();
   bool _showPassword = false;
 
+  // Enterprise: Bank details
+  final _bankNameController = TextEditingController();
+  final _bankAccountController = TextEditingController();
+  final _bankBranchController = TextEditingController();
+  // Enterprise: Emergency contact
+  final _emergencyContactController = TextEditingController();
+  final _emergencyPhoneController = TextEditingController();
+  // Enterprise: Pay grade
+  final _payGradeController = TextEditingController();
+  // Enterprise: lifecycle dates (stored as ISO strings)
+  String? _probationEndDate;
+  String? _confirmationDate;
+  String? _contractEndDate;
+  String? _terminationDate;
+
   // Dropdown selections
   String? _selectedDepartment;
   String? _selectedDesignation;
@@ -36,6 +52,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
   String? _selectedEmploymentType;
   String? _selectedEmployeeType;
   String? _selectedStatus;
+  String? _selectedPayBasis;
   bool _saving = false;
   List<Map<String, dynamic>> _offices = [];
 
@@ -75,11 +92,24 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     _selectedEmploymentType = emp['employmentType'];
     _selectedEmployeeType = emp['employeeType'];
     _selectedStatus = emp['status'];
+    _selectedPayBasis = emp['payBasis'];
     _salaryController.text = (emp['salary'] ?? 0).toString();
     if (emp['joiningDate'] != null) {
       _joiningDate = DateTime.parse(emp['joiningDate']);
       _joiningDateController.text = DateFormat('dd MMM yyyy').format(_joiningDate);
     }
+    // Enterprise / profile fields
+    final profile = emp['profile'] is Map ? Map<String, dynamic>.from(emp['profile'] as Map) : <String, dynamic>{};
+    _bankNameController.text = (emp['bankName'] ?? profile['bankName'] ?? '').toString();
+    _bankAccountController.text = (emp['bankAccount'] ?? profile['bankAccount'] ?? '').toString();
+    _bankBranchController.text = (emp['bankBranch'] ?? profile['bankBranch'] ?? '').toString();
+    _emergencyContactController.text = (emp['emergencyContact'] ?? profile['emergencyContact'] ?? '').toString();
+    _emergencyPhoneController.text = (emp['emergencyPhone'] ?? profile['emergencyPhone'] ?? '').toString();
+    _payGradeController.text = (emp['payGrade'] ?? profile['payGrade'] ?? '').toString();
+    _probationEndDate = emp['probationEndDate'] ?? profile['probationEndDate'];
+    _confirmationDate = emp['confirmationDate'] ?? profile['confirmationDate'];
+    _contractEndDate = emp['contractEndDate'] ?? profile['contractEndDate'];
+    _terminationDate = emp['terminationDate'] ?? profile['terminationDate'];
   }
 
   @override
@@ -92,6 +122,12 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     _salaryController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _bankNameController.dispose();
+    _bankAccountController.dispose();
+    _bankBranchController.dispose();
+    _emergencyContactController.dispose();
+    _emergencyPhoneController.dispose();
+    _payGradeController.dispose();
     super.dispose();
   }
 
@@ -99,6 +135,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kBgLight,
+      drawer: const HRDrawer(currentItem: 'add_employee'),
       body: Column(
         children: [
           _buildTopHeader(context),
@@ -119,6 +156,10 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                     _buildEmploymentSection(),
                     const SizedBox(height: 20),
                     _buildSalarySection(),
+                    const SizedBox(height: 20),
+                    _buildLifecycleSection(),
+                    const SizedBox(height: 20),
+                    _buildBankAndEmergencySection(),
                     const SizedBox(height: 24),
                     _buildActionButtons(),
                   ],
@@ -539,37 +580,159 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
             return null;
           },
         ),
+        const SizedBox(height: 14),
+        _buildDropdownField(
+          label: 'Pay basis',
+          hint: 'Select pay basis',
+          value: _selectedPayBasis,
+          items: const ['Monthly', 'Daily', 'Hourly'],
+          onChanged: (v) => setState(() => _selectedPayBasis = v),
+        ),
+        const SizedBox(height: 14),
+        _buildTextField(
+          controller: _payGradeController,
+          label: 'Pay grade (optional)',
+          hint: 'e.g. G1, Manager Grade, BPS-17',
+          icon: Icons.grade_rounded,
+        ),
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: kPrimary.withValues(alpha: 0.04),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: kPrimary.withValues(alpha: 0.1),
-              width: 1,
-            ),
+            border: Border.all(color: kPrimary.withValues(alpha: 0.1)),
           ),
           child: Row(
             children: [
-              Icon(
-                Icons.info_outline_rounded,
-                size: 16,
-                color: kPrimary,
-              ),
+              const Icon(Icons.info_outline_rounded, size: 16, color: kPrimary),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Additional allowances and deductions can be configured in Payroll Settings',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: kSubText,
-                    height: 1.4,
-                  ),
+                  'House rent, transport & medical allowances are set in the payroll salary builder per employee.',
+                  style: TextStyle(fontSize: 11, color: kSubText, height: 1.4),
                 ),
               ),
             ],
           ),
+        ),
+      ],
+    );
+  }
+
+  // ── Employment lifecycle (probation, confirmation, contract, termination) ─
+  Widget _buildLifecycleSection() {
+    return _buildSection(
+      title: 'Employment Lifecycle',
+      icon: Icons.timeline_rounded,
+      children: [
+        _buildSimpleDatePicker('Probation end date', _probationEndDate, (d) => setState(() => _probationEndDate = d)),
+        const SizedBox(height: 14),
+        _buildSimpleDatePicker('Confirmation date', _confirmationDate, (d) => setState(() => _confirmationDate = d)),
+        const SizedBox(height: 14),
+        _buildSimpleDatePicker('Contract end date', _contractEndDate, (d) => setState(() => _contractEndDate = d)),
+        const SizedBox(height: 14),
+        _buildSimpleDatePicker('Termination date (if applicable)', _terminationDate, (d) => setState(() => _terminationDate = d)),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.amber.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.amber.shade200),
+          ),
+          child: const Row(children: [
+            Icon(Icons.info_outline_rounded, size: 15, color: Colors.amber),
+            SizedBox(width: 8),
+            Expanded(child: Text('Probation period: PF waived, flagged on payslip. Termination: payslip pro-rated to last working day.', style: TextStyle(fontSize: 11, color: Colors.black54, height: 1.4))),
+          ]),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSimpleDatePicker(String label, String? value, void Function(String) onPicked) {
+    return GestureDetector(
+      onTap: () async {
+        DateTime initial = DateTime.now();
+        if (value != null && value.length >= 10) {
+          try { initial = DateTime.parse(value); } catch (_) {}
+        }
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: initial,
+          firstDate: DateTime(2020),
+          lastDate: DateTime(2035),
+        );
+        if (picked != null) onPicked(DateFormat('yyyy-MM-dd').format(picked));
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+          borderRadius: BorderRadius.circular(10),
+          color: Colors.white,
+        ),
+        child: Row(children: [
+          Icon(Icons.calendar_today_rounded, size: 16, color: kSubText),
+          const SizedBox(width: 10),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(label, style: TextStyle(fontSize: 11, color: kSubText)),
+            const SizedBox(height: 2),
+            Text(value?.isNotEmpty == true ? value!.substring(0, 10) : 'Not set', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: value?.isNotEmpty == true ? Colors.black87 : Colors.grey.shade400)),
+          ])),
+          if (value?.isNotEmpty == true)
+            GestureDetector(
+              onTap: () => onPicked(''),
+              child: Icon(Icons.clear, size: 16, color: kSubText),
+            ),
+        ]),
+      ),
+    );
+  }
+
+  // ── Bank & Emergency contact ─────────────────────────────────
+  Widget _buildBankAndEmergencySection() {
+    return _buildSection(
+      title: 'Bank & Emergency Contact',
+      icon: Icons.account_balance_rounded,
+      children: [
+        _buildTextField(
+          controller: _bankNameController,
+          label: 'Bank name',
+          hint: 'e.g. HBL, UBL, MCB',
+          icon: Icons.account_balance_rounded,
+        ),
+        const SizedBox(height: 14),
+        _buildTextField(
+          controller: _bankAccountController,
+          label: 'Account / IBAN number',
+          hint: 'PK00XXXX0000000000000000',
+          icon: Icons.credit_card_rounded,
+        ),
+        const SizedBox(height: 14),
+        _buildTextField(
+          controller: _bankBranchController,
+          label: 'Branch (optional)',
+          hint: 'e.g. Gulberg, Lahore',
+          icon: Icons.location_on_outlined,
+        ),
+        const SizedBox(height: 18),
+        const Divider(),
+        const SizedBox(height: 10),
+        _buildTextField(
+          controller: _emergencyContactController,
+          label: 'Emergency contact name',
+          hint: 'Full name',
+          icon: Icons.contact_emergency_rounded,
+        ),
+        const SizedBox(height: 14),
+        _buildTextField(
+          controller: _emergencyPhoneController,
+          label: 'Emergency contact phone',
+          hint: '03xx-xxxxxxx',
+          icon: Icons.phone_outlined,
+          keyboardType: TextInputType.phone,
         ),
       ],
     );
@@ -889,6 +1052,18 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
         'salary': double.tryParse(_salaryController.text.trim()) ?? 0,
         'joiningDate': _joiningDate.toIso8601String(),
         if (!_isEditing) 'password': _passwordController.text.trim(),
+        // Enterprise fields
+        if (_selectedPayBasis != null) 'payBasis': _selectedPayBasis,
+        if (_payGradeController.text.trim().isNotEmpty) 'payGrade': _payGradeController.text.trim(),
+        if (_probationEndDate != null && _probationEndDate!.isNotEmpty) 'probationEndDate': _probationEndDate,
+        if (_confirmationDate != null && _confirmationDate!.isNotEmpty) 'confirmationDate': _confirmationDate,
+        if (_contractEndDate != null && _contractEndDate!.isNotEmpty) 'contractEndDate': _contractEndDate,
+        if (_terminationDate != null && _terminationDate!.isNotEmpty) 'terminationDate': _terminationDate,
+        if (_bankNameController.text.trim().isNotEmpty) 'bankName': _bankNameController.text.trim(),
+        if (_bankAccountController.text.trim().isNotEmpty) 'bankAccount': _bankAccountController.text.trim(),
+        if (_bankBranchController.text.trim().isNotEmpty) 'bankBranch': _bankBranchController.text.trim(),
+        if (_emergencyContactController.text.trim().isNotEmpty) 'emergencyContact': _emergencyContactController.text.trim(),
+        if (_emergencyPhoneController.text.trim().isNotEmpty) 'emergencyPhone': _emergencyPhoneController.text.trim(),
       };
       if (_isEditing && widget.employee?['id'] != null) {
         await HrApiService.instance.updateEmployee(

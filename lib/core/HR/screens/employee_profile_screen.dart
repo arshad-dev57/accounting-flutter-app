@@ -1,6 +1,7 @@
 // screens/employee_profile_screen.dart - EMPLOYEE PROFILE & SELF-SERVICE
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
+import 'package:BisonsTechs_app/core/HR/screens/add_employee_screen.dart';
 import 'package:BisonsTechs_app/core/HR/screens/employee_payslip_screen.dart';
 import 'package:BisonsTechs_app/core/HR/screens/notifications_center_screen.dart';
 import 'package:BisonsTechs_app/core/HR/services/hr_api_service.dart';
@@ -22,6 +23,9 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen>
   late TabController _tabController;
   bool _isEditing = false;
   bool _isDarkMode = false;
+  bool _loadingDossier = false;
+
+  bool get _isAdmin => widget.employeeId != null && widget.employeeId!.isNotEmpty;
 
   Map<String, dynamic> _employeeData = {
     'id': '',
@@ -36,6 +40,11 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen>
     'status': 'Active',
     'shift': '',
     'basicSalary': 0,
+    'payBasis': '',
+    'bankName': '',
+    'bankAccount': '',
+    'probationEndDate': '',
+    'confirmationDate': '',
     'profileImage': null,
     'dateOfBirth': DateTime.now(),
     'gender': '',
@@ -49,7 +58,7 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen>
     'about': '',
   };
 
-  final List<Map<String, dynamic>> _leaveBalance = [];
+  List<Map<String, dynamic>> _leaveBalance = [];
   Map<String, dynamic> _attendanceSummary = {
     'present': 0,
     'late': 0,
@@ -60,24 +69,45 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen>
     'overtime': 0,
     'workingHours': 0,
   };
-  final List<Map<String, dynamic>> _documents = [];
+  List<Map<String, dynamic>> _documents = [];
   final List<Map<String, dynamic>> _achievements = [];
+  List<Map<String, dynamic>> _payrollHistory = [];
+  List<Map<String, dynamic>> _leaveHistory = [];
+  List<Map<String, dynamic>> _performanceHistory = [];
+  List<Map<String, dynamic>> _lifecycleHistory = [];
+  List<Map<String, dynamic>> _attendanceRecent = [];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: _isAdmin ? 7 : 3, vsync: this);
+    _tabController.addListener(() => setState(() {}));
     _loadProfile();
   }
 
   Future<void> _loadProfile() async {
+    setState(() => _loadingDossier = true);
     try {
       final id = widget.employeeId;
-      final data = (id == null || id.isEmpty)
-          ? await HrApiService.instance.me()
-          : await HrApiService.instance.employeeById(id);
+      Map<String, dynamic> data;
+      if (id == null || id.isEmpty) {
+        data = await HrApiService.instance.me();
+      } else {
+        try {
+          data = await HrApiService.instance.employeeDossier(id);
+        } catch (_) {
+          data = await HrApiService.instance.employeeById(id);
+        }
+      }
       if (!mounted) return;
+
       final joining = DateTime.tryParse(data['joiningDate']?.toString() ?? '');
+
+      List<Map<String, dynamic>> listOf(dynamic v) {
+        if (v is! List) return [];
+        return v.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+      }
+
       setState(() {
         _employeeData = {
           ..._employeeData,
@@ -92,19 +122,69 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen>
           'employeeType': data['employmentType'] ?? '',
           'status': data['status'] ?? 'Active',
           'shift': data['shift'] ?? '',
-          'basicSalary': data['salary'] ?? 0,
+          'basicSalary': data['salary'] ?? data['basicSalary'] ?? 0,
+          'payBasis': data['payBasis'] ?? '',
+          'bankName': data['bankName'] ?? '',
+          'bankAccount': data['bankAccount'] ?? '',
+          'probationEndDate': data['probationEndDate'] ?? '',
+          'confirmationDate': data['confirmationDate'] ?? '',
+          'manager': data['manager'] ?? '',
         };
-        final att = data['attendance'] as Map<String, dynamic>?;
+        _payrollHistory = listOf(data['payroll'] ?? data['payrollHistory']);
+        _leaveBalance = listOf(data['leaveBalance'] ?? data['leaves']);
+        _leaveHistory = listOf(data['leaveHistory'] ?? data['leaves']);
+        _performanceHistory = listOf(data['performance'] ?? data['performanceHistory']);
+        _lifecycleHistory = listOf(data['lifecycle'] ?? data['lifecycleHistory']);
+        _documents = listOf(data['documents'] ?? data['docs']);
+        _attendanceRecent = listOf(data['attendance'] is List ? data['attendance'] : null);
+
+        final att = data['attendance'] is Map ? (data['attendance'] as Map<String, dynamic>) : null;
         if (att != null) {
           _attendanceSummary = {
             ..._attendanceSummary,
-            'present': att['statusKey'] == 'present' || att['statusKey'] == 'late' ? 1 : 0,
-            'late': att['statusKey'] == 'late' ? 1 : 0,
+            'present': att['present'] ?? (att['statusKey'] == 'present' ? 1 : 0),
+            'late': att['late'] ?? (att['statusKey'] == 'late' ? 1 : 0),
+            'absent': att['absent'] ?? 0,
             'workingHours': ((att['workingMinutes'] as num?)?.toInt() ?? 0) / 60,
           };
         }
+        _loadingDossier = false;
       });
-    } catch (_) {}
+    } catch (_) {
+      if (mounted) setState(() => _loadingDossier = false);
+    }
+  }
+
+  Future<void> _deactivateEmployee() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        title: const Text('Deactivate Employee'),
+        content: Text('Set ${_employeeData['name']} as Inactive?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: kDanger),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Deactivate', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await HrApiService.instance.deactivateEmployee(widget.employeeId!);
+      if (mounted) {
+        Navigator.of(context).pop(true);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceFirst('Exception: ', '')), backgroundColor: kDanger),
+        );
+      }
+    }
   }
 
   @override
@@ -125,46 +205,47 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen>
           Expanded(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-              child: IndexedStack(
-                index: _tabController.index,
-                children: [
-                  _buildProfileView(),
-                  _buildAttendanceView(),
-                  _buildDocumentsView(),
-                ],
-              ),
+              child: _isAdmin
+                  ? IndexedStack(
+                      index: _tabController.index,
+                      children: [
+                        _buildProfileView(),
+                        _buildAttendanceView(),
+                        _buildLeaveTab(),
+                        _buildPayrollTab(),
+                        _buildPerformanceTab(),
+                        _buildDocumentsView(),
+                        _buildLifecycleTab(),
+                      ],
+                    )
+                  : IndexedStack(
+                      index: _tabController.index,
+                      children: [
+                        _buildProfileView(),
+                        _buildAttendanceView(),
+                        _buildDocumentsView(),
+                      ],
+                    ),
             ),
           ),
         ],
       ),
-      floatingActionButton: _tabController.index == 0
-          ? Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: kPrimary.withValues(alpha: 0.4),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+      floatingActionButton: _isAdmin
+          ? null
+          : (_tabController.index == 0
+              ? Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [BoxShadow(color: kPrimary.withValues(alpha: 0.4), blurRadius: 12, offset: const Offset(0, 4))],
                   ),
-                ],
-              ),
-              child: FloatingActionButton(
-                onPressed: () {
-                  setState(() {
-                    _isEditing = !_isEditing;
-                  });
-                },
-                backgroundColor: _isEditing ? kSuccess : kPrimary,
-                elevation: 0,
-                child: Icon(
-                  _isEditing ? Icons.check_rounded : Icons.edit_rounded,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-            )
-          : null,
+                  child: FloatingActionButton(
+                    onPressed: () => setState(() => _isEditing = !_isEditing),
+                    backgroundColor: _isEditing ? kSuccess : kPrimary,
+                    elevation: 0,
+                    child: Icon(_isEditing ? Icons.check_rounded : Icons.edit_rounded, color: Colors.white, size: 24),
+                  ),
+                )
+              : null),
     );
   }
 
@@ -192,9 +273,9 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'My Profile',
-                      style: TextStyle(
+                    Text(
+                      _isAdmin ? 'Employee Dossier' : 'My Profile',
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
@@ -203,36 +284,35 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen>
                     ),
                     Text(
                       _employeeData['name'] as String,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.white.withValues(alpha: 0.7),
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.7), fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
               ),
-              GestureDetector(
-                onTap: () {
-                  _loadProfile();
-                },
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.refresh_rounded,
-                    size: 18,
-                    color: Colors.white.withValues(alpha: 0.9),
-                  ),
+              if (_isAdmin) ...[
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined, color: Colors.white, size: 20),
+                  onPressed: () async {
+                    await Navigator.of(context).push<bool>(
+                      MaterialPageRoute(builder: (_) => AddEmployeeScreen(employee: _employeeData)),
+                    );
+                    _loadProfile();
+                  },
+                  tooltip: 'Edit',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                 ),
-              ),
-              const SizedBox(width: 8),
+                if (_employeeData['status'] == 'Active')
+                  IconButton(
+                    icon: const Icon(Icons.block_outlined, color: Colors.white70, size: 20),
+                    onPressed: _deactivateEmployee,
+                    tooltip: 'Deactivate',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                  ),
+              ],
               GestureDetector(
-                onTap: () => _showSettingsMenu(context),
+                onTap: _loadProfile,
                 child: Container(
                   width: 36,
                   height: 36,
@@ -240,11 +320,7 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen>
                     color: Colors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(
-                    Icons.more_vert_rounded,
-                    size: 18,
-                    color: Colors.white.withValues(alpha: 0.9),
-                  ),
+                  child: Icon(Icons.refresh_rounded, size: 18, color: Colors.white.withValues(alpha: 0.9)),
                 ),
               ),
             ],
@@ -253,18 +329,12 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen>
       ),
     );
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // PROFILE HEADER
-  // ═══════════════════════════════════════════════════════════════
-
   Widget _buildProfileHeader() {
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       child: Row(
         children: [
-          // Avatar
           Stack(
             children: [
               Container(
@@ -449,61 +519,35 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen>
       ),
     );
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // TAB BAR
-  // ═══════════════════════════════════════════════════════════════
-
   Widget _buildTabBar() {
+    final adminTabs = const [
+      Tab(icon: Icon(Icons.person_outline_rounded, size: 16), text: 'Profile'),
+      Tab(icon: Icon(Icons.fingerprint_rounded, size: 16), text: 'Attendance'),
+      Tab(icon: Icon(Icons.flight_takeoff_rounded, size: 16), text: 'Leave'),
+      Tab(icon: Icon(Icons.payments_outlined, size: 16), text: 'Payroll'),
+      Tab(icon: Icon(Icons.star_outline_rounded, size: 16), text: 'Reviews'),
+      Tab(icon: Icon(Icons.folder_rounded, size: 16), text: 'Docs'),
+      Tab(icon: Icon(Icons.timeline_rounded, size: 16), text: 'Lifecycle'),
+    ];
+    final selfTabs = const [
+      Tab(icon: Icon(Icons.person_outline_rounded, size: 16), text: 'Profile'),
+      Tab(icon: Icon(Icons.fingerprint_rounded, size: 16), text: 'Attendance'),
+      Tab(icon: Icon(Icons.folder_rounded, size: 16), text: 'Documents'),
+    ];
+
     return Container(
       color: Colors.white,
       child: TabBar(
         controller: _tabController,
+        isScrollable: _isAdmin,
         indicatorColor: kPrimary,
         indicatorWeight: 3,
         indicatorSize: TabBarIndicatorSize.tab,
         labelColor: kPrimary,
         unselectedLabelColor: kSubText,
-        labelStyle: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-        ),
-        unselectedLabelStyle: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-        ),
-        tabs: const [
-          Tab(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.person_outline_rounded, size: 16),
-                SizedBox(width: 4),
-                Text('Profile'),
-              ],
-            ),
-          ),
-          Tab(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.fingerprint_rounded, size: 16),
-                SizedBox(width: 4),
-                Text('Attendance'),
-              ],
-            ),
-          ),
-          Tab(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.folder_rounded, size: 16),
-                SizedBox(width: 4),
-                Text('Documents'),
-              ],
-            ),
-          ),
-        ],
+        labelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700),
+        unselectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
+        tabs: _isAdmin ? adminTabs : selfTabs,
       ),
     );
   }
@@ -533,10 +577,6 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen>
       ),
     );
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // LEAVE BALANCE CARD
-  // ═══════════════════════════════════════════════════════════════
 
   Widget _buildLeaveBalanceCard() {
     return Container(
@@ -637,10 +677,6 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen>
       ),
     );
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // PERSONAL INFO CARD
-  // ═══════════════════════════════════════════════════════════════
 
   Widget _buildPersonalInfoCard() {
     return Container(
@@ -752,11 +788,6 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen>
       ),
     );
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // EMERGENCY CONTACT CARD
-  // ═══════════════════════════════════════════════════════════════
-
   Widget _buildEmergencyContactCard() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -811,13 +842,7 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen>
         ],
       ),
     );
-  }
-
-  // ═══════════════════════════════════════════════════════════════
-  // ACHIEVEMENTS CARD
-  // ═══════════════════════════════════════════════════════════════
-
-  Widget _buildAchievementsCard() {
+  }  Widget _buildAchievementsCard() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1633,4 +1658,206 @@ class _EmployeeProfileScreenState extends State<EmployeeProfileScreen>
       ),
     );
   }
+
+  // ─── Admin-only tabs ─────────────────────────────────────────────
+
+  Widget _buildLeaveTab() {
+    final leaves = _leaveHistory.isNotEmpty ? _leaveHistory : _leaveBalance;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (leaves.isEmpty)
+            _emptyCard('No leave records found')
+          else
+            ...leaves.map((l) {
+              final status = '${l['status'] ?? 'Pending'}';
+              final color = status == 'Approved' ? kSuccess : status == 'Rejected' ? kDanger : kWarning;
+              return _dossierCard(
+                icon: Icons.flight_takeoff_rounded,
+                color: color,
+                title: '${l['type'] ?? l['leaveType'] ?? 'Leave'}',
+                subtitle: '${l['from'] ?? ''} → ${l['to'] ?? ''}  •  ${l['reason'] ?? ''}',
+                trailing: _pill(status, color),
+              );
+            }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPayrollTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Pay Structure', style: TextStyle(fontWeight: FontWeight.w800, color: kPrimary)),
+                const SizedBox(height: 8),
+                _kv('Gross Salary', 'Rs ${_employeeData['basicSalary']}'),
+                _kv('Pay Basis', '${_employeeData['payBasis']}'.isEmpty ? '—' : '${_employeeData['payBasis']}'),
+                _kv('Bank', '${_employeeData['bankName']}'.isEmpty ? '—' : '${_employeeData['bankName']}'),
+                _kv('Account', '${_employeeData['bankAccount']}'.isEmpty ? '—' : '${_employeeData['bankAccount']}'),
+              ],
+            ),
+          ),
+          if (_payrollHistory.isEmpty)
+            _emptyCard('No payroll slips yet for this employee')
+          else
+            ...(_payrollHistory).map((p) {
+              final status = '${p['status'] ?? 'Draft'}';
+              final color = status == 'Paid' ? kSuccess : status == 'Approved' ? kPrimary : kWarning;
+              final net = p['netSalary'] ?? p['net'] ?? p['total'] ?? 0;
+              return _dossierCard(
+                icon: Icons.receipt_outlined,
+                color: color,
+                title: '${p['periodLabel'] ?? p['period'] ?? 'Payslip'}',
+                subtitle: 'Net: Rs $net',
+                trailing: _pill(status, color),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const EmployeePayslipScreen()),
+                ),
+              );
+            }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPerformanceTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (_performanceHistory.isEmpty)
+            _emptyCard('No performance reviews yet')
+          else
+            ..._performanceHistory.map((r) {
+              final rating = (r['rating'] as num?)?.toDouble() ?? 0;
+              final status = '${r['status'] ?? 'Draft'}';
+              final color = status == 'Approved' ? kSuccess : kWarning;
+              return _dossierCard(
+                icon: Icons.star_rounded,
+                color: color,
+                title: '${r['period'] ?? 'Review'}  •  Rating: ${rating.toStringAsFixed(1)}/5',
+                subtitle: '${r['notes'] ?? r['comment'] ?? ''}',
+                trailing: _pill(status, color),
+              );
+            }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLifecycleTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Employment Dates', style: TextStyle(fontWeight: FontWeight.w800, color: kPrimary)),
+                const SizedBox(height: 8),
+                _kv('Joining Date', DateFormat('d MMM yyyy').format(_employeeData['joiningDate'] as DateTime)),
+                if ('${_employeeData['probationEndDate']}'.isNotEmpty)
+                  _kv('Probation End', '${_employeeData['probationEndDate']}'),
+                if ('${_employeeData['confirmationDate']}'.isNotEmpty)
+                  _kv('Confirmed On', '${_employeeData['confirmationDate']}'),
+              ],
+            ),
+          ),
+          if (_lifecycleHistory.isEmpty)
+            _emptyCard('No lifecycle events yet')
+          else
+            ..._lifecycleHistory.map((e) {
+              final type = '${e['eventType'] ?? e['type'] ?? 'Event'}';
+              final status = '${e['status'] ?? 'Pending'}';
+              final color = status == 'Approved' ? kSuccess : status == 'Rejected' ? kDanger : kWarning;
+              return _dossierCard(
+                icon: Icons.timeline_rounded,
+                color: color,
+                title: type[0].toUpperCase() + type.substring(1).replaceAll('_', ' '),
+                subtitle: '${e['effectiveDate'] ?? e['date'] ?? ''}  •  ${e['notes'] ?? ''}',
+                trailing: _pill(status, color),
+              );
+            }),
+        ],
+      ),
+    );
+  }
+
+  Widget _emptyCard(String msg) => Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
+    child: Center(child: Text(msg, style: TextStyle(color: kSubText, fontSize: 13))),
+  );
+
+  Widget _dossierCard({
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String subtitle,
+    Widget? trailing,
+    VoidCallback? onTap,
+  }) => GestureDetector(
+    onTap: onTap,
+    child: Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+            child: Icon(icon, size: 18, color: color),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+              if (subtitle.isNotEmpty)
+                Text(subtitle, style: TextStyle(fontSize: 11, color: kSubText), maxLines: 2, overflow: TextOverflow.ellipsis),
+            ]),
+          ),
+          if (trailing != null) trailing,
+          if (onTap != null) Icon(Icons.chevron_right_rounded, size: 18, color: kSubText),
+        ],
+      ),
+    ),
+  );
+
+  Widget _pill(String label, Color color) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
+    child: Text(label, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: color)),
+  );
+
+  Widget _kv(String key, String value) => Padding(
+    padding: const EdgeInsets.only(bottom: 6),
+    child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+      Text(key, style: TextStyle(fontSize: 12, color: kSubText)),
+      Flexible(child: Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600), textAlign: TextAlign.right)),
+    ]),
+  );
 }

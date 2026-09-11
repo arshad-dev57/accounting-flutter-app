@@ -1,11 +1,16 @@
 // screens/live_employee_tracking_screen.dart - LIVE EMPLOYEE TRACKING MAP
 
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/config/maps_config.dart';
 import 'package:BisonsTechs_app/core/HR/services/hr_api_service.dart';
+import 'package:BisonsTechs_app/widgets/hr_drawer.dart';
+import 'package:flutter/foundation.dart' show Factory, kIsWeb;
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 
@@ -23,6 +28,7 @@ class _LiveEmployeeTrackingScreenState
   String _selectedEmployeeId = '';
   bool _isMapLoading = true;
   bool _usingLiveFeed = false;
+  bool _myLocationEnabled = false;
   GoogleMapController? _mapController;
   Timer? _pollTimer;
 
@@ -31,8 +37,24 @@ class _LiveEmployeeTrackingScreenState
   @override
   void initState() {
     super.initState();
+    _prepareLocation();
     _loadLiveFeed();
     _pollTimer = Timer.periodic(const Duration(seconds: 30), (_) => _loadLiveFeed());
+  }
+
+  Future<void> _prepareLocation() async {
+    try {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      final ok = permission == LocationPermission.always ||
+          permission == LocationPermission.whileInUse;
+      if (!mounted) return;
+      setState(() => _myLocationEnabled = ok);
+    } catch (_) {
+      // Map still works without my-location layer.
+    }
   }
 
   @override
@@ -142,6 +164,7 @@ class _LiveEmployeeTrackingScreenState
 
     return Scaffold(
       backgroundColor: kBgLight,
+      drawer: const HRDrawer(currentItem: 'live_tracking'),
       body: Column(
         children: [
           _buildTopHeader(context),
@@ -151,7 +174,7 @@ class _LiveEmployeeTrackingScreenState
               color: const Color(0xFFFFF7ED),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: const Text(
-                'Demo markers — open Employee dashboard to start live GPS pings',
+                'Waiting for live GPS pings — map still works with last known / demo markers',
                 style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
               ),
             ),
@@ -160,7 +183,7 @@ class _LiveEmployeeTrackingScreenState
             child: Column(
               children: [
                 Expanded(
-                  flex: 2,
+                  flex: (!kIsWeb && Platform.isAndroid) ? 3 : 2,
                   child: _buildMapView(filteredEmployees),
                 ),
                 Expanded(
@@ -190,11 +213,13 @@ class _LiveEmployeeTrackingScreenState
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           child: Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () => Navigator.of(context).pop(),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
+              Builder(
+                builder: (context) => IconButton(
+                  icon: const Icon(Icons.menu_rounded, color: Colors.white),
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -394,13 +419,23 @@ class _LiveEmployeeTrackingScreenState
           GoogleMap(
             initialCameraPosition: CameraPosition(target: initial, zoom: 12),
             markers: markers,
-            myLocationEnabled: true,
+            myLocationEnabled: _myLocationEnabled,
             myLocationButtonEnabled: false,
             compassEnabled: true,
             mapToolbarEnabled: false,
-            onMapCreated: (controller) {
+            zoomControlsEnabled: !kIsWeb && Platform.isAndroid,
+            liteModeEnabled: false,
+            gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+              Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer()),
+            },
+            onMapCreated: (controller) async {
               _mapController = controller;
-              setState(() => _isMapLoading = false);
+              if (mounted) setState(() => _isMapLoading = false);
+              // Force a camera nudge so Android surface paints tiles.
+              try {
+                await Future<void>.delayed(const Duration(milliseconds: 250));
+                await controller.moveCamera(CameraUpdate.zoomBy(0));
+              } catch (_) {}
             },
           ),
           if (_isMapLoading)

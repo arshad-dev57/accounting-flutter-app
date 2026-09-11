@@ -2,14 +2,13 @@
 
 import 'package:BisonsTechs_app/Utils/colors.dart';
 import 'package:BisonsTechs_app/core/HR/screens/add_employee_screen.dart';
-import 'package:BisonsTechs_app/core/HR/screens/employee_attendance_screen.dart';
 import 'package:BisonsTechs_app/core/HR/screens/employee_profile_screen.dart';
 import 'package:BisonsTechs_app/core/HR/screens/employees_list_screen.dart';
-import 'package:BisonsTechs_app/core/HR/screens/leave_management_screen.dart';
+import 'package:BisonsTechs_app/core/HR/screens/hr_admin_modules.dart';
 import 'package:BisonsTechs_app/core/HR/screens/live_employee_tracking_screen.dart';
-import 'package:BisonsTechs_app/core/HR/screens/notifications_center_screen.dart';
 import 'package:BisonsTechs_app/core/HR/services/hr_api_service.dart';
 import 'package:BisonsTechs_app/widgets/hr_drawer.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -22,13 +21,16 @@ class HRDashboardScreen extends StatefulWidget {
 
 class _HRDashboardScreenState extends State<HRDashboardScreen> {
   Map<String, dynamic> _stats = {
-    'totalEmployees': 0,
-    'present': 0,
-    'late': 0,
-    'absent': 0,
-    'onLeave': 0,
-    'fieldStaff': 0,
+    'totalEmployees': 0, 'present': 0, 'late': 0,
+    'absent': 0, 'onLeave': 0, 'fieldStaff': 0, 'liveCount': 0, 'working': 0,
   };
+  List<Map<String, dynamic>> _attendance = [];
+  List<Map<String, dynamic>> _weekly = [];
+  int _pendingLeaves = 0;
+  int _pendingOt = 0;
+  int _pendingLoans = 0;
+  bool _loading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -37,11 +39,39 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
   }
 
   Future<void> _loadStats() async {
+    setState(() { _loading = true; _error = null; });
     try {
-      final data = await HrApiService.instance.dashboard();
+      final results = await Future.wait([
+        HrApiService.instance.dashboard(),
+        HrApiService.instance.leaves().catchError((_) => <Map<String, dynamic>>[]),
+        HrApiService.instance.overtime().catchError((_) => <Map<String, dynamic>>[]),
+        HrApiService.instance.loans().catchError((_) => <Map<String, dynamic>>[]),
+      ]);
       if (!mounted) return;
-      setState(() => _stats = data);
-    } catch (_) {}
+      final data = results[0] as Map<String, dynamic>;
+      final leaves = results[1] as List<Map<String, dynamic>>;
+      final ot = results[2] as List<Map<String, dynamic>>;
+      final loans = results[3] as List<Map<String, dynamic>>;
+      final attendance = data['attendance'];
+
+      List<Map<String, dynamic>> listOf(dynamic v) {
+        if (v is! List) return [];
+        return v.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+      }
+
+      setState(() {
+        _stats = data;
+        _attendance = attendance is List ? listOf(attendance) : [];
+        _weekly = listOf(data['weekly']);
+        _pendingLeaves = leaves.where((l) => '${l['status']}'.toLowerCase() == 'pending').length;
+        _pendingOt = ot.where((o) => '${o['status']}'.toLowerCase() == 'pending').length;
+        _pendingLoans = loans.where((l) => '${l['status']}'.toLowerCase() == 'pending').length;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() { _loading = false; _error = e.toString().replaceFirst('Exception: ', ''); });
+    }
   }
 
   @override
@@ -55,22 +85,62 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
             children: [
               _buildTopHeader(context),
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        _buildDateSelector(),
-                        const SizedBox(height: 12),
-                        _buildStatsGrid(context),
-                        const SizedBox(height: 16),
-                        _buildQuickActions(context),
-                        const SizedBox(height: 16),
-                        _buildLiveTrackingCard(context),
-                        const SizedBox(height: 16),
-                        _buildRecentActivity(context),
-                        const SizedBox(height: 24),
-                      ],
+                child: RefreshIndicator(
+                  onRefresh: _loadStats,
+                  color: kPrimary,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Column(
+                        children: [
+                          _buildDateSelector(),
+                          const SizedBox(height: 12),
+                          if (_loading)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 40),
+                              child: Center(child: CircularProgressIndicator(color: kPrimary)),
+                            )
+                          else ...[
+                            if (_error != null) ...[
+                              Container(
+                                width: double.infinity,
+                                margin: const EdgeInsets.only(bottom: 12),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: kDanger.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        _error!,
+                                        style: const TextStyle(color: kDanger, fontSize: 12, fontWeight: FontWeight.w600),
+                                      ),
+                                    ),
+                                    TextButton(onPressed: _loadStats, child: const Text('Retry')),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            _buildStatsGrid(context),
+                            const SizedBox(height: 16),
+                            _buildPendingApprovals(context),
+                            const SizedBox(height: 16),
+                            if (_weekly.isNotEmpty) ...[
+                              _buildWeeklyChart(),
+                              const SizedBox(height: 16),
+                            ],
+                            _buildQuickActions(context),
+                            const SizedBox(height: 16),
+                            _buildLiveTrackingCard(context),
+                            const SizedBox(height: 16),
+                            _buildRecentActivity(context),
+                          ],
+                          const SizedBox(height: 24),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -162,7 +232,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
               const SizedBox(width: 8),
               // Notifications
               GestureDetector(
-                onTap: () => HRNav.go(context, const NotificationsCenterScreen()),
+                onTap: () => HRNav.go(context, const NotificationsAdminScreen()),
                 child: Container(
                   width: 40,
                   height: 40,
@@ -360,7 +430,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
             Icons.check_circle_rounded,
             kSuccess,
             Colors.green.shade50,
-            () => HRNav.go(context, const EmployeeAttendanceScreen()),
+            () => HRNav.go(context, const AdminAttendanceRegisterScreen()),
           ),
           _statItem(
             'Late',
@@ -368,7 +438,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
             Icons.warning_rounded,
             kWarning,
             Colors.orange.shade50,
-            () => HRNav.go(context, const EmployeeAttendanceScreen()),
+            () => HRNav.go(context, const AdminAttendanceRegisterScreen()),
           ),
           _statItem(
             'Absent',
@@ -376,7 +446,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
             Icons.person_off_rounded,
             kDanger,
             Colors.red.shade50,
-            () => HRNav.go(context, const EmployeeAttendanceScreen()),
+            () => HRNav.go(context, const AdminAttendanceRegisterScreen()),
           ),
           _statItem(
             'On Leave',
@@ -384,7 +454,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
             Icons.beach_access_rounded,
             Colors.purple,
             Colors.purple.shade50,
-            () => HRNav.go(context, const LeaveManagementScreen()),
+            () => HRNav.go(context, const LeaveManagementAdminScreen()),
           ),
           _statItem(
             'Field Staff',
@@ -462,6 +532,152 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
   // QUICK ACTIONS
   // ═══════════════════════════════════════════════════════════════
 
+  Widget _buildPendingApprovals(BuildContext context) {
+    final total = _pendingLeaves + _pendingOt + _pendingLoans;
+    if (total == 0) return const SizedBox.shrink();
+    return GestureDetector(
+      onTap: () => HRNav.go(context, const ApprovalsAdminScreen()),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.orange.shade50,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.orange.shade200),
+        ),
+        child: Row(children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: Colors.orange.shade100, borderRadius: BorderRadius.circular(12)),
+            child: const Icon(Icons.inbox_rounded, color: Colors.deepOrange, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('$total Pending Approval${total == 1 ? '' : 's'}',
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Colors.deepOrange)),
+            const SizedBox(height: 2),
+            Text(
+              [
+                if (_pendingLeaves > 0) '$_pendingLeaves leave${_pendingLeaves > 1 ? 's' : ''}',
+                if (_pendingOt > 0) '$_pendingOt OT',
+                if (_pendingLoans > 0) '$_pendingLoans loan${_pendingLoans > 1 ? 's' : ''}',
+              ].join(' · '),
+              style: TextStyle(fontSize: 11, color: Colors.orange.shade800),
+            ),
+          ])),
+          const Icon(Icons.chevron_right_rounded, color: Colors.deepOrange),
+        ]),
+      ),
+    );
+  }
+
+  Widget _buildWeeklyChart() {
+    final days = _weekly.take(7).toList();
+    final maxY = days.fold<double>(0, (prev, d) {
+      final p = (d['present'] as num?)?.toDouble() ?? 0;
+      final a = (d['absent'] as num?)?.toDouble() ?? 0;
+      return (p + a) > prev ? (p + a) : prev;
+    });
+    final safeMax = maxY < 1 ? 5.0 : maxY * 1.2;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            Text('Weekly Attendance', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: kText)),
+            Row(children: [
+              _legendDot(kPrimary, 'Present'),
+              const SizedBox(width: 10),
+              _legendDot(kDanger, 'Absent'),
+            ]),
+          ]),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 120,
+            child: BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceAround,
+                maxY: safeMax,
+                barTouchData: BarTouchData(
+                  touchTooltipData: BarTouchTooltipData(
+                    getTooltipColor: (_) => kPrimary.withValues(alpha: 0.9),
+                    getTooltipItem: (g, gi, rod, ri) {
+                      final d = days[gi];
+                      return BarTooltipItem(
+                        '${d['day'] ?? ''}\nP:${d['present'] ?? 0} A:${d['absent'] ?? 0}',
+                        const TextStyle(color: Colors.white, fontSize: 10),
+                      );
+                    },
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  bottomTitles: AxisTitles(sideTitles: SideTitles(
+                    showTitles: true,
+                    getTitlesWidget: (v, _) {
+                      final i = v.toInt();
+                      if (i < 0 || i >= days.length) return const SizedBox.shrink();
+                      final day = '${days[i]['day'] ?? ''}';
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(day.length > 3 ? day.substring(0, 3) : day, style: TextStyle(fontSize: 9, color: kSubText)),
+                      );
+                    },
+                    reservedSize: 22,
+                  )),
+                  leftTitles: AxisTitles(sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 24,
+                    getTitlesWidget: (v, _) => Text('${v.toInt()}', style: TextStyle(fontSize: 9, color: kSubText)),
+                  )),
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                ),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: safeMax / 4,
+                  getDrawingHorizontalLine: (_) => FlLine(color: kBorderLight, strokeWidth: 1),
+                ),
+                borderData: FlBorderData(show: false),
+                barGroups: List.generate(days.length, (i) {
+                  final d = days[i];
+                  final present = (d['present'] as num?)?.toDouble() ?? 0;
+                  final absent = (d['absent'] as num?)?.toDouble() ?? 0;
+                  return BarChartGroupData(x: i, barRods: [
+                    BarChartRodData(
+                      toY: present + absent,
+                      width: 14,
+                      borderRadius: BorderRadius.circular(4),
+                      rodStackItems: [
+                        BarChartRodStackItem(0, present, kPrimary),
+                        BarChartRodStackItem(present, present + absent, kDanger.withValues(alpha: 0.6)),
+                      ],
+                    ),
+                  ]);
+                }),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _legendDot(Color color, String label) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+      const SizedBox(width: 4),
+      Text(label, style: TextStyle(fontSize: 10, color: kSubText, fontWeight: FontWeight.w600)),
+    ],
+  );
+
   Widget _buildQuickActions(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -498,17 +714,17 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
               ),
               const SizedBox(width: 12),
               _actionButton(
-                'Mark Attendance',
+                'Attendance',
                 Icons.fingerprint_rounded,
                 Colors.teal,
-                () => HRNav.go(context, const EmployeeAttendanceScreen()),
+                () => HRNav.go(context, const AdminAttendanceRegisterScreen()),
               ),
               const SizedBox(width: 12),
               _actionButton(
-                'View Map',
-                Icons.map_rounded,
+                'Salary build',
+                Icons.payments_rounded,
                 Colors.purple,
-                () => HRNav.go(context, const LiveEmployeeTrackingScreen()),
+                () => HRNav.go(context, const SalaryBuildScreen()),
               ),
             ],
           ),
@@ -631,7 +847,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
                       ),
                       const SizedBox(width: 6),
                        Text(
-                        '24 employees active',
+                        '${_stats['liveCount'] ?? _stats['working'] ?? _stats['fieldStaff'] ?? 0} employees active',
                         style: TextStyle(
                           fontSize: 11,
                           color: kSubText,
@@ -712,7 +928,7 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
                 ),
               ),
               GestureDetector(
-                onTap: () => HRNav.go(context, const LeaveManagementScreen()),
+                onTap: () => HRNav.go(context, const LeaveManagementAdminScreen()),
                 child: Text(
                   'View All',
                   style: TextStyle(
@@ -725,50 +941,58 @@ class _HRDashboardScreenState extends State<HRDashboardScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          _activityItem(
-            'Ahmed Khan',
-            'Checked in',
-            '09:03 AM',
-            Icons.login_rounded,
-            kSuccess,
-            '✅ Auto Geofence',
-          ),
-          const Divider(height: 1),
-          _activityItem(
-            'Sara Ali',
-            'Checked in (Late)',
-            '09:25 AM',
-            Icons.warning_rounded,
-            kWarning,
-            '⚠️ 25 min late',
-          ),
-          const Divider(height: 1),
-          _activityItem(
-            'Ali Raza',
-            'Absent',
-            '11:00 AM',
-            Icons.person_off_rounded,
-            kDanger,
-            '❌ No check-in',
-          ),
-          const Divider(height: 1),
-          _activityItem(
-            'Usman Sheikh',
-            'Started Break',
-            '01:05 PM',
-            Icons.free_breakfast_rounded,
-            Colors.blue,
-            '⏸️ Break started',
-          ),
-          const Divider(height: 1),
-          _activityItem(
-            'Fatima Noor',
-            'Checked out',
-            '06:05 PM',
-            Icons.logout_rounded,
-            Colors.purple,
-            '✅ Auto checkout',
-          ),
+          if (_attendance.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Text(
+                'No attendance activity yet today',
+                style: TextStyle(color: kSubTextLight, fontSize: 12),
+              ),
+            )
+          else
+            ..._attendance.take(6).toList().asMap().entries.expand((entry) {
+              final row = entry.value;
+              final emp = row['employee'];
+              final name = emp is Map
+                  ? '${emp['name'] ?? 'Employee'}'
+                  : '${row['employee'] ?? row['employeeName'] ?? row['name'] ?? 'Employee'}';
+              final status = '${row['status'] ?? 'present'}'.toLowerCase();
+              String action;
+              IconData icon;
+              Color color;
+              String subtitle;
+              if (status.contains('late')) {
+                action = 'Checked in (Late)';
+                icon = Icons.warning_rounded;
+                color = kWarning;
+                subtitle = 'Late arrival';
+              } else if (status.contains('absent')) {
+                action = 'Absent';
+                icon = Icons.person_off_rounded;
+                color = kDanger;
+                subtitle = 'No check-in';
+              } else if (status.contains('leave')) {
+                action = 'On leave';
+                icon = Icons.beach_access_rounded;
+                color = Colors.purple;
+                subtitle = 'Approved leave';
+              } else {
+                action = 'Checked in';
+                icon = Icons.login_rounded;
+                color = kSuccess;
+                subtitle = '${row['source'] ?? 'Attendance'}';
+              }
+              String time = '—';
+              final checkIn = row['checkIn'];
+              if (checkIn != null) {
+                final raw = '$checkIn';
+                time = raw.length >= 16 ? raw.substring(11, 16) : raw;
+              }
+              return [
+                if (entry.key > 0) const Divider(height: 1),
+                _activityItem(name, action, time, icon, color, subtitle),
+              ];
+            }),
         ],
       ),
     );

@@ -32,7 +32,7 @@
         android:usesCleartextTraffic="true">
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyC0KGqBPA7MxhoWW_XRWD06k9nVr1ez-vE"/>
+            android:value="AIzaSyDGP0gACQqAuosy8SZFUFtcLVhc-jTtSJc"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"
