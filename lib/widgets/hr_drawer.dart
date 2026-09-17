@@ -159,30 +159,15 @@ final _hrSections = [
       icon: Icons.emoji_events_rounded,
       builder: () => const BonusesAdminScreen(),
     ),
-    _NavItem(
-      id: 'lifecycle',
-      label: 'Lifecycle',
-      icon: Icons.timeline_rounded,
-      builder: () => const LifecycleAdminScreen(),
-    ),
-    _NavItem(
-      id: 'documents',
-      label: 'Documents',
-      icon: Icons.folder_open_rounded,
-      builder: () => const DocumentsAdminScreen(),
-    ),
+  
+  
     _NavItem(
       id: 'approvals',
       label: 'Approvals',
       icon: Icons.inbox_rounded,
       builder: () => const ApprovalsAdminScreen(),
     ),
-    _NavItem(
-      id: 'tasks',
-      label: 'Task Management',
-      icon: Icons.task_alt_rounded,
-      builder: () => const TasksAdminScreen(),
-    ),
+    
     _NavItem(
       id: 'performance',
       label: 'Performance Reviews',
@@ -203,12 +188,7 @@ final _hrSections = [
       icon: Icons.bar_chart_rounded,
       builder: () => const ReportsAdminScreen(),
     ),
-    _NavItem(
-      id: 'notifications',
-      label: 'Notifications',
-      icon: Icons.notifications_rounded,
-      builder: () => const NotificationsAdminScreen(),
-    ),
+  
     _NavItem(
       id: 'settings',
       label: 'HR Settings',

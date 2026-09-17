@@ -182,11 +182,6 @@ class _HRReportsAnalyticsScreenState extends State<HRReportsAnalyticsScreen>
       ),
     );
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // TOP HEADER
-  // ═══════════════════════════════════════════════════════════════
-
   Widget _buildTopHeader(BuildContext context) {
     return Container(
       color: kPrimary,
@@ -268,11 +263,6 @@ class _HRReportsAnalyticsScreenState extends State<HRReportsAnalyticsScreen>
       ),
     );
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // PERIOD SELECTOR
-  // ═══════════════════════════════════════════════════════════════
-
   Widget _buildPeriodSelector() {
     final periods = ['Today', 'This Week', 'This Month', 'This Quarter', 'This Year', 'Custom'];
 
@@ -344,11 +334,6 @@ class _HRReportsAnalyticsScreenState extends State<HRReportsAnalyticsScreen>
       ),
     );
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // TAB BAR
-  // ═══════════════════════════════════════════════════════════════
-
   Widget _buildTabBar() {
     return Container(
       color: Colors.white,
@@ -403,10 +388,6 @@ class _HRReportsAnalyticsScreenState extends State<HRReportsAnalyticsScreen>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // OVERVIEW VIEW
-  // ═══════════════════════════════════════════════════════════════
-
   Widget _buildOverviewView() {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -415,23 +396,16 @@ class _HRReportsAnalyticsScreenState extends State<HRReportsAnalyticsScreen>
           // KPI Cards
           _buildKPICards(),
           const SizedBox(height: 12),
-          // Quick Stats
           _buildQuickStats(),
           const SizedBox(height: 12),
-          // Department Summary
           _buildDepartmentSummary(),
           const SizedBox(height: 12),
-          // Recent Activity
           _buildRecentActivity(),
           const SizedBox(height: 16),
         ],
       ),
     );
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // KPI CARDS
-  // ═══════════════════════════════════════════════════════════════
 
   Widget _buildKPICards() {
     return Container(
@@ -545,10 +519,6 @@ class _HRReportsAnalyticsScreenState extends State<HRReportsAnalyticsScreen>
       ),
     );
   }
-
-  // ═══════════════════════════════════════════════════════════════
-  // QUICK STATS
-  // ═══════════════════════════════════════════════════════════════
 
   Widget _buildQuickStats() {
     return Container(
