@@ -1118,6 +1118,16 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                     showArrow: true,
                     onTap: _navigateToPurchase,
                   ),
+                if (erp && perms.canAccessModule('manufacturing'))
+                  _SidebarItemWidget(
+                    icon: Icons.factory_outlined,
+                    label: 'Manufacturing',
+                    index: 12,
+                    selectedIndex: _selectedIndex,
+                    collapsed: collapsed,
+                    showArrow: true,
+                    onTap: _navigateToManufacturingDashboard,
+                  ),
                 if (erp)
                   _SidebarItemWidget(
                     icon: Icons.groups_outlined,
@@ -1224,6 +1234,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                     'accounting',
                     'sales',
                     'purchases',
+                    'manufacturing',
                     'accounting',
                     'accounting',
                   ],
@@ -1232,6 +1243,7 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
                     ('Accounting', Mdi.account_balance, '__accounting'),
                     ('Sales', Mdi.cart_outline, '__sales'),
                     ('Purchases', Mdi.cart_plus, '__purchase'),
+                    ('Manufacturing', Mdi.i_factory, '__manufacturing'),
                     ('HR Admin', Mdi.account_tie, '__hr'),
                     ('Tax Compliance', Mdi.percent, '__tax'),
                   ],
@@ -1386,6 +1398,14 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
             icon: Icons.shopping_cart_outlined,
             color: const Color(0xFFF59E0B),
             onTap: _navigateToPurchase,
+          ),
+        if (erp && perms.canAccessModule('manufacturing'))
+          _HomeProduct(
+            title: 'Manufacturing',
+            subtitle: 'Production, BOM, materials & shop floor',
+            icon: Icons.factory_outlined,
+            color: const Color(0xFFC2410C),
+            onTap: _navigateToManufacturingDashboard,
           ),
         if (erp)
           _HomeProduct(
@@ -1601,6 +1621,8 @@ class _DashboardSelectionScreenState extends State<DashboardSelectionScreen> {
   void _navigateToSales() => Get.offAllNamed('/warehouse/sales');
   void _navigateToPurchase() => Get.offAllNamed('/purchase/dashboard');
   void _navigateToHrDashboard() => Get.offAllNamed('/hr/dashboard');
+  void _navigateToManufacturingDashboard() =>
+      Get.offAllNamed('/manufacturing/dashboard');
   void _navigateToUsers() => Get.to(() => const UserListScreen());
 
   void _openSettings() {
@@ -2845,6 +2867,9 @@ class _NavSectionState extends State<_NavSection> {
         break;
       case '__purchase':
         Get.offAllNamed('/purchase/dashboard');
+        break;
+      case '__manufacturing':
+        Get.offAllNamed('/manufacturing/dashboard');
         break;
       case '__hr':
         Get.offAllNamed('/hr/dashboard');

@@ -579,6 +579,19 @@ class UserManagementController extends GetxController {
       ],
     ),
     ModuleConfig(
+      module: 'manufacturing',
+      displayName: 'Manufacturing',
+      description: 'Manage production, BOM, materials, and shop floor',
+      icon: Icons.factory_outlined,
+      subPages: [
+        SubPagePermission(
+          page: 'dashboard',
+          displayName: 'Dashboard',
+          icon: Icons.dashboard,
+        ),
+      ],
+    ),
+    ModuleConfig(
       module: 'pos',
       displayName: 'POS',
       description: 'Point of sale register and management',
