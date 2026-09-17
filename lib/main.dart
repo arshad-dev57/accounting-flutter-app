@@ -19,6 +19,7 @@ import 'package:BisonsTechs_app/core/dashboard/controllers/dashboard_controller.
 import 'package:BisonsTechs_app/core/dashboardSelection/screen/dashboard_selection.dart';
 import 'package:BisonsTechs_app/core/HR/screens/employee_dashboard_screen.dart';
 import 'package:BisonsTechs_app/core/HR/screens/hr_dashboard_screen.dart';
+import 'package:BisonsTechs_app/core/Manufacturing/screens/manufacturing_dashboard_screen.dart';
 import 'package:BisonsTechs_app/core/goodsRecieving/goods_receiving_controller.dart';
 import 'package:BisonsTechs_app/core/goodsRecieving/goods_receiving_screen.dart';
 import 'package:BisonsTechs_app/core/login/screen/login_screen.dart';
@@ -200,6 +201,10 @@ class MyApp extends StatelessWidget {
             GetPage(
               name: '/hr/dashboard',
               page: () => const HRDashboardScreen(),
+            ),
+            GetPage(
+              name: '/manufacturing/dashboard',
+              page: () => const ManufacturingDashboardScreen(),
             ),
             GetPage(
               name: '/hr/employee-dashboard',
